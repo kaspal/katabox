@@ -1,0 +1,16 @@
+id = "two-sum"
+title = "Two Sum"
+difficulty = "easy"
+tags = ["array", "hash-map"]
+pattern = "arrays-hashing"
+rank = 1
+
+[signature]
+name = "twoSum"
+params = [{ name = "nums", type = "int[]" }, { name = "target", type = "int" }]
+returns = "int[]"
+
+[judge]
+checker = "unordered"
+time_limit_ms = 2000
+memory_mb = 256

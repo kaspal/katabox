@@ -1,0 +1,11 @@
+{
+  "name": "katabox",
+  "private": true,
+  "license": "MIT OR Apache-2.0",
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --filter @katabox/desktop tauri dev",
+    "build": "pnpm --filter @katabox/desktop build",
+    "typecheck": "pnpm --filter @katabox/desktop exec tsc --noEmit"
+  }
+}

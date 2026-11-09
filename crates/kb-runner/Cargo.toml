@@ -1,0 +1,14 @@
+[package]
+name = "kb-runner"
+description = "Sandboxed execution of user code with time, memory and process limits"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+kb-core.workspace = true
+
+[lints]
+workspace = true

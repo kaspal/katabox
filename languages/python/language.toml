@@ -1,0 +1,7 @@
+# Runtime definition for python. Harness template: harness.py.j2 (Core judge phase).
+id = "python"
+extension = "py"
+compile = ""
+run = "python -I -X utf8 {main}"
+language_server = "basedpyright"
+debug_adapter = "debugpy"

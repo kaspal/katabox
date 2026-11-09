@@ -1,0 +1,37 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/desktop/src-tauri"]
+# The desktop app needs WebKitGTK/WebView2 to build; library crates build anywhere.
+default-members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/OWNER/katabox"
+rust-version = "1.85"
+
+[workspace.dependencies]
+kb-core = { path = "crates/kb-core" }
+kb-judge = { path = "crates/kb-judge" }
+kb-store = { path = "crates/kb-store" }
+kb-runner = { path = "crates/kb-runner" }
+kb-toolchain = { path = "crates/kb-toolchain" }
+kb-bridge = { path = "crates/kb-bridge" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.9"
+thiserror = "2"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

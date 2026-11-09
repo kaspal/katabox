@@ -1,0 +1,7 @@
+# Runtime definition for rust. Harness template: harness.rs.j2 (Core judge phase).
+id = "rust"
+extension = "rs"
+compile = "rustc -O --edition 2024 -o {binary} {main}"
+run = "{binary}"
+language_server = "rust-analyzer"
+debug_adapter = "CodeLLDB"

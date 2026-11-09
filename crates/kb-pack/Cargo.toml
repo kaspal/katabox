@@ -1,0 +1,22 @@
+[package]
+name = "kb-pack"
+description = "Validate and build KataBox problem packs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "kb-pack"
+path = "src/main.rs"
+
+[dependencies]
+kb-core.workspace = true
+kb-judge.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+[lints]
+workspace = true

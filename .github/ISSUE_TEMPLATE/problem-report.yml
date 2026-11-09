@@ -1,0 +1,18 @@
+name: Problem report
+description: A wrong test, unclear statement or weak hidden tests in a problem
+labels: [content]
+body:
+  - type: input
+    id: problem
+    attributes: { label: Problem id, placeholder: two-sum }
+    validations: { required: true }
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is wrong?
+      options: [Wrong expected output, Unclear statement, Weak tests (wrong solution passes), Translation, Other]
+    validations: { required: true }
+  - type: textarea
+    id: details
+    attributes: { label: Details, description: Include the input, your output and the expected output if relevant. }
+    validations: { required: true }

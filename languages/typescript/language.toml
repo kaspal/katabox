@@ -1,0 +1,7 @@
+# Runtime definition for typescript. Harness template: harness.ts.j2 (Core judge phase).
+id = "typescript"
+extension = "ts"
+compile = ""
+run = "node --max-old-space-size={memory_mb} {main}"
+language_server = "typescript-language-server"
+debug_adapter = "vscode-js-debug"

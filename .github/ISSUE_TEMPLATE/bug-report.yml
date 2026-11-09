@@ -1,0 +1,19 @@
+name: Bug report
+description: Something in the app does not work
+labels: [bug]
+body:
+  - type: input
+    id: os
+    attributes: { label: Operating system and version, placeholder: Windows 11 23H2 / Ubuntu 24.04 }
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes: { label: KataBox version }
+  - type: textarea
+    id: steps
+    attributes: { label: Steps to reproduce }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: What you expected and what happened }
+    validations: { required: true }

@@ -1,0 +1,7 @@
+# Runtime definition for php. Harness template: harness.php.j2 (Core judge phase).
+id = "php"
+extension = "php"
+compile = ""
+run = "php -n -d memory_limit={memory_mb}M {main}"
+language_server = "phpactor"
+debug_adapter = "vscode-php-debug + Xdebug 3"
