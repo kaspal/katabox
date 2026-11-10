@@ -1,0 +1,28 @@
+# cargo-deny configuration: `cargo deny check licenses` (run in CI).
+# KataBox is MIT OR Apache-2.0; dependencies must be compatible with that.
+
+[graph]
+all-features = true
+
+[licenses]
+version = 2
+confidence-threshold = 0.9
+allow = [
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-3-Clause",
+    "Zlib",
+    "0BSD",
+    "CC0-1.0",
+    "Unlicense",
+    "Unicode-3.0",
+    # Weak copyleft, file-level (Tauri's dependency tree).
+    "MPL-2.0",
+]
+exceptions = [
+    # Approved exception (ADR 0007): the Linux sandbox. The linking exception allows
+    # static linking into the MIT/Apache app; changes to hakoniwa itself stay LGPL.
+    { allow = ["LGPL-3.0-only WITH LGPL-3.0-linking-exception"], crate = "hakoniwa" },
+]

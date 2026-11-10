@@ -208,6 +208,11 @@ fn execute(
     let _ = in_t.join();
 
     Ok(Outcome {
+        mode: if spec.less_privileged {
+            crate::SandboxMode::LessPrivilegedAppContainer
+        } else {
+            crate::SandboxMode::AppContainer
+        },
         termination: termination.unwrap_or(Termination::Exited),
         exit_code,
         stdout,

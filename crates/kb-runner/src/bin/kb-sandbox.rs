@@ -5,12 +5,18 @@
 //!                [--cpu-ms N] [--wall-ms N] [--mem-mb N] [--procs N] [--lpac]
 //!                [--env K=V] -- <program> [args...]
 //! kb-sandbox cleanup --root <dir> [--toolchain <dir>]
+//! kb-sandbox probe                      # Linux: what this kernel supports
 //! ```
 //!
+//! On Linux this binary is also the sandbox helper the runner starts for every run
+//! (hidden `__supervise` / `__contain` / `__probe-userns` subcommands, ADR 0007). Linux
+//! runs take `--mode auto|namespaces|fallback`.
+//!
 //! `--root` is the KataBox sandbox root (must contain `.katabox-sandbox-root`; the dev
-//! root `target/katabox` is created by `scripts/fetch-python-toolchain.ps1`).
+//! root `target/katabox` is created by `scripts/fetch-python-toolchain.{ps1,sh}`).
 //! `--toolchain` defaults to `<root>/toolchains/python-3.14`. A bare program name
-//! (e.g. `python`) is resolved to `<toolchain>/<name>.exe`. Without `--work`, a fresh
+//! (e.g. `python`) is resolved to `<toolchain>/<name>.exe` on Windows and
+//! `<toolchain>/bin/<name>` on Linux. Without `--work`, a fresh
 //! `<root>/runs/cli-<pid>` folder is used; the runner deletes the work folder after the
 //! run unless `--keep-work`.
 
@@ -23,9 +29,20 @@ use kb_runner::{SandboxSpec, cleanup, run};
 
 const USAGE: &str = "usage:
   kb-sandbox run --root <dir> [--toolchain <dir>] [--work <dir>] [--keep-work] [--cpu-ms N] [--wall-ms N] [--mem-mb N] [--procs N] [--lpac] [--env K=V] -- <program> [args...]
-  kb-sandbox cleanup --root <dir> [--toolchain <dir>]";
+  kb-sandbox cleanup --root <dir> [--toolchain <dir>]
+  kb-sandbox probe
+  (Linux runs also take --mode auto|namespaces|fallback)";
 
 fn main() -> ExitCode {
+    #[cfg(target_os = "linux")]
+    {
+        let args: Vec<String> = std::env::args().skip(1).collect();
+        if let Some(cmd) = args.first() {
+            if let Some(code) = kb_runner::helper_main(cmd, &args[1..]) {
+                return code;
+            }
+        }
+    }
     match real_main() {
         Ok(code) => code,
         Err(e) => {
@@ -45,6 +62,7 @@ fn real_main() -> Result<ExitCode, String> {
     let mut limits = Limits::default_for(Language::Python);
     let mut wall_ms: Option<u64> = None;
     let mut lpac = false;
+    let mut mode = kb_runner::LinuxIsolation::Auto;
     let mut env: Vec<(String, String)> = Vec::new();
     let mut rest: Vec<String> = Vec::new();
 
@@ -60,6 +78,14 @@ fn real_main() -> Result<ExitCode, String> {
             "--mem-mb" => limits.memory_mb = parse(&value("--mem-mb")?)?,
             "--procs" => limits.max_processes = parse(&value("--procs")?)?,
             "--lpac" => lpac = true,
+            "--mode" => {
+                mode = match value("--mode")?.as_str() {
+                    "auto" => kb_runner::LinuxIsolation::Auto,
+                    "namespaces" => kb_runner::LinuxIsolation::Namespaces,
+                    "fallback" => kb_runner::LinuxIsolation::Fallback,
+                    other => return Err(format!("unknown mode {other}")),
+                }
+            }
             "--env" => {
                 let kv = value("--env")?;
                 let (k, v) = kv.split_once('=').ok_or("--env needs KEY=VALUE")?;
@@ -71,6 +97,19 @@ fn real_main() -> Result<ExitCode, String> {
             }
             other => return Err(format!("unknown option {other}")),
         }
+    }
+    if cmd == "probe" {
+        #[cfg(target_os = "linux")]
+        {
+            let s = kb_runner::linux_probe().map_err(|e| e.to_string())?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&s).map_err(|e| e.to_string())?
+            );
+            return Ok(ExitCode::SUCCESS);
+        }
+        #[cfg(not(target_os = "linux"))]
+        return Err("probe is Linux-only".into());
     }
     let root = absolute(&root.ok_or("--root is required")?)?;
     let toolchain = match toolchain {
@@ -105,6 +144,7 @@ fn real_main() -> Result<ExitCode, String> {
             spec.args = rest.collect();
             spec.read_only_dirs = vec![toolchain];
             spec.less_privileged = lpac;
+            spec.linux_isolation = mode;
             spec.env = env;
             if let Some(ms) = wall_ms {
                 spec.wall_time = Duration::from_millis(ms);
@@ -115,8 +155,9 @@ fn real_main() -> Result<ExitCode, String> {
             let _ = std::io::stdout().write_all(&o.stdout);
             let _ = std::io::stderr().write_all(&o.stderr);
             eprintln!(
-                "[kb-sandbox] termination={:?} exit={:#x} user={:?} kernel={:?} wall={:?} peak_mem={} KiB \
-                 procs(total={}, max_active={}, after={}) mem_limit_hit={} proc_limit_hit={} lpac={}",
+                "[kb-sandbox] mode={:?} termination={:?} exit={:#x} user={:?} kernel={:?} wall={:?} peak_mem={} KiB \
+                 procs(total={}, max_active={}, after={}) mem_limit_hit={} proc_limit_hit={}",
+                o.mode,
                 o.termination,
                 o.exit_code,
                 o.user_time,
@@ -128,7 +169,6 @@ fn real_main() -> Result<ExitCode, String> {
                 o.active_processes_after,
                 o.memory_limit_hit,
                 o.process_limit_hit,
-                spec.less_privileged,
             );
             Ok(ExitCode::from(u8::try_from(o.exit_code).unwrap_or(1)))
         }
@@ -149,10 +189,14 @@ fn resolve_program(name: &str, toolchain: &Path) -> PathBuf {
     if p.components().count() > 1 || p.is_absolute() {
         return p.to_path_buf();
     }
-    let exe = if p.extension().is_some() {
-        name.to_string()
+    if cfg!(windows) {
+        let exe = if p.extension().is_some() {
+            name.to_string()
+        } else {
+            format!("{name}.exe")
+        };
+        toolchain.join(exe)
     } else {
-        format!("{name}.exe")
-    };
-    toolchain.join(exe)
+        toolchain.join("bin").join(name)
+    }
 }

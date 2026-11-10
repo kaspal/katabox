@@ -22,8 +22,14 @@ jobs:
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+      - name: Install libseccomp (kb-runner, ADR 0007)
+        run: sudo apt-get update && sudo apt-get install -y libseccomp-dev
+      - name: Fetch pinned Python toolchain (Linux attack suite)
+        run: scripts/fetch-python-toolchain.sh
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
+      # Includes the Linux attack suite: namespace mode runs; fallback tests assert the
+      # refusal on kernels without Landlock ABI 6.
       - run: cargo test
       - name: Validate problem packages
         run: cargo run -p kb-pack -- validate
@@ -43,6 +49,48 @@ jobs:
         run: pwsh scripts/fetch-python-toolchain.ps1
       - run: cargo clippy -p kb-runner --all-targets -- -D warnings
       - run: cargo test -p kb-runner -- --nocapture
+
+  sandbox-linux:
+    name: Sandbox attack suite (Linux, both modes)
+    # Ubuntu 24.04 restricts unprivileged user namespaces through AppArmor, which is
+    # exactly the case fallback mode exists for.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Install libseccomp
+        run: sudo apt-get update && sudo apt-get install -y libseccomp-dev
+      - name: Fetch pinned Python toolchain
+        run: scripts/fetch-python-toolchain.sh
+      - run: cargo clippy -p kb-runner --all-targets --features unscoped-fallback-for-tests -- -D warnings
+      - name: Probe (user namespaces restricted)
+        run: cargo run -q -p kb-runner --bin kb-sandbox -- probe
+      # The runner kernel is older than 6.12 (no Landlock signal scoping), so the product
+      # refuses fallback; the test-only feature lets the suite exercise its other layers.
+      - name: Fallback mode + Auto picks fallback
+        run: >
+          cargo test -p kb-runner --features unscoped-fallback-for-tests --test attacks_linux
+          -- --nocapture fallback auto_mode probe
+      - name: Fallback refused without the test feature
+        run: cargo test -p kb-runner --test attacks_linux -- --nocapture fallback
+      - name: Allow user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Probe (user namespaces allowed)
+        run: cargo run -q -p kb-runner --bin kb-sandbox -- probe
+      - name: Namespace mode + Auto picks namespaces
+        run: cargo test -p kb-runner --test attacks_linux -- --nocapture namespaces auto_mode
+
+  licenses:
+    name: License check
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check licenses
 
   ui:
     name: UI build
