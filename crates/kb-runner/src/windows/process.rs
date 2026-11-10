@@ -31,8 +31,9 @@ use windows_sys::Win32::System::Threading::{
 use super::acl::{self, Access};
 use super::appcontainer::{self, AppContainerSid};
 use super::job::{Job, JobLimits};
-use super::{last_error, wide};
+use super::{last_error, wide, workdir};
 use crate::cmdline::quote_windows_arg;
+use crate::validate::{self, Resolved};
 use crate::{APP_CONTAINER_NAME, Outcome, SandboxError, SandboxSpec, Termination};
 
 /// From WinBase.h (lives in the large WindowsProgramming module of windows-sys).
@@ -52,26 +53,51 @@ const KILL_GRACE: Duration = Duration::from_secs(5);
 static SPAWN_LOCK: Mutex<()> = Mutex::new(());
 
 pub(crate) fn run(spec: &SandboxSpec) -> Result<Outcome, SandboxError> {
-    validate(spec)?;
+    // Validate before creating or granting anything.
+    let paths = validate::resolve(spec)?;
     let sid = appcontainer::ensure_profile(APP_CONTAINER_NAME)?;
-    appcontainer::seal_profile_storage(APP_CONTAINER_NAME, &sid)?;
-    for dir in &spec.read_only_dirs {
-        acl::grant(dir, &sid, Access::ReadExecute)?;
+    let result = grant_and_execute(spec, &paths, &sid);
+    // `execute` has returned, so its job is closed and every sandboxed process is dead.
+    let cleanup = workdir::finish(&paths.work_dir, &sid, spec.keep_work_dir);
+    match (result, cleanup) {
+        (Ok(outcome), Ok(())) => Ok(outcome),
+        (Err(e), _) | (Ok(_), Err(e)) => Err(e),
     }
-    acl::grant(&spec.work_dir, &sid, Access::ReadWriteExecute)?;
+}
 
-    let job = Arc::new(Job::new(&JobLimits {
+fn grant_and_execute(
+    spec: &SandboxSpec,
+    paths: &Resolved,
+    sid: &AppContainerSid,
+) -> Result<Outcome, SandboxError> {
+    appcontainer::seal_profile_storage(APP_CONTAINER_NAME, sid)?;
+    for dir in &paths.read_only_dirs {
+        acl::grant(dir, sid, Access::ReadExecute)?;
+    }
+    acl::grant(&paths.work_dir, sid, Access::ReadWriteExecute)?;
+    execute(spec, paths, sid)
+}
+
+/// Owns the job: whichever way this returns, the job handle closes and
+/// KILL_ON_JOB_CLOSE ends any process still in it.
+fn execute(
+    spec: &SandboxSpec,
+    paths: &Resolved,
+    sid: &AppContainerSid,
+) -> Result<Outcome, SandboxError> {
+    let job = Job::new(&JobLimits {
         cpu_time: spec.cpu_time,
         memory_bytes: spec.memory_bytes,
         max_processes: spec.max_processes,
-    })?);
+    })?;
 
     let (stdin_r, stdin_w) = pipe()?;
     let (stdout_r, stdout_w) = pipe()?;
     let (stderr_r, stderr_w) = pipe()?;
     let process = spawn(
         spec,
-        &sid,
+        paths,
+        sid,
         &job,
         [
             stdin_r.as_raw_handle(),
@@ -84,8 +110,8 @@ pub(crate) fn run(spec: &SandboxSpec) -> Result<Outcome, SandboxError> {
     drop((stdin_r, stdout_w, stderr_w));
 
     let output = Arc::new(OutputState::default());
-    let out_t = spawn_reader(stdout_r, &job, &output, spec.max_output_bytes);
-    let err_t = spawn_reader(stderr_r, &job, &output, spec.max_output_bytes);
+    let out_t = spawn_reader(stdout_r, &output, spec.max_output_bytes);
+    let err_t = spawn_reader(stderr_r, &output, spec.max_output_bytes);
     let stdin_data = spec.stdin.clone();
     let in_t = thread::spawn(move || {
         let mut f = File::from(stdin_w);
@@ -115,6 +141,7 @@ pub(crate) fn run(spec: &SandboxSpec) -> Result<Outcome, SandboxError> {
     loop {
         let now = Instant::now();
         if termination.is_none() && output.exceeded.load(Ordering::SeqCst) {
+            job.terminate(KILLED_OUTPUT);
             termination = Some(Termination::OutputLimit);
         }
         if termination.is_none() && now >= deadline {
@@ -138,9 +165,10 @@ pub(crate) fn run(spec: &SandboxSpec) -> Result<Outcome, SandboxError> {
         if all_exited || acct.active_processes == 0 {
             break;
         }
-        // The job's own CPU limit is only checked periodically by Windows and was seen
-        // overshooting 2x; enforce it from accounting too (overshoot <= one POLL).
-        if termination.is_none() && acct.user_time >= spec.cpu_time {
+        // The CPU limit is user + kernel time, enforced here from accounting (overshoot
+        // <= one POLL). The job's own limit counts user time only, and Windows checks it
+        // lazily (seen overshooting 2x), so it is just a backstop.
+        if termination.is_none() && acct.user_time + acct.kernel_time >= spec.cpu_time {
             job.terminate(KILLED_CPU_TIME);
             termination = Some(Termination::CpuTimeLimit);
         }
@@ -154,19 +182,25 @@ pub(crate) fn run(spec: &SandboxSpec) -> Result<Outcome, SandboxError> {
     }
     let wall_time = start.elapsed();
 
-    // The tree can die from our output kill before the loop sees the flag.
+    // The tree can exit right as the output cap is crossed.
     if termination.is_none() && output.exceeded.load(Ordering::SeqCst) {
         termination = Some(Termination::OutputLimit);
     }
     let acct = job.accounting();
-    if termination.is_none() && acct.user_time >= spec.cpu_time {
-        termination = Some(Termination::CpuTimeLimit); // notification lost; accounting is authoritative
+    if termination.is_none() && acct.user_time + acct.kernel_time >= spec.cpu_time {
+        termination = Some(Termination::CpuTimeLimit); // accounting is authoritative
     }
 
     let mut exit_code = 0u32;
     // SAFETY: valid process handle and out-pointer.
     if unsafe { GetExitCodeProcess(process.as_raw_handle(), &mut exit_code) } == 0 {
+        // Returning drops `job`, which kills anything left; detached readers then see EOF.
         return Err(last_error("GetExitCodeProcess"));
+    }
+    if acct.active_processes > 0 {
+        return Err(SandboxError::Internal(
+            "processes survived termination; job closed to kill them".into(),
+        ));
     }
 
     let stdout = out_t.join().unwrap_or_default();
@@ -190,47 +224,16 @@ pub(crate) fn run(spec: &SandboxSpec) -> Result<Outcome, SandboxError> {
     })
 }
 
-fn validate(spec: &SandboxSpec) -> Result<(), SandboxError> {
-    let bad = |m: String| Err(SandboxError::InvalidSpec(m));
-    if !spec.program.is_absolute() || !spec.program.is_file() {
-        return bad(format!(
-            "program must be an existing absolute path: {}",
-            spec.program.display()
-        ));
-    }
-    if !spec.work_dir.is_absolute() || !spec.work_dir.is_dir() {
-        return bad(format!(
-            "work_dir must be an existing absolute folder: {}",
-            spec.work_dir.display()
-        ));
-    }
-    for d in &spec.read_only_dirs {
-        if !d.is_absolute() || !d.is_dir() {
-            return bad(format!(
-                "read-only dir must be an existing absolute folder: {}",
-                d.display()
-            ));
-        }
-    }
-    if spec.max_processes == 0 || spec.memory_bytes == 0 || spec.cpu_time.is_zero() {
-        return bad("limits must be non-zero".into());
-    }
-    Ok(())
-}
-
 #[derive(Default)]
 struct OutputState {
     total: AtomicUsize,
     exceeded: AtomicBool,
 }
 
-fn spawn_reader(
-    h: OwnedHandle,
-    job: &Arc<Job>,
-    state: &Arc<OutputState>,
-    limit: usize,
-) -> JoinHandle<Vec<u8>> {
-    let (job, state) = (Arc::clone(job), Arc::clone(state));
+/// Reads one pipe to EOF. It only flags the cap; the wait loop does the kill, so the
+/// job is never shared with these threads.
+fn spawn_reader(h: OwnedHandle, state: &Arc<OutputState>, limit: usize) -> JoinHandle<Vec<u8>> {
+    let state = Arc::clone(state);
     thread::spawn(move || {
         let mut f = File::from(h);
         let mut buf = vec![0u8; 16 * 1024];
@@ -243,8 +246,8 @@ fn spawn_reader(
             let before = state.total.fetch_add(n, Ordering::SeqCst);
             let room = limit.saturating_sub(before);
             out.extend_from_slice(&buf[..n.min(room)]);
-            if before + n > limit && !state.exceeded.swap(true, Ordering::SeqCst) {
-                job.terminate(KILLED_OUTPUT);
+            if before + n > limit {
+                state.exceeded.store(true, Ordering::SeqCst);
             }
         }
         out
@@ -334,8 +337,8 @@ impl Drop for AttrList {
     }
 }
 
-fn command_line(spec: &SandboxSpec) -> Result<String, SandboxError> {
-    let program = spec
+fn command_line(spec: &SandboxSpec, paths: &Resolved) -> Result<String, SandboxError> {
+    let program = paths
         .program
         .to_str()
         .ok_or_else(|| SandboxError::InvalidSpec("program path is not valid Unicode".into()))?;
@@ -350,9 +353,9 @@ fn command_line(spec: &SandboxSpec) -> Result<String, SandboxError> {
 
 /// Sorted, NUL-separated, double-NUL-terminated UTF-16 environment. Never inherits
 /// the host environment.
-fn env_block(spec: &SandboxSpec) -> Vec<u16> {
+fn env_block(spec: &SandboxSpec, paths: &Resolved) -> Vec<u16> {
     let system_root = std::env::var("SystemRoot").unwrap_or_else(|_| r"C:\Windows".into());
-    let work = spec.work_dir.display().to_string();
+    let work = paths.work_dir.display().to_string();
     // CreateProcess fails with ERROR_ENVVAR_NOT_FOUND for an AppContainer unless
     // LOCALAPPDATA is present; Windows then rewrites LOCALAPPDATA, TEMP and TMP to the
     // (sealed, unwritable) profile folder, so the child cannot rely on TEMP.
@@ -382,6 +385,7 @@ fn env_block(spec: &SandboxSpec) -> Vec<u16> {
 
 fn spawn(
     spec: &SandboxSpec,
+    paths: &Resolved,
     sid: &AppContainerSid,
     job: &Job,
     stdio: [HANDLE; 3],
@@ -433,13 +437,13 @@ fn spawn(
     si.StartupInfo.hStdError = stdio[2];
     si.lpAttributeList = attrs.ptr();
 
-    let app = wide(&spec.program);
-    let mut cmd: Vec<u16> = command_line(spec)?
+    let app = wide(&paths.program);
+    let mut cmd: Vec<u16> = command_line(spec, paths)?
         .encode_utf16()
         .chain(std::iter::once(0))
         .collect();
-    let env = env_block(spec);
-    let cwd = wide(&spec.work_dir);
+    let env = env_block(spec, paths);
+    let cwd = wide(&paths.work_dir);
     // SAFETY: plain-old-data out-struct.
     let mut pi: PROCESS_INFORMATION = unsafe { std::mem::zeroed() };
     let flags = EXTENDED_STARTUPINFO_PRESENT

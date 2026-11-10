@@ -8,6 +8,7 @@ mod acl;
 mod appcontainer;
 mod job;
 mod process;
+mod workdir;
 
 use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;

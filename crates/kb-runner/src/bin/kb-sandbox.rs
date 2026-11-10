@@ -1,13 +1,18 @@
 //! Manual test command for the sandbox.
 //!
 //! ```text
-//! kb-sandbox run --toolchain <dir> [--work <dir>] [--cpu-ms N] [--wall-ms N]
-//!                [--mem-mb N] [--procs N] [--lpac] [--env K=V] -- <program> [args...]
-//! kb-sandbox cleanup --toolchain <dir>
+//! kb-sandbox run --root <dir> [--toolchain <dir>] [--work <dir>] [--keep-work]
+//!                [--cpu-ms N] [--wall-ms N] [--mem-mb N] [--procs N] [--lpac]
+//!                [--env K=V] -- <program> [args...]
+//! kb-sandbox cleanup --root <dir> [--toolchain <dir>]
 //! ```
 //!
-//! A bare program name (e.g. `python`) is resolved to `<toolchain>/<name>.exe`.
-//! Without `--work`, a fresh folder under the system temp dir is used and removed.
+//! `--root` is the KataBox sandbox root (must contain `.katabox-sandbox-root`; the dev
+//! root `target/katabox` is created by `scripts/fetch-python-toolchain.ps1`).
+//! `--toolchain` defaults to `<root>/toolchains/python-3.14`. A bare program name
+//! (e.g. `python`) is resolved to `<toolchain>/<name>.exe`. Without `--work`, a fresh
+//! `<root>/runs/cli-<pid>` folder is used; the runner deletes the work folder after the
+//! run unless `--keep-work`.
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -17,8 +22,8 @@ use kb_core::{Language, Limits};
 use kb_runner::{SandboxSpec, cleanup, run};
 
 const USAGE: &str = "usage:
-  kb-sandbox run --toolchain <dir> [--work <dir>] [--cpu-ms N] [--wall-ms N] [--mem-mb N] [--procs N] [--lpac] [--env K=V] -- <program> [args...]
-  kb-sandbox cleanup --toolchain <dir>";
+  kb-sandbox run --root <dir> [--toolchain <dir>] [--work <dir>] [--keep-work] [--cpu-ms N] [--wall-ms N] [--mem-mb N] [--procs N] [--lpac] [--env K=V] -- <program> [args...]
+  kb-sandbox cleanup --root <dir> [--toolchain <dir>]";
 
 fn main() -> ExitCode {
     match real_main() {
@@ -33,8 +38,10 @@ fn main() -> ExitCode {
 fn real_main() -> Result<ExitCode, String> {
     let mut args = std::env::args().skip(1);
     let cmd = args.next().ok_or("missing command")?;
+    let mut root: Option<PathBuf> = None;
     let mut toolchain: Option<PathBuf> = None;
     let mut work: Option<PathBuf> = None;
+    let mut keep_work = false;
     let mut limits = Limits::default_for(Language::Python);
     let mut wall_ms: Option<u64> = None;
     let mut lpac = false;
@@ -44,8 +51,10 @@ fn real_main() -> Result<ExitCode, String> {
     while let Some(a) = args.next() {
         let mut value = |name: &str| args.next().ok_or(format!("{name} needs a value"));
         match a.as_str() {
+            "--root" => root = Some(value("--root")?.into()),
             "--toolchain" => toolchain = Some(value("--toolchain")?.into()),
             "--work" => work = Some(value("--work")?.into()),
+            "--keep-work" => keep_work = true,
             "--cpu-ms" => limits.cpu_time_ms = parse(&value("--cpu-ms")?)?,
             "--wall-ms" => wall_ms = Some(parse(&value("--wall-ms")?)?),
             "--mem-mb" => limits.memory_mb = parse(&value("--mem-mb")?)?,
@@ -63,7 +72,11 @@ fn real_main() -> Result<ExitCode, String> {
             other => return Err(format!("unknown option {other}")),
         }
     }
-    let toolchain = absolute(&toolchain.ok_or("--toolchain is required")?)?;
+    let root = absolute(&root.ok_or("--root is required")?)?;
+    let toolchain = match toolchain {
+        Some(t) => absolute(&t)?,
+        None => root.join("toolchains").join("python-3.14"),
+    };
 
     match cmd.as_str() {
         "cleanup" => {
@@ -76,17 +89,19 @@ fn real_main() -> Result<ExitCode, String> {
             let program = rest.next().ok_or("missing program after --")?;
             let program = resolve_program(&program, &toolchain);
 
-            let (work_dir, temp) = match work {
-                Some(w) => (absolute(&w)?, false),
+            let work_dir = match work {
+                Some(w) => absolute(&w)?,
                 None => {
-                    let dir =
-                        std::env::temp_dir().join(format!("kb-sandbox-{}", std::process::id()));
+                    let dir = root
+                        .join("runs")
+                        .join(format!("cli-{}", std::process::id()));
                     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-                    (dir, true)
+                    dir
                 }
             };
 
-            let mut spec = SandboxSpec::new(program, &work_dir, &limits);
+            let mut spec = SandboxSpec::new(&root, program, &work_dir, &limits);
+            spec.keep_work_dir = keep_work;
             spec.args = rest.collect();
             spec.read_only_dirs = vec![toolchain];
             spec.less_privileged = lpac;
@@ -94,11 +109,7 @@ fn real_main() -> Result<ExitCode, String> {
             if let Some(ms) = wall_ms {
                 spec.wall_time = Duration::from_millis(ms);
             }
-            let result = run(&spec);
-            if temp {
-                let _ = std::fs::remove_dir_all(&work_dir);
-            }
-            let o = result.map_err(|e| e.to_string())?;
+            let o = run(&spec).map_err(|e| e.to_string())?;
 
             use std::io::Write;
             let _ = std::io::stdout().write_all(&o.stdout);

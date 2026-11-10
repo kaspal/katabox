@@ -1,8 +1,8 @@
-//! Attack suite for the Windows sandbox (ADR 0002). Every attack must be stopped or
-//! blocked. Needs the pinned Python toolchain:
+//! Attack suite for the Windows sandbox (ADR 0002, 0006). Every attack must be stopped
+//! or blocked. Needs the dev sandbox root with the pinned Python toolchain:
 //!
 //! ```text
-//! pwsh scripts/fetch-python-toolchain.ps1
+//! pwsh scripts/fetch-python-toolchain.ps1      # creates target/katabox
 //! cargo test -p kb-runner --test attacks_windows -- --nocapture
 //! ```
 //!
@@ -11,11 +11,12 @@
 
 use std::net::TcpListener;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::Mutex;
 use std::time::Duration;
 
 use kb_core::{Language, Limits};
-use kb_runner::{Outcome, SandboxSpec, Termination, run};
+use kb_runner::{Outcome, ROOT_MARKER, SandboxError, SandboxSpec, Termination, run};
 
 static SERIAL: Mutex<()> = Mutex::new(());
 
@@ -32,23 +33,30 @@ def t(label, fn):
         print(label, "ERR", getattr(e, "winerror", None), type(e).__name__, flush=True)
 "#;
 
-fn toolchain() -> PathBuf {
-    let dir = std::env::var_os("KB_TEST_PYTHON_HOME")
+/// The KataBox-owned dev sandbox root (`target/katabox`, or `KB_TEST_ROOT`).
+fn sandbox_root() -> PathBuf {
+    let root = std::env::var_os("KB_TEST_ROOT")
         .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/toolchains/python-3.14")
-        });
-    let dir = std::path::absolute(dir).unwrap();
+        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/katabox"));
+    let root = std::path::absolute(root).unwrap();
     assert!(
-        dir.join("python.exe").is_file(),
-        "Python toolchain missing at {}. Run: pwsh scripts/fetch-python-toolchain.ps1",
-        dir.display()
+        root.join(ROOT_MARKER).is_file() && toolchain_in(&root).join("python.exe").is_file(),
+        "sandbox root or Python toolchain missing at {}. Run: pwsh scripts/fetch-python-toolchain.ps1",
+        root.display()
     );
-    dir
+    root
 }
 
-/// Per-test folder: `work/` is the sandbox's only writable folder, `secret/` is a
-/// sibling the sandbox must not see.
+fn toolchain_in(root: &Path) -> PathBuf {
+    root.join("toolchains").join("python-3.14")
+}
+
+fn toolchain() -> PathBuf {
+    toolchain_in(&sandbox_root())
+}
+
+/// Per-test folder `<root>/runs/<name>-<pid>`: `work/` is the sandbox's only writable
+/// folder (deleted by the runner after each run), `secret/` is a sibling it must not see.
 struct Arena {
     root: PathBuf,
     work: PathBuf,
@@ -57,8 +65,9 @@ struct Arena {
 
 impl Arena {
     fn new(name: &str) -> Self {
-        let root = Path::new(env!("CARGO_TARGET_TMPDIR"))
-            .join(format!("kbsb-{name}-{}", std::process::id()));
+        let root = sandbox_root()
+            .join("runs")
+            .join(format!("{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
         let work = root.join("work");
         let secret = root.join("secret");
@@ -68,11 +77,23 @@ impl Arena {
         Arena { root, work, secret }
     }
 
+    /// A fresh, empty work folder next to `work/`.
+    fn new_work(&self, name: &str) -> PathBuf {
+        let dir = self.root.join(name);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
     fn python(&self, code: &str, args: &[&str]) -> SandboxSpec {
+        self.python_in(&self.work, code, args)
+    }
+
+    fn python_in(&self, work: &Path, code: &str, args: &[&str]) -> SandboxSpec {
         let tc = toolchain();
         let mut spec = SandboxSpec::new(
+            sandbox_root(),
             tc.join("python.exe"),
-            &self.work,
+            work,
             &Limits::default_for(Language::Python),
         );
         let mut full = String::from(PRELUDE);
@@ -84,6 +105,29 @@ impl Arena {
         spec.args.extend(args.iter().map(|s| s.to_string()));
         spec.read_only_dirs = vec![tc];
         spec
+    }
+}
+
+/// `icacls` listing of `p`, as the host sees it.
+fn icacls(p: &Path) -> String {
+    let out = Command::new("icacls").arg(p).output().expect("run icacls");
+    String::from_utf8_lossy(&out.stdout).into_owned()
+}
+
+/// No AppContainer SID (S-1-15-2-…) and no ALL APPLICATION PACKAGES entry on `p`.
+fn assert_no_package_aces(p: &Path) {
+    let acl = icacls(p);
+    assert!(
+        !acl.contains("S-1-15-2-") && !acl.contains("APPLICATION PACKAGE"),
+        "sandbox-reachable permission left on {}:\n{acl}",
+        p.display()
+    );
+}
+
+fn expect_rejected(name: &str, spec: &SandboxSpec) {
+    match run(spec) {
+        Err(SandboxError::InvalidSpec(msg)) => eprintln!("[{name}] rejected: {msg}"),
+        other => panic!("[{name}] spec was not rejected: {other:?}"),
     }
 }
 
@@ -169,15 +213,14 @@ fn infinite_loop_hits_cpu_limit() {
     let spec = a.python("while True:\n    pass\n", &[]); // cpu 2 s, wall 6 s
     let o = go("infinite-loop", &spec);
     assert_eq!(o.termination, Termination::CpuTimeLimit);
+    let cpu = o.user_time + o.kernel_time;
     assert!(
-        o.user_time >= Duration::from_millis(1_900),
-        "killed too early: {:?}",
-        o.user_time
+        cpu >= Duration::from_millis(1_900),
+        "killed too early: {cpu:?}"
     );
     assert!(
-        o.user_time < Duration::from_millis(2_500),
-        "CPU limit overshot: {:?}",
-        o.user_time
+        cpu < Duration::from_millis(2_500),
+        "CPU limit overshot: {cpu:?}"
     );
     assert!(
         o.wall_time < Duration::from_secs(4),
@@ -237,17 +280,11 @@ fn fork_bomb_is_capped_and_cleaned_up() {
     let a = Arena::new("forkbomb");
     // Every process spawns copies of itself forever.
     let bomb = "import subprocess, sys, time\ncode = sys.argv[1]\nwhile True:\n    try:\n        subprocess.Popen([sys.executable, '-I', '-B', '-c', code, code])\n    except OSError:\n        time.sleep(0.01)\n";
-    let tc = toolchain();
-    let mut spec = SandboxSpec::new(
-        tc.join("python.exe"),
-        &a.work,
-        &Limits::default_for(Language::Python),
-    );
+    let mut spec = a.python("", &[]);
     spec.args = ["-I", "-B", "-c", bomb, bomb]
         .iter()
         .map(|s| s.to_string())
         .collect();
-    spec.read_only_dirs = vec![tc];
     spec.wall_time = Duration::from_secs(5);
     spec.max_output_bytes = 4 * MB as usize; // don't let stderr noise end the test early
     let o = go("fork-bomb", &spec);
@@ -432,4 +469,312 @@ fn known_gap_system_files_readable_without_lpac() {
         ),
     );
     assert_allowed(&o, "read-win.ini");
+}
+
+// --- CPU limit counts kernel time --------------------------------------------------
+
+#[test]
+fn kernel_time_counts_toward_cpu_limit() {
+    let _s = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let a = Arena::new("kernelburn");
+    // Rewriting 1 MiB into the file cache is ~96% kernel time (measured); a limit on
+    // user time alone would let this run until the 6 s wall-clock limit.
+    let code = "fd = os.open('burn.bin', os.O_RDWR | os.O_CREAT | os.O_BINARY)\nbuf = b'x' * (1 << 20)\nwhile True:\n    os.lseek(fd, 0, 0)\n    os.write(fd, buf)\n";
+    let o = go("kernel-burn", &a.python(code, &[]));
+    assert_eq!(o.termination, Termination::CpuTimeLimit);
+    let cpu = o.user_time + o.kernel_time;
+    assert!(
+        o.kernel_time >= Duration::from_millis(1_000),
+        "test did not burn kernel time: {:?}",
+        o.kernel_time
+    );
+    assert!(
+        cpu >= Duration::from_millis(1_900),
+        "killed too early: {cpu:?}"
+    );
+    assert!(
+        cpu < Duration::from_millis(2_500),
+        "CPU limit overshot: {cpu:?}"
+    );
+    assert!(
+        o.wall_time < Duration::from_millis(3_500),
+        "took too long: {:?}",
+        o.wall_time
+    );
+}
+
+// --- Nothing stays writable between runs --------------------------------------------
+
+/// Python that leaves things behind: nested files, a read-only file, junctions written
+/// with raw FSCTL_SET_REPARSE_POINT (to the secret folder = argv[1], to the toolchain =
+/// argv[2], and a loop back into its own folder), and icacls grants to ALL APPLICATION
+/// PACKAGES (S-1-15-2-1).
+const LEAVE_TRACES: &str = r#"
+open('run1.txt', 'w').write('written by run 1')
+os.makedirs(os.path.join('sub', 'deeper'))
+open(os.path.join('sub', 'deeper', 'inner.txt'), 'w').write('x')
+import stat
+open('readonly.txt', 'w').write('x'); os.chmod('readonly.txt', stat.S_IREAD)
+
+import ctypes, ctypes.wintypes as w, struct
+k32 = ctypes.WinDLL('kernel32', use_last_error=True)
+k32.CreateFileW.restype = w.HANDLE
+k32.CreateFileW.argtypes = [w.LPCWSTR, w.DWORD, w.DWORD, w.LPVOID, w.DWORD, w.DWORD, w.HANDLE]
+k32.DeviceIoControl.argtypes = [w.HANDLE, w.DWORD, w.LPVOID, w.DWORD, w.LPVOID, w.DWORD,
+                                ctypes.POINTER(w.DWORD), w.LPVOID]
+def raw_junction(link, target):
+    os.mkdir(link)
+    h = k32.CreateFileW(link, 0x40000000, 0, None, 3, 0x02000000 | 0x00200000, None)
+    if h in (None, ctypes.c_void_p(-1).value):
+        raise ctypes.WinError(ctypes.get_last_error())
+    sub = ('\\??\\' + target).encode('utf-16-le'); prn = target.encode('utf-16-le')
+    body = struct.pack('<HHHH', 0, len(sub), len(sub) + 2, len(prn)) + sub + b'\0\0' + prn + b'\0\0'
+    buf = struct.pack('<IHH', 0xA0000003, len(body), 0) + body
+    n = w.DWORD()
+    ok = k32.DeviceIoControl(h, 0x000900A4, buf, len(buf), None, 0, ctypes.byref(n), None)
+    k32.CloseHandle(h)
+    if not ok:
+        raise ctypes.WinError(ctypes.get_last_error())
+    return os.readlink(link)
+t('junction-to-secret', lambda: raw_junction(os.path.abspath('link-secret'), sys.argv[1]))
+t('junction-to-toolchain', lambda: raw_junction(os.path.abspath('link-tool'), sys.argv[2]))
+t('junction-to-self', lambda: raw_junction(os.path.abspath('link-self'), os.path.abspath('sub')))
+
+import subprocess
+icacls = os.path.join(os.environ['SYSTEMROOT'], 'System32', 'icacls.exe')
+def grant(target, perm):
+    r = subprocess.run([icacls, target, '/grant', perm], capture_output=True, text=True)
+    print('  icacls', target, '->', (r.stdout + r.stderr).strip().replace('\n', ' / ')[:110])
+    if r.returncode:
+        raise PermissionError(r.returncode)
+for label, target, perm in [('grant-aap-file', 'run1.txt', '*S-1-15-2-1:(F)'),
+                            ('grant-aap-subdir', 'sub', '*S-1-15-2-1:(OI)(CI)(F)'),
+                            ('grant-aap-workdir', '.', '*S-1-15-2-1:(OI)(CI)(F)')]:
+    t(label, lambda: grant(target, perm))
+"#;
+
+/// The junction escapes must fail; Windows only lets a sandboxed process point a mount
+/// point at a folder it can write to.
+fn assert_junction_escapes_blocked(o: &Outcome) {
+    assert_blocked(o, "junction-to-secret");
+    assert_blocked(o, "junction-to-toolchain");
+}
+
+/// The toolchain survived cleanup untouched and still runs.
+fn assert_toolchain_intact(a: &Arena) {
+    assert!(toolchain().join("python.exe").is_file());
+    assert!(toolchain().join("Lib").join("os.py").is_file());
+    let w = a.new_work("toolchain-check");
+    let o = go(
+        "toolchain-still-runs",
+        &a.python_in(&w, "print('alive')\n", &[]),
+    );
+    assert_eq!(String::from_utf8_lossy(&o.stdout).trim(), "alive");
+}
+
+/// Python run in a *different* work folder, attacking the first run's folder (argv[1]).
+const ATTACK_RUN1: &str = r#"
+d = sys.argv[1]
+t('read-run1-file', lambda: open(os.path.join(d, 'run1.txt')).read())
+t('read-run1-nested', lambda: open(os.path.join(d, 'sub', 'deeper', 'inner.txt')).read())
+t('list-run1-dir', lambda: os.listdir(d))
+t('write-run1-dir', lambda: open(os.path.join(d, 'new.txt'), 'w').write('x'))
+t('append-run1-file', lambda: open(os.path.join(d, 'run1.txt'), 'a').write('x'))
+t('delete-run1-file', lambda: os.remove(os.path.join(d, 'run1.txt')))
+t('mkdir-run1-sub', lambda: os.mkdir(os.path.join(d, 'sub', 'pwned')))
+"#;
+
+const ATTACK_LABELS: [&str; 7] = [
+    "read-run1-file",
+    "read-run1-nested",
+    "list-run1-dir",
+    "write-run1-dir",
+    "append-run1-file",
+    "delete-run1-file",
+    "mkdir-run1-sub",
+];
+
+#[test]
+fn work_dir_is_deleted_and_second_run_cannot_touch_it() {
+    let _s = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let a = Arena::new("deleted");
+    let tc = toolchain();
+    let run1 = a.new_work("run1");
+    let o = go(
+        "run1-default",
+        &a.python_in(
+            &run1,
+            LEAVE_TRACES,
+            &[a.secret.to_str().unwrap(), tc.to_str().unwrap()],
+        ),
+    );
+    assert_eq!(
+        o.exit_code,
+        0,
+        "run 1 failed: {}",
+        String::from_utf8_lossy(&o.stderr)
+    );
+    assert_junction_escapes_blocked(&o);
+    assert!(!run1.exists(), "work folder was not deleted");
+    assert_toolchain_intact(&a);
+    // Deleting must not have followed the junction into the secret folder.
+    assert_eq!(
+        std::fs::read_to_string(a.secret.join("canary.txt")).unwrap(),
+        "TOP SECRET"
+    );
+    assert_no_package_aces(&a.secret);
+
+    let run2 = a.new_work("run2");
+    let o = go(
+        "run2-vs-deleted-run1",
+        &a.python_in(&run2, ATTACK_RUN1, &[run1.to_str().unwrap()]),
+    );
+    for label in ATTACK_LABELS {
+        assert_blocked(&o, label);
+    }
+    assert!(!run1.exists(), "run 2 recreated run 1's folder");
+}
+
+#[test]
+fn kept_work_dir_is_sealed_against_later_runs() {
+    let _s = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let a = Arena::new("kept");
+    let tc = toolchain();
+    let run1 = a.new_work("run1");
+    let mut spec = a.python_in(
+        &run1,
+        LEAVE_TRACES,
+        &[a.secret.to_str().unwrap(), tc.to_str().unwrap()],
+    );
+    spec.keep_work_dir = true;
+    let o = go("run1-keep", &spec);
+    assert_eq!(
+        o.exit_code,
+        0,
+        "run 1 failed: {}",
+        String::from_utf8_lossy(&o.stderr)
+    );
+    assert_junction_escapes_blocked(&o);
+    assert_allowed(&o, "junction-to-self"); // the one link it can make; cleanup must drop it
+
+    // Host view after run 1: folder kept, links removed, no sandbox-reachable entry anywhere.
+    assert!(run1.join("run1.txt").is_file());
+    assert!(
+        std::fs::symlink_metadata(run1.join("link-self")).is_err(),
+        "junction left behind"
+    );
+    assert!(
+        run1.join("sub").join("deeper").join("inner.txt").is_file(),
+        "link target was harmed"
+    );
+    assert_toolchain_intact(&a);
+    for p in [
+        run1.clone(),
+        run1.join("run1.txt"),
+        run1.join("readonly.txt"),
+        run1.join("sub"),
+        run1.join("sub").join("deeper"),
+        run1.join("sub").join("deeper").join("inner.txt"),
+    ] {
+        assert_no_package_aces(&p);
+    }
+
+    let run2 = a.new_work("run2");
+    let o = go(
+        "run2-vs-kept-run1",
+        &a.python_in(&run2, ATTACK_RUN1, &[run1.to_str().unwrap()]),
+    );
+    for label in ATTACK_LABELS {
+        assert_blocked(&o, label);
+    }
+    assert_eq!(
+        std::fs::read_to_string(run1.join("run1.txt")).unwrap(),
+        "written by run 1"
+    );
+    assert!(!run1.join("new.txt").exists());
+}
+
+// --- Specs must stay inside the KataBox root ----------------------------------------
+
+#[test]
+fn spec_pointing_at_user_profile_is_rejected() {
+    let _s = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let a = Arena::new("profile");
+    let profile = PathBuf::from(std::env::var_os("USERPROFILE").unwrap());
+    let profile_acl_before = icacls(&profile);
+    let base = a.python("print('should never run')\n", &[]);
+
+    let mut s = base.clone();
+    s.work_dir = profile.clone();
+    expect_rejected("work_dir=USERPROFILE", &s);
+
+    let mut s = base.clone();
+    s.read_only_dirs.push(profile.clone());
+    expect_rejected("read_only_dirs+=USERPROFILE", &s);
+
+    let mut s = base.clone();
+    s.sandbox_root = profile.clone();
+    expect_rejected("sandbox_root=USERPROFILE", &s);
+
+    let mut s = base.clone();
+    s.sandbox_root = profile.parent().unwrap().to_path_buf();
+    expect_rejected("sandbox_root=parent of USERPROFILE", &s);
+
+    let mut s = base.clone();
+    s.work_dir = profile.join("Documents");
+    expect_rejected("work_dir=USERPROFILE\\Documents (outside root)", &s);
+
+    let mut s = base.clone();
+    s.work_dir = PathBuf::from(r"C:\");
+    expect_rejected("work_dir=C:\\", &s);
+
+    let mut s = base.clone();
+    s.read_only_dirs.push(PathBuf::from(r"C:\"));
+    expect_rejected("read_only_dirs+=C:\\", &s);
+
+    // A junction inside the root that points at the profile must not pass as "inside".
+    let link = a.root.join("profile-link");
+    let made = Command::new("cmd")
+        .args(["/c", "mklink", "/J"])
+        .arg(&link)
+        .arg(&profile)
+        .output()
+        .unwrap();
+    assert!(made.status.success(), "mklink failed: {made:?}");
+    let mut s = base.clone();
+    s.work_dir = link.clone();
+    expect_rejected("work_dir=junction to USERPROFILE", &s);
+    std::fs::remove_dir(&link).unwrap(); // removes the junction only
+
+    // Nothing was granted or deleted along the way.
+    assert!(profile.is_dir());
+    assert_eq!(
+        icacls(&profile),
+        profile_acl_before,
+        "user profile ACL changed"
+    );
+    assert_no_package_aces(&profile);
+}
+
+#[test]
+fn work_dir_with_preexisting_link_is_rejected() {
+    let _s = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let a = Arena::new("prelink");
+    let link = a.work.join("link");
+    let made = Command::new("cmd")
+        .args(["/c", "mklink", "/J"])
+        .arg(&link)
+        .arg(&a.secret)
+        .output()
+        .unwrap();
+    assert!(made.status.success(), "mklink failed: {made:?}");
+    expect_rejected(
+        "work_dir containing a junction",
+        &a.python("print(1)\n", &[]),
+    );
+    assert_no_package_aces(&a.secret);
+    assert!(
+        a.work.is_dir(),
+        "rejected spec must not delete the work folder"
+    );
 }

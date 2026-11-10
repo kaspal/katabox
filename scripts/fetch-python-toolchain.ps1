@@ -2,13 +2,22 @@
 # Windows sandbox attack suite. This is NOT the product download path (that lives in
 # kb-toolchain and needs maintainer sign-off); it only feeds `cargo test -p kb-runner`.
 #
-# Usage: pwsh scripts/fetch-python-toolchain.ps1 [-Dest target/toolchains/python-3.14]
+# Also creates the dev sandbox root (target/katabox, marked with .katabox-sandbox-root),
+# which mirrors the app layout: <root>/toolchains/<runtime> and <root>/runs/<run>.
+#
+# Usage: pwsh scripts/fetch-python-toolchain.ps1 [-Root target/katabox]
 
 param(
-    [string]$Dest = (Join-Path $PSScriptRoot "..\target\toolchains\python-3.14")
+    [string]$Root = (Join-Path $PSScriptRoot "..\target\katabox")
 )
 
 $ErrorActionPreference = "Stop"
+
+$Root = [System.IO.Path]::GetFullPath($Root)
+New-Item -ItemType Directory -Force (Join-Path $Root "runs") | Out-Null
+$Marker = Join-Path $Root ".katabox-sandbox-root"
+if (-not (Test-Path $Marker)) { New-Item -ItemType File $Marker | Out-Null }
+$Dest = Join-Path $Root "toolchains\python-3.14"
 
 $Release = "20261026"
 $Asset = "cpython-3.14.10+$Release-x86_64-pc-windows-msvc-install_only.tar.gz"
@@ -16,13 +25,13 @@ $Asset = "cpython-3.14.10+$Release-x86_64-pc-windows-msvc-install_only.tar.gz"
 $Sha256 = "98bbe6a0d798bcbad142e96e5930a330e4dc407638e898b515c51eb73a27580d"
 $Url = "https://github.com/astral-sh/python-build-standalone/releases/download/$Release/" + [uri]::EscapeDataString($Asset)
 
-$Dest = [System.IO.Path]::GetFullPath($Dest)
 if (Test-Path (Join-Path $Dest "python.exe")) {
     Write-Host "Toolchain already present at $Dest"
     exit 0
 }
 
 $Parent = Split-Path $Dest -Parent
+New-Item -ItemType Directory -Force $Parent | Out-Null
 $Work = Join-Path $Parent ("_fetch-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Force $Work | Out-Null
 try {

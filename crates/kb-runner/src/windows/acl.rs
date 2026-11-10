@@ -14,9 +14,10 @@ use windows_sys::Win32::Security::Authorization::{
     TRUSTEE_IS_SID, TRUSTEE_IS_UNKNOWN, TRUSTEE_W,
 };
 use windows_sys::Win32::Security::{
-    ACCESS_ALLOWED_ACE, ACL, CONTAINER_INHERIT_ACE, DACL_SECURITY_INFORMATION, EqualSid, GetAce,
-    INHERITED_ACE, NO_INHERITANCE, OBJECT_INHERIT_ACE, PSECURITY_DESCRIPTOR, PSID,
-    SUB_CONTAINERS_AND_OBJECTS_INHERIT,
+    ACCESS_ALLOWED_ACE, ACL, ACL_REVISION, CONTAINER_INHERIT_ACE, DACL_SECURITY_INFORMATION,
+    EqualSid, GetAce, INHERITED_ACE, InitializeAcl, NO_INHERITANCE, OBJECT_INHERIT_ACE,
+    PSECURITY_DESCRIPTOR, PSID, SUB_CONTAINERS_AND_OBJECTS_INHERIT,
+    UNPROTECTED_DACL_SECURITY_INFORMATION,
 };
 use windows_sys::Win32::Storage::FileSystem::{
     DELETE, FILE_GENERIC_EXECUTE, FILE_GENERIC_READ, FILE_GENERIC_WRITE,
@@ -24,7 +25,7 @@ use windows_sys::Win32::Storage::FileSystem::{
 use windows_sys::Win32::System::SystemServices::ACCESS_ALLOWED_ACE_TYPE;
 
 use super::appcontainer::AppContainerSid;
-use super::wide;
+use super::{last_error, wide};
 use crate::SandboxError;
 
 #[derive(Clone, Copy)]
@@ -180,6 +181,40 @@ pub(crate) fn grant(
         Trustee: trustee(sid),
     };
     apply(&wpath, SE_FILE_OBJECT, &ea, dacl)
+}
+
+/// Drop every explicit entry on `path` and turn inheritance back on, so it carries only
+/// what its parent passes down. Undoes anything the sandbox set on its own files.
+/// `path` must not be a link: Windows would apply this to the link target.
+pub(crate) fn reset_to_inherited(path: &Path) -> Result<(), SandboxError> {
+    let wpath = wide(path);
+    // An ACL with no entries: header only, 8 bytes, DWORD-aligned via u64 storage.
+    let mut buf = [0u64; 1];
+    let empty = buf.as_mut_ptr() as *mut ACL;
+    // SAFETY: `buf` is exactly size_of::<ACL>() bytes and suitably aligned.
+    if unsafe { InitializeAcl(empty, size_of::<ACL>() as u32, ACL_REVISION) } == 0 {
+        return Err(last_error("InitializeAcl"));
+    }
+    let _lock = ACL_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    // SAFETY: NUL-terminated path; `empty` is a valid ACL that outlives the call.
+    let err = unsafe {
+        SetNamedSecurityInfoW(
+            wpath.as_ptr(),
+            SE_FILE_OBJECT,
+            DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION,
+            null_mut(),
+            null_mut(),
+            empty,
+            std::ptr::null(),
+        )
+    };
+    if err != 0 {
+        return Err(SandboxError::Win32 {
+            op: "SetNamedSecurityInfoW (reset)",
+            code: err,
+        });
+    }
+    Ok(())
 }
 
 /// Remove every explicit entry for the AppContainer SID from `path`. Missing paths are ignored.
