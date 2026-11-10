@@ -1,6 +1,6 @@
 # 9. PHP and Rust in the judge
 
-Date: 2026-11-10 · Status: proposed
+Date: 2026-11-10 · Status: accepted
 
 ## Context
 ADR 0008 defined the judge protocol for Python and TypeScript. PHP and Rust need runtimes

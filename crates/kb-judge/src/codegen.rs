@@ -128,10 +128,9 @@ function twoSum(array $nums, int $target): array {
     fn rust_stub() {
         assert_eq!(
             starter_code(Language::Rust, &two_sum()).unwrap(),
-            "pub fn two_sum(nums: Vec<i64>, target: i64) -> Vec<i64> {
-    todo!()
-}
-"
+            "pub fn two_sum(nums: Vec<i64>, target: i64) -> Vec<i64> {\n    \
+             // Do not write `fn main`: KataBox provides it and calls this function.\n    \
+             todo!()\n}\n"
         );
     }
 

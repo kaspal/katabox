@@ -1,3 +1,4 @@
 pub fn {{ function }}({% for p in params %}{{ p.name }}: {{ p.type }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {{ returns }} {
+    // Do not write `fn main`: KataBox provides it and calls this function.
     todo!()
 }
