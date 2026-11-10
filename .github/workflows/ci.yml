@@ -24,7 +24,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install libseccomp (kb-runner, ADR 0007)
         run: sudo apt-get update && sudo apt-get install -y libseccomp-dev
-      - name: Fetch pinned Python toolchain (Linux attack suite)
+      - name: Fetch pinned Python and Node toolchains (Linux attack suite)
         run: scripts/fetch-python-toolchain.sh
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
@@ -35,7 +35,7 @@ jobs:
         run: cargo run -p kb-pack -- validate
 
   sandbox-windows:
-    name: Sandbox attack suite (Windows)
+    name: Sandbox attack suite + judge (Windows)
     # Same minutes policy as the Windows desktop job: main only until the repo is public.
     if: github.event_name == 'push'
     runs-on: windows-latest
@@ -45,10 +45,12 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - name: Fetch pinned Python toolchain
+      - name: Fetch pinned Python and Node toolchains
         run: pwsh scripts/fetch-python-toolchain.ps1
-      - run: cargo clippy -p kb-runner --all-targets -- -D warnings
+      - run: cargo clippy -p kb-runner -p kb-judge --all-targets -- -D warnings
       - run: cargo test -p kb-runner -- --nocapture
+      # Judge end-to-end tests on two-sum (Python + TypeScript in the sandbox).
+      - run: cargo test -p kb-judge
 
   sandbox-linux:
     name: Sandbox attack suite (Linux, both modes)

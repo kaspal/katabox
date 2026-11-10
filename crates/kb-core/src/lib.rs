@@ -151,16 +151,80 @@ impl Limits {
     }
 }
 
+/// Stable, machine-readable identifier of a judge message. The UI translates by code;
+/// the English `text` next to it is for logs, the CLI and as a fallback. Serialized in
+/// snake_case: **never rename a variant**, only add new ones.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MessageCode {
+    // Checker.
+    /// The return value differs from the expected output.
+    OutputMismatch,
+    /// A custom checker was asked to run outside the sandbox.
+    CustomCheckerUnsupported,
+    // Compilation.
+    /// The source does not parse (compiler or parser output in the text).
+    SyntaxError,
+    /// TypeScript syntax that type stripping cannot remove (`enum`, `namespace`, ...).
+    UnsupportedSyntax,
+    /// The solution does not define or export the required function.
+    FunctionNotFound,
+    // Runtime, reported by the harness.
+    /// The solution raised while its module was loading (traceback in the text).
+    LoadError,
+    /// The function raised (traceback in the text).
+    Exception,
+    /// The return value cannot be converted to JSON.
+    ReturnNotSerializable,
+    /// The language runtime reported running out of memory (e.g. Python `MemoryError`).
+    OutOfMemory,
+    /// The test printed more than the per-test output cap.
+    TooMuchOutput,
+    // Runtime, decided by the judge from the sandbox outcome.
+    /// The batch hit its CPU or wall-clock limit during this test.
+    TimeLimit,
+    /// The batch hit the sandbox's total output limit during this test.
+    OutputLimit,
+    /// The batch hit the memory limit during this test.
+    MemoryLimit,
+    /// The process exited or crashed during this test (exit code in the text).
+    ProcessExited,
+    // Internal errors (never the user's fault).
+    /// The harness stopped without reporting anything.
+    HarnessSilent,
+    /// The harness wrote a record the judge cannot read, or records out of order.
+    BadHarnessRecord,
+    /// The harness said it finished but some tests have no result.
+    IncompleteResults,
+}
+
+/// A judge message: stable code plus English text.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Message {
+    pub code: MessageCode,
+    pub text: String,
+}
+
+impl Message {
+    pub fn new(code: MessageCode, text: impl Into<String>) -> Self {
+        Message {
+            code,
+            text: text.into(),
+        }
+    }
+}
+
 /// Result of a single test case.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TestResult {
     pub index: u32,
     pub kind: TestKind,
     pub verdict: Verdict,
-    pub time_ms: u32,
+    /// Time of this test in microseconds.
+    pub time_us: u64,
     pub memory_kb: u32,
-    /// Checker message, e.g. "expected [0,1], got [1,2]".
-    pub message: Option<String>,
+    /// Why the test did not pass, e.g. `output_mismatch` / "expected [0,1], got [1,2]".
+    pub message: Option<Message>,
 }
 
 /// Aggregated outcome of a submission: the first non-accepted verdict wins.
@@ -197,7 +261,7 @@ mod tests {
             index: i,
             kind: TestKind::Hidden,
             verdict: v,
-            time_ms: 1,
+            time_us: 1,
             memory_kb: 1,
             message: None,
         };
@@ -208,6 +272,17 @@ mod tests {
             mk(2, Verdict::TimeLimitExceeded),
         ];
         assert_eq!(overall_verdict(&rs), Verdict::WrongAnswer);
+    }
+
+    #[test]
+    fn message_codes_serialize_as_stable_snake_case() {
+        let m = Message::new(MessageCode::ReturnNotSerializable, "x");
+        assert_eq!(
+            serde_json::to_string(&m).unwrap(),
+            r#"{"code":"return_not_serializable","text":"x"}"#
+        );
+        let c: MessageCode = serde_json::from_str("\"syntax_error\"").unwrap();
+        assert_eq!(c, MessageCode::SyntaxError);
     }
 
     #[test]

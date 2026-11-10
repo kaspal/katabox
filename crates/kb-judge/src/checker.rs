@@ -1,6 +1,7 @@
 //! Built-in checkers. Values are compared as JSON so every language's harness
 //! only has to serialize its return value.
 
+use kb_core::{Message, MessageCode};
 use serde_json::Value;
 use std::str::FromStr;
 
@@ -42,7 +43,7 @@ impl FromStr for Checker {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CheckOutcome {
     Ok,
-    Wrong(String),
+    Wrong(Message),
 }
 
 impl Checker {
@@ -54,13 +55,19 @@ impl Checker {
             Checker::Unordered => unordered_eq(expected, actual),
             Checker::Float(eps) => float_eq(expected, actual, *eps),
             Checker::Custom => {
-                return CheckOutcome::Wrong("custom checker must run in the sandbox".into());
+                return CheckOutcome::Wrong(Message::new(
+                    MessageCode::CustomCheckerUnsupported,
+                    "custom checker must run in the sandbox",
+                ));
             }
         };
         if ok {
             CheckOutcome::Ok
         } else {
-            CheckOutcome::Wrong(format!("expected {expected}, got {actual}"))
+            CheckOutcome::Wrong(Message::new(
+                MessageCode::OutputMismatch,
+                format!("expected {expected}, got {actual}"),
+            ))
         }
     }
 }
@@ -124,6 +131,15 @@ mod tests {
             Checker::Exact.check(&json!([0, 1]), &json!([1, 0])),
             CheckOutcome::Wrong(_)
         ));
+    }
+
+    #[test]
+    fn mismatch_has_a_stable_code() {
+        let CheckOutcome::Wrong(m) = Checker::Exact.check(&json!(1), &json!(2)) else {
+            panic!("expected a mismatch")
+        };
+        assert_eq!(m.code, MessageCode::OutputMismatch);
+        assert_eq!(m.text, "expected 1, got 2");
     }
 
     #[test]
