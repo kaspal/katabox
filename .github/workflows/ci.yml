@@ -28,6 +28,22 @@ jobs:
       - name: Validate problem packages
         run: cargo run -p kb-pack -- validate
 
+  sandbox-windows:
+    name: Sandbox attack suite (Windows)
+    # Same minutes policy as the Windows desktop job: main only until the repo is public.
+    if: github.event_name == 'push'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Fetch pinned Python toolchain
+        run: pwsh scripts/fetch-python-toolchain.ps1
+      - run: cargo clippy -p kb-runner --all-targets -- -D warnings
+      - run: cargo test -p kb-runner -- --nocapture
+
   ui:
     name: UI build
     runs-on: ubuntu-22.04

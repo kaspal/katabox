@@ -7,8 +7,28 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
+[[bin]]
+# Manual test command: `kb-sandbox run --toolchain <dir> -- python -c "print(1)"`.
+name = "kb-sandbox"
+path = "src/bin/kb-sandbox.rs"
+
 [dependencies]
 kb-core.workspace = true
+thiserror.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "=0.61.2", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Security_Authorization",
+    "Win32_Security_Isolation",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+    "Win32_System_JobObjects",
+    "Win32_System_Pipes",
+    "Win32_System_SystemServices",
+    "Win32_System_Threading",
+] }
 
 [lints]
 workspace = true
