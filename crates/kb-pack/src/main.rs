@@ -166,7 +166,12 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
     for p in &meta.signature.params {
         if p.name.is_empty() || p.ty.is_empty() {
             errs.push("every param needs a name and a type".into());
+        } else if let Err(e) = p.ty.parse::<kb_judge::Type>() {
+            errs.push(format!("param {:?}: {e}", p.name));
         }
+    }
+    if let Err(e) = meta.signature.returns.parse::<kb_judge::Type>() {
+        errs.push(format!("returns: {e}"));
     }
     if let Err(e) = meta.judge.checker.parse::<kb_judge::Checker>() {
         errs.push(e);

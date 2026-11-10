@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use crate::{SandboxError, SandboxSpec};
 
 /// File that marks a folder as a KataBox-owned sandbox root. The app creates it in its
-/// data folder; the dev/test root is created by `scripts/fetch-python-toolchain.{ps1,sh}`.
+/// data folder; the dev/test root is created by `scripts/fetch-toolchains.{ps1,sh}`.
 pub const ROOT_MARKER: &str = ".katabox-sandbox-root";
 
 /// Canonical, validated paths from a spec. Backends use these, never the raw spec paths.

@@ -12,7 +12,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 | --- | --- |
 | `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI, `src-tauri/` = thin Rust shell (commands and wiring only) |
 | `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult). No I/O |
-| `crates/kb-judge` | Checkers (done) and harness codegen (next) |
+| `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge (Python, TypeScript so far; ADR 0008) |
 | `crates/kb-runner` | Sandboxed execution. **Security-critical** |
 | `crates/kb-store` | SQLite: `content.db` (read-only) + `user.db` |
 | `crates/kb-toolchain` | Download/verify/locate runtimes |
@@ -24,13 +24,14 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 ## Commands
 
 ```sh
-scripts/fetch-python-toolchain.sh # Linux: pinned Python for the sandbox attack suite (.ps1 on Windows)
+scripts/fetch-toolchains.sh # Linux: pinned Python + Node for the sandbox and judge tests (.ps1 on Windows)
 cargo test                       # library crates (default-members); Linux needs libseccomp-dev
 cargo deny check licenses        # license check (hakoniwa is an approved LGPL exception)
 kb-sandbox probe                 # Linux: what this kernel supports (cargo run -p kb-runner --bin kb-sandbox -- probe)
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
 cargo run -p kb-pack -- validate # validate every problem
+cargo run -p kb-judge -- run two-sum --lang python <file>  # judge a file (Windows; --public, --json)
 pnpm install && pnpm build       # UI build
 pnpm dev                         # run the desktop app (needs WebView2 / WebKitGTK 4.1)
 cargo check -p katabox-desktop   # desktop shell (needs WebKitGTK on Linux)

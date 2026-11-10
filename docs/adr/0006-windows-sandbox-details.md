@@ -77,5 +77,5 @@ work-folder lifecycle, the sandbox root, and kernel time in the CPU limit.
   sandbox cannot resolve parent folders; the harness must filter or avoid it.
 - A cleanup failure turns the run into an error (results are dropped rather than
   leaving a folder in an unknown state).
-- Running the attack suite on Windows requires `scripts/fetch-python-toolchain.ps1`
+- Running the attack suite on Windows requires `scripts/fetch-toolchains.ps1`
   first; it creates the marked dev root `target/katabox`.

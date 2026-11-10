@@ -1,4 +1,5 @@
-# Runtime definition for python. Harness template: harness.py.j2 (Core judge phase).
+# Runtime definition for python. Templates (minijinja, embedded by kb-judge):
+# stub.py.j2 (starter code for the editor) and harness.py.j2 (runs the tests).
 id = "python"
 extension = "py"
 compile = ""

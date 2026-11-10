@@ -1,7 +1,11 @@
-# Runtime definition for typescript. Harness template: harness.ts.j2 (Core judge phase).
+# Runtime definition for typescript. Templates (minijinja, embedded by kb-judge):
+# stub.ts.j2 (starter code for the editor) and harness.ts.j2 (runs the tests).
+# Node strips types itself (no type checking, ADR 0008). The --preserve-symlinks flags
+# stop Node from lstat-ing every parent folder up to the drive root, which the Windows
+# sandbox denies.
 id = "typescript"
 extension = "ts"
 compile = ""
-run = "node --max-old-space-size={memory_mb} {main}"
+run = "node --preserve-symlinks --preserve-symlinks-main --max-old-space-size={memory_mb} {main}"
 language_server = "typescript-language-server"
 debug_adapter = "vscode-js-debug"

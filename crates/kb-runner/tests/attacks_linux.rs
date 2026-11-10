@@ -3,7 +3,7 @@
 //! `<name>::fallback`. Needs the dev sandbox root with the pinned Python toolchain:
 //!
 //! ```text
-//! scripts/fetch-python-toolchain.sh             # creates target/katabox
+//! scripts/fetch-toolchains.sh             # creates target/katabox
 //! cargo test -p kb-runner --test attacks_linux -- --nocapture --test-threads=1
 //! ```
 //!
@@ -119,7 +119,7 @@ fn sandbox_root() -> PathBuf {
     let root = std::fs::canonicalize(&root).unwrap_or(root);
     assert!(
         root.join(ROOT_MARKER).is_file() && python_in(&root).is_file(),
-        "sandbox root or Python toolchain missing at {}. Run: scripts/fetch-python-toolchain.sh",
+        "sandbox root or Python toolchain missing at {}. Run: scripts/fetch-toolchains.sh",
         root.display()
     );
     root

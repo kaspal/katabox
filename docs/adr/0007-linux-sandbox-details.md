@@ -160,7 +160,7 @@ a time). The spike (`crates/kb-runner/src/linux/`, attack suite in
   CI runs fallback with the test feature on `ubuntu-24.04` (AppArmor restricts user
   namespaces there, so Auto must pick fallback), checks the refusal without it, then
   lifts the restriction for namespace mode.
-- Linux attack-suite setup: `scripts/fetch-python-toolchain.sh` (same pinned
+- Linux attack-suite setup: `scripts/fetch-toolchains.sh` (same pinned
   python-build-standalone 3.14.10+20261026 as Windows, SHA-256 from the release's
   `SHA256SUMS`; it also creates the marked dev root `target/katabox`).
 

@@ -13,7 +13,7 @@
 //! runs take `--mode auto|namespaces|fallback`.
 //!
 //! `--root` is the KataBox sandbox root (must contain `.katabox-sandbox-root`; the dev
-//! root `target/katabox` is created by `scripts/fetch-python-toolchain.{ps1,sh}`).
+//! root `target/katabox` is created by `scripts/fetch-toolchains.{ps1,sh}`).
 //! `--toolchain` defaults to `<root>/toolchains/python-3.14`. A bare program name
 //! (e.g. `python`) is resolved to `<toolchain>/<name>.exe` on Windows and
 //! `<toolchain>/bin/<name>` on Linux. Without `--work`, a fresh

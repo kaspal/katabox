@@ -1,8 +1,39 @@
-//! Judging: compares a program's JSON output with the expected answer.
+//! Judging for KataBox (ADR 0008).
 //!
-//! Harness code generation (one minijinja template per language) lands here in
-//! the Core judge phase. The checkers below are complete and tested.
+//! - [`codegen`]: starter stub and test harness from a problem's typed signature, rendered
+//!   from the minijinja templates in `languages/<id>/`.
+//! - [`judge()`]: runs a submission against a batch of tests in one sandboxed run
+//!   (kb-runner), applies the problem's [`Checker`], and returns a [`Report`].
+//! - [`checker`]: built-in output comparisons.
 
 pub mod checker;
+pub mod codegen;
+mod judge;
+pub mod languages;
+pub mod problem;
+mod protocol;
+pub mod signature;
 
 pub use checker::{CheckOutcome, Checker};
+pub use codegen::{harness, starter_code};
+pub use judge::{Failure, JudgeEnv, Report, STARTUP_ALLOWANCE, TestOutcome, judge};
+pub use problem::{Problem, TestCase};
+pub use signature::{Param, Signature, Type};
+
+use kb_core::Language;
+
+#[derive(Debug, thiserror::Error)]
+pub enum JudgeError {
+    #[error("problem: {0}")]
+    Problem(String),
+    #[error("{0} is not supported by the judge yet")]
+    Unsupported(Language),
+    #[error("toolchain: {0}")]
+    Toolchain(String),
+    #[error("sandbox: {0}")]
+    Sandbox(#[from] kb_runner::SandboxError),
+    #[error("judge internal error: {0}")]
+    Internal(String),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+}
