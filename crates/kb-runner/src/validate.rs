@@ -4,14 +4,14 @@
 //! (marked with [`ROOT_MARKER`]). Drive roots, network paths, and the user profile or any
 //! folder containing it are refused outright, so a bad spec can never hand the sandbox
 //! the user's files.
-#![cfg_attr(not(windows), allow(dead_code))] // only the Windows backend calls `resolve` so far
+#![cfg_attr(not(any(windows, target_os = "linux")), allow(dead_code))]
 
 use std::path::{Path, PathBuf};
 
 use crate::{SandboxError, SandboxSpec};
 
 /// File that marks a folder as a KataBox-owned sandbox root. The app creates it in its
-/// data folder; the dev/test root is created by `scripts/fetch-python-toolchain.ps1`.
+/// data folder; the dev/test root is created by `scripts/fetch-python-toolchain.{ps1,sh}`.
 pub const ROOT_MARKER: &str = ".katabox-sandbox-root";
 
 /// Canonical, validated paths from a spec. Backends use these, never the raw spec paths.
@@ -141,6 +141,12 @@ fn plain(p: PathBuf, _what: &str) -> Result<PathBuf, SandboxError> {
 pub(crate) fn sensitive_reason(p: &Path, profile: Option<&Path>) -> Option<&'static str> {
     if p.parent().is_none() {
         Some("a drive root")
+    } else if cfg!(target_os = "linux")
+        && ["/proc", "/sys", "/dev", "/run"]
+            .iter()
+            .any(|sys| p.starts_with(sys))
+    {
+        Some("a system folder (/proc, /sys, /dev or /run)")
     } else if profile.is_some_and(|u| u.starts_with(p)) {
         Some("the user profile or a folder containing it")
     } else {
@@ -304,5 +310,14 @@ mod tests {
             sensitive_reason(&profile.join("AppData"), Some(profile)),
             None
         );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn linux_system_folders_are_refused() {
+        for p in ["/proc/self", "/sys/fs", "/dev/shm", "/run/user/1000"] {
+            assert!(sensitive_reason(Path::new(p), None).is_some(), "{p}");
+        }
+        assert_eq!(sensitive_reason(Path::new("/opt/katabox"), None), None);
     }
 }

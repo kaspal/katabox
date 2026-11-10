@@ -14,7 +14,16 @@ path = "src/bin/kb-sandbox.rs"
 
 [dependencies]
 kb-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
+
+# Linux sandbox (ADR 0007). hakoniwa is LGPL-3.0-only WITH LGPL-3.0-linking-exception
+# (approved exception); its `seccomp` feature links libseccomp (runtime dep: libseccomp2).
+[target.'cfg(target_os = "linux")'.dependencies]
+hakoniwa = { version = "=1.8.1", default-features = false, features = ["landlock", "seccomp"] }
+landlock = "=0.4.7"
+nix = { version = "0.29", features = ["fs", "mount", "process", "resource", "sched", "signal", "user"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "=0.61.2", features = [
@@ -29,6 +38,12 @@ windows-sys = { version = "=0.61.2", features = [
     "Win32_System_SystemServices",
     "Win32_System_Threading",
 ] }
+
+[features]
+# TEST ONLY. Lets the attack suite exercise fallback mode on kernels without Landlock
+# signal scoping (ABI < 6), where the product refuses fallback. Never enable in the app;
+# see ADR 0007.
+unscoped-fallback-for-tests = []
 
 [lints]
 workspace = true
