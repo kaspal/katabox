@@ -1,7 +1,10 @@
-# Runtime definition for php. Harness template: harness.php.j2 (Core judge phase).
+# Runtime definition for php. Templates (minijinja, embedded by kb-judge):
+# stub.php.j2 (starter code for the editor) and harness.php.j2 (runs the tests).
+# -n: no php.ini, so only built-in extensions plus mbstring, loaded explicitly (ADR 0009).
+# Fatal errors (e.g. memory exhausted) go to stderr, never into the captured output.
 id = "php"
 extension = "php"
 compile = ""
-run = "php -n -d memory_limit={memory_mb}M {main}"
+run = "php -n -d extension_dir={toolchain}/ext -d extension=mbstring -d memory_limit={memory_mb}M -d display_errors=stderr {main}"
 language_server = "phpactor"
 debug_adapter = "vscode-php-debug + Xdebug 3"

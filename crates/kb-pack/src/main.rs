@@ -1,8 +1,11 @@
-//! `kb-pack validate [DIR]` — checks every problem folder under DIR
-//! (default `content/problems`) against the package format in the plan.
+//! `kb-pack validate [DIR] [--run] [--root ROOT]` — checks every problem folder under DIR
+//! (default `content/problems`) against the package format in the plan: structure,
+//! metadata, test files, and that each reference solution matches its generated stub.
 //!
-//! Running reference solutions against tests and stress testing arrive with
-//! kb-runner; this first version checks structure, metadata and test files.
+//! `--run` also judges every reference solution in every language against all tests in
+//! the sandbox (content pipeline step 2) and fails unless each one is Accepted. ROOT is
+//! the sandbox root with the toolchains (default `target/katabox`, created by
+//! `scripts/fetch-toolchains.ps1`).
 
 use kb_core::{Difficulty, Language};
 use serde::Deserialize;
@@ -72,37 +75,144 @@ struct Judge {
     memory_mb: u32,
 }
 
+const USAGE: &str = "usage: kb-pack validate [DIR] [--run] [--root ROOT]";
+
 fn main() -> ExitCode {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    match args.first().map(String::as_str) {
-        Some("validate") => {
-            let dir = args
-                .get(1)
-                .map(PathBuf::from)
-                .unwrap_or_else(|| "content/problems".into());
-            validate_all(&dir)
-        }
-        _ => {
-            eprintln!("usage: kb-pack validate [DIR]");
-            ExitCode::from(2)
+    let mut args = std::env::args().skip(1);
+    if args.next().as_deref() != Some("validate") {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    }
+    let mut dir = PathBuf::from("content/problems");
+    let mut run_root: Option<PathBuf> = None;
+    let mut run = false;
+    while let Some(a) = args.next() {
+        match a.as_str() {
+            "--run" => run = true,
+            "--root" => match args.next() {
+                Some(r) => run_root = Some(r.into()),
+                None => {
+                    eprintln!("--root needs a value\n{USAGE}");
+                    return ExitCode::from(2);
+                }
+            },
+            s if s.starts_with("--") => {
+                eprintln!("unknown option {s}\n{USAGE}");
+                return ExitCode::from(2);
+            }
+            _ => dir = a.into(),
         }
     }
+    let code = validate_all(&dir);
+    if code != ExitCode::SUCCESS || !run {
+        return code;
+    }
+    let root = run_root.unwrap_or_else(|| "target/katabox".into());
+    run_references(&dir, &root)
 }
 
-fn validate_all(dir: &Path) -> ExitCode {
-    let entries = match fs::read_dir(dir) {
-        Ok(e) => e,
-        Err(e) => {
-            eprintln!("cannot read {}: {e}", dir.display());
-            return ExitCode::FAILURE;
-        }
-    };
-    let mut dirs: Vec<PathBuf> = entries
+/// Problem folders under `dir`, sorted.
+fn problem_dirs(dir: &Path) -> std::io::Result<Vec<PathBuf>> {
+    let mut dirs: Vec<PathBuf> = fs::read_dir(dir)?
         .flatten()
         .map(|e| e.path())
         .filter(|p| p.is_dir())
         .collect();
     dirs.sort();
+    Ok(dirs)
+}
+
+/// Judge every reference solution in every supported language; all must be Accepted.
+fn run_references(dir: &Path, root: &Path) -> ExitCode {
+    let root = match std::path::absolute(root) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("{}: {e}", root.display());
+            return ExitCode::FAILURE;
+        }
+    };
+    let env = kb_judge::JudgeEnv::dev(root);
+    let dirs = match problem_dirs(dir) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("cannot read {}: {e}", dir.display());
+            return ExitCode::FAILURE;
+        }
+    };
+    let (mut runs, mut failed) = (0, 0);
+    println!();
+    for p in &dirs {
+        let problem = match kb_judge::Problem::load(p) {
+            Ok(pr) => pr,
+            Err(e) => {
+                failed += 1;
+                println!("FAIL  {}: {e}", p.display());
+                continue;
+            }
+        };
+        for lang in kb_judge::languages::SUPPORTED {
+            runs += 1;
+            let name = lang.id();
+            let file = p
+                .join("solutions")
+                .join(format!("ref.{}", lang.extension()));
+            let outcome = fs::read_to_string(&file)
+                .map_err(|e| e.to_string())
+                .and_then(|src| {
+                    kb_judge::judge(&problem, &problem.tests, lang, &src, &env)
+                        .map_err(|e| e.to_string())
+                });
+            match outcome {
+                Ok(r) if r.verdict.is_accepted() => {
+                    println!(
+                        "run   {} {name:<10} AC  {}/{} tests, {} us",
+                        problem.id, r.total_tests, r.total_tests, r.time_us
+                    );
+                }
+                Ok(r) => {
+                    failed += 1;
+                    let why = r
+                        .first_failure
+                        .as_ref()
+                        .and_then(|f| f.message.as_ref())
+                        .or(r.compile_output.as_ref())
+                        .map(|m| {
+                            m.text
+                                .lines()
+                                .take(8)
+                                .collect::<Vec<_>>()
+                                .join("\n        ")
+                        })
+                        .unwrap_or_default();
+                    println!(
+                        "FAIL  {} {name:<10} {}\n        {why}",
+                        problem.id,
+                        r.verdict.code()
+                    );
+                }
+                Err(e) => {
+                    failed += 1;
+                    println!("FAIL  {} {name:<10} {e}", problem.id);
+                }
+            }
+        }
+    }
+    println!("\n{runs} reference run(s), {failed} failed");
+    if failed == 0 {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
+    }
+}
+
+fn validate_all(dir: &Path) -> ExitCode {
+    let dirs = match problem_dirs(dir) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("cannot read {}: {e}", dir.display());
+            return ExitCode::FAILURE;
+        }
+    };
 
     let mut failed = 0;
     for p in &dirs {
@@ -220,7 +330,55 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
             errs.push(format!("missing reference solution {}", f.display()));
         }
     }
+    if errs.is_empty() {
+        check_reference_signatures(dir, &mut errs);
+    }
     (Some(meta.difficulty), errs)
+}
+
+/// Every reference solution must declare the function exactly as its generated stub
+/// does (whitespace aside), so the stub users start from matches what is judged.
+fn check_reference_signatures(dir: &Path, errs: &mut Vec<String>) {
+    let problem = match kb_judge::Problem::load(dir) {
+        Ok(p) => p,
+        Err(e) => {
+            errs.push(e.to_string());
+            return;
+        }
+    };
+    for lang in kb_judge::languages::SUPPORTED {
+        let stub = match kb_judge::starter_code(lang, &problem.signature) {
+            Ok(s) => s,
+            Err(e) => {
+                errs.push(format!("{lang} stub: {e}"));
+                continue;
+            }
+        };
+        let Some(line) = signature_line(&stub) else {
+            continue;
+        };
+        let file = dir
+            .join("solutions")
+            .join(format!("ref.{}", lang.extension()));
+        let src = fs::read_to_string(&file).unwrap_or_default();
+        if !src.lines().any(|l| normalize(l) == line) {
+            errs.push(format!(
+                "{} does not declare the stub's signature: {line}",
+                file.display()
+            ));
+        }
+    }
+}
+
+/// The stub's declaration line (skipping `<?php` and blank lines), whitespace-normalized.
+fn signature_line(stub: &str) -> Option<String> {
+    stub.lines()
+        .map(normalize)
+        .find(|l| !l.is_empty() && l != "<?php")
+}
+
+fn normalize(line: &str) -> String {
+    line.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 /// Each test is `{"input": {<param>: ...}, "output": ...}`. Returns the count.
@@ -259,4 +417,66 @@ fn check_tests(dir: &Path, params: &[&str], errs: &mut Vec<String>) -> usize {
         }
     }
     n
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn signature_line_skips_php_open_tag() {
+        assert_eq!(
+            signature_line("<?php\nfunction f(int $a): int {\n\n}\n").as_deref(),
+            Some("function f(int $a): int {")
+        );
+        assert_eq!(
+            signature_line("pub fn f(a: i64) -> i64 {\n    todo!()\n}\n").as_deref(),
+            Some("pub fn f(a: i64) -> i64 {")
+        );
+        assert_eq!(
+            normalize("  def  f(a:  int) -> int:  "),
+            "def f(a: int) -> int:"
+        );
+    }
+
+    #[test]
+    fn two_sum_references_match_their_stubs() {
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/two-sum");
+        let mut errs = Vec::new();
+        check_reference_signatures(&dir, &mut errs);
+        assert!(errs.is_empty(), "{errs:?}");
+    }
+
+    #[test]
+    fn a_mismatched_reference_is_reported() {
+        let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/two-sum");
+        let dir = std::env::temp_dir().join(format!("kbp-mismatch-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        copy_dir(&src, &dir);
+        fs::write(
+            dir.join("solutions/ref.rs"),
+            "pub fn two_sum(nums: Vec<i64>, target: i64) -> Vec<usize> { vec![] }\n",
+        )
+        .unwrap();
+        let mut errs = Vec::new();
+        check_reference_signatures(&dir, &mut errs);
+        fs::remove_dir_all(&dir).unwrap();
+        assert_eq!(errs.len(), 1, "{errs:?}");
+        assert!(
+            errs[0].contains("ref.rs") && errs[0].contains("-> Vec<i64>"),
+            "{errs:?}"
+        );
+    }
+
+    fn copy_dir(from: &Path, to: &Path) {
+        fs::create_dir_all(to).unwrap();
+        for e in fs::read_dir(from).unwrap().flatten() {
+            let target = to.join(e.file_name());
+            if e.path().is_dir() {
+                copy_dir(&e.path(), &target);
+            } else {
+                fs::copy(e.path(), target).unwrap();
+            }
+        }
+    }
 }

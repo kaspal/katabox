@@ -169,6 +169,10 @@ pub enum MessageCode {
     UnsupportedSyntax,
     /// The solution does not define or export the required function.
     FunctionNotFound,
+    /// The compiler rejected the code (compiler output in the text).
+    CompileError,
+    /// The compiler exceeded its own time, memory or process limits.
+    CompileLimit,
     // Runtime, reported by the harness.
     /// The solution raised while its module was loading (traceback in the text).
     LoadError,

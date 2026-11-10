@@ -3,7 +3,7 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use kb_core::{
     Language, Limits, Message, MessageCode, TestKind, TestResult, Verdict, overall_verdict,
@@ -15,7 +15,7 @@ use serde_json::{Map, Value};
 use crate::JudgeError;
 use crate::checker::{CheckOutcome, Checker};
 use crate::codegen::workspace_files;
-use crate::languages::definition;
+use crate::languages::{LanguageDef, definition};
 use crate::problem::{Problem, TestCase};
 use crate::protocol::{self, Record, Request, Status, TestRecord};
 
@@ -28,6 +28,12 @@ pub const STARTUP_ALLOWANCE: Duration = Duration::from_millis(1_000);
 /// of the user's captured prints.
 const RECORD_OUTPUT_ALLOWANCE: usize = 8 * 1024 * 1024;
 
+/// Cap on compiler output (stdout + stderr).
+const COMPILE_OUTPUT_LIMIT: usize = 1024 * 1024;
+
+/// Compiled binaries kept per language; older ones are deleted (least recently used).
+pub const BINARY_CACHE_SIZE: usize = 64;
+
 /// Where the sandbox root and the language toolchains are.
 #[derive(Debug, Clone)]
 pub struct JudgeEnv {
@@ -35,6 +41,9 @@ pub struct JudgeEnv {
     pub sandbox_root: PathBuf,
     /// Parent of the per-run work folders; must be inside `sandbox_root`.
     pub runs_dir: PathBuf,
+    /// Compiled binaries, as `<cache_dir>/<language>/<hash>.exe`; must be inside
+    /// `sandbox_root` and outside `runs_dir`. The sandbox may read and run it.
+    pub cache_dir: PathBuf,
     toolchains: Vec<(Language, PathBuf)>,
 }
 
@@ -43,18 +52,21 @@ impl JudgeEnv {
         let sandbox_root = sandbox_root.into();
         JudgeEnv {
             runs_dir: sandbox_root.join("runs"),
+            cache_dir: sandbox_root.join("cache"),
             sandbox_root,
             toolchains: Vec::new(),
         }
     }
 
-    /// The layout `scripts/fetch-toolchains.{ps1,sh}` creates:
-    /// `<root>/toolchains/python-3.14` and `<root>/toolchains/node-26`.
+    /// The layout `scripts/fetch-toolchains.{ps1,sh}` creates: `<root>/toolchains/`
+    /// `python-3.14`, `node-26`, `php-8.5` and `rust-1.99`.
     pub fn dev(sandbox_root: impl Into<PathBuf>) -> Self {
         let env = JudgeEnv::new(sandbox_root);
         let tc = env.sandbox_root.join("toolchains");
         env.with_toolchain(Language::Python, tc.join("python-3.14"))
             .with_toolchain(Language::TypeScript, tc.join("node-26"))
+            .with_toolchain(Language::Php, tc.join("php-8.5"))
+            .with_toolchain(Language::Rust, tc.join("rust-1.99"))
     }
 
     /// Use `dir` as the runtime for `lang` (the folder holding `python.exe` / `node.exe`
@@ -113,6 +125,17 @@ pub struct Report {
     pub time_us: u64,
     /// Peak memory of the whole run (capped at the limit).
     pub memory_kb: u32,
+    /// The compile step, for compiled languages.
+    pub compile: Option<CompileInfo>,
+}
+
+/// What the compile step did.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct CompileInfo {
+    /// The binary came from the cache; nothing was compiled.
+    pub cached: bool,
+    /// Wall time of the compile in microseconds (0 when cached).
+    pub time_us: u64,
 }
 
 /// Judge `source` against `tests` (usually `problem.tests`, or only the public ones for
@@ -132,7 +155,26 @@ pub fn judge(
     }
     let def = definition(language)?;
     let toolchain = env.toolchain(language)?;
-    let (program, args) = def.command(toolchain, problem.memory_mb)?;
+    let files = workspace_files(&def, &problem.signature, source)?;
+
+    // Compiled languages: compile (or reuse a cached binary), then run the binary with
+    // only the cache folder readable. Interpreted: run the harness from the work folder.
+    let (binary, compile) = if def.compile_limits.is_some() {
+        let function = problem.signature.function_name(language);
+        match compile_cached(&def, toolchain, &files, &function, env)? {
+            Compiled::Binary(path, info) => (Some(path), Some(info)),
+            Compiled::Failed(message, info) => {
+                return Ok(compile_failure(tests, message, info));
+            }
+        }
+    } else {
+        (None, None)
+    };
+    let (program, args) = def.command(toolchain, problem.memory_mb, binary.as_deref())?;
+    let read_only = match &binary {
+        Some(b) => b.parent().unwrap_or(&env.cache_dir).to_path_buf(),
+        None => toolchain.to_path_buf(),
+    };
 
     let mut limits = Limits::default_for(language);
     limits.memory_mb = problem.memory_mb;
@@ -141,8 +183,10 @@ pub fn judge(
     let print_cap = limits.max_output_kb as usize * 1024;
 
     let work = WorkDir::create(&env.runs_dir)?;
-    for (name, contents) in workspace_files(&def, &problem.signature, source)? {
-        std::fs::write(work.path.join(name), contents)?;
+    if binary.is_none() {
+        for (name, contents) in &files {
+            std::fs::write(work.path.join(name), contents)?;
+        }
     }
     let nonce = nonce();
     let request = Request {
@@ -153,7 +197,7 @@ pub fn judge(
 
     let mut spec = SandboxSpec::new(&env.sandbox_root, program, &work.path, &limits);
     spec.args = args;
-    spec.read_only_dirs = vec![toolchain.to_path_buf()];
+    spec.read_only_dirs = vec![read_only];
     spec.stdin = serde_json::to_vec(&request).map_err(|e| JudgeError::Internal(e.to_string()))?;
     spec.max_output_bytes = RECORD_OUTPUT_ALLOWANCE + print_cap * (tests.len() + 1);
     let outcome = kb_runner::run(&spec)?;
@@ -170,7 +214,168 @@ pub fn judge(
     let records = protocol::parse(&outcome.stdout, &nonce);
     let mut report = assemble(&problem.checker, tests, records, &facts);
     work.clean_messages(&mut report);
+    report.compile = compile;
     Ok(report)
+}
+
+enum Compiled {
+    Binary(PathBuf, CompileInfo),
+    Failed(Message, CompileInfo),
+}
+
+/// Compile the workspace in the sandbox, or reuse the binary compiled from the same
+/// inputs. The cache key covers the compiler, its arguments, the harness and the source.
+fn compile_cached(
+    def: &LanguageDef,
+    toolchain: &Path,
+    files: &[(String, String)],
+    function: &str,
+    env: &JudgeEnv,
+) -> Result<Compiled, JudgeError> {
+    let (compiler, args) = def.compile_command(toolchain)?;
+    let limits = def
+        .compile_limits
+        .ok_or_else(|| JudgeError::Internal(format!("{} has no compile limits", def.language)))?;
+    let dir = env.cache_dir.join(def.language.id());
+    std::fs::create_dir_all(&dir)?;
+    let ext = Path::new(&def.binary_file())
+        .extension()
+        .map(|e| format!(".{}", e.to_string_lossy()))
+        .unwrap_or_default();
+    let cached = dir.join(format!("{}{ext}", cache_key(&compiler, &args, files)?));
+    if cached.is_file() {
+        // Mark as recently used for eviction.
+        let _ = std::fs::File::options()
+            .write(true)
+            .open(&cached)
+            .and_then(|f| f.set_modified(SystemTime::now()));
+        return Ok(Compiled::Binary(
+            cached,
+            CompileInfo {
+                cached: true,
+                time_us: 0,
+            },
+        ));
+    }
+
+    let work = WorkDir::create(&env.runs_dir)?;
+    for (name, contents) in files {
+        std::fs::write(work.path.join(name), contents)?;
+    }
+    let run_limits = Limits {
+        cpu_time_ms: limits.cpu_time_ms,
+        memory_mb: limits.memory_mb,
+        max_processes: limits.max_processes,
+        max_output_kb: 1024,
+    };
+    let mut spec = SandboxSpec::new(&env.sandbox_root, compiler, &work.path, &run_limits);
+    spec.args = args;
+    spec.read_only_dirs = vec![toolchain.to_path_buf()];
+    spec.wall_time = limits.wall_time();
+    spec.max_output_bytes = COMPILE_OUTPUT_LIMIT;
+    // Keep the folder so the binary can be copied out; WorkDir deletes it afterwards.
+    spec.keep_work_dir = true;
+    let outcome = kb_runner::run(&spec)?;
+    let info = CompileInfo {
+        cached: false,
+        time_us: u64::try_from(outcome.wall_time.as_micros()).unwrap_or(u64::MAX),
+    };
+
+    let over_limit = outcome.termination != Termination::Exited
+        || outcome.memory_limit_hit
+        || outcome.process_limit_hit;
+    if over_limit {
+        let text = format!(
+            "compilation exceeded its limits ({} ms CPU, {} MB, {} processes): {:?}",
+            limits.cpu_time_ms, limits.memory_mb, limits.max_processes, outcome.termination
+        );
+        return Ok(Compiled::Failed(
+            Message::new(MessageCode::CompileLimit, text),
+            info,
+        ));
+    }
+    let built = work.path.join(def.binary_file());
+    if outcome.exit_code != 0 || !built.is_file() {
+        let mut out = String::from_utf8_lossy(&outcome.stderr).into_owned();
+        out.push_str(&String::from_utf8_lossy(&outcome.stdout));
+        let code = if out.contains(&format!("cannot find function `{function}`")) {
+            MessageCode::FunctionNotFound
+        } else {
+            MessageCode::CompileError
+        };
+        let mut message = Message::new(code, out.trim_end());
+        work.clean(&mut message);
+        return Ok(Compiled::Failed(message, info));
+    }
+
+    // Copy (not move) into the cache folder so the file inherits the folder's sandbox
+    // grant, then rename within the folder so a half-written binary is never used.
+    let tmp = dir.join(format!(".tmp-{}-{}", std::process::id(), work.id()));
+    std::fs::copy(&built, &tmp)?;
+    std::fs::rename(&tmp, &cached)?;
+    evict(&dir, BINARY_CACHE_SIZE);
+    Ok(Compiled::Binary(cached, info))
+}
+
+/// Hex SHA-256 of everything that determines the compiled binary.
+fn cache_key(
+    compiler: &Path,
+    args: &[String],
+    files: &[(String, String)],
+) -> Result<String, JudgeError> {
+    use sha2::{Digest, Sha256};
+    let meta = std::fs::metadata(compiler)?;
+    let mtime = meta
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(SystemTime::UNIX_EPOCH).ok())
+        .map_or(0, |d| d.as_nanos());
+    let mut h = Sha256::new();
+    let mut field = |bytes: &[u8]| {
+        h.update((bytes.len() as u64).to_le_bytes());
+        h.update(bytes);
+    };
+    field(compiler.to_string_lossy().as_bytes());
+    field(&meta.len().to_le_bytes());
+    field(&mtime.to_le_bytes());
+    for a in args {
+        field(a.as_bytes());
+    }
+    for (name, contents) in files {
+        field(name.as_bytes());
+        field(contents.as_bytes());
+    }
+    Ok(h.finalize().iter().map(|b| format!("{b:02x}")).collect())
+}
+
+/// Delete all but the `keep` most recently used binaries in `dir`.
+fn evict(dir: &Path, keep: usize) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    let mut files: Vec<(SystemTime, PathBuf)> = entries
+        .filter_map(Result::ok)
+        .filter(|e| e.file_type().is_ok_and(|t| t.is_file()))
+        .filter(|e| !e.file_name().to_string_lossy().starts_with(".tmp-"))
+        .filter_map(|e| Some((e.metadata().ok()?.modified().ok()?, e.path())))
+        .collect();
+    files.sort_by_key(|f| std::cmp::Reverse(f.0));
+    for (_, path) in files.into_iter().skip(keep) {
+        let _ = std::fs::remove_file(path);
+    }
+}
+
+fn compile_failure(tests: &[TestCase], message: Message, info: CompileInfo) -> Report {
+    Report {
+        verdict: Verdict::CompilationError,
+        tests: Vec::new(),
+        total_tests: u32::try_from(tests.len()).unwrap_or(u32::MAX),
+        first_failure: None,
+        compile_output: Some(message),
+        time_us: 0,
+        memory_kb: 0,
+        compile: Some(info),
+    }
 }
 
 /// What the judge needs from the sandbox outcome.
@@ -199,6 +404,7 @@ fn assemble(
         compile_output: None,
         time_us: 0,
         memory_kb: facts.memory_kb,
+        compile: None,
     };
 
     let (mut ready, mut done, mut load_error) = (false, false, None);
@@ -369,6 +575,8 @@ fn stop_reason(
         "heap out of memory",
         "Fatal process out of memory",
         "MemoryError",
+        "Allowed memory size",
+        "memory allocation of",
     ];
     if facts.memory_limit_hit || oom.iter().any(|s| facts.stderr.contains(s)) {
         return Some((
@@ -459,6 +667,7 @@ fn stderr_tail(stderr: &str) -> String {
 /// removes it if the run never started.
 struct WorkDir {
     path: PathBuf,
+    id: u64,
 }
 
 impl WorkDir {
@@ -471,17 +680,22 @@ impl WorkDir {
             std::fs::remove_dir_all(&path)?;
         }
         std::fs::create_dir(&path)?;
-        Ok(WorkDir { path })
+        Ok(WorkDir { path, id: n })
     }
 
-    /// Strip this folder's absolute path from messages so tracebacks read `solution.ts:3`.
-    fn clean_messages(&self, report: &mut Report) {
+    fn id(&self) -> u64 {
+        self.id
+    }
+
+    /// This folder's absolute path as it appears in messages: as a `file:///` URL (Node)
+    /// and as a plain path, each with a trailing separator.
+    fn prefixes(&self) -> Vec<String> {
         let Ok(canon) = std::fs::canonicalize(&self.path).or_else(|_| {
             // Already deleted by the runner: rebuild the canonical form from the parent.
             let parent = self.path.parent().unwrap_or(&self.path);
             std::fs::canonicalize(parent).map(|p| p.join(self.path.file_name().unwrap_or_default()))
         }) else {
-            return;
+            return Vec::new();
         };
         let plain = canon
             .to_string_lossy()
@@ -492,28 +706,42 @@ impl WorkDir {
             "file:///{}/",
             plain.replace('\\', "/").trim_start_matches('/')
         );
-        let prefixes = [url, format!("{plain}{sep}")];
-        let clean = |m: &mut Message| {
-            for p in &prefixes {
-                if m.text.contains(p.as_str()) {
-                    m.text = m.text.replace(p.as_str(), "");
-                }
-            }
-        };
-        if let Some(c) = report.compile_output.as_mut() {
-            clean(c);
+        vec![url, format!("{plain}{sep}")]
+    }
+
+    /// Strip this folder's absolute path from one message.
+    fn clean(&self, message: &mut Message) {
+        strip_prefixes(message, &self.prefixes());
+    }
+
+    /// Strip this folder's absolute path from messages so tracebacks read `solution.ts:3`.
+    fn clean_messages(&self, report: &mut Report) {
+        let prefixes = self.prefixes();
+        let messages = report
+            .compile_output
+            .iter_mut()
+            .chain(
+                report
+                    .tests
+                    .iter_mut()
+                    .filter_map(|t| t.result.message.as_mut()),
+            )
+            .chain(
+                report
+                    .first_failure
+                    .iter_mut()
+                    .filter_map(|f| f.message.as_mut()),
+            );
+        for m in messages {
+            strip_prefixes(m, &prefixes);
         }
-        for t in &mut report.tests {
-            if let Some(m) = t.result.message.as_mut() {
-                clean(m);
-            }
-        }
-        if let Some(m) = report
-            .first_failure
-            .as_mut()
-            .and_then(|f| f.message.as_mut())
-        {
-            clean(m);
+    }
+}
+
+fn strip_prefixes(m: &mut Message, prefixes: &[String]) {
+    for p in prefixes {
+        if m.text.contains(p.as_str()) {
+            m.text = m.text.replace(p.as_str(), "");
         }
     }
 }
@@ -765,6 +993,50 @@ mod tests {
             &facts(Termination::Exited, 0),
         );
         assert_eq!(r.verdict, Verdict::InternalError);
+    }
+
+    #[test]
+    fn cache_key_tracks_every_input() {
+        let compiler = std::env::current_exe().unwrap();
+        let args = vec!["-O".to_string()];
+        let files = vec![("main.rs".to_string(), "fn main() {}".to_string())];
+        let key = cache_key(&compiler, &args, &files).unwrap();
+        assert_eq!(key.len(), 64);
+        assert_eq!(key, cache_key(&compiler, &args, &files).unwrap(), "stable");
+        let edited = vec![("main.rs".to_string(), "fn main() { }".to_string())];
+        assert_ne!(key, cache_key(&compiler, &args, &edited).unwrap());
+        assert_ne!(key, cache_key(&compiler, &[], &files).unwrap());
+        // Field boundaries are length-prefixed: moving text between fields changes the key.
+        let a = vec![("ab".to_string(), "c".to_string())];
+        let b = vec![("a".to_string(), "bc".to_string())];
+        assert_ne!(
+            cache_key(&compiler, &args, &a).unwrap(),
+            cache_key(&compiler, &args, &b).unwrap()
+        );
+    }
+
+    #[test]
+    fn eviction_keeps_the_most_recently_used() {
+        let dir = std::env::temp_dir().join(format!("kbj-evict-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let base = SystemTime::now() - Duration::from_secs(1000);
+        for i in 0..5u64 {
+            let f = dir.join(format!("{i}.exe"));
+            std::fs::write(&f, "").unwrap();
+            let file = std::fs::File::options().write(true).open(&f).unwrap();
+            file.set_modified(base + Duration::from_secs(i * 10))
+                .unwrap();
+        }
+        std::fs::write(dir.join(".tmp-in-progress"), "").unwrap();
+        evict(&dir, 2);
+        let mut left: Vec<String> = std::fs::read_dir(&dir)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
+        left.sort();
+        std::fs::remove_dir_all(&dir).unwrap();
+        assert_eq!(left, [".tmp-in-progress", "3.exe", "4.exe"]);
     }
 
     #[test]

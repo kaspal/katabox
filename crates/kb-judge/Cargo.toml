@@ -8,7 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [[bin]]
-# Dev command: `kb-judge run <problem> --lang <python|typescript> <file>`.
+# Dev command: `kb-judge run <problem> --lang <python|typescript|php|rust> <file>`.
 name = "kb-judge"
 path = "src/bin/kb-judge.rs"
 
@@ -18,6 +18,7 @@ kb-runner.workspace = true
 minijinja = { version = "3.1", default-features = false, features = ["builtins", "json"] }
 serde.workspace = true
 serde_json.workspace = true
+sha2 = "0.10"
 thiserror.workspace = true
 toml.workspace = true
 

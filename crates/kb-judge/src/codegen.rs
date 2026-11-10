@@ -62,6 +62,7 @@ fn template_context(def: &LanguageDef, sig: &Signature) -> Value {
         params,
         param_keys,
         returns => sig.returns.spelled_in(lang),
+        return_depth => sig.returns.array_depth(),
         solution_file => def.solution_file(),
     }
 }
@@ -112,6 +113,44 @@ mod tests {
     }
 
     #[test]
+    fn php_stub() {
+        assert_eq!(
+            starter_code(Language::Php, &two_sum()).unwrap(),
+            "<?php
+function twoSum(array $nums, int $target): array {
+
+}
+"
+        );
+    }
+
+    #[test]
+    fn rust_stub() {
+        assert_eq!(
+            starter_code(Language::Rust, &two_sum()).unwrap(),
+            "pub fn two_sum(nums: Vec<i64>, target: i64) -> Vec<i64> {
+    todo!()
+}
+"
+        );
+    }
+
+    #[test]
+    fn php_and_rust_harnesses_embed_the_signature() {
+        let php = harness(Language::Php, &two_sum()).unwrap();
+        assert!(php.contains(r#"const KB_FUNCTION = "twoSum";"#), "{php}");
+        assert!(php.contains("const KB_RETURN_DEPTH = 1;"));
+        let rs = harness(Language::Rust, &two_sum()).unwrap();
+        assert!(rs.contains(r#"include!("solution.rs");"#), "{rs}");
+        assert!(rs.contains("type Args = (Vec<i64>,i64,);"), "{rs}");
+        assert!(rs.contains("fn call(args: Args) -> Vec<i64>"));
+        assert!(rs.contains("crate::two_sum(a0, a1)"));
+        for src in [&php, &rs] {
+            assert!(!src.contains("{{") && !src.contains("{%"));
+        }
+    }
+
+    #[test]
     fn harnesses_embed_the_signature() {
         let py = harness(Language::Python, &two_sum()).unwrap();
         assert!(py.contains(r#"ALIASES = ["two_sum", "twoSum"]"#), "{py}");
@@ -128,8 +167,8 @@ mod tests {
     #[test]
     fn unsupported_language_is_an_error() {
         assert!(matches!(
-            starter_code(Language::Php, &two_sum()),
-            Err(JudgeError::Unsupported(Language::Php))
+            starter_code(Language::JavaScript, &two_sum()),
+            Err(JudgeError::Unsupported(Language::JavaScript))
         ));
     }
 }
