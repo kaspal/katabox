@@ -2,7 +2,7 @@
 //! or blocked. Needs the dev sandbox root with the pinned Python toolchain:
 //!
 //! ```text
-//! pwsh scripts/fetch-python-toolchain.ps1      # creates target/katabox
+//! pwsh scripts/fetch-toolchains.ps1      # creates target/katabox
 //! cargo test -p kb-runner --test attacks_windows -- --nocapture
 //! ```
 //!
@@ -41,7 +41,7 @@ fn sandbox_root() -> PathBuf {
     let root = std::path::absolute(root).unwrap();
     assert!(
         root.join(ROOT_MARKER).is_file() && toolchain_in(&root).join("python.exe").is_file(),
-        "sandbox root or Python toolchain missing at {}. Run: pwsh scripts/fetch-python-toolchain.ps1",
+        "sandbox root or Python toolchain missing at {}. Run: pwsh scripts/fetch-toolchains.ps1",
         root.display()
     );
     root

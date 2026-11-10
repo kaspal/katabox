@@ -9,7 +9,7 @@
 //!
 //! `<problem>` is a folder with `problem.toml`, or an id under `--problems` (default
 //! `content/problems`). `--root` is the sandbox root with the toolchains (default
-//! `target/katabox`, created by `scripts/fetch-python-toolchain.{ps1,sh}`).
+//! `target/katabox`, created by `scripts/fetch-toolchains.{ps1,sh}`).
 //! `run` judges every test (public, then hidden) unless `--public`; it exits 0 on
 //! Accepted, 1 on any other verdict, 2 on errors.
 

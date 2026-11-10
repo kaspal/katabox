@@ -2,7 +2,7 @@
 //! Needs the dev sandbox root with the pinned toolchains:
 //!
 //! ```text
-//! pwsh scripts/fetch-python-toolchain.ps1      # Python 3.14 + Node 26 in target/katabox
+//! pwsh scripts/fetch-toolchains.ps1      # Python 3.14 + Node 26 in target/katabox
 //! cargo test -p kb-judge --test e2e_windows
 //! ```
 #![cfg(windows)]
@@ -29,7 +29,7 @@ fn env() -> JudgeEnv {
         root.join(ROOT_MARKER).is_file()
             && tc.join("python-3.14/python.exe").is_file()
             && tc.join("node-26/node.exe").is_file(),
-        "sandbox root or toolchains missing at {}. Run: pwsh scripts/fetch-python-toolchain.ps1",
+        "sandbox root or toolchains missing at {}. Run: pwsh scripts/fetch-toolchains.ps1",
         root.display()
     );
     JudgeEnv::dev(root)

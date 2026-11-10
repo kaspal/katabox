@@ -6,9 +6,9 @@
 #
 # Also creates the dev sandbox root (target/katabox, marked with .katabox-sandbox-root),
 # which mirrors the app layout: <root>/toolchains/<runtime> and <root>/runs/<run>.
-# Linux counterpart of scripts/fetch-python-toolchain.ps1 (same releases, same layout).
+# Linux counterpart of scripts/fetch-toolchains.ps1 (same releases, same layout).
 #
-# Usage: scripts/fetch-python-toolchain.sh [root]   (default: target/katabox)
+# Usage: scripts/fetch-toolchains.sh [root]   (default: target/katabox)
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -61,7 +61,7 @@ install_toolchain() {
 # python-build-standalone. Checksums from the release's SHA256SUMS file.
 py_release="20261026"
 # Node.js LTS ("Lithium"). Checksums from the release's SHASUMS256.txt. Keep the version
-# in sync with scripts/fetch-python-toolchain.ps1 and kb-judge's `toolchains/node-26`.
+# in sync with scripts/fetch-toolchains.ps1 and kb-judge's `toolchains/node-26`.
 node_version="v26.13.0"
 case "$(uname -m)" in
     x86_64)

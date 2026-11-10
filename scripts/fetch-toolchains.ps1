@@ -6,7 +6,7 @@
 # Also creates the dev sandbox root (target/katabox, marked with .katabox-sandbox-root),
 # which mirrors the app layout: <root>/toolchains/<runtime> and <root>/runs/<run>.
 #
-# Usage: pwsh scripts/fetch-python-toolchain.ps1 [-Root target/katabox]
+# Usage: pwsh scripts/fetch-toolchains.ps1 [-Root target/katabox]
 
 param(
     [string]$Root = (Join-Path $PSScriptRoot "..\target\katabox")
@@ -70,7 +70,7 @@ Install-Toolchain -Name "Python 3.14" `
     -Dest (Join-Path $Root "toolchains\python-3.14")
 
 # Node.js LTS ("Lithium"), portable zip. Checksum from the release's SHASUMS256.txt.
-# Keep the version in sync with scripts/fetch-python-toolchain.sh and kb-judge's
+# Keep the version in sync with scripts/fetch-toolchains.sh and kb-judge's
 # dev toolchain path (`toolchains/node-26`).
 $NodeVersion = "v26.13.0"
 Install-Toolchain -Name "Node $NodeVersion" `

@@ -48,7 +48,7 @@ impl JudgeEnv {
         }
     }
 
-    /// The layout `scripts/fetch-python-toolchain.{ps1,sh}` creates:
+    /// The layout `scripts/fetch-toolchains.{ps1,sh}` creates:
     /// `<root>/toolchains/python-3.14` and `<root>/toolchains/node-26`.
     pub fn dev(sandbox_root: impl Into<PathBuf>) -> Self {
         let env = JudgeEnv::new(sandbox_root);

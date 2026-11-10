@@ -24,7 +24,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 ## Commands
 
 ```sh
-scripts/fetch-python-toolchain.sh # Linux: pinned Python + Node for the sandbox and judge tests (.ps1 on Windows)
+scripts/fetch-toolchains.sh # Linux: pinned Python + Node for the sandbox and judge tests (.ps1 on Windows)
 cargo test                       # library crates (default-members); Linux needs libseccomp-dev
 cargo deny check licenses        # license check (hakoniwa is an approved LGPL exception)
 kb-sandbox probe                 # Linux: what this kernel supports (cargo run -p kb-runner --bin kb-sandbox -- probe)
