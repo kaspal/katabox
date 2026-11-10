@@ -1,10 +1,10 @@
 //! Dev command for the judge (English only; not part of the app UI).
 //!
 //! ```text
-//! kb-judge run <problem> --lang <python|typescript> <file> [--public] [--json]
+//! kb-judge run <problem> --lang <python|typescript|php|rust> <file> [--public] [--json]
 //!              [--root <dir>] [--problems <dir>]
-//! kb-judge stub <problem> --lang <python|typescript>
-//! kb-judge harness <problem> --lang <python|typescript>
+//! kb-judge stub <problem> --lang <python|typescript|php|rust>
+//! kb-judge harness <problem> --lang <python|typescript|php|rust>
 //! ```
 //!
 //! `<problem>` is a folder with `problem.toml`, or an id under `--problems` (default
@@ -20,9 +20,9 @@ use kb_core::{Language, Message, Verdict};
 use kb_judge::{JudgeEnv, Problem, Report, harness, judge, starter_code};
 
 const USAGE: &str = "usage:
-  kb-judge run <problem> --lang <python|typescript> <file> [--public] [--json] [--root <dir>] [--problems <dir>]
-  kb-judge stub <problem> --lang <python|typescript>
-  kb-judge harness <problem> --lang <python|typescript>";
+  kb-judge run <problem> --lang <python|typescript|php|rust> <file> [--public] [--json] [--root <dir>] [--problems <dir>]
+  kb-judge stub <problem> --lang <python|typescript|php|rust>
+  kb-judge harness <problem> --lang <python|typescript|php|rust>";
 
 fn main() -> ExitCode {
     match real_main() {
@@ -112,6 +112,13 @@ fn load_problem(arg: &str, problems: &Path) -> Result<Problem, String> {
 
 fn print_report(problem: &Problem, lang: Language, r: &Report) {
     println!("{} [{lang}] {} test(s)", problem.id, r.total_tests);
+    if let Some(c) = &r.compile {
+        if c.cached {
+            println!("compiled binary reused from the cache");
+        } else {
+            println!("compiled in {} ms", ms(c.time_us));
+        }
+    }
     if let Some(out) = &r.compile_output {
         println!("\n[{}]\n{}", code(out), out.text);
     }

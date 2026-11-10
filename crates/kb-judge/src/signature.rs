@@ -68,7 +68,29 @@ impl Type {
                 Type::Bool => "boolean".into(),
                 Type::Array(t) => format!("{}[]", t.spelled_in(lang)),
             },
-            Language::Php | Language::Rust => unimplemented!("{lang} types are not mapped yet"),
+            // PHP has one array type; nesting is not expressible in a type declaration.
+            Language::Php => match self {
+                Type::Int => "int".into(),
+                Type::Float => "float".into(),
+                Type::String => "string".into(),
+                Type::Bool => "bool".into(),
+                Type::Array(_) => "array".into(),
+            },
+            Language::Rust => match self {
+                Type::Int => "i64".into(),
+                Type::Float => "f64".into(),
+                Type::String => "String".into(),
+                Type::Bool => "bool".into(),
+                Type::Array(t) => format!("Vec<{}>", t.spelled_in(lang)),
+            },
+        }
+    }
+
+    /// How many array levels wrap the element type (`int[][]` -> 2).
+    pub fn array_depth(&self) -> usize {
+        match self {
+            Type::Array(t) => 1 + t.array_depth(),
+            _ => 0,
         }
     }
 }
@@ -144,8 +166,9 @@ impl Signature {
 /// A problem.toml name (camelCase) in `lang`'s naming convention.
 fn identifier(name: &str, lang: Language) -> String {
     let name = match lang {
-        Language::Python | Language::Rust | Language::Php => snake_case(name),
-        Language::TypeScript | Language::JavaScript => name.to_string(),
+        Language::Python | Language::Rust => snake_case(name),
+        // PHP functions are conventionally camelCase, like the problem.toml name.
+        Language::Php | Language::TypeScript | Language::JavaScript => name.to_string(),
     };
     avoid_keyword(name, lang)
 }
@@ -189,6 +212,87 @@ const PYTHON_KEYWORDS: &[&str] = &[
     "def", "del", "elif", "else", "except", "finally", "for", "from", "global", "if", "import",
     "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try", "while",
     "with", "yield",
+];
+
+/// Names a PHP function may not take (keywords and language constructs).
+const PHP_RESERVED: &[&str] = &[
+    "abstract",
+    "and",
+    "array",
+    "as",
+    "break",
+    "callable",
+    "case",
+    "catch",
+    "class",
+    "clone",
+    "const",
+    "continue",
+    "declare",
+    "default",
+    "die",
+    "do",
+    "echo",
+    "else",
+    "elseif",
+    "empty",
+    "enddeclare",
+    "endfor",
+    "endforeach",
+    "endif",
+    "endswitch",
+    "endwhile",
+    "eval",
+    "exit",
+    "extends",
+    "final",
+    "finally",
+    "fn",
+    "for",
+    "foreach",
+    "function",
+    "global",
+    "goto",
+    "if",
+    "implements",
+    "include",
+    "include_once",
+    "instanceof",
+    "insteadof",
+    "interface",
+    "isset",
+    "list",
+    "match",
+    "namespace",
+    "new",
+    "or",
+    "print",
+    "private",
+    "protected",
+    "public",
+    "readonly",
+    "require",
+    "require_once",
+    "return",
+    "static",
+    "switch",
+    "throw",
+    "trait",
+    "try",
+    "unset",
+    "use",
+    "var",
+    "while",
+    "xor",
+    "yield",
+];
+
+const RUST_KEYWORDS: &[&str] = &[
+    "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern",
+    "false", "fn", "for", "gen", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut",
+    "pub", "ref", "return", "self", "static", "struct", "super", "trait", "true", "type", "unsafe",
+    "use", "where", "while", "abstract", "become", "box", "do", "final", "macro", "override",
+    "priv", "try", "typeof", "unsized", "virtual", "yield",
 ];
 
 const TS_RESERVED: &[&str] = &[
@@ -244,9 +348,17 @@ fn avoid_keyword(name: String, lang: Language) -> String {
     let reserved = match lang {
         Language::Python => PYTHON_KEYWORDS,
         Language::TypeScript | Language::JavaScript => TS_RESERVED,
-        Language::Php | Language::Rust => &[],
+        Language::Php => PHP_RESERVED,
+        Language::Rust => RUST_KEYWORDS,
     };
-    if reserved.contains(&name.as_str()) {
+    // PHP keywords are case-insensitive.
+    let lowered = name.to_ascii_lowercase();
+    let probe = if lang == Language::Php {
+        lowered.as_str()
+    } else {
+        name.as_str()
+    };
+    if reserved.contains(&probe) {
         name + "_"
     } else {
         name
@@ -281,6 +393,31 @@ mod tests {
         assert_eq!(t.spelled_in(Language::TypeScript), "number[][]");
         assert_eq!(Type::Bool.spelled_in(Language::TypeScript), "boolean");
         assert_eq!(Type::String.spelled_in(Language::Python), "str");
+    }
+
+    #[test]
+    fn spells_php_and_rust_types() {
+        let t: Type = "int[][]".parse().unwrap();
+        assert_eq!(t.spelled_in(Language::Rust), "Vec<Vec<i64>>");
+        assert_eq!(t.spelled_in(Language::Php), "array");
+        assert_eq!(t.array_depth(), 2);
+        assert_eq!(Type::Float.spelled_in(Language::Rust), "f64");
+        assert_eq!(Type::String.spelled_in(Language::Rust), "String");
+        assert_eq!(Type::Bool.spelled_in(Language::Php), "bool");
+        assert_eq!(Type::Int.array_depth(), 0);
+    }
+
+    #[test]
+    fn php_keeps_camel_case_and_rust_snake_cases() {
+        let s = sig(r#"name = "list"
+params = [{ name = "type", type = "int" }, { name = "maxValue", type = "int" }]
+returns = "int""#)
+        .unwrap();
+        assert_eq!(s.function_name(Language::Php), "list_");
+        assert_eq!(s.function_name(Language::Rust), "list");
+        assert_eq!(s.param_name(&s.params[0], Language::Rust), "type_");
+        assert_eq!(s.param_name(&s.params[1], Language::Rust), "max_value");
+        assert_eq!(s.param_name(&s.params[1], Language::Php), "maxValue");
     }
 
     #[test]

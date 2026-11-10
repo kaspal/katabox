@@ -1,8 +1,8 @@
-//! End-to-end judge tests on two-sum: real Python and Node inside the Windows sandbox.
-//! Needs the dev sandbox root with the pinned toolchains:
+//! End-to-end judge tests on two-sum: real Python, Node, PHP and rustc inside the Windows
+//! sandbox. Needs the dev sandbox root with the pinned toolchains:
 //!
 //! ```text
-//! pwsh scripts/fetch-toolchains.ps1      # Python 3.14 + Node 26 in target/katabox
+//! pwsh scripts/fetch-toolchains.ps1      # Python, Node, PHP and Rust in target/katabox
 //! cargo test -p kb-judge --test e2e_windows
 //! ```
 #![cfg(windows)]
@@ -28,7 +28,9 @@ fn env() -> JudgeEnv {
     assert!(
         root.join(ROOT_MARKER).is_file()
             && tc.join("python-3.14/python.exe").is_file()
-            && tc.join("node-26/node.exe").is_file(),
+            && tc.join("node-26/node.exe").is_file()
+            && tc.join("php-8.5/php.exe").is_file()
+            && tc.join("rust-1.99/bin/rustc.exe").is_file(),
         "sandbox root or toolchains missing at {}. Run: pwsh scripts/fetch-toolchains.ps1",
         root.display()
     );
@@ -148,6 +150,14 @@ fn starter_stubs_parse_and_get_wrong_answer() {
         assert_eq!(r.verdict, Verdict::WrongAnswer, "{lang}");
         assert_eq!(r.first_failure.unwrap().actual, Some(json!(null)), "{lang}");
     }
+    // Typed returns: PHP's empty body fails its `: array` return type, and Rust's stub is
+    // `todo!()`. Both compile and run.
+    let r = run(Language::Php, &starter_code(Language::Php, &sig).unwrap());
+    assert_eq!(r.verdict, Verdict::RuntimeError);
+    assert!(failure_message(&r, MessageCode::Exception).contains("TypeError"));
+    let r = run(Language::Rust, &starter_code(Language::Rust, &sig).unwrap());
+    assert_eq!(r.verdict, Verdict::RuntimeError);
+    assert!(failure_message(&r, MessageCode::Exception).contains("not yet implemented"));
 }
 
 // ---- Time Limit Exceeded ----------------------------------------------------------
@@ -381,4 +391,234 @@ fn public_only_run() {
     .unwrap();
     assert_eq!(r.verdict, Verdict::Accepted);
     assert_eq!(r.total_tests, 3);
+}
+
+// ---- PHP --------------------------------------------------------------------------
+
+const PHP_HEAD: &str = "<?php\nfunction twoSum(array $nums, int $target): array {\n";
+
+#[test]
+fn php_accepted_reference() {
+    let r = run(Language::Php, &reference(Language::Php));
+    assert_eq!(r.verdict, Verdict::Accepted);
+    assert_eq!(r.tests.len(), 7);
+    assert!(r.compile.is_none());
+}
+
+#[test]
+fn php_wrong_answer() {
+    let r = run(
+        Language::Php,
+        &format!("{PHP_HEAD}    return [0, 1];\n}}\n"),
+    );
+    assert_eq!(r.verdict, Verdict::WrongAnswer);
+    let f = r.first_failure.unwrap();
+    assert_eq!((f.kind, f.index), (TestKind::Public, 2));
+    assert_eq!(f.actual, Some(json!([0, 1])));
+}
+
+#[test]
+fn php_list_keys_are_normalized() {
+    // array_filter keeps keys; without re-indexing this would encode as an object.
+    let src =
+        format!("{PHP_HEAD}    return array_filter([3 => 0, 7 => 1], fn ($x) => true);\n}}\n");
+    let r = run(Language::Php, &src);
+    assert_eq!(r.tests[0].actual, Some(json!([0, 1])));
+}
+
+#[test]
+fn php_time_limit_exceeded() {
+    let r = run(
+        Language::Php,
+        &format!("{PHP_HEAD}    while (true) {{}}\n}}\n"),
+    );
+    assert_eq!(r.verdict, Verdict::TimeLimitExceeded);
+    assert_eq!(r.tests.len(), 1);
+}
+
+#[test]
+fn php_runtime_error() {
+    let src = "<?php\nfunction helper(array $a): int {\n    throw new LogicException('nope');\n}\n\
+               function twoSum(array $nums, int $target): array {\n    return [helper($nums)];\n}\n";
+    let r = run(Language::Php, src);
+    assert_eq!(r.verdict, Verdict::RuntimeError);
+    let msg = failure_message(&r, MessageCode::Exception);
+    assert!(
+        msg.starts_with("LogicException: nope in solution.php:3"),
+        "{msg}"
+    );
+    assert!(msg.contains("at helper() (solution.php:6)"), "{msg}");
+    assert!(!msg.contains("main.php"), "{msg}");
+}
+
+#[test]
+fn php_memory_limit_exceeded() {
+    let src =
+        format!("{PHP_HEAD}    $s = str_repeat('x', 512 * 1024 * 1024);\n    return [0, 1];\n}}\n");
+    let r = run(Language::Php, &src);
+    assert_eq!(r.verdict, Verdict::MemoryLimitExceeded);
+    assert_eq!(
+        failure_message(&r, MessageCode::MemoryLimit),
+        "memory limit exceeded"
+    );
+}
+
+#[test]
+fn php_compilation_errors() {
+    let r = run(Language::Php, &format!("{PHP_HEAD}    return [0, 1\n}}\n"));
+    assert_eq!(r.verdict, Verdict::CompilationError);
+    let out = compile_output(&r, MessageCode::SyntaxError);
+    assert!(out.contains("solution.php on line"), "{out}");
+
+    // A fatal compile error PHP cannot throw as an exception.
+    let src = format!(
+        "<?php\nfunction count($x) {{ return 1; }}\n{}",
+        &PHP_HEAD[6..]
+    );
+    let r = run(Language::Php, &format!("{src}    return [0, 1];\n}}\n"));
+    assert!(compile_output(&r, MessageCode::CompileError).contains("Cannot redeclare"));
+
+    let r = run(Language::Php, "<?php\nfunction twosum2() { return []; }\n");
+    assert!(compile_output(&r, MessageCode::FunctionNotFound).contains("twoSum() is not defined"));
+}
+
+#[test]
+fn php_return_value_not_json() {
+    let r = run(Language::Php, &format!("{PHP_HEAD}    return [NAN];\n}}\n"));
+    assert_eq!(r.verdict, Verdict::RuntimeError);
+    failure_message(&r, MessageCode::ReturnNotSerializable);
+}
+
+#[test]
+fn php_prints_and_warnings_are_captured_per_test() {
+    let src = format!(
+        "{PHP_HEAD}    echo 'nums = ', json_encode($nums), \"\\n\";\n    echo '{{\"kind\":\"done\"}}', \"\\n\";\n    \
+         echo $undefined;\n    return $target === 9 ? [0, 1] : [];\n}}\n"
+    );
+    let r = run(Language::Php, &src);
+    assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
+    assert_eq!(
+        r.tests[0].stdout,
+        "nums = [2,7,11,15]\n{\"kind\":\"done\"}\nWarning: Undefined variable $undefined in solution.php on line 5\n"
+    );
+    assert_eq!(r.tests.len(), 7, "a fake record must not end the run");
+}
+
+#[test]
+fn php_mbstring_is_available() {
+    let src = format!("{PHP_HEAD}    return [mb_strlen('ñandú'), 1];\n}}\n");
+    let r = run(Language::Php, &src);
+    assert_eq!(r.tests[0].actual, Some(json!([5, 1])));
+}
+
+// ---- Rust -------------------------------------------------------------------------
+
+const RS_HEAD: &str = "pub fn two_sum(nums: Vec<i64>, target: i64) -> Vec<i64> {\n";
+
+/// A source that has never been compiled, so the cache cannot answer for it.
+fn fresh(src: &str) -> String {
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    format!("// fresh {nanos} {:?}\n{src}", std::thread::current().id())
+}
+
+#[test]
+fn rust_accepted_reference_then_cached() {
+    let src = fresh(&reference(Language::Rust));
+    let r = run(Language::Rust, &src);
+    assert_eq!(r.verdict, Verdict::Accepted);
+    assert_eq!(r.tests.len(), 7);
+    let c = r.compile.unwrap();
+    assert!(!c.cached && c.time_us > 0, "{c:?}");
+
+    let again = run(Language::Rust, &src);
+    assert_eq!(again.verdict, Verdict::Accepted);
+    assert!(again.compile.unwrap().cached);
+}
+
+#[test]
+fn rust_wrong_answer() {
+    let r = run(Language::Rust, &format!("{RS_HEAD}    vec![0, 1]\n}}\n"));
+    assert_eq!(r.verdict, Verdict::WrongAnswer);
+    let f = r.first_failure.unwrap();
+    assert_eq!((f.kind, f.index), (TestKind::Public, 2));
+    assert_eq!(f.actual, Some(json!([0, 1])));
+}
+
+#[test]
+fn rust_time_limit_exceeded() {
+    let r = run(Language::Rust, &format!("{RS_HEAD}    loop {{}}\n}}\n"));
+    assert_eq!(r.verdict, Verdict::TimeLimitExceeded);
+    assert_eq!(r.tests.len(), 1);
+}
+
+#[test]
+fn rust_panic_is_a_runtime_error() {
+    let src = format!("{RS_HEAD}    let v: Vec<i64> = Vec::new();\n    vec![v[nums.len()]]\n}}\n");
+    let r = run(Language::Rust, &src);
+    assert_eq!(r.verdict, Verdict::RuntimeError);
+    let msg = failure_message(&r, MessageCode::Exception);
+    assert!(msg.starts_with("panicked at solution.rs:3:"), "{msg}");
+    assert!(msg.contains("index out of bounds"), "{msg}");
+}
+
+#[test]
+fn rust_process_exit_mid_test() {
+    let r = run(
+        Language::Rust,
+        &format!("{RS_HEAD}    std::process::exit(3)\n}}\n"),
+    );
+    assert_eq!(r.verdict, Verdict::RuntimeError);
+    assert!(failure_message(&r, MessageCode::ProcessExited).contains("exit code 0x3"));
+}
+
+#[test]
+fn rust_compilation_errors() {
+    let r = run(
+        Language::Rust,
+        &format!("{RS_HEAD}    let x: i64 = \"nope\";\n    vec![x]\n}}\n"),
+    );
+    assert_eq!(r.verdict, Verdict::CompilationError);
+    assert!(r.tests.is_empty());
+    assert!(r.compile.is_some());
+    let out = compile_output(&r, MessageCode::CompileError);
+    assert!(out.contains("error[E0308]: mismatched types"), "{out}");
+    assert!(out.contains("--> solution.rs:2:"), "{out}");
+    assert!(!out.contains("warning"), "warnings are silenced: {out}");
+    assert!(!out.contains(":\\"), "absolute paths leak: {out}");
+
+    let r = run(Language::Rust, "pub fn twosum() -> Vec<i64> { vec![] }\n");
+    assert_eq!(r.verdict, Verdict::CompilationError);
+    compile_output(&r, MessageCode::FunctionNotFound);
+}
+
+#[test]
+fn rust_prints_are_captured_per_test() {
+    let src = format!(
+        "{RS_HEAD}    println!(\"nums = {{:?}}\", nums);\n    println!(\"{{{{\\\"kind\\\":\\\"done\\\"}}}}\");\n    \
+         eprint!(\"no newline\");\n    if target == 9 {{ vec![0, 1] }} else {{ vec![] }}\n}}\n"
+    );
+    let r = run(Language::Rust, &src);
+    assert_eq!(r.tests.len(), 7, "a fake record must not end the run");
+    assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
+    assert_eq!(
+        r.tests[0].stdout,
+        "nums = [2, 7, 11, 15]\n{\"kind\":\"done\"}\nno newline"
+    );
+    let f = r.first_failure.unwrap();
+    assert_eq!(
+        f.stdout,
+        "nums = [3, 2, 4]\n{\"kind\":\"done\"}\nno newline"
+    );
+}
+
+#[test]
+fn rust_printing_too_much_is_output_limit_exceeded() {
+    let src =
+        format!("{RS_HEAD}    print!(\"{{}}\", \"x\".repeat(100_000));\n    vec![0, 1]\n}}\n");
+    let r = run(Language::Rust, &src);
+    assert_eq!(r.verdict, Verdict::OutputLimitExceeded);
+    assert_eq!(r.tests[0].stdout.len(), 64 * 1024);
 }

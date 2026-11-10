@@ -16,7 +16,10 @@ pub mod signature;
 
 pub use checker::{CheckOutcome, Checker};
 pub use codegen::{harness, starter_code};
-pub use judge::{Failure, JudgeEnv, Report, STARTUP_ALLOWANCE, TestOutcome, judge};
+pub use judge::{
+    BINARY_CACHE_SIZE, CompileInfo, Failure, JudgeEnv, Report, STARTUP_ALLOWANCE, TestOutcome,
+    judge,
+};
 pub use problem::{Problem, TestCase};
 pub use signature::{Param, Signature, Type};
 

@@ -1,7 +1,19 @@
-# Runtime definition for rust. Harness template: harness.rs.j2 (Core judge phase).
+# Runtime definition for rust. Templates (minijinja, embedded by kb-judge):
+# stub.rs.j2 (starter code for the editor) and harness.rs.j2 (main.rs, which include!s
+# the solution). Compiled inside the sandbox with the limits below; the binary is cached
+# by a hash of the source (ADR 0009).
 id = "rust"
 extension = "rs"
-compile = "rustc -O --edition 2024 -o {binary} {main}"
+compile = "rustc -O --edition 2024 --color never -A warnings -o {binary} {main}"
 run = "{binary}"
 language_server = "rust-analyzer"
 debug_adapter = "CodeLLDB"
+
+# Measured on Windows (ADR 0009): a typical solution needs about 1.2 s CPU, 0.9 s wall,
+# 185 MB and 4 processes (rustc, gcc, ld, conhost); a heavy generic one about 20 s CPU
+# (rustc compiles on several threads; the limit counts all of them), 9 s wall, 245 MB.
+[compile_limits]
+cpu_time_ms = 30000
+wall_time_ms = 60000
+memory_mb = 1024
+max_processes = 16
