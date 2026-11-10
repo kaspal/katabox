@@ -12,6 +12,7 @@
 //!   stream results.
 
 use std::path::PathBuf;
+use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
 use kb_core::Limits;
@@ -153,12 +154,26 @@ pub enum SandboxError {
     Io(#[from] std::io::Error),
 }
 
+/// Held for the whole of every `run` and `cleanup`. All runs share one AppContainer SID,
+/// so two runs active at once could reach each other's work folders (ADR 0006). This
+/// serializes runs within one process; it does not coordinate separate processes.
+static RUN_LOCK: Mutex<()> = Mutex::new(());
+
+fn run_lock() -> MutexGuard<'static, ()> {
+    // A panic in an earlier run must not wedge every later one; the lock guards no data.
+    RUN_LOCK.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 /// Run `spec` in the sandbox and wait for the whole process tree to finish.
+///
+/// Only one sandboxed run happens at a time in this process: a second call blocks until
+/// the first has finished, cleanup included.
 ///
 /// The spec is validated before anything is created or granted. Once validation passes,
 /// `work_dir` is cleaned up after the run even if the run fails: its grant is revoked
 /// and it is deleted unless `keep_work_dir`. A cleanup failure is returned as an error.
 pub fn run(spec: &SandboxSpec) -> Result<Outcome, SandboxError> {
+    let _one_at_a_time = run_lock();
     #[cfg(windows)]
     {
         windows::run(spec)
@@ -171,7 +186,9 @@ pub fn run(spec: &SandboxSpec) -> Result<Outcome, SandboxError> {
 }
 
 /// Remove what `run` leaves behind: the ACL entries on `dirs` and the AppContainer profile.
+/// Waits for any run in progress, so the profile is never deleted under a running sandbox.
 pub fn cleanup(dirs: &[PathBuf]) -> Result<(), SandboxError> {
+    let _one_at_a_time = run_lock();
     #[cfg(windows)]
     {
         windows::cleanup(dirs)

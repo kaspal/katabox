@@ -1,6 +1,6 @@
 # 6. Windows sandbox details
 
-Date: 2026-11-09 · Status: proposed (needs maintainer sign-off)
+Date: 2026-11-09 · Status: accepted
 
 ## Context
 ADR 0002 chose Job Objects + AppContainer on Windows. The Foundations spike
@@ -33,6 +33,10 @@ work-folder lifecycle, the sandbox root, and kernel time in the CPU limit.
   and deletes the folder. With `keep_work_dir` the folder stays, but every explicit
   permission inside it is reset to inherited. If deletion fails, the reset still runs and
   the run returns an error. Read-only grants (toolchains) persist between runs.
+- **One sandboxed run at a time.** `kb_runner::run` holds a process-wide lock for the
+  whole run, cleanup included; a second call waits. `cleanup` takes the same lock so the
+  profile is never deleted under a running sandbox. Reason: every run uses the same
+  AppContainer SID, so two runs active at once could reach each other's work folders.
 - AppContainer `KataBox.Sandbox`, zero capabilities. CreateProcess requires a registered
   profile, and a profile brings a writable, persistent folder (`Packages\katabox.sandbox\AC`,
   where Windows points TEMP/TMP) and registry key. Every run revokes the SID's access to
@@ -42,7 +46,7 @@ work-folder lifecycle, the sandbox root, and kernel time in the CPU limit.
 - The child never inherits the host environment.
 
 ## Consequences
-- Verified by the attack suite (19 tests): a second run cannot read, list, write, append,
+- Verified by the attack suite (20 tests): a second run cannot read, list, write, append,
   delete or create in a previous run's folder, whether it was deleted or kept; specs
   pointing at the user profile, its parent, `C:\`, a folder outside the root, or a
   junction to the profile are rejected without touching any ACL; a kernel-heavy loop
@@ -53,9 +57,14 @@ work-folder lifecycle, the sandbox root, and kernel time in the CPU limit.
   FSCTL_SET_REPARSE_POINT), and it cannot change ACLs on its own files (`icacls /grant`
   is denied). Cleanup does not depend on either: it never follows links and resets
   permissions anyway.
-- **Concurrent runs share one AppContainer SID**, so two runs active at the same time can
-  reach each other's work folders. Run submissions one at a time, or move to one
-  AppContainer profile per run before allowing parallel runs.
+- Runs are serialized (verified: two `run` calls started together from two threads
+  produce disjoint process lifetimes; without the lock they overlapped fully). Judging
+  many tests is therefore sequential. **The path to parallel runs is one AppContainer
+  profile (and SID) per concurrent run**, each granted only its own work folder, so no
+  run can reach another's; that also needs profile creation and deletion per run (or a
+  small reusable pool) and the same storage sealing for every profile.
+- The lock is per process. Two KataBox processes running sandboxes at once would still
+  share the SID; the app should stay single-instance until per-run profiles exist.
 - Known gap: the sandbox can read files Windows grants to ALL APPLICATION PACKAGES
   (much of `C:\Windows`, `Program Files`). Recorded by `known_gap_system_files_readable_without_lpac`.
 - Not yet proven: whether UDP datagrams are dropped before leaving the machine (no reply

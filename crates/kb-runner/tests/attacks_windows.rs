@@ -694,6 +694,63 @@ fn kept_work_dir_is_sealed_against_later_runs() {
     assert!(!run1.join("new.txt").exists());
 }
 
+// --- One sandboxed run at a time ----------------------------------------------------
+
+/// All runs share one AppContainer SID, so they must never overlap. Two threads call
+/// `run` at the same moment; each sandboxed process reports when it started and ended
+/// (wall clock), and those intervals must be disjoint.
+#[test]
+fn concurrent_run_calls_never_overlap() {
+    let _s = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let a = Arena::new("concurrent");
+    let code = "import time\nprint('start', repr(time.time()), flush=True)\ntime.sleep(1.0)\nprint('end', repr(time.time()), flush=True)\n";
+    let specs = [
+        a.python_in(&a.new_work("t1"), code, &[]),
+        a.python_in(&a.new_work("t2"), code, &[]),
+    ];
+    let barrier = std::sync::Arc::new(std::sync::Barrier::new(2));
+    let started = std::time::Instant::now();
+    let handles: Vec<_> = specs
+        .into_iter()
+        .map(|spec| {
+            let barrier = std::sync::Arc::clone(&barrier);
+            std::thread::spawn(move || {
+                barrier.wait(); // both threads call run() together
+                run(&spec).expect("sandbox run failed")
+            })
+        })
+        .collect();
+    let outcomes: Vec<Outcome> = handles.into_iter().map(|h| h.join().unwrap()).collect();
+    let total = started.elapsed();
+
+    let stamp = |o: &Outcome, label: &str| -> f64 {
+        line(o, label)
+            .split_whitespace()
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap()
+    };
+    let mut spans: Vec<(f64, f64)> = outcomes
+        .iter()
+        .map(|o| {
+            assert_eq!(o.termination, Termination::Exited);
+            (stamp(o, "start"), stamp(o, "end"))
+        })
+        .collect();
+    spans.sort_by(|x, y| x.0.total_cmp(&y.0));
+    let gap = spans[1].0 - spans[0].1;
+    eprintln!(
+        "\n[concurrent] run A {:.3}..{:.3}  run B {:.3}..{:.3}  (B starts {gap:+.3} s after A ends)  total {total:?}",
+        spans[0].0, spans[0].1, spans[1].0, spans[1].1
+    );
+    assert!(gap >= 0.0, "sandboxed runs overlapped by {:.3} s", -gap);
+    assert!(
+        total >= Duration::from_secs(2),
+        "runs finished too fast to have been serialized: {total:?}"
+    );
+}
+
 // --- Specs must stay inside the KataBox root ----------------------------------------
 
 #[test]
