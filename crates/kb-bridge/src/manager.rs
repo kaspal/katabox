@@ -47,6 +47,15 @@ pub struct LspManager {
     sessions: Mutex<HashMap<Language, Session>>,
 }
 
+impl std::fmt::Debug for LspManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LspManager")
+            .field("root", &self.tc.root)
+            .field("projects_root", &self.projects_root)
+            .finish_non_exhaustive()
+    }
+}
+
 /// JavaScript files are served by the TypeScript server.
 fn server_language(l: Language) -> Language {
     if l == Language::JavaScript {

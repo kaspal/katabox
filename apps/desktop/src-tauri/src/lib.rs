@@ -202,6 +202,40 @@ async fn set_setting(state: State<'_, AppState>, key: String, value: Value) -> R
     state.app()?.set_setting(&key, &value).await
 }
 
+/// Start (or rebind) the language server for `language` on `problem` (ADR 0014).
+/// Server messages and status changes stream over `on_event`.
+#[tauri::command]
+#[specta::specta]
+async fn lsp_connect(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+    text: String,
+    on_event: Channel<kb_bridge::LspEvent>,
+) -> Res<kb_bridge::LspConnection> {
+    let send = move |e| {
+        let _ = on_event.send(e);
+    };
+    state
+        .app()?
+        .lsp_connect(&problem, language, &text, send)
+        .await
+}
+
+/// Relay a JSON-RPC message from the editor to its language server.
+#[tauri::command]
+#[specta::specta]
+async fn lsp_send(state: State<'_, AppState>, language: Language, message: String) -> Res<()> {
+    state.app()?.lsp_send(language, message).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn lsp_disconnect(state: State<'_, AppState>, language: Language) -> Res<()> {
+    state.app()?.lsp_disconnect(language).await;
+    Ok(())
+}
+
 /// Every command, for the invoke handler and the TypeScript bindings.
 fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::<tauri::Wry>::new().commands(tauri_specta::collect_commands![
@@ -226,6 +260,9 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         unlocked_hints,
         get_setting,
         set_setting,
+        lsp_connect,
+        lsp_send,
+        lsp_disconnect,
     ])
 }
 
@@ -314,6 +351,15 @@ pub fn run_app() {
             app.manage(AppState(state));
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running KataBox");
+        .build(tauri::generate_context!())
+        .expect("error while building KataBox")
+        .run(|handle, event| {
+            // Stop language servers cleanly on exit (their Job Objects would kill them anyway).
+            if let tauri::RunEvent::Exit = event
+                && let Some(state) = handle.try_state::<AppState>()
+                && let Ok(app) = state.app()
+            {
+                tauri::async_runtime::block_on(app.lsp_shutdown());
+            }
+        });
 }

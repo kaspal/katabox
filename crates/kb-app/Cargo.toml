@@ -8,6 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+kb-bridge.workspace = true
 kb-core.workspace = true
 kb-judge.workspace = true
 kb-runner.workspace = true
@@ -20,7 +21,7 @@ tokio = { workspace = true, features = ["sync"] }
 
 [features]
 # TypeScript bindings for the desktop app (tauri-specta).
-specta = ["dep:specta", "kb-core/specta", "kb-store/specta"]
+specta = ["dep:specta", "kb-core/specta", "kb-store/specta", "kb-bridge/specta"]
 
 [dev-dependencies]
 kb-pack.workspace = true

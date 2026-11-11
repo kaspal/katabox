@@ -58,6 +58,15 @@ pub struct ToolchainInfo {
     pub problem: Option<String>,
 }
 
+/// Whether a language server can run for a language here, and if not, why.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct LanguageServerInfo {
+    pub language: Language,
+    pub available: bool,
+    pub reason: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct AppInfo {
@@ -72,6 +81,8 @@ pub struct AppInfo {
     pub sandbox_root_source: RootSource,
     /// Languages the judge supports, with their toolchain status.
     pub toolchains: Vec<ToolchainInfo>,
+    /// Language servers (completion, hover, diagnostics), per judge language.
+    pub language_servers: Vec<LanguageServerInfo>,
     /// `windows`, `linux`, ...
     pub platform: String,
 }
@@ -147,6 +158,9 @@ pub struct App {
     dev_data: bool,
     data_dir: PathBuf,
     judging: tokio::sync::Mutex<()>,
+    /// Language servers (ADR 0014): tools from the sandbox root, projects and state in
+    /// the app's local data folder.
+    lsp: kb_bridge::LspManager,
 }
 
 impl App {
@@ -165,6 +179,7 @@ impl App {
             &paths.local_data_dir,
         )?;
         Ok(App {
+            lsp: kb_bridge::LspManager::new(&root, &paths.local_data_dir),
             env: JudgeEnv::dev(&root),
             store,
             root,
@@ -214,6 +229,17 @@ impl App {
             sandbox_root: self.root.display().to_string(),
             sandbox_root_source: self.root_source,
             toolchains,
+            language_servers: kb_judge::languages::SUPPORTED
+                .into_iter()
+                .map(|language| {
+                    let reason = self.lsp.unavailable_reason(language);
+                    LanguageServerInfo {
+                        language,
+                        available: reason.is_none(),
+                        reason,
+                    }
+                })
+                .collect(),
             platform: std::env::consts::OS.to_string(),
         })
     }
@@ -478,6 +504,40 @@ impl App {
             }
         }
         Ok(tests)
+    }
+
+    // --- Language servers (ADR 0014) ------------------------------------------------
+
+    /// Start (or rebind) the language server for `language` on `problem`; `text` seeds
+    /// the solution file. Messages and status changes go to `on_event`.
+    pub async fn lsp_connect<F>(
+        &self,
+        problem: &str,
+        language: Language,
+        text: &str,
+        on_event: F,
+    ) -> Result<kb_bridge::LspConnection>
+    where
+        F: Fn(kb_bridge::LspEvent) + Send + Sync + 'static,
+    {
+        Ok(self
+            .lsp
+            .connect(problem, language, text, std::sync::Arc::new(on_event))
+            .await?)
+    }
+
+    /// Relay a JSON-RPC message from the editor to the server (through the bridge's policy).
+    pub async fn lsp_send(&self, language: Language, message: String) -> Result<()> {
+        Ok(self.lsp.send(language, message).await?)
+    }
+
+    pub async fn lsp_disconnect(&self, language: Language) {
+        self.lsp.disconnect(language).await;
+    }
+
+    /// Stop every language server (app exit).
+    pub async fn lsp_shutdown(&self) {
+        self.lsp.shutdown().await;
     }
 
     // --- Submissions, history, notes, hints, settings ------------------------------

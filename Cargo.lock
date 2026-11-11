@@ -1825,6 +1825,7 @@ name = "katabox-desktop"
 version = "0.1.0"
 dependencies = [
  "kb-app",
+ "kb-bridge",
  "kb-core",
  "kb-pack",
  "kb-runner",
@@ -1842,6 +1843,7 @@ dependencies = [
 name = "kb-app"
 version = "0.1.0"
 dependencies = [
+ "kb-bridge",
  "kb-core",
  "kb-judge",
  "kb-pack",
