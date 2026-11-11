@@ -42,6 +42,28 @@ async getProblem(id: string, uiLang: UiLang) : Promise<Result<ProblemView, AppEr
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * The editorial and its lock state (unlocked when solved or after 3 failed submits).
+ */
+async editorial(problem: string, uiLang: UiLang) : Promise<Result<EditorialState, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("editorial", { problem, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The language of the problem's most recently edited draft.
+ */
+async lastLanguage(problem: string) : Promise<Result<Language | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("last_language", { problem }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getStub(problem: string, language: Language) : Promise<Result<string, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_stub", { problem, language }) };
@@ -276,6 +298,38 @@ title: string; language: Language; updated_at: number }
 export type Difficulty = "easy" | "medium" | "hard"
 export type Draft = { code: string; updated_at: number }
 /**
+ * Why the editorial is unlocked.
+ */
+export type EditorialReason = 
+/**
+ * The problem was solved.
+ */
+"accepted" | 
+/**
+ * Enough submissions failed.
+ */
+"attempts"
+/**
+ * The editorial tab's state.
+ */
+export type EditorialState = { unlocked: boolean; reason: EditorialReason | null; 
+/**
+ * Non-Accepted submissions so far.
+ */
+failed_submits: number; 
+/**
+ * Failed submissions needed to unlock without solving.
+ */
+required_failures: number; 
+/**
+ * The problem has an editorial at all.
+ */
+available: boolean; 
+/**
+ * The editorial (Markdown), only when unlocked.
+ */
+text: string | null }
+/**
  * Details of the first test that did not pass. For hidden tests this is the only one
  * revealed, and only after submitting.
  */
@@ -478,7 +532,11 @@ export type RootSource =
  * `<app local data>/sandbox` (the default; created when missing).
  */
 "app_data"
-export type Snapshot = { id: number; problem_id: string; language: Language; code: string; source: SnapshotSource; created_at: number }
+export type Snapshot = { id: number; problem_id: string; language: Language; code: string; source: SnapshotSource; 
+/**
+ * Verdict of the Run or Submit that saved it (None for restores and old rows).
+ */
+verdict: Verdict | null; created_at: number }
 export type SnapshotSource = "run" | "submit" | 
 /**
  * The draft that was replaced by restoring another snapshot.

@@ -31,10 +31,16 @@ pub(crate) struct Migration {
     pub sql: &'static str,
 }
 
-pub(crate) const MIGRATIONS: &[Migration] = &[Migration {
-    version: 1,
-    sql: include_str!("../migrations/0001_init.sql"),
-}];
+pub(crate) const MIGRATIONS: &[Migration] = &[
+    Migration {
+        version: 1,
+        sql: include_str!("../migrations/0001_init.sql"),
+    },
+    Migration {
+        version: 2,
+        sql: include_str!("../migrations/0002_snapshot_verdict.sql"),
+    },
+];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -107,6 +113,8 @@ pub struct Snapshot {
     pub language: Language,
     pub code: String,
     pub source: SnapshotSource,
+    /// Verdict of the Run or Submit that saved it (None for restores and old rows).
+    pub verdict: Option<Verdict>,
     pub created_at: i64,
 }
 
@@ -233,6 +241,25 @@ impl UserDb {
         .transpose()
     }
 
+    /// The most recently edited draft of `problem`, in any language.
+    pub async fn latest_draft_for(&self, problem: &str) -> Result<Option<DraftRef>> {
+        let row = sqlx::query(
+            "SELECT problem_id, language, updated_at FROM drafts WHERE problem_id = ?
+             ORDER BY updated_at DESC, language LIMIT 1",
+        )
+        .bind(problem)
+        .fetch_optional(&self.pool)
+        .await?;
+        row.map(|r| {
+            Ok(DraftRef {
+                problem_id: r.try_get("problem_id")?,
+                language: parse_language(&r.try_get::<String, _>("language")?)?,
+                updated_at: r.try_get("updated_at")?,
+            })
+        })
+        .transpose()
+    }
+
     /// The most recently edited drafts, newest first (at most `limit`).
     pub async fn recent_drafts(&self, limit: u32) -> Result<Vec<DraftRef>> {
         sqlx::query(
@@ -255,10 +282,28 @@ impl UserDb {
 
     // --- Runs and submissions -------------------------------------------------------
 
-    /// A Run (public tests): snapshot the code. Does not change the problem's status.
-    pub async fn record_run(&self, problem: &str, language: Language, code: &str) -> Result<i64> {
-        self.snapshot(problem, language, code, SnapshotSource::Run)
-            .await
+    /// A Run (public tests): snapshot the code with the run's verdict. Does not change
+    /// the problem's status.
+    pub async fn record_run(
+        &self,
+        problem: &str,
+        language: Language,
+        code: &str,
+        verdict: Verdict,
+    ) -> Result<i64> {
+        let mut tx = self.pool.begin().await?;
+        let id = insert_snapshot(
+            &mut tx,
+            problem,
+            language,
+            code,
+            SnapshotSource::Run,
+            Some(verdict),
+            now_ms(),
+        )
+        .await?;
+        tx.commit().await?;
+        Ok(id)
     }
 
     /// A Submit: store the submission with its full Report, snapshot the code and
@@ -293,6 +338,7 @@ impl UserDb {
             language,
             code,
             SnapshotSource::Submit,
+            Some(report.verdict),
             now,
         )
         .await?;
@@ -390,7 +436,7 @@ impl UserDb {
         source: SnapshotSource,
     ) -> Result<i64> {
         let mut tx = self.pool.begin().await?;
-        let id = insert_snapshot(&mut tx, problem, language, code, source, now_ms()).await?;
+        let id = insert_snapshot(&mut tx, problem, language, code, source, None, now_ms()).await?;
         tx.commit().await?;
         Ok(id)
     }
@@ -398,7 +444,7 @@ impl UserDb {
     /// The history of `problem`, newest first.
     pub async fn list_snapshots(&self, problem: &str) -> Result<Vec<Snapshot>> {
         sqlx::query(
-            "SELECT id, problem_id, language, code, source, created_at FROM snapshots
+            "SELECT id, problem_id, language, code, source, verdict, created_at FROM snapshots
              WHERE problem_id = ? ORDER BY id DESC",
         )
         .bind(problem)
@@ -415,7 +461,7 @@ impl UserDb {
     pub async fn restore_snapshot(&self, id: i64) -> Result<Snapshot> {
         let mut tx = self.pool.begin().await?;
         let snap = sqlx::query(
-            "SELECT id, problem_id, language, code, source, created_at FROM snapshots
+            "SELECT id, problem_id, language, code, source, verdict, created_at FROM snapshots
              WHERE id = ?",
         )
         .bind(id)
@@ -436,6 +482,7 @@ impl UserDb {
                 snap.language,
                 &cur,
                 SnapshotSource::Restore,
+                None,
                 now_ms(),
             )
             .await?;
@@ -640,6 +687,7 @@ async fn insert_snapshot(
     language: Language,
     code: &str,
     source: SnapshotSource,
+    verdict: Option<Verdict>,
     now: i64,
 ) -> Result<i64> {
     let hash = code_hash(code);
@@ -650,14 +698,16 @@ async fn insert_snapshot(
         .execute(&mut *conn)
         .await?;
     let id: i64 = sqlx::query_scalar(
-        "INSERT INTO snapshots (problem_id, language, code, code_hash, source, created_at)
-         VALUES (?, ?, ?, ?, ?, ?) RETURNING id",
+        "INSERT INTO snapshots (problem_id, language, code, code_hash, source, verdict,
+                                created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id",
     )
     .bind(problem)
     .bind(language.id())
     .bind(code)
     .bind(&hash)
     .bind(source.code())
+    .bind(verdict.map(verdict_code).transpose()?)
     .bind(now)
     .fetch_one(&mut *conn)
     .await?;
@@ -686,6 +736,11 @@ fn snapshot_row(r: &SqliteRow) -> Result<Snapshot> {
         language: parse_language(&r.try_get::<String, _>("language")?)?,
         code: r.try_get("code")?,
         source: SnapshotSource::parse(&r.try_get::<String, _>("source")?)?,
+        verdict: r
+            .try_get::<Option<String>, _>("verdict")?
+            .as_deref()
+            .map(parse_verdict)
+            .transpose()?,
         created_at: r.try_get("created_at")?,
     })
 }
@@ -912,6 +967,46 @@ pub(crate) mod tests {
     }
 
     #[tokio::test]
+    async fn migration_2_adds_snapshot_verdicts_to_old_rows() {
+        let dir = temp_dir("v2");
+        let path = dir.join("user.db");
+        let db = UserDb::open_with(&path, &MIGRATIONS[..1]).await.unwrap();
+        sqlx::query(
+            "INSERT INTO snapshots (problem_id, language, code, code_hash, source, created_at)
+             VALUES ('p', 'python', 'x', 'h', 'run', 1)",
+        )
+        .execute(&db.pool)
+        .await
+        .unwrap();
+        db.close().await;
+
+        let db = UserDb::open(&path).await.unwrap();
+        assert_eq!(db.schema_version().await.unwrap(), 2);
+        assert!(db.backup_path().is_some());
+        let old = db.list_snapshots("p").await.unwrap();
+        assert_eq!((old[0].code.as_str(), old[0].verdict), ("x", None));
+        db.record_run("p", Language::Python, "y", Verdict::TimeLimitExceeded)
+            .await
+            .unwrap();
+        assert_eq!(
+            db.list_snapshots("p").await.unwrap()[0].verdict,
+            Some(Verdict::TimeLimitExceeded)
+        );
+    }
+
+    #[tokio::test]
+    async fn latest_draft_for_a_problem() {
+        let (_dir, db) = fresh("latest").await;
+        assert_eq!(db.latest_draft_for("p").await.unwrap(), None);
+        db.save_draft("p", Language::Rust, "a").await.unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        db.save_draft("p", Language::Php, "b").await.unwrap();
+        db.save_draft("q", Language::Python, "c").await.unwrap();
+        let d = db.latest_draft_for("p").await.unwrap().unwrap();
+        assert_eq!(d.language, Language::Php);
+    }
+
+    #[tokio::test]
     async fn settings_drafts_notes_hints() {
         let (_dir, db) = fresh("misc").await;
         assert_eq!(db.get_setting("theme").await.unwrap(), None);
@@ -964,22 +1059,45 @@ pub(crate) mod tests {
     #[tokio::test]
     async fn snapshots_dedupe_cap_and_restore() {
         let (_dir, db) = fresh("snap").await;
-        let a = db.record_run("p", Language::Python, "a").await.unwrap();
-        db.record_run("p", Language::Python, "b").await.unwrap();
-        let a2 = db.record_run("p", Language::Python, "a").await.unwrap();
+        let a = db
+            .record_run("p", Language::Python, "a", Verdict::Accepted)
+            .await
+            .unwrap();
+        db.record_run("p", Language::Python, "b", Verdict::WrongAnswer)
+            .await
+            .unwrap();
+        let a2 = db
+            .record_run("p", Language::Python, "a", Verdict::Accepted)
+            .await
+            .unwrap();
         assert!(a2 > a);
         let codes = |s: Vec<Snapshot>| s.into_iter().map(|s| s.code).collect::<Vec<_>>();
         assert_eq!(codes(db.list_snapshots("p").await.unwrap()), ["a", "b"]);
+        let verdicts: Vec<Option<Verdict>> = db
+            .list_snapshots("p")
+            .await
+            .unwrap()
+            .iter()
+            .map(|s| s.verdict)
+            .collect();
+        assert_eq!(
+            verdicts,
+            [Some(Verdict::Accepted), Some(Verdict::WrongAnswer)]
+        );
         // Same code in another language is a different snapshot.
-        db.record_run("p", Language::Rust, "a").await.unwrap();
+        db.record_run("p", Language::Rust, "a", Verdict::Accepted)
+            .await
+            .unwrap();
         assert_eq!(db.list_snapshots("p").await.unwrap().len(), 3);
         // Other problems are separate.
-        db.record_run("q", Language::Python, "a").await.unwrap();
+        db.record_run("q", Language::Python, "a", Verdict::Accepted)
+            .await
+            .unwrap();
         assert_eq!(db.list_snapshots("q").await.unwrap().len(), 1);
 
         // Cap: 205 distinct codes leave the newest 200.
         for i in 0..205 {
-            db.record_run("p", Language::Python, &format!("v{i}"))
+            db.record_run("p", Language::Python, &format!("v{i}"), Verdict::Accepted)
                 .await
                 .unwrap();
         }
@@ -1002,6 +1120,7 @@ pub(crate) mod tests {
         assert_eq!(after.len(), 200);
         assert_eq!(after[0].code, "work in progress");
         assert_eq!(after[0].source, SnapshotSource::Restore);
+        assert_eq!(after[0].verdict, None);
         assert!(after.iter().any(|s| s.id == target)); // the restored one stays
 
         // Restoring when the draft already equals the snapshot adds nothing.
@@ -1023,9 +1142,14 @@ pub(crate) mod tests {
         let db = UserDb::open(&path).await.unwrap();
         let body = "x = 1  # padding\n".repeat(120); // ~2 KB
         for i in 0..200 {
-            db.record_run("big", Language::Python, &format!("# {i}\n{body}"))
-                .await
-                .unwrap();
+            db.record_run(
+                "big",
+                Language::Python,
+                &format!("# {i}\n{body}"),
+                Verdict::Accepted,
+            )
+            .await
+            .unwrap();
         }
         db.close().await;
 
@@ -1110,7 +1234,9 @@ pub(crate) mod tests {
         assert_eq!(still.status, ProblemStatus::Solved);
         assert_eq!(still.first_solved_at, Some(first));
         // Runs never touch the status.
-        db.record_run("r", Language::Php, "<?php").await.unwrap();
+        db.record_run("r", Language::Php, "<?php", Verdict::CompilationError)
+            .await
+            .unwrap();
         assert_eq!(db.problem_status("r").await.unwrap(), None);
         assert_eq!(
             db.statuses().await.unwrap().get("p"),
@@ -1134,6 +1260,7 @@ pub(crate) mod tests {
         let snaps = db.list_snapshots("p").await.unwrap();
         assert_eq!(snaps.len(), 2);
         assert_eq!(snaps[0].source, SnapshotSource::Submit);
+        assert_eq!(snaps[0].verdict, Some(Verdict::WrongAnswer));
         assert_eq!(snaps[0].code, "<?php wrong");
     }
 }
