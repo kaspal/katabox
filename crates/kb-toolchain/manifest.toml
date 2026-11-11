@@ -1,0 +1,343 @@
+# KataBox toolchain manifest (ADR 0015): every artifact the app may download, pinned per
+# app version and compiled into the binary. This is the only place pins live: the app,
+# the `kb-toolchain` CLI and scripts/fetch-toolchains.* all install from it.
+#
+# Changing a pin: take URL, size and SHA-256 from the upstream checksum list (named per
+# artifact below), then run the real-pins test (KB_REAL_PINS=1 cargo test -p kb-toolchain
+# --test real_pins -- --nocapture) and record the results. A pin that was never actually
+# downloaded and matched must not ship.
+
+schema = 1
+
+# The only hosts the downloader talks to, https on port 443 only. Redirects must stay
+# within this list (GitHub release assets and windows.php.net redirect).
+hosts = [
+    "github.com",
+    "release-assets.githubusercontent.com",
+    "objects.githubusercontent.com",
+    "nodejs.org",
+    "windows.php.net",
+    "downloads.php.net",
+    "static.rust-lang.org",
+    "registry.npmjs.org",
+]
+
+# --- Artifacts ---------------------------------------------------------------------
+# platform: windows-x86_64 | linux-x86_64 | linux-aarch64 | any
+
+# python-build-standalone 20261026 (SHA256SUMS of the release).
+[[artifact]]
+id = "python-windows-x86_64"
+platform = "windows-x86_64"
+urls = ["https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10%2B20261026-x86_64-pc-windows-msvc-install_only.tar.gz"]
+size = 51031912
+sha256 = "98bbe6a0d798bcbad142e96e5930a330e4dc407638e898b515c51eb73a27580d"
+format = "tar.gz"
+
+[[artifact]]
+id = "python-linux-x86_64"
+platform = "linux-x86_64"
+urls = ["https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10%2B20261026-x86_64-unknown-linux-gnu-install_only.tar.gz"]
+size = 76564514
+sha256 = "1b38024924eb7f4cf0cab45d7b871d1f1991354190fccd2625ac7529a43786e2"
+format = "tar.gz"
+
+[[artifact]]
+id = "python-linux-aarch64"
+platform = "linux-aarch64"
+urls = ["https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10%2B20261026-aarch64-unknown-linux-gnu-install_only.tar.gz"]
+size = 58805984
+sha256 = "dcc31ce7b9ddbbffac160da7fff0cc069054f43eca52382a7d0eebf94e985b88"
+format = "tar.gz"
+
+# Node.js v26.13.0 LTS (SHASUMS256.txt of the release).
+[[artifact]]
+id = "node-windows-x86_64"
+platform = "windows-x86_64"
+urls = ["https://nodejs.org/dist/v26.13.0/node-v26.13.0-win-x64.zip"]
+size = 41157375
+sha256 = "dcc60d59a0746999f99064a01c020445d54d84228c691cdbf25b49ac3b59150a"
+format = "zip"
+
+[[artifact]]
+id = "node-linux-x86_64"
+platform = "linux-x86_64"
+urls = ["https://nodejs.org/dist/v26.13.0/node-v26.13.0-linux-x64.tar.gz"]
+size = 62893692
+sha256 = "5848553868b402d3fabb5b09270649977780a390f832155721025a08b5104455"
+format = "tar.gz"
+
+[[artifact]]
+id = "node-linux-aarch64"
+platform = "linux-aarch64"
+urls = ["https://nodejs.org/dist/v26.13.0/node-v26.13.0-linux-arm64.tar.gz"]
+size = 62611009
+sha256 = "439e9c438acdf6a6ffe47418da709153d66c4bed812e30a473faacb107dd2791"
+format = "tar.gz"
+
+# PHP 8.5.12 NTS x64, VS17 build (windows.php.net releases.json). Superseded builds move
+# to releases/archives/, so both are listed; both redirect to downloads.php.net.
+[[artifact]]
+id = "php-windows-x86_64"
+platform = "windows-x86_64"
+urls = [
+    "https://windows.php.net/downloads/releases/php-8.5.12-1-nts-Win32-vs17-x64.zip",
+    "https://windows.php.net/downloads/releases/archives/php-8.5.12-1-nts-Win32-vs17-x64.zip",
+]
+size = 36310917
+sha256 = "2a36a2edcb7a5b9252f638fd5e4cf84d7f6e066092654220dc0b63e5cf4e9723"
+format = "zip"
+
+# Rust 1.99.1 for x86_64-pc-windows-gnu (dist/2026-10-15/channel-rust-stable.toml, the
+# `hash` of each `.tar.gz`). rust-mingw is the self-contained linker (ADR 0009).
+[[artifact]]
+id = "rustc-windows-x86_64"
+platform = "windows-x86_64"
+urls = ["https://static.rust-lang.org/dist/2026-10-15/rustc-1.99.1-x86_64-pc-windows-gnu.tar.gz"]
+size = 161274138
+sha256 = "43b17e9a9134ea72562bfbb23728a830f671ea9be1db6a72597a8d240e986b35"
+format = "tar.gz"
+
+[[artifact]]
+id = "rust-std-windows-x86_64"
+platform = "windows-x86_64"
+urls = ["https://static.rust-lang.org/dist/2026-10-15/rust-std-1.99.1-x86_64-pc-windows-gnu.tar.gz"]
+size = 44957351
+sha256 = "6546651238a3ac092b763511be524ca6eda6103e5d47342416923be1b3ce837c"
+format = "tar.gz"
+
+[[artifact]]
+id = "rust-mingw-windows-x86_64"
+platform = "windows-x86_64"
+urls = ["https://static.rust-lang.org/dist/2026-10-15/rust-mingw-1.99.1-x86_64-pc-windows-gnu.tar.gz"]
+size = 9594887
+sha256 = "30263d7bb4fd0bf63a153afe36d7fc102f929a7d42781651c6b3a03a414ba428"
+format = "tar.gz"
+
+[[artifact]]
+id = "rust-src"
+platform = "any"
+urls = ["https://static.rust-lang.org/dist/2026-10-15/rust-src-1.99.1.tar.gz"]
+size = 9392879
+sha256 = "b0d6d3a7e46a97adfe6488f8b60c04c019566b8363eeb6ffb32c6cf63609071d"
+format = "tar.gz"
+
+[[artifact]]
+id = "rust-analyzer-windows-x86_64"
+platform = "windows-x86_64"
+urls = ["https://static.rust-lang.org/dist/2026-10-15/rust-analyzer-1.99.1-x86_64-pc-windows-gnu.tar.gz"]
+size = 18549561
+sha256 = "3cfefdf58a2046d7fef43f3a49d4eaa40bc34a0a7329ca8af5bb6cf0fafdaefc"
+format = "tar.gz"
+
+# Language servers from npm (scripts/language-servers/package-lock.json: `resolved` and
+# `integrity`, checked by a test). npm itself is never run.
+[[artifact]]
+id = "npm-basedpyright"
+platform = "any"
+urls = ["https://registry.npmjs.org/basedpyright/-/basedpyright-1.40.2.tgz"]
+size = 6210925
+sha256 = "5d1073a0e61a1adc6b40b2bed4489017aa5c1336aa8e6fdcb7157b9bf26f3fab"
+integrity = "sha512-9uld8+5tZC2Gxf8nIynyunK0N4xn01W1ApzLMXDAcuA8uJq2QSfldYn9gSbxn9MWR8wmHDo7GaEHLhlnLFHaJA=="
+format = "tar.gz"
+
+[[artifact]]
+id = "npm-typescript"
+platform = "any"
+urls = ["https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz"]
+size = 4515854
+sha256 = "33cd0ee1beaa8c9e9d15a9da836c62ddea4c34a42d7c2d349dbc80d94165d22a"
+integrity = "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="
+format = "tar.gz"
+
+[[artifact]]
+id = "npm-typescript-language-server"
+platform = "any"
+urls = ["https://registry.npmjs.org/typescript-language-server/-/typescript-language-server-6.0.3.tgz"]
+size = 514069
+sha256 = "96c1b2aa0cd72db1d653438870f3b2b4cd6b2b508ca4903ce7c798dda59bc151"
+integrity = "sha512-iAxKyLXRNbnxGfCGZ/j4ilAb0PSNommvTvcghF8B8sq5JFGDKEQwzNEFZ0KTYEwzcA7rtRa+2OPeouiFR8L5KA=="
+format = "tar.gz"
+
+# --- Components ----------------------------------------------------------------------
+# One folder each under the sandbox root, always replaced as a whole (ADR 0015).
+# A source extracts `subtree` of an artifact (other entries are ignored), minus
+# `exclude`, or exactly one `member` (with its own sha256). `links`: in-archive symlinks
+# copied as files; `skip_links`: symlinks left out (a trailing `/` is a prefix). Any
+# other link fails the install.
+
+[[component]]
+id = "python"
+platform = "windows-x86_64"
+dest = "toolchains/python-3.14"
+check = "python.exe"
+installed_size = 156611145
+[[component.source]]
+artifact = "python-windows-x86_64"
+subtree = "python"
+
+[[component]]
+id = "python"
+platform = "linux-x86_64"
+dest = "toolchains/python-3.14"
+check = "bin/python3"
+installed_size = 331719383
+[[component.source]]
+artifact = "python-linux-x86_64"
+subtree = "python"
+links = ["bin/python3"]
+skip_links = ["bin/", "lib/", "share/"]
+
+[[component]]
+id = "python"
+platform = "linux-aarch64"
+dest = "toolchains/python-3.14"
+check = "bin/python3"
+installed_size = 247942813
+[[component.source]]
+artifact = "python-linux-aarch64"
+subtree = "python"
+links = ["bin/python3"]
+skip_links = ["bin/", "lib/", "share/"]
+
+[[component]]
+id = "node"
+platform = "windows-x86_64"
+dest = "toolchains/node-26"
+check = "node.exe"
+installed_size = 112910764
+[[component.source]]
+artifact = "node-windows-x86_64"
+subtree = "node-v26.13.0-win-x64"
+
+[[component]]
+id = "node"
+platform = "linux-x86_64"
+dest = "toolchains/node-26"
+check = "bin/node"
+installed_size = 224437237
+[[component.source]]
+artifact = "node-linux-x86_64"
+subtree = "node-v26.13.0-linux-x64"
+skip_links = ["bin/npm", "bin/npx"]
+
+[[component]]
+id = "node"
+platform = "linux-aarch64"
+dest = "toolchains/node-26"
+check = "bin/node"
+installed_size = 224446345
+[[component.source]]
+artifact = "node-linux-aarch64"
+subtree = "node-v26.13.0-linux-arm64"
+skip_links = ["bin/npm", "bin/npx"]
+
+[[component]]
+id = "php"
+platform = "windows-x86_64"
+dest = "toolchains/php-8.5"
+check = "php.exe"
+installed_size = 102812390
+[[component.source]]
+artifact = "php-windows-x86_64"
+subtree = ""
+# App-local VC++ runtime (ADR 0009): the Microsoft-signed 14.44.35211 DLL from the pinned
+# Python build, so users never install a redistributable.
+[[component.source]]
+artifact = "python-windows-x86_64"
+member = "python/vcruntime140.dll"
+member_sha256 = "d5e4d9a3e835fa679450145d6a7d94e36573a509317111904d9b3712c30d9066"
+
+[[component]]
+id = "rust"
+platform = "windows-x86_64"
+dest = "toolchains/rust-1.99"
+check = "bin/rustc.exe"
+installed_size = 818156694
+[[component.source]]
+artifact = "rustc-windows-x86_64"
+subtree = "rustc-1.99.1-x86_64-pc-windows-gnu/rustc"
+exclude = ["manifest.in"]
+[[component.source]]
+artifact = "rust-std-windows-x86_64"
+subtree = "rust-std-1.99.1-x86_64-pc-windows-gnu/rust-std-x86_64-pc-windows-gnu"
+exclude = ["manifest.in"]
+[[component.source]]
+artifact = "rust-mingw-windows-x86_64"
+subtree = "rust-mingw-1.99.1-x86_64-pc-windows-gnu/rust-mingw"
+exclude = ["manifest.in"]
+
+# std's sources for rust-analyzer, outside the judge's sysroot (ADR 0015).
+[[component]]
+id = "rust-src"
+platform = "windows-x86_64"
+dest = "tools/rust-src"
+check = "library/std/src/lib.rs"
+installed_size = 72825366
+[[component.source]]
+artifact = "rust-src"
+subtree = "rust-src-1.99.1/rust-src/lib/rustlib/src/rust"
+
+[[component]]
+id = "rust-analyzer"
+platform = "windows-x86_64"
+dest = "tools/rust-analyzer"
+check = "bin/rust-analyzer.exe"
+installed_size = 67757335
+[[component.source]]
+artifact = "rust-analyzer-windows-x86_64"
+subtree = "rust-analyzer-1.99.1-x86_64-pc-windows-gnu/rust-analyzer-preview"
+
+[[component]]
+id = "basedpyright"
+platform = "any"
+dest = "tools/language-servers/node_modules/basedpyright"
+check = "langserver.index.js"
+installed_size = 27852831
+[[component.source]]
+artifact = "npm-basedpyright"
+subtree = "package"
+
+[[component]]
+id = "typescript"
+platform = "any"
+dest = "tools/language-servers/node_modules/typescript"
+check = "lib/tsserver.js"
+installed_size = 24346827
+[[component.source]]
+artifact = "npm-typescript"
+subtree = "package"
+
+[[component]]
+id = "typescript-language-server"
+platform = "any"
+dest = "tools/language-servers/node_modules/typescript-language-server"
+check = "lib/cli.mjs"
+installed_size = 2421102
+[[component.source]]
+artifact = "npm-typescript-language-server"
+subtree = "package"
+
+# --- Languages -----------------------------------------------------------------------
+# What the user picks. `runtime` is what the judge runs; `servers` is what the language
+# server needs. A language is available on a platform when all its components are.
+
+[[language]]
+id = "python"
+runtime = ["python"]
+servers = ["node", "basedpyright"]
+
+[[language]]
+id = "typescript"
+runtime = ["node"]
+servers = ["typescript", "typescript-language-server"]
+
+[[language]]
+id = "php"
+runtime = ["php"]
+servers = []
+
+[[language]]
+id = "rust"
+runtime = ["rust"]
+servers = ["rust-src", "rust-analyzer"]
