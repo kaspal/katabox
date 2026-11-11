@@ -33,6 +33,8 @@ jobs:
       - run: cargo test
       - name: Validate problem packages
         run: cargo run -p kb-pack -- validate
+      - name: Build content.db
+        run: cargo run -p kb-pack -- build --out target/content.db
 
   sandbox-windows:
     name: Sandbox attack suite + judge (Windows)
@@ -47,10 +49,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Fetch pinned Python, Node, PHP and Rust toolchains
         run: pwsh scripts/fetch-toolchains.ps1
-      - run: cargo clippy -p kb-runner -p kb-judge --all-targets -- -D warnings
+      - run: cargo clippy -p kb-runner -p kb-judge -p kb-store --all-targets -- -D warnings
       - run: cargo test -p kb-runner -- --nocapture
       # Judge end-to-end tests on two-sum (Python, TypeScript, PHP, Rust in the sandbox).
       - run: cargo test -p kb-judge
+      # Includes recording a real two-sum judge Report in user.db.
+      - run: cargo test -p kb-store
       # Every reference solution, every language, through the judge (content pipeline).
       - run: cargo run -p kb-pack -- validate --run
 
