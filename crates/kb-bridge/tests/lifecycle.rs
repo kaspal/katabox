@@ -121,12 +121,20 @@ const ALLOWED_ENV: &[&str] = &[
     "XDG_DATA_HOME",
 ];
 
+fn hover(id: i64, uri: &str) -> String {
+    req(
+        id,
+        "textDocument/hover",
+        json!({ "textDocument": { "uri": uri }, "position": { "line": 0, "character": 0 } }),
+    )
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn starts_lazily_and_relays_through_the_policy() {
     let m = manager("relay", &[], fast());
     // Nothing runs before the first connect.
     assert!(matches!(
-        m.send(Language::Python, "{}".into()).await,
+        m.send(Language::Python, 1, "{}".into()).await,
         Err(BridgeError::NotConnected(Language::Python))
     ));
 
@@ -137,26 +145,28 @@ async fn starts_lazily_and_relays_through_the_policy() {
         .unwrap();
     assert!(conn.file_uri.starts_with(&conn.root_uri) && conn.file_uri.ends_with("solution.py"));
     assert_eq!(conn.language_id, "python");
+    let send = |msg: String| m.send(Language::Python, conn.session, msg);
+
+    // Before `initialize`, requests are refused by the bridge (a stale client's).
+    send(hover(9, &conn.file_uri)).await.unwrap();
+    assert_eq!(ev.message(|m| m["id"] == 9).await["error"]["code"], -32002);
 
     // The UI's initialize asks for the whole disk and its own options; the server sees
     // only the project root and the bridge's settings.
-    m.send(
-        Language::Python,
-        req(
-            1,
-            "initialize",
-            json!({
-                "rootUri": "file:///C:/",
-                "workspaceFolders": [{ "uri": "file:///C:/", "name": "all" }],
-                "initializationOptions": { "evil": true },
-                "capabilities": {}
-            }),
-        ),
-    )
+    send(req(
+        1,
+        "initialize",
+        json!({
+            "rootUri": "file:///C:/",
+            "workspaceFolders": [{ "uri": "file:///C:/", "name": "all" }],
+            "initializationOptions": { "evil": true },
+            "capabilities": {}
+        }),
+    ))
     .await
     .unwrap();
     ev.until(1, |s| *s == LspStatus::Ready).await;
-    m.send(Language::Python, note("textDocument/didOpen", json!({
+    send(note("textDocument/didOpen", json!({
         "textDocument": { "uri": conn.file_uri, "languageId": "python", "version": 1, "text": "x" }
     })))
     .await
@@ -199,24 +209,68 @@ async fn starts_lazily_and_relays_through_the_policy() {
     );
 
     // Blocked: commands, and documents outside the project.
-    m.send(
-        Language::Python,
-        req(2, "workspace/executeCommand", json!({ "command": "x" })),
-    )
+    send(req(
+        2,
+        "workspace/executeCommand",
+        json!({ "command": "x" }),
+    ))
     .await
     .unwrap();
     assert_eq!(ev.message(|m| m["id"] == 2).await["error"]["code"], -32601);
-    m.send(Language::Python, req(3, "textDocument/hover", json!({
-        "textDocument": { "uri": "file:///C:/Windows/win.ini" }, "position": { "line": 0, "character": 0 }
-    })))
-    .await
-    .unwrap();
+    send(hover(3, "file:///C:/Windows/win.ini")).await.unwrap();
     assert_eq!(ev.message(|m| m["id"] == 3).await["error"]["code"], -32601);
 
-    m.disconnect(Language::Python).await;
+    m.disconnect(Language::Python, conn.session).await;
     assert_eq!(ev.statuses().first(), Some(&LspStatus::Starting));
     assert_eq!(ev.statuses().last(), Some(&LspStatus::Stopped));
-    assert!(m.send(Language::Python, "{}".into()).await.is_err());
+    assert!(send("{}".into()).await.is_err());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_new_connect_replaces_the_session_and_cuts_off_the_old_client() {
+    let m = manager("replace", &[], fast());
+    let (ev1, ev2) = (Events::default(), Events::default());
+    let first = m
+        .connect("two-sum", Language::Python, "", ev1.sink())
+        .await
+        .unwrap();
+    m.send(
+        Language::Python,
+        first.session,
+        req(0, "initialize", json!({ "capabilities": {} })),
+    )
+    .await
+    .unwrap();
+    ev1.until(1, |s| *s == LspStatus::Ready).await;
+
+    // A remounted editor connects again: a fresh server it initializes itself.
+    let second = m
+        .connect("two-sum", Language::Python, "", ev2.sink())
+        .await
+        .unwrap();
+    assert_ne!(first.session, second.session);
+    assert_eq!(ev1.statuses().last(), Some(&LspStatus::Stopped));
+    assert!(matches!(
+        m.send(Language::Python, first.session, "{}".into()).await,
+        Err(BridgeError::NotConnected(_))
+    ));
+    m.send(
+        Language::Python,
+        second.session,
+        req(0, "initialize", json!({ "capabilities": {} })),
+    )
+    .await
+    .unwrap();
+    ev2.until(1, |s| *s == LspStatus::Ready).await;
+
+    // The old editor's late cleanup leaves the new session alone.
+    m.disconnect(Language::Python, first.session).await;
+    m.send(Language::Python, second.session, hover(1, &second.file_uri))
+        .await
+        .unwrap();
+    ev2.message(|m| m["id"] == 1).await;
+    m.disconnect(Language::Python, second.session).await;
+    assert_eq!(ev2.statuses().last(), Some(&LspStatus::Stopped));
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -225,18 +279,24 @@ async fn stops_when_idle_and_starts_again_on_connect() {
     config.idle = Duration::from_millis(400);
     let m = manager("idle", &[], config);
     let ev = Events::default();
-    m.connect("two-sum", Language::Rust, "", ev.sink())
+    let conn = m
+        .connect("two-sum", Language::Rust, "", ev.sink())
         .await
         .unwrap();
     m.send(
         Language::Rust,
+        conn.session,
         req(1, "initialize", json!({ "capabilities": {} })),
     )
     .await
     .unwrap();
     ev.until(1, |s| *s == LspStatus::Ready).await;
     ev.until(1, |s| *s == LspStatus::Stopped).await;
-    assert!(m.send(Language::Rust, "{}".into()).await.is_err());
+    assert!(
+        m.send(Language::Rust, conn.session, "{}".into())
+            .await
+            .is_err()
+    );
 
     let ev2 = Events::default();
     m.connect("two-sum", Language::Rust, "", ev2.sink())
@@ -257,11 +317,27 @@ async fn restarts_after_crashes_with_backoff_then_gives_up() {
         .unwrap();
     for round in 1..=3 {
         ev.until(round, |s| *s == LspStatus::Starting).await;
+        // The UI starts a new client for each restarted process, on the same session.
+        m.send(
+            Language::TypeScript,
+            conn.session,
+            req(0, "initialize", json!({ "capabilities": {} })),
+        )
+        .await
+        .unwrap();
+        ev.until(round, |s| *s == LspStatus::Ready).await;
         // The fake server dies on this edit, as a buggy server would.
-        m.send(Language::TypeScript, note("textDocument/didChange", json!({
-            "textDocument": { "uri": format!("{}solution.ts", conn.root_uri), "version": 2 },
-            "contentChanges": [{ "text": "crash" }]
-        })))
+        m.send(
+            Language::TypeScript,
+            conn.session,
+            note(
+                "textDocument/didChange",
+                json!({
+                    "textDocument": { "uri": conn.file_uri, "version": 2 },
+                    "contentChanges": [{ "text": "crash" }]
+                }),
+            ),
+        )
         .await
         .unwrap();
         if round < 3 {
@@ -283,7 +359,11 @@ async fn restarts_after_crashes_with_backoff_then_gives_up() {
         })
         .collect();
     assert_eq!(delays, [50, 100], "exponential backoff");
-    assert!(m.send(Language::TypeScript, "{}".into()).await.is_err());
+    assert!(
+        m.send(Language::TypeScript, conn.session, "{}".into())
+            .await
+            .is_err()
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -324,15 +404,17 @@ async fn bad_problem_ids_and_missing_tools_are_errors() {
 async fn a_client_exit_is_a_stop_not_a_crash() {
     let m = manager("exit", &[], fast());
     let ev = Events::default();
-    m.connect("two-sum", Language::Python, "", ev.sink())
+    let conn = m
+        .connect("two-sum", Language::Python, "", ev.sink())
         .await
         .unwrap();
-    m.send(Language::Python, req(1, "shutdown", Value::Null))
+    let send = |msg: String| m.send(Language::Python, conn.session, msg);
+    send(req(0, "initialize", json!({ "capabilities": {} })))
         .await
         .unwrap();
-    m.send(Language::Python, note("exit", Value::Null))
-        .await
-        .unwrap();
+    ev.until(1, |s| *s == LspStatus::Ready).await;
+    send(req(1, "shutdown", Value::Null)).await.unwrap();
+    send(note("exit", Value::Null)).await.unwrap();
     ev.until(1, |s| *s == LspStatus::Stopped).await;
     assert_eq!(ev.count(|s| matches!(s, LspStatus::Restarting { .. })), 0);
 }

@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Extension } from "@codemirror/state";
 import { LSPClient, languageServerExtensions, type Transport } from "@codemirror/lsp-client";
-import type { Language, LspEvent, LspStatus } from "@/bindings";
+import type { Language, LspConnection, LspEvent, LspStatus } from "@/bindings";
 import { api } from "@/lib/api";
 import { isAppError } from "@/lib/errors";
 import { sanitizeHTML } from "@/workspace/editor/lsp/sanitize";
@@ -20,9 +20,14 @@ export type LanguageServer = {
   wake: () => void;
 };
 
+type Connected = { language: Language; conn: LspConnection };
+
 /**
  * `unavailable`: the reason from app_info when this language has no server here (then
  * nothing is started). `text` is read once per connection to seed the solution file.
+ *
+ * Every connect gets its own bridge session (a server is initialized once per process);
+ * a client is created per server process: again when the bridge restarts it after a crash.
  */
 export function useLanguageServer(
   problem: string,
@@ -32,86 +37,107 @@ export function useLanguageServer(
 ): LanguageServer {
   const [status, setStatus] = useState<ServerState>({ state: "off" });
   const [extension, setExtension] = useState<Extension | null>(null);
-  // Bumped to reconnect: after a crash restart, or when waking an idle server.
-  const [generation, setGeneration] = useState(0);
+  const [connected, setConnected] = useState<Connected | null>(null);
+  // Bumped to connect again: waking a server that stopped while idle.
+  const [connectGen, setConnectGen] = useState(0);
+  // Bumped for a new client on the same session: the server restarted after a crash.
+  const [clientGen, setClientGen] = useState(0);
   const statusRef = useRef<ServerState>(status);
   const textRef = useRef(text);
   textRef.current = text;
+  // The current client's message handlers (the transport subscribes them).
+  const handlers = useRef(new Set<(m: string) => void>());
 
+  // The session: connect, follow its status, disconnect when the editor leaves.
   useEffect(() => {
+    setConnected(null);
     if (!language) {
       setStatus({ state: "off" });
-      setExtension(null);
       return;
     }
     if (unavailable !== null) {
       setStatus({ state: "unavailable", reason: unavailable });
-      setExtension(null);
       return;
     }
     let live = true;
     let wasReady = false;
-    const handlers = new Set<(m: string) => void>();
+    let session: number | null = null;
     const update = (s: ServerState) => {
       statusRef.current = s;
       if (live) setStatus(s);
     };
-    const transport: Transport = {
-      send(message) {
-        api.lspSend(language, message).catch((e) => {
-          if (isAppError(e) && e.code === "language_server_not_connected" && live) {
-            update({ state: "stopped" });
-          }
-        });
-      },
-      subscribe: (h) => void handlers.add(h),
-      unsubscribe: (h) => void handlers.delete(h),
-    };
     const onEvent = (e: LspEvent) => {
       if (!live) return;
       if (e.kind === "message") {
-        handlers.forEach((h) => h(e.message));
+        handlers.current.forEach((h) => h(e.message));
         return;
       }
       update(e.status);
       if (e.status.state === "ready") wasReady = true;
-      // The server restarted after a crash: a fresh client re-initializes it.
-      if (e.status.state === "starting" && wasReady) setGeneration((g) => g + 1);
-      if (e.status.state === "unavailable" || e.status.state === "stopped") setExtension(null);
+      if (e.status.state === "starting" && wasReady) setClientGen((g) => g + 1);
+      if (e.status.state === "unavailable" || e.status.state === "stopped") setConnected(null);
     };
 
     update({ state: "connecting" });
-    let client: LSPClient | null = null;
     api
       .lspConnect(problem, language, textRef.current(), onEvent)
       .then((conn) => {
-        if (!live) return;
-        client = new LSPClient({
-          rootUri: conn.root_uri,
-          timeout: 5000,
-          sanitizeHTML,
-          extensions: languageServerExtensions(),
-        }).connect(transport);
-        setExtension(client.plugin(conn.file_uri, conn.language_id));
+        session = conn.session;
+        // Cleaned up before the bridge answered (React's dev double effects, quick
+        // navigation): release the session right away.
+        if (!live) return void api.lspDisconnect(language, conn.session).catch(() => {});
+        setConnected({ language, conn });
       })
       .catch((e) => {
         if (!live) return;
-        const reason = isAppError(e) ? e.message : String(e);
-        update({ state: "unavailable", reason });
-        setExtension(null);
+        update({ state: "unavailable", reason: isAppError(e) ? e.message : String(e) });
       });
 
     return () => {
       live = false;
-      client?.disconnect();
+      if (session !== null) void api.lspDisconnect(language, session).catch(() => {});
+    };
+  }, [problem, language, unavailable, connectGen]);
+
+  // The client: one per server process of the session.
+  useEffect(() => {
+    if (!connected) {
+      setExtension(null);
+      return;
+    }
+    const { language, conn } = connected;
+    let live = true;
+    const transport: Transport = {
+      send(message) {
+        api.lspSend(language, conn.session, message).catch((e) => {
+          // The session ended (stopped while idle): show it; typing wakes it.
+          if (live && isAppError(e) && e.code === "language_server_not_connected") {
+            statusRef.current = { state: "stopped" };
+            setStatus(statusRef.current);
+          }
+        });
+      },
+      subscribe: (h) => void handlers.current.add(h),
+      unsubscribe: (h) => void handlers.current.delete(h),
+    };
+    const client = new LSPClient({
+      rootUri: conn.root_uri,
+      timeout: 5000,
+      sanitizeHTML,
+      extensions: languageServerExtensions(),
+    }).connect(transport);
+    setExtension(client.plugin(conn.file_uri, conn.language_id));
+    return () => {
+      live = false;
+      client.disconnect();
       setExtension(null);
     };
-  }, [problem, language, unavailable, generation]);
+  }, [connected, clientGen]);
 
   const wake = useCallback(() => {
     if (statusRef.current.state === "stopped") {
       statusRef.current = { state: "connecting" };
-      setGeneration((g) => g + 1);
+      setConnectGen((g) => g + 1);
     }
   }, []);
 

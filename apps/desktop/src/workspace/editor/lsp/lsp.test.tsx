@@ -79,19 +79,31 @@ describe("Workspace with a language server", () => {
     await waitFor(() => expect(screen.getByTestId("lsp-status")).toHaveAttribute("data-state", "ready"), { timeout: 4000 });
     expect(fake.api.lspConnect).toHaveBeenCalledTimes(1);
 
-    // The bridge restarted the server after a crash: a new client initializes it.
+    // The bridge restarted the server after a crash: a new client initializes the new
+    // process on the same session.
     act(() => fake.state.lspEmit?.({ kind: "status", status: { state: "restarting", attempt: 1, delay_ms: 1000 } }));
     act(() => fake.state.lspEmit?.({ kind: "status", status: { state: "starting" } }));
-    await waitFor(() => expect(fake.api.lspConnect).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(fake.state.lspSent.filter((m) => m.method === "initialize")).toHaveLength(2));
+    expect(fake.api.lspConnect).toHaveBeenCalledTimes(1);
 
-    // Stopped while idle; typing brings it back.
+    // Stopped while idle; typing connects a new session.
     act(() => fake.state.lspEmit?.({ kind: "status", status: { state: "stopped" } as LspStatus }));
     expect(screen.getByTestId("lsp-status")).toHaveAttribute("data-state", "stopped");
     act(() => {
       v.dispatch({ changes: { from: v.state.doc.length, insert: "# edit\n" } });
     });
-    await waitFor(() => expect(fake.api.lspConnect).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(fake.api.lspConnect).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.getByTestId("lsp-status")).toHaveAttribute("data-state", "ready"));
+    expect(fake.api.lspSend).toHaveBeenLastCalledWith("python", 2, expect.any(String));
+  });
+
+  it("releases its session when the workspace closes", async () => {
+    const fake = setFakeApi({ lastLanguage: "python" });
+    const { unmount } = renderApp("/problems/two-sum");
+    await editor();
+    await waitFor(() => expect(screen.getByTestId("lsp-status")).toHaveAttribute("data-state", "ready"), { timeout: 4000 });
+    unmount();
+    expect(fake.api.lspDisconnect).toHaveBeenCalledWith("python", 1);
   });
 
   it("keeps the editor working without a server and says why", async () => {

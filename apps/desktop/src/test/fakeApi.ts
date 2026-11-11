@@ -157,6 +157,8 @@ export function createFakeApi(
     lspEmit: null as ((e: LspEvent) => void) | null,
     /** Messages the editor sent to the fake language server. */
     lspSent: [] as { method?: string; id?: unknown; params?: unknown }[],
+    /** The current language-server session; older ones are refused, as in the bridge. */
+    lspSession: 0,
   };
 
   const snap = (problem: string, language: Language, code: string, source: Snapshot["source"], verdict: Verdict | null) => {
@@ -294,15 +296,20 @@ export function createFakeApi(
     // on didOpen, and offers a completion.
     lspConnect: vi.fn(async (problem: string, language: Language, _text: string, onEvent: (e: LspEvent) => void) => {
       state.lspEmit = onEvent;
+      state.lspSession += 1;
       onEvent({ kind: "status", status: { state: "starting" } });
       const ext = language === "typescript" ? "ts" : language === "python" ? "py" : language;
       return {
+        session: state.lspSession,
         root_uri: `file:///lsp/${problem}/${language}/`,
         file_uri: `file:///lsp/${problem}/${language}/solution.${ext}`,
         language_id: language,
       };
     }),
-    lspSend: vi.fn(async (_language: Language, message: string) => {
+    lspSend: vi.fn(async (_language: Language, session: number, message: string) => {
+      if (session !== state.lspSession) {
+        throw { code: "language_server_not_connected", message: "replaced" };
+      }
       const m = JSON.parse(message);
       state.lspSent.push(m);
       const emit = state.lspEmit;

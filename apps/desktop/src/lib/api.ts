@@ -100,9 +100,10 @@ export const api = {
     ch.onmessage = onEvent;
     return call(commands.lspConnect(problem, language, text, ch));
   },
-  lspSend: (language: Language, message: string): Promise<null> =>
-    call(commands.lspSend(language, message)),
-  lspDisconnect: (language: Language): Promise<null> => call(commands.lspDisconnect(language)),
+  lspSend: (language: Language, session: number, message: string): Promise<null> =>
+    call(commands.lspSend(language, session, message)),
+  lspDisconnect: (language: Language, session: number): Promise<null> =>
+    call(commands.lspDisconnect(language, session)),
 };
 
 export type Api = typeof api;

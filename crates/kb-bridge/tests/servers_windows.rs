@@ -77,6 +77,8 @@ async fn check(
     col: u32,
     expect_item: &str,
     expect_diag: &str,
+    // Lines (by a fragment) that may have diagnostics; any other line must have none.
+    broken_lines: &[&str],
 ) {
     let data = root().join("..").join(format!(
         "kb-bridge-real-{}-{}",
@@ -97,7 +99,7 @@ async fn check(
         .unwrap();
     let send = |v: Value| {
         let m = &m;
-        async move { m.send(language, v.to_string()).await.unwrap() }
+        async move { m.send(language, conn.session, v.to_string()).await.unwrap() }
     };
     send(
         json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
@@ -158,15 +160,8 @@ server said: {logs:#?}"
         );
     }
 
-    // Editing triggers fresh diagnostics (rust-analyzer computes semantic ones once its
-    // project has loaded), as typing in the editor does.
-    send(
-        json!({ "jsonrpc": "2.0", "method": "textDocument/didChange", "params": {
-        "textDocument": { "uri": conn.file_uri, "version": 2 },
-        "contentChanges": [{ "text": code }]
-    } }),
-    )
-    .await;
+    // Diagnostics arrive without an edit (rust-analyzer: the bridge pulls again when the
+    // server asks for a refresh after loading its project).
     let diag = ev
         .message(60, |m| {
             m["method"] == "textDocument/publishDiagnostics"
@@ -193,11 +188,40 @@ server said: {logs:#?}"
             })
             .map(|d| d["message"].as_str().unwrap_or_default().to_string())
             .collect();
+        let methods: Vec<String> = ev
+            .messages()
+            .iter()
+            .filter_map(|m| m["method"].as_str().map(str::to_owned))
+            .collect();
         panic!(
-            "{language}: no diagnostic containing {expect_diag:?}; got {got:?}; statuses {:?}",
+            "{language}: no diagnostic containing {expect_diag:?}; got {got:?}; statuses {:?}; server methods {methods:?}",
             ev.statuses()
         );
     }
+    // Correct code gets no errors or warnings (hints such as "never read" are fine): only
+    // the deliberately broken lines do.
+    for d in diag.as_ref().unwrap()["params"]["diagnostics"]
+        .as_array()
+        .unwrap()
+    {
+        if d["severity"].as_u64().unwrap_or(1) > 2 {
+            continue;
+        }
+        let line = d["range"]["start"]["line"].as_u64().unwrap() as usize;
+        let text = code.lines().nth(line).unwrap_or_default();
+        assert!(
+            broken_lines.iter().any(|b| text.contains(b)),
+            "{language}: diagnostic on correct line {line} ({text:?}): {}",
+            d["message"]
+        );
+    }
+    // The editor matches diagnostics to its file by exact URI, so the bridge must hand
+    // back the URI it gave out, however the server spells it.
+    assert_eq!(
+        diag.unwrap()["params"]["uri"].as_str(),
+        Some(conn.file_uri.as_str()),
+        "{language}: diagnostics URI"
+    );
     assert!(ev.statuses().contains(&LspStatus::Ready));
     m.shutdown().await;
     assert_eq!(ev.statuses().last(), Some(&LspStatus::Stopped));
@@ -206,13 +230,31 @@ server said: {logs:#?}"
 #[tokio::test(flavor = "multi_thread")]
 async fn basedpyright_completes_and_diagnoses() {
     let code = "def two_sum(nums: list[int], target: int) -> list[int]:\n    seen: dict[int, int] = {}\n    seen.ite\n    return undefined_name\n";
-    check(Language::Python, code, 2, 12, "items", "undefined_name").await;
+    check(
+        Language::Python,
+        code,
+        2,
+        12,
+        "items",
+        "undefined_name",
+        &["seen.ite", "undefined_name"],
+    )
+    .await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn typescript_language_server_completes_and_diagnoses() {
     let code = "export function twoSum(nums: number[], target: number): number[] {\n  const seen = new Map<number, number>();\n  seen.se\n  return undefinedName;\n}\n";
-    check(Language::TypeScript, code, 2, 9, "set", "undefinedName").await;
+    check(
+        Language::TypeScript,
+        code,
+        2,
+        9,
+        "set",
+        "undefinedName",
+        &["seen.se", "undefinedName"],
+    )
+    .await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -220,7 +262,16 @@ async fn rust_analyzer_completes_and_diagnoses_without_cargo() {
     // Well-formed around the cursor: rust-analyzer completes `seen.ins|()`.
     let code = "use std::collections::HashMap;\n\npub fn two_sum(nums: Vec<i64>, target: i64) -> Vec<i64> {\n    let mut seen: HashMap<i64, i64> = HashMap::new();\n    seen.ins();\n    vec![]\n}\n\nfn broken(seen: HashMap<i64, i64>) { seen.no_such_method(); }\n";
     // An unknown method is a stable native diagnostic (no cargo check involved).
-    check(Language::Rust, code, 4, 12, "insert", "no_such_method").await;
+    check(
+        Language::Rust,
+        code,
+        4,
+        12,
+        "insert",
+        "no_such_method",
+        &["seen.ins", "no_such_method"],
+    )
+    .await;
 }
 
 #[tokio::test(flavor = "multi_thread")]

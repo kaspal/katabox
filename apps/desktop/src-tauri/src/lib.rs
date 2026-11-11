@@ -202,8 +202,8 @@ async fn set_setting(state: State<'_, AppState>, key: String, value: Value) -> R
     state.app()?.set_setting(&key, &value).await
 }
 
-/// Start (or rebind) the language server for `language` on `problem` (ADR 0014).
-/// Server messages and status changes stream over `on_event`.
+/// Start a language server for `language` on `problem`, replacing the language's previous
+/// session (ADR 0014). Server messages and status changes stream over `on_event`.
 #[tauri::command]
 #[specta::specta]
 async fn lsp_connect(
@@ -222,17 +222,23 @@ async fn lsp_connect(
         .await
 }
 
-/// Relay a JSON-RPC message from the editor to its language server.
+/// Relay a JSON-RPC message from the editor's client of `session` to its language server.
 #[tauri::command]
 #[specta::specta]
-async fn lsp_send(state: State<'_, AppState>, language: Language, message: String) -> Res<()> {
-    state.app()?.lsp_send(language, message).await
+async fn lsp_send(
+    state: State<'_, AppState>,
+    language: Language,
+    session: u32,
+    message: String,
+) -> Res<()> {
+    state.app()?.lsp_send(language, session, message).await
 }
 
+/// Stop `session`'s language server (the editor closed).
 #[tauri::command]
 #[specta::specta]
-async fn lsp_disconnect(state: State<'_, AppState>, language: Language) -> Res<()> {
-    state.app()?.lsp_disconnect(language).await;
+async fn lsp_disconnect(state: State<'_, AppState>, language: Language, session: u32) -> Res<()> {
+    state.app()?.lsp_disconnect(language, session).await;
     Ok(())
 }
 

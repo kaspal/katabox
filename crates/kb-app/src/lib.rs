@@ -508,8 +508,9 @@ impl App {
 
     // --- Language servers (ADR 0014) ------------------------------------------------
 
-    /// Start (or rebind) the language server for `language` on `problem`; `text` seeds
-    /// the solution file. Messages and status changes go to `on_event`.
+    /// Start a language server for `language` on `problem`, replacing the language's
+    /// previous session; `text` seeds the solution file. Messages and status changes go
+    /// to `on_event`.
     pub async fn lsp_connect<F>(
         &self,
         problem: &str,
@@ -526,13 +527,15 @@ impl App {
             .await?)
     }
 
-    /// Relay a JSON-RPC message from the editor to the server (through the bridge's policy).
-    pub async fn lsp_send(&self, language: Language, message: String) -> Result<()> {
-        Ok(self.lsp.send(language, message).await?)
+    /// Relay a JSON-RPC message from the editor's client of `session` to the server
+    /// (through the bridge's policy).
+    pub async fn lsp_send(&self, language: Language, session: u32, message: String) -> Result<()> {
+        Ok(self.lsp.send(language, session, message).await?)
     }
 
-    pub async fn lsp_disconnect(&self, language: Language) {
-        self.lsp.disconnect(language).await;
+    /// Stop `session` (the editor closed); a no-op once a newer connect replaced it.
+    pub async fn lsp_disconnect(&self, language: Language, session: u32) {
+        self.lsp.disconnect(language, session).await;
     }
 
     /// Stop every language server (app exit).

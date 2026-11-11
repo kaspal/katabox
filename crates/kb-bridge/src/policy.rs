@@ -125,8 +125,54 @@ impl Policy {
         FromClient::Forward(msg)
     }
 
+    /// The project URI spelling for `uri` when it names something inside the project,
+    /// however the server spelled it (basedpyright and tsserver send `file:///c%3A/…` for
+    /// `file:///C:/…`). The editor matches files by exact URI.
+    fn canonical(&self, uri: &str) -> Option<String> {
+        if !uri.starts_with("file:") || uri.starts_with(&self.root_uri) {
+            return None;
+        }
+        let (got, root) = (percent_decode(uri), percent_decode(&self.root_uri));
+        let n = root.len();
+        let same = got.len() >= n
+            && got.is_char_boundary(n)
+            && if cfg!(windows) {
+                got.as_bytes()[..n].eq_ignore_ascii_case(root.as_bytes())
+            } else {
+                got.as_bytes()[..n] == *root.as_bytes()
+            };
+        same.then(|| format!("{}{}", self.root_uri, percent_encode_path(&got[n..])))
+    }
+
+    /// Rewrite every project URI in a server message (values and object keys, such as
+    /// `WorkspaceEdit.changes`) to the project's spelling.
+    fn canonicalize(&self, v: &mut Value) {
+        match v {
+            Value::String(s) => {
+                if let Some(c) = self.canonical(s) {
+                    *s = c;
+                }
+            }
+            Value::Array(items) => items.iter_mut().for_each(|i| self.canonicalize(i)),
+            Value::Object(map) => {
+                let renamed: Vec<(String, String)> = map
+                    .keys()
+                    .filter_map(|k| self.canonical(k).map(|c| (k.clone(), c)))
+                    .collect();
+                for (old, new) in renamed {
+                    if let Some(val) = map.remove(&old) {
+                        map.insert(new, val);
+                    }
+                }
+                map.values_mut().for_each(|i| self.canonicalize(i));
+            }
+            _ => {}
+        }
+    }
+
     /// Filter a message from the server. Requests the UI need not see are answered here.
-    pub fn from_server(&self, msg: Value) -> FromServer {
+    pub fn from_server(&self, mut msg: Value) -> FromServer {
+        self.canonicalize(&mut msg);
         let (Some(id), Some(method)) = (msg.get("id"), msg.get("method").and_then(Value::as_str))
         else {
             // A notification or a response.
@@ -175,6 +221,39 @@ impl Policy {
             _ => FromServer::Forward(msg),
         }
     }
+}
+
+/// Decode `%XX` escapes (invalid ones are kept as is).
+fn percent_decode(s: &str) -> String {
+    let b = s.as_bytes();
+    let mut out = Vec::with_capacity(b.len());
+    let mut i = 0;
+    while i < b.len() {
+        if b[i] == b'%'
+            && let Some(hex) = s.get(i + 1..i + 3)
+            && let Ok(byte) = u8::from_str_radix(hex, 16)
+        {
+            out.push(byte);
+            i += 3;
+        } else {
+            out.push(b[i]);
+            i += 1;
+        }
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+/// Percent-encode a path tail for a `file:` URI (unreserved characters and `/` stay).
+fn percent_encode_path(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for &c in s.as_bytes() {
+        if c.is_ascii_alphanumeric() || b"-._~/".contains(&c) {
+            out.push(c as char);
+        } else {
+            out.push_str(&format!("%{c:02X}"));
+        }
+    }
+    out
 }
 
 /// Every document URI a `workspace/applyEdit` touches.
@@ -348,5 +427,42 @@ mod tests {
             p.from_server(json!({ "jsonrpc": "2.0", "method": "textDocument/publishDiagnostics", "params": {} })),
             FromServer::Forward(_)
         ));
+    }
+
+    #[test]
+    fn server_uris_come_back_in_the_project_spelling() {
+        let p = Policy {
+            root_uri: "file:///C:/Users/Jos%C3%A9%20P/lsp/two-sum/python/".into(),
+            settings: json!({}),
+        };
+        let file = "file:///C:/Users/Jos%C3%A9%20P/lsp/two-sum/python/solution.py";
+        let forwarded = |msg: Value| match p.from_server(msg) {
+            FromServer::Forward(m) => m,
+            other => panic!("{other:?}"),
+        };
+        // Same spelling: untouched.
+        let out = forwarded(
+            json!({ "jsonrpc": "2.0", "method": "textDocument/publishDiagnostics",
+            "params": { "uri": file, "diagnostics": [] } }),
+        );
+        assert_eq!(out["params"]["uri"], file);
+        // Decoded and differently encoded spellings map back (values and edit keys).
+        let out = forwarded(json!({ "jsonrpc": "2.0", "id": 1, "result": {
+            "uri": "file:///C:/Users/José P/lsp/two-sum/python/solution.py",
+            "changes": { "file:///C:/Users/Jos%c3%a9%20P/lsp/two-sum/python/solution.py": [] },
+            "other": "file:///C:/elsewhere/x.py", "text": "c%3A",
+        } }));
+        assert_eq!(out["result"]["uri"], file);
+        assert!(out["result"]["changes"].get(file).is_some());
+        assert_eq!(out["result"]["other"], "file:///C:/elsewhere/x.py");
+        assert_eq!(out["result"]["text"], "c%3A");
+        // Drive letter case and an encoded colon, as basedpyright and tsserver send them.
+        if cfg!(windows) {
+            let out = forwarded(
+                json!({ "jsonrpc": "2.0", "method": "textDocument/publishDiagnostics",
+                "params": { "uri": "file:///c%3A/Users/Jos%C3%A9%20P/lsp/two-sum/python/solution.py" } }),
+            );
+            assert_eq!(out["params"]["uri"], file);
+        }
     }
 }

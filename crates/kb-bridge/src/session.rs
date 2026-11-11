@@ -80,7 +80,6 @@ impl Default for SessionConfig {
 
 enum Cmd {
     Send(String),
-    SetSink(Sink),
     Stop(oneshot::Sender<()>),
 }
 
@@ -88,13 +87,13 @@ enum Cmd {
 pub struct Session {
     tx: mpsc::UnboundedSender<Cmd>,
     alive: Arc<AtomicBool>,
-    pub problem: String,
+    pub id: u32,
     pub project: Project,
 }
 
 impl Session {
     pub fn start(
-        problem: String,
+        id: u32,
         project: Project,
         spec: ServerSpec,
         sink: Sink,
@@ -114,7 +113,7 @@ impl Session {
         Session {
             tx,
             alive,
-            problem,
+            id,
             project,
         }
     }
@@ -126,10 +125,6 @@ impl Session {
     /// Queue a message from the UI. False when the session has ended.
     pub fn send(&self, message: String) -> bool {
         self.is_alive() && self.tx.send(Cmd::Send(message)).is_ok()
-    }
-
-    pub fn set_sink(&self, sink: Sink) {
-        let _ = self.tx.send(Cmd::SetSink(sink));
     }
 
     /// Stop gracefully and wait for it.
@@ -178,7 +173,7 @@ enum End {
 async fn run(
     spec: ServerSpec,
     policy: Policy,
-    mut sink: Sink,
+    sink: Sink,
     config: SessionConfig,
     mut rx: mpsc::UnboundedReceiver<Cmd>,
 ) {
@@ -260,14 +255,29 @@ async fn run(
                 cmd = rx.recv() => match cmd {
                     None => break End::Closed,
                     Some(Cmd::Stop(done)) => break End::Stopped(Some(done)),
-                    Some(Cmd::SetSink(s)) => sink = s,
                     Some(Cmd::Send(text)) => {
                         idle_at = Instant::now() + config.idle;
                         let Ok(v) = serde_json::from_str::<Value>(&text) else { continue };
+                        // Each process is initialized by the client started for it; anything
+                        // before that `initialize` is a stale client's (after a restart).
+                        if init_id.is_none() && v.get("method").and_then(Value::as_str) != Some("initialize") {
+                            if let (Some(id), Some(_)) = (v.get("id"), v.get("method")) {
+                                sink(LspEvent::Message { message: json!({
+                                    "jsonrpc": "2.0", "id": id,
+                                    "error": { "code": -32002, "message": "server not initialized" }
+                                }).to_string() });
+                            }
+                            continue;
+                        }
                         match policy.from_client(v) {
-                            FromClient::Forward(v) => {
+                            FromClient::Forward(mut v) => {
                                 match v.get("method").and_then(Value::as_str) {
-                                    Some("initialize") => init_id = v.get("id").cloned(),
+                                    Some("initialize") => {
+                                        init_id = v.get("id").cloned();
+                                        if spec.pull_diagnostics {
+                                            pull_capabilities(&mut v);
+                                        }
+                                    }
                                     Some("exit") => exit_requested = true,
                                     Some("textDocument/didOpen" | "textDocument/didChange") if spec.pull_diagnostics => {
                                         if let Some(uri) = v.pointer("/params/textDocument/uri").and_then(Value::as_str) {
@@ -298,11 +308,20 @@ async fn run(
                         }
                     }
                     Some(v) => {
-                        // The server says diagnostics changed (e.g. its project finished loading).
-                        if spec.pull_diagnostics && v.get("method").and_then(Value::as_str) == Some("workspace/diagnostic/refresh") {
+                        // The server says diagnostics changed, or that it finished loading.
+                        let method = v.get("method").and_then(Value::as_str);
+                        let settled = method == Some("experimental/serverStatus");
+                        if spec.pull_diagnostics
+                            && (method == Some("workspace/diagnostic/refresh")
+                                || (settled && v.pointer("/params/quiescent") == Some(&Value::Bool(true))))
+                        {
                             if let Some(uri) = &last_doc {
                                 pull = Some((Instant::now() + PULL_DELAY, uri.clone()));
                             }
+                        }
+                        if settled {
+                            // The bridge asked for it; the editor has no use for it.
+                            continue;
                         }
                         match policy.from_server(v) {
                         FromServer::Forward(v) => {
@@ -390,7 +409,8 @@ async fn run(
                         delay_ms: u64::try_from(delay.as_millis()).unwrap_or(u64::MAX),
                     },
                 );
-                // Wait out the backoff; messages meanwhile are dropped (the UI reconnects).
+                // Wait out the backoff; messages meanwhile are dropped (the UI starts a new
+                // client for the restarted process on `Starting`).
                 let resume_at = Instant::now() + delay;
                 loop {
                     tokio::select! {
@@ -402,7 +422,6 @@ async fn run(
                                 let _ = done.send(());
                                 return;
                             }
-                            Some(Cmd::SetSink(s)) => sink = s,
                             Some(Cmd::Send(_)) => {}
                         }
                     }
@@ -410,6 +429,41 @@ async fn run(
             }
         }
     }
+}
+
+/// The bridge pulls diagnostics for the editor (which only takes pushed ones): declare
+/// pull support, refresh support, and rust-analyzer's status notification, so the server
+/// says when to pull again (rust-analyzer: `quiescent` once its project has loaded).
+fn pull_capabilities(init: &mut Value) {
+    let Some(caps) = init.pointer_mut("/params/capabilities") else {
+        return;
+    };
+    if !caps.is_object() {
+        *caps = json!({});
+    }
+    caps["workspace"] = merge(
+        caps.get("workspace"),
+        json!({ "diagnostics": { "refreshSupport": true } }),
+    );
+    caps["textDocument"] = merge(
+        caps.get("textDocument"),
+        json!({ "diagnostic": { "dynamicRegistration": false } }),
+    );
+    caps["experimental"] = merge(
+        caps.get("experimental"),
+        json!({ "serverStatusNotification": true }),
+    );
+}
+
+fn merge(base: Option<&Value>, add: Value) -> Value {
+    let mut out = base
+        .filter(|b| b.is_object())
+        .cloned()
+        .unwrap_or_else(|| json!({}));
+    if let (Some(o), Value::Object(a)) = (out.as_object_mut(), add) {
+        o.extend(a);
+    }
+    out
 }
 
 fn exit_text(code: Option<i32>) -> String {

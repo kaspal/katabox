@@ -362,7 +362,7 @@ async fn language_servers_are_reported_and_connect_errors_are_typed() {
         .unwrap_err();
     assert_eq!(err.code, AppErrorCode::InvalidInput);
     let err = app
-        .lsp_send(Language::Python, "{}".into())
+        .lsp_send(Language::Python, 1, "{}".into())
         .await
         .unwrap_err();
     assert_eq!(err.code, AppErrorCode::LanguageServerNotConnected);

@@ -1,9 +1,15 @@
 //! All language servers of the app: one session per language, started lazily on the
 //! first connect, bound to the problem being edited.
+//!
+//! Every connect starts a fresh session with a new id, and only that id reaches it. A
+//! language server is initialized once per process, so a second client (a remounted
+//! editor, React's dev double effects) can never share one; a stale client's messages are
+//! refused instead of landing in the new session.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, Ordering};
 
 use kb_core::Language;
 use serde::Serialize;
@@ -19,7 +25,7 @@ pub enum BridgeError {
     InvalidProblem(String),
     #[error("{0}")]
     Unavailable(String),
-    #[error("no {0} language server is connected")]
+    #[error("no {0} language server is connected (or the connection was replaced)")]
     NotConnected(Language),
     #[error(transparent)]
     Io(#[from] std::io::Error),
@@ -29,6 +35,8 @@ pub enum BridgeError {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct LspConnection {
+    /// Pass back with every message; a newer connect for the language replaces it.
+    pub session: u32,
     pub root_uri: String,
     pub file_uri: String,
     pub language_id: String,
@@ -45,6 +53,7 @@ pub struct LspManager {
     config: SessionConfig,
     spec: Option<SpecFn>,
     sessions: Mutex<HashMap<Language, Session>>,
+    next_id: AtomicU32,
 }
 
 impl std::fmt::Debug for LspManager {
@@ -76,6 +85,7 @@ impl LspManager {
             config: SessionConfig::default(),
             spec: None,
             sessions: Mutex::new(HashMap::new()),
+            next_id: AtomicU32::new(1),
         }
     }
 
@@ -101,8 +111,8 @@ impl LspManager {
         spec::unavailable_reason(server_language(language), &self.tc)
     }
 
-    /// Start (or rebind) the server for `language` on `problem`. Events go to `sink`.
-    /// The solution file is written with `text` when a new session starts.
+    /// Start a server for `language` on `problem`, replacing (and stopping) the language's
+    /// previous session. Events go to `sink`; the solution file is written with `text`.
     pub async fn connect(
         &self,
         problem: &str,
@@ -115,12 +125,6 @@ impl LspManager {
         }
         let key = server_language(language);
         let mut sessions = self.sessions.lock().await;
-        if let Some(s) = sessions.get(&key) {
-            if s.problem == problem && s.is_alive() {
-                s.set_sink(sink);
-                return Ok(connection(&s.project));
-            }
-        }
         if let Some(old) = sessions.remove(&key) {
             old.stop().await;
         }
@@ -141,36 +145,42 @@ impl LspManager {
                 return Err(BridgeError::Unavailable(reason));
             }
         };
-        let conn = connection(&project);
-        let session = Session::start(
-            problem.to_string(),
-            project,
-            spec,
-            sink,
-            self.config.clone(),
-        );
+        let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+        let conn = LspConnection {
+            session: id,
+            root_uri: project.root_uri.clone(),
+            file_uri: project.file_uri.clone(),
+            language_id: project.language_id.to_string(),
+        };
+        let session = Session::start(id, project, spec, sink, self.config.clone());
         sessions.insert(key, session);
         Ok(conn)
     }
 
-    /// Relay a JSON-RPC message from the UI.
-    pub async fn send(&self, language: Language, message: String) -> Result<(), BridgeError> {
+    /// Relay a JSON-RPC message from the UI's client of `session`.
+    pub async fn send(
+        &self,
+        language: Language,
+        session: u32,
+        message: String,
+    ) -> Result<(), BridgeError> {
         let key = server_language(language);
         let sessions = self.sessions.lock().await;
         match sessions.get(&key) {
-            Some(s) if s.send(message) => Ok(()),
+            Some(s) if s.id == session && s.send(message) => Ok(()),
             _ => Err(BridgeError::NotConnected(key)),
         }
     }
 
-    pub async fn disconnect(&self, language: Language) {
-        let removed = self
-            .sessions
-            .lock()
-            .await
-            .remove(&server_language(language));
-        if let Some(s) = removed {
-            s.stop().await;
+    /// Stop `session` (the editor closed). A replaced session is already stopped.
+    pub async fn disconnect(&self, language: Language, session: u32) {
+        let key = server_language(language);
+        let mut sessions = self.sessions.lock().await;
+        if sessions.get(&key).is_some_and(|s| s.id == session) {
+            if let Some(s) = sessions.remove(&key) {
+                drop(sessions);
+                s.stop().await;
+            }
         }
     }
 
@@ -180,13 +190,5 @@ impl LspManager {
         for s in all {
             s.stop().await;
         }
-    }
-}
-
-fn connection(p: &Project) -> LspConnection {
-    LspConnection {
-        root_uri: p.root_uri.clone(),
-        file_uri: p.file_uri.clone(),
-        language_id: p.language_id.to_string(),
     }
 }

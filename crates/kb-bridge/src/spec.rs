@@ -252,11 +252,12 @@ pub fn server_for(
             // rust-analyzer serves its native diagnostics by pull only.
             pull_diagnostics: true,
             // Never cargo, never build scripts or proc-macros, never `cargo check`.
-            // Never cargo, never build scripts or proc-macros, never `cargo check`.
             // `sysrootQueryMetadata: none` stops it from running `cargo metadata` on the
             // sysroot (it tries even with a rust-project.json; the bundled toolchain has no
             // cargo anyway). Semantic diagnostics are "experimental" in rust-analyzer and
-            // only analyse; without them it reports syntax errors only.
+            // only analyse; without them it reports syntax errors only. E0282 ("type
+            // annotations needed") is off: it fires on correct code such as
+            // `let m: HashMap<i64, i64> = HashMap::new();`.
             settings: json!({
                 "linkedProjects": [s(project.dir.join("rust-project.json"))],
                 "cargo": {
@@ -267,7 +268,11 @@ pub fn server_for(
                 "procMacro": { "enable": false },
                 "checkOnSave": false,
                 "files": { "watcher": "client" },
-                "diagnostics": { "enable": true, "experimental": { "enable": true } }
+                "diagnostics": {
+                    "enable": true,
+                    "experimental": { "enable": true },
+                    "disabled": ["E0282"]
+                }
             }),
         },
     };

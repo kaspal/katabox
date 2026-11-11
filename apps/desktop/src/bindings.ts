@@ -191,8 +191,8 @@ async setSetting(key: string, value: JsonValue) : Promise<Result<null, AppError>
 }
 },
 /**
- * Start (or rebind) the language server for `language` on `problem` (ADR 0014).
- * Server messages and status changes stream over `on_event`.
+ * Start a language server for `language` on `problem`, replacing the language's previous
+ * session (ADR 0014). Server messages and status changes stream over `on_event`.
  */
 async lspConnect(problem: string, language: Language, text: string, onEvent: TAURI_CHANNEL<LspEvent>) : Promise<Result<LspConnection, AppError>> {
     try {
@@ -203,19 +203,22 @@ async lspConnect(problem: string, language: Language, text: string, onEvent: TAU
 }
 },
 /**
- * Relay a JSON-RPC message from the editor to its language server.
+ * Relay a JSON-RPC message from the editor's client of `session` to its language server.
  */
-async lspSend(language: Language, message: string) : Promise<Result<null, AppError>> {
+async lspSend(language: Language, session: number, message: string) : Promise<Result<null, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("lsp_send", { language, message }) };
+    return { status: "ok", data: await TAURI_INVOKE("lsp_send", { language, session, message }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
-async lspDisconnect(language: Language) : Promise<Result<null, AppError>> {
+/**
+ * Stop `session`'s language server (the editor closed).
+ */
+async lspDisconnect(language: Language, session: number) : Promise<Result<null, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("lsp_disconnect", { language }) };
+    return { status: "ok", data: await TAURI_INVOKE("lsp_disconnect", { language, session }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -411,7 +414,11 @@ export type LanguageServerInfo = { language: Language; available: boolean; reaso
 /**
  * What the editor needs to talk about its document.
  */
-export type LspConnection = { root_uri: string; file_uri: string; language_id: string }
+export type LspConnection = { 
+/**
+ * Pass back with every message; a newer connect for the language replaces it.
+ */
+session: number; root_uri: string; file_uri: string; language_id: string }
 /**
  * Sent to the UI.
  */
