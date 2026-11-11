@@ -1,0 +1,89 @@
+/*
+ * KataBox design tokens (ADR 0012). Colors are hex so `tokens.test.ts` can check WCAG AA
+ * contrast for both themes. Spacing follows Tailwind's 4 px step (0.25rem); radii and
+ * the type scale are below. Semantic colors (verdict, difficulty, status) are always
+ * shown with an icon or a text label, never by color alone.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces and text */
+  --background: #f7f8fa;
+  --foreground: #16181d;
+  --card: #ffffff;
+  --card-foreground: #16181d;
+  --popover: #ffffff;
+  --popover-foreground: #16181d;
+  --muted: #eef0f4;
+  --muted-foreground: #555b69;
+  --accent: #e8ebf2;
+  --accent-foreground: #16181d;
+  --border: #dde0e7;
+  --input: #c9cdd6;
+  --rail: #eef0f4;
+
+  /* Brand and focus */
+  --primary: #3651c9;
+  --primary-foreground: #ffffff;
+  --secondary: #e8ebf2;
+  --secondary-foreground: #16181d;
+  --ring: #3651c9;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+
+  /* Semantic */
+  --verdict-accepted: #17732f;
+  --verdict-wrong: #b42318;
+  --verdict-error: #9a4b00;
+  --verdict-limit: #7c3aed;
+  --difficulty-easy: #17732f;
+  --difficulty-medium: #8a5a00;
+  --difficulty-hard: #b42318;
+  --status-solved: #17732f;
+  --status-attempted: #8a5a00;
+  --dev-badge: #8a5a00;
+  --dev-badge-foreground: #ffffff;
+
+  /* Shape and type */
+  --radius: 0.5rem;
+  --font-size-ui: 0.875rem;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #111318;
+  --foreground: #e6e8ee;
+  --card: #171a21;
+  --card-foreground: #e6e8ee;
+  --popover: #1b1f27;
+  --popover-foreground: #e6e8ee;
+  --muted: #1e222b;
+  --muted-foreground: #a0a7b6;
+  --accent: #252a35;
+  --accent-foreground: #e6e8ee;
+  --border: #2b303b;
+  --input: #3a404d;
+  --rail: #0d0f13;
+
+  --primary: #8aa4ff;
+  --primary-foreground: #0b0d12;
+  --secondary: #252a35;
+  --secondary-foreground: #e6e8ee;
+  --ring: #8aa4ff;
+  --destructive: #ff8a80;
+  --destructive-foreground: #0b0d12;
+
+  --verdict-accepted: #4ac26b;
+  --verdict-wrong: #ff8a80;
+  --verdict-error: #e3b341;
+  --verdict-limit: #c297ff;
+  --difficulty-easy: #4ac26b;
+  --difficulty-medium: #e3b341;
+  --difficulty-hard: #ff8a80;
+  --status-solved: #4ac26b;
+  --status-attempted: #e3b341;
+  --dev-badge: #e3b341;
+  --dev-badge-foreground: #0b0d12;
+}

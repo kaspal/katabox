@@ -114,6 +114,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # Vitest + Testing Library: library, i18n, theme, palette, token contrast (ADR 0012).
+      - run: pnpm test
 
   desktop:
     name: Desktop shell (${{ matrix.os }})

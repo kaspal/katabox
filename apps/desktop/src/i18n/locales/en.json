@@ -1,0 +1,203 @@
+{
+  "app": {
+    "name": "KataBox",
+    "devData": "DEV DATA",
+    "devDataHint": "Development build: progress is saved in a separate folder, not your real data."
+  },
+  "nav": {
+    "label": "Main navigation",
+    "home": "Home",
+    "library": "Library",
+    "workspace": "Workspace",
+    "progress": "Progress",
+    "settings": "Settings",
+    "smoke": "Smoke screen (dev)"
+  },
+  "palette": {
+    "open": "Command palette",
+    "placeholder": "Type a command or search a problem…",
+    "empty": "No results.",
+    "pages": "Go to",
+    "problems": "Open problem",
+    "theme": "Theme",
+    "language": "Language"
+  },
+  "theme": {
+    "label": "Theme",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "es": "Español"
+  },
+  "difficulty": {
+    "label": "Difficulty",
+    "any": "Any difficulty",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "status": {
+    "label": "Status",
+    "any": "Any status",
+    "todo": "To do",
+    "attempted": "Attempted",
+    "solved": "Solved"
+  },
+  "pattern": {
+    "label": "Pattern",
+    "any": "Any pattern",
+    "arrays-hashing": "Arrays & hashing",
+    "two-pointers": "Two pointers",
+    "sliding-window": "Sliding window",
+    "stack": "Stack",
+    "binary-search": "Binary search",
+    "linked-list": "Linked list",
+    "trees": "Trees",
+    "tries": "Tries",
+    "heap": "Heap",
+    "backtracking": "Backtracking",
+    "graphs": "Graphs",
+    "dynamic-programming": "Dynamic programming",
+    "greedy": "Greedy",
+    "intervals": "Intervals",
+    "math": "Math",
+    "bit-manipulation": "Bit manipulation",
+    "strings": "Strings",
+    "union-find": "Union-find",
+    "design": "Design",
+    "sorting": "Sorting"
+  },
+  "tag": {
+    "label": "Tag",
+    "any": "Any tag"
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "details": "Details"
+  },
+  "library": {
+    "title": "Problem library",
+    "search": "Search problems",
+    "searchHint": "Press / to search",
+    "clear": "Clear filters",
+    "count_one": "{{count}} problem",
+    "count_other": "{{count}} problems",
+    "empty": "No problems match these filters.",
+    "table": "Problems",
+    "keyboardHint": "↑ ↓ to move, Enter to open",
+    "columns": {
+      "status": "Status",
+      "title": "Title",
+      "difficulty": "Difficulty",
+      "pattern": "Pattern",
+      "tags": "Tags"
+    },
+    "sortBy": "Sort by {{column}}"
+  },
+  "home": {
+    "title": "Home",
+    "continue": "Continue",
+    "continueEdited": "{{language}} · edited {{when}}",
+    "continueOpen": "Open",
+    "noDraft": "No draft yet. Pick a problem to start.",
+    "browse": "Browse problems",
+    "solved": "Solved",
+    "solvedOf": "{{solved}} of {{total}}",
+    "daily": "Daily problem",
+    "dailySoon": "A daily pick arrives in a later version."
+  },
+  "workspace": {
+    "title": "Workspace",
+    "comingSoon": "The editor, tests and results arrive in the next version.",
+    "smokeLink": "Open it in the smoke screen (development)",
+    "back": "Back to the library"
+  },
+  "progress": {
+    "title": "Progress",
+    "comingSoon": "Statistics and streaks arrive in a later version."
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "about": "About",
+    "version": "App version",
+    "contentPack": "Problem pack",
+    "userSchema": "Database version",
+    "dataFolder": "Data folder",
+    "sandboxRoot": "Sandbox folder",
+    "sandboxSource": "Chosen from",
+    "rootSource": {
+      "env": "KATABOX_SANDBOX_ROOT",
+      "setting": "Setting",
+      "dev": "Development root",
+      "app_data": "App data"
+    },
+    "toolchains": "Language runtimes",
+    "toolchainLanguage": "Language",
+    "toolchainStatus": "Status",
+    "toolchainPath": "Program",
+    "present": "Installed",
+    "missing": "Missing"
+  },
+  "languages": {
+    "python": "Python",
+    "javascript": "JavaScript",
+    "typescript": "TypeScript",
+    "php": "PHP",
+    "rust": "Rust"
+  },
+  "time": {
+    "justNow": "just now"
+  },
+  "errors": {
+    "generic": "Something went wrong.",
+    "not_found": "Not found.",
+    "invalid_input": "That input is not valid.",
+    "invalid_custom_input": "A custom test input is not valid.",
+    "unsupported_language": "This language is not supported yet.",
+    "toolchain_missing": "The runtime for this language is not installed.",
+    "judge_busy": "A run is already in progress.",
+    "sandbox": "The sandbox could not run the code.",
+    "judge_internal": "The judge failed. This is not your fault.",
+    "store": "The database could not be read or written.",
+    "internal": "KataBox could not start or hit an unexpected error."
+  },
+  "judge": {
+    "verdict": {
+      "accepted": "Accepted",
+      "wrong_answer": "Wrong answer",
+      "time_limit_exceeded": "Time limit exceeded",
+      "memory_limit_exceeded": "Memory limit exceeded",
+      "output_limit_exceeded": "Output limit exceeded",
+      "runtime_error": "Runtime error",
+      "compilation_error": "Compilation error",
+      "internal_error": "Internal error"
+    },
+    "message": {
+      "output_mismatch": "The returned value differs from the expected output.",
+      "custom_checker_unsupported": "Custom checkers are not supported yet.",
+      "syntax_error": "The code does not parse.",
+      "unsupported_syntax": "This TypeScript syntax is not supported.",
+      "function_not_found": "The required function is missing.",
+      "compile_error": "The compiler rejected the code.",
+      "compile_limit": "The compiler ran out of time or memory.",
+      "load_error": "The code failed while loading.",
+      "exception": "The function raised an error.",
+      "return_not_serializable": "The return value cannot be converted to JSON.",
+      "out_of_memory": "The program ran out of memory.",
+      "too_much_output": "The test printed too much output.",
+      "time_limit": "The time limit was reached during this test.",
+      "output_limit": "The output limit was reached during this test.",
+      "memory_limit": "The memory limit was reached during this test.",
+      "process_exited": "The program exited or crashed during this test.",
+      "harness_silent": "The test harness stopped without reporting.",
+      "bad_harness_record": "The test harness reported something unreadable.",
+      "incomplete_results": "Some tests have no result."
+    }
+  }
+}

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @katabox/desktop tauri dev",
     "build": "pnpm --filter @katabox/desktop build",
-    "typecheck": "pnpm --filter @katabox/desktop exec tsc --noEmit"
+    "typecheck": "pnpm --filter @katabox/desktop exec tsc --noEmit",
+    "test": "pnpm --filter @katabox/desktop test"
   }
 }
