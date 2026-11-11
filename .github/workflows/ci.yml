@@ -47,9 +47,10 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - name: Fetch pinned Python, Node, PHP and Rust toolchains
+      # Also fetches the pinned language servers into target/katabox/tools (ADR 0014).
+      - name: Fetch pinned Python, Node, PHP and Rust toolchains and language servers
         run: pwsh scripts/fetch-toolchains.ps1
-      - run: cargo clippy -p kb-runner -p kb-judge -p kb-store --all-targets -- -D warnings
+      - run: cargo clippy -p kb-runner -p kb-judge -p kb-store -p kb-bridge --all-targets -- -D warnings
       - run: cargo test -p kb-runner -- --nocapture
       # Judge end-to-end tests on two-sum (Python, TypeScript, PHP, Rust in the sandbox).
       - run: cargo test -p kb-judge
@@ -57,6 +58,9 @@ jobs:
       - run: cargo test -p kb-store
       # Run and Submit on two-sum through the app service (kb-app), every language.
       - run: cargo test -p kb-app
+      # Language servers through the bridge: lifecycle with a fake server, and basedpyright,
+      # typescript-language-server and rust-analyzer for real (completion, diagnostics).
+      - run: cargo test -p kb-bridge
       # Every reference solution, every language, through the judge (content pipeline).
       - run: cargo run -p kb-pack -- validate --run
 
