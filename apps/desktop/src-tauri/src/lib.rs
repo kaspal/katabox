@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
-    SubmissionView, SubmitResult,
+    LanguagesInfo, SubmissionView, SubmitResult,
 };
 use kb_core::{JudgeEvent, Language, Report};
 use kb_store::{
@@ -242,6 +242,41 @@ async fn lsp_disconnect(state: State<'_, AppState>, language: Language, session:
     Ok(())
 }
 
+/// Install state of every language, with sizes and free disk space (ADR 0015).
+#[tauri::command]
+#[specta::specta]
+async fn languages(state: State<'_, AppState>) -> Res<LanguagesInfo> {
+    Ok(state.app()?.languages())
+}
+
+/// Download and install languages; progress goes to `on_event`. Installing again after a
+/// failure or a cancel resumes the downloads.
+#[tauri::command]
+#[specta::specta]
+async fn install_languages(
+    state: State<'_, AppState>,
+    languages: Vec<Language>,
+    on_event: Channel<kb_toolchain::InstallEvent>,
+) -> Res<()> {
+    let send = move |e| {
+        let _ = on_event.send(e);
+    };
+    state.app()?.install_languages(&languages, send).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn cancel_install(state: State<'_, AppState>) -> Res<()> {
+    state.app()?.cancel_install();
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn uninstall_language(state: State<'_, AppState>, language: Language) -> Res<()> {
+    state.app()?.uninstall_language(language).await
+}
+
 /// Every command, for the invoke handler and the TypeScript bindings.
 fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::<tauri::Wry>::new().commands(tauri_specta::collect_commands![
@@ -269,6 +304,10 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         lsp_connect,
         lsp_send,
         lsp_disconnect,
+        languages,
+        install_languages,
+        cancel_install,
+        uninstall_language,
     ])
 }
 

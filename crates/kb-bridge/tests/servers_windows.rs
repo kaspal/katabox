@@ -126,8 +126,10 @@ async fn check(
     } }))
     .await;
 
+    // A cold rust-analyzer indexes std first; under a loaded machine (the whole test suite)
+    // that has taken over 20 s. Asking again every 0.5 s returns as soon as it is ready.
     let mut labels = Vec::new();
-    for attempt in 0..40 {
+    for attempt in 0..180 {
         let id = 100 + attempt;
         send(
             json!({ "jsonrpc": "2.0", "id": id, "method": "textDocument/completion", "params": {

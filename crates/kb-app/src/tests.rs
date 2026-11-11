@@ -367,3 +367,45 @@ async fn language_servers_are_reported_and_connect_errors_are_typed() {
         .unwrap_err();
     assert_eq!(err.code, AppErrorCode::LanguageServerNotConnected);
 }
+
+#[tokio::test]
+async fn a_fresh_root_has_no_languages_and_says_what_installing_costs() {
+    let app = app("languages").await;
+    let info = app.languages();
+    let langs: Vec<Language> = info.languages.iter().map(|l| l.language).collect();
+    assert_eq!(
+        langs,
+        [
+            Language::Python,
+            Language::TypeScript,
+            Language::Php,
+            Language::Rust
+        ]
+    );
+    for l in &info.languages {
+        assert!(!l.installed && !l.runtime_installed, "{l:?}");
+        if l.available {
+            assert!(l.download_bytes > 0 && l.installed_bytes > 0, "{l:?}");
+        }
+    }
+    assert_eq!(
+        info.platform_supported,
+        kb_toolchain::Platform::current().is_some()
+    );
+    // Nothing to remove is not an error; the server status agrees.
+    app.uninstall_language(Language::Python).await.unwrap();
+    let ls = app.app_info().await.unwrap().language_servers;
+    assert!(ls.iter().all(|s| !s.available));
+}
+
+#[test]
+fn toolchain_errors_keep_their_codes() {
+    let e: AppError = kb_toolchain::Error::Busy.into();
+    assert_eq!(e.code, AppErrorCode::InstallBusy);
+    let e: AppError = kb_toolchain::Error::Cancelled.into();
+    assert_eq!(e.code, AppErrorCode::InstallCancelled);
+    assert_eq!(
+        serde_json::to_value(AppErrorCode::NotEnoughSpace).unwrap(),
+        json!("not_enough_space")
+    );
+}

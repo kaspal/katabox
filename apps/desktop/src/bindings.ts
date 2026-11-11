@@ -223,6 +223,45 @@ async lspDisconnect(language: Language, session: number) : Promise<Result<null, 
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Install state of every language, with sizes and free disk space (ADR 0015).
+ */
+async languages() : Promise<Result<LanguagesInfo, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("languages") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Download and install languages; progress goes to `on_event`. Installing again after a
+ * failure or a cancel resumes the downloads.
+ */
+async installLanguages(languages: Language[], onEvent: TAURI_CHANNEL<InstallEvent>) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("install_languages", { languages, onEvent }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async cancelInstall() : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("cancel_install") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async uninstallLanguage(language: Language) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("uninstall_language", { language }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -292,6 +331,50 @@ export type AppErrorCode =
  */
 "language_server_not_connected" | 
 /**
+ * A download failed (HTTP error, connection dropped). Retrying resumes it.
+ */
+"download_failed" | 
+/**
+ * No connection to the download server.
+ */
+"network_unavailable" | 
+/**
+ * A download or redirect pointed outside the allowed hosts (ADR 0015).
+ */
+"host_not_allowed" | 
+/**
+ * A download did not match its pinned SHA-256.
+ */
+"checksum_mismatch" | 
+/**
+ * A download did not have its pinned size.
+ */
+"size_mismatch" | 
+/**
+ * An archive had an entry the installer refuses (path, link or size).
+ */
+"unsafe_archive" | 
+/**
+ * Not enough free disk space for the install.
+ */
+"not_enough_space" | 
+/**
+ * A file is in use (antivirus, a running program); try again.
+ */
+"file_locked" | 
+/**
+ * The install was cancelled; installing again resumes the downloads.
+ */
+"install_cancelled" | 
+/**
+ * Another install or uninstall is running.
+ */
+"install_busy" | 
+/**
+ * Languages cannot be installed on this OS or CPU.
+ */
+"unsupported_platform" | 
+/**
  * Anything else, including the app failing to start.
  */
 "internal"
@@ -328,6 +411,7 @@ cached: boolean;
  * Wall time of the compile in microseconds (0 when cached).
  */
 time_us: number }
+export type ComponentPhase = "queued" | "downloading" | "verifying" | "extracting" | "installing" | "installed"
 export type ContentMeta = { pack_id: string; pack_version: string; 
 /**
  * UTC, ISO 8601 (`2026-11-11T09:30:00Z`).
@@ -380,6 +464,10 @@ text: string | null }
  * revealed, and only after submitting.
  */
 export type Failure = { kind: TestKind; index: number; verdict: Verdict; input: Partial<{ [key in string]: JsonValue }>; expected: JsonValue; actual: JsonValue | null; message: Message | null; stdout: string }
+/**
+ * Progress of an install, in order: one `Plan`, then `Progress` per component.
+ */
+export type InstallEvent = { kind: "plan"; items: PlanItem[] } | { kind: "progress"; component: string; phase: ComponentPhase; done: number; total: number }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
 /**
  * Progress of one judge run, sent to the UI as it happens. The sandbox returns output
@@ -411,6 +499,42 @@ export type Language = "python" | "javascript" | "typescript" | "php" | "rust"
  * Whether a language server can run for a language here, and if not, why.
  */
 export type LanguageServerInfo = { language: Language; available: boolean; reason: string | null }
+/**
+ * Per language, for the first-run screen and Settings.
+ */
+export type LanguageStatus = { language: Language; 
+/**
+ * Installable on this platform.
+ */
+available: boolean; 
+/**
+ * Runtime and language server installed.
+ */
+installed: boolean; runtime_installed: boolean; servers_installed: boolean; components: string[]; 
+/**
+ * What an install would still download.
+ */
+download_bytes: number; 
+/**
+ * Disk use of the whole language once installed.
+ */
+installed_bytes: number }
+/**
+ * What the first-run screen and Settings → Languages show.
+ */
+export type LanguagesInfo = { 
+/**
+ * Python, JavaScript/TypeScript, PHP, Rust: each a runtime plus its language server.
+ */
+languages: LanguageStatus[]; 
+/**
+ * Free bytes on the sandbox root's volume, when known.
+ */
+free_bytes: number | null; 
+/**
+ * KataBox can install languages on this OS and CPU.
+ */
+platform_supported: boolean }
 /**
  * What the editor needs to talk about its document.
  */
@@ -537,6 +661,14 @@ export type MessageCode =
  * The harness said it finished but some tests have no result.
  */
 "incomplete_results"
+/**
+ * One component of an install plan.
+ */
+export type PlanItem = { component: string; 
+/**
+ * Bytes still to download (shared artifacts counted once, on first use).
+ */
+download_bytes: number; installed_bytes: number }
 /**
  * Which problems to list. Every field is optional; `None` means "any".
  */

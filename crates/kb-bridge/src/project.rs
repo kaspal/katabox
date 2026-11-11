@@ -129,7 +129,8 @@ pub fn prepare(
                 "rust-project.json",
                 json!({
                     "sysroot": sysroot,
-                    "sysroot_src": sysroot.join("lib").join("rustlib").join("src").join("rust").join("library"),
+                    // std's sources live outside the judge's sysroot (ADR 0015).
+                    "sysroot_src": tc.rust_src_library(),
                     "crates": [{
                         "root_module": file,
                         "edition": "2024",

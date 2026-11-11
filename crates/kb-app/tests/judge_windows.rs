@@ -227,3 +227,93 @@ async fn run_with_custom_inputs() {
     assert_eq!(snaps[1].verdict, Some(Verdict::Accepted));
     assert!(app.list_submissions("two-sum").await.unwrap().is_empty());
 }
+
+/// The judge's dev layout and the installer's receipts name the same programs.
+#[tokio::test]
+async fn installed_runtimes_are_where_the_judge_looks() {
+    let app = app("layout").await;
+    let info = app.app_info().await.unwrap();
+    let dev = kb_judge::JudgeEnv::dev(dev_root());
+    for t in &info.toolchains {
+        let want = dev.toolchain_program(t.language).unwrap();
+        assert_eq!(
+            t.program.as_deref(),
+            Some(want.display().to_string().as_str()),
+            "{}",
+            t.language
+        );
+    }
+    let langs = app.languages();
+    assert!(langs.platform_supported);
+    assert!(
+        langs
+            .languages
+            .iter()
+            .all(|l| l.installed && l.download_bytes == 0),
+        "{langs:?}"
+    );
+}
+
+fn copy_dir(from: &Path, to: &Path) {
+    std::fs::create_dir_all(to).unwrap();
+    for e in std::fs::read_dir(from).unwrap().flatten() {
+        let t = to.join(e.file_name());
+        if e.file_type().unwrap().is_dir() {
+            copy_dir(&e.path(), &t);
+        } else {
+            std::fs::copy(e.path(), &t).unwrap();
+        }
+    }
+}
+
+/// kb-runner grants the sandbox access to a toolchain folder lazily, once. The installer
+/// replaces a component as a whole folder renamed in from staging (ADR 0015): after a
+/// replacement the sandbox must still read it.
+#[tokio::test]
+async fn a_runtime_replaced_by_rename_still_runs_in_the_sandbox() {
+    let root = std::env::temp_dir().join(format!("kb-app-replace-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(root.join("receipts")).unwrap();
+    std::fs::write(root.join(kb_runner::ROOT_MARKER), b"").unwrap();
+    copy_dir(
+        &dev_root().join("toolchains/python-3.14"),
+        &root.join("toolchains/python-3.14"),
+    );
+    std::fs::copy(
+        dev_root().join("receipts/python.json"),
+        root.join("receipts/python.json"),
+    )
+    .unwrap();
+    let dir = std::env::temp_dir().join(format!("kb-app-replace-data-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let app = App::open(&AppPaths {
+        content_db: content_db(),
+        user_db: dir.join("user.db"),
+        local_data_dir: dir.join("local"),
+        dev_root: Some(root.clone()),
+        dev_data: true,
+    })
+    .await
+    .unwrap();
+    let accepted =
+        |r: kb_app::SubmitResult| assert_eq!(r.report.verdict, Verdict::Accepted, "{:?}", r.report);
+    let code = reference(Language::Python);
+    accepted(
+        app.submit("two-sum", Language::Python, &code, |_| {})
+            .await
+            .unwrap(),
+    );
+
+    // What promotion does: a new copy staged elsewhere in the root, the old folder gone,
+    // the new one renamed into place.
+    let staged = root.join("staging/new");
+    copy_dir(&root.join("toolchains/python-3.14"), &staged);
+    std::fs::remove_dir_all(root.join("toolchains/python-3.14")).unwrap();
+    std::fs::rename(&staged, root.join("toolchains/python-3.14")).unwrap();
+    accepted(
+        app.submit("two-sum", Language::Python, &code, |_| {})
+            .await
+            .unwrap(),
+    );
+    app.close().await;
+}

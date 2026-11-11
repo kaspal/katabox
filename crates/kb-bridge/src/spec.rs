@@ -9,31 +9,54 @@ use serde_json::{Value, json};
 
 use crate::project::Project;
 
-/// Where the runtimes and servers are: `<root>/toolchains/…` and `<root>/tools/…`
-/// (the layout `scripts/fetch-toolchains.ps1` creates).
-#[derive(Debug, Clone, PartialEq)]
+/// Where the runtimes and servers are: the sandbox root's layout from kb-toolchain
+/// (ADR 0015), the one place component folders are named.
+#[derive(Debug, Clone)]
 pub struct Toolchains {
     pub root: PathBuf,
+    layout: kb_toolchain::layout::Layout,
+}
+
+impl PartialEq for Toolchains {
+    fn eq(&self, other: &Self) -> bool {
+        self.root == other.root
+    }
 }
 
 impl Toolchains {
     pub fn new(root: impl Into<PathBuf>) -> Self {
-        Toolchains { root: root.into() }
+        let root = root.into();
+        let platform =
+            kb_toolchain::Platform::current().unwrap_or(kb_toolchain::Platform::WindowsX86_64);
+        Toolchains {
+            layout: kb_toolchain::layout::Layout::new(root.clone(), platform),
+            root,
+        }
     }
     pub fn tools(&self) -> PathBuf {
-        self.root.join("tools")
+        self.layout.tools()
     }
     pub fn node_dir(&self) -> PathBuf {
-        self.root.join("toolchains").join("node-26")
+        self.layout.node_dir()
     }
     pub fn php_dir(&self) -> PathBuf {
-        self.root.join("toolchains").join("php-8.5")
+        self.layout.php_dir()
     }
     pub fn rust_sysroot(&self) -> PathBuf {
-        self.root.join("toolchains").join("rust-1.99")
+        self.layout.rust_sysroot()
+    }
+    /// std's sources (`tools/rust-src/library`), outside the judge's sysroot.
+    pub fn rust_src_library(&self) -> PathBuf {
+        self.layout.rust_src().join("library")
+    }
+    pub fn rust_analyzer(&self) -> PathBuf {
+        self.layout
+            .rust_analyzer_dir()
+            .join("bin")
+            .join(exe("rust-analyzer"))
     }
     fn node_modules(&self) -> PathBuf {
-        self.tools().join("language-servers").join("node_modules")
+        self.layout.node_modules()
     }
 }
 
@@ -92,18 +115,7 @@ pub fn unavailable_reason(language: Language, tc: &Toolchains) -> Option<String>
             tc.php_dir().join(exe("php")),
             tc.tools().join("phpactor").join("phpactor.phar"),
         ],
-        Language::Rust => vec![
-            tc.tools()
-                .join("rust-analyzer")
-                .join("bin")
-                .join(exe("rust-analyzer")),
-            tc.rust_sysroot()
-                .join("lib")
-                .join("rustlib")
-                .join("src")
-                .join("rust")
-                .join("library"),
-        ],
+        Language::Rust => vec![tc.rust_analyzer(), tc.rust_src_library()],
     };
     needed
         .iter()
@@ -240,11 +252,7 @@ pub fn server_for(
         },
         Language::Rust => ServerSpec {
             name: "rust-analyzer",
-            program: tc
-                .tools()
-                .join("rust-analyzer")
-                .join("bin")
-                .join(exe("rust-analyzer")),
+            program: tc.rust_analyzer(),
             args: vec![],
             // rust-analyzer may run the bundled rustc for target queries; nothing else.
             env: clean_env(&[tc.rust_sysroot().join("bin")], state),

@@ -29,6 +29,7 @@ kb-app = { workspace = true, features = ["specta"] }
 kb-bridge = { workspace = true, features = ["specta"] }
 kb-core = { workspace = true, features = ["specta"] }
 kb-store = { workspace = true, features = ["specta"] }
+kb-toolchain = { workspace = true, features = ["specta"] }
 serde.workspace = true
 serde_json.workspace = true
 # tauri-specta 2 is a release candidate: versions are pinned exactly (ADR 0011).

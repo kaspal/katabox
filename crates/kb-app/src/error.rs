@@ -34,6 +34,28 @@ pub enum AppErrorCode {
     LanguageServerUnavailable,
     /// The language server is not running (stopped or restarting); connect again.
     LanguageServerNotConnected,
+    /// A download failed (HTTP error, connection dropped). Retrying resumes it.
+    DownloadFailed,
+    /// No connection to the download server.
+    NetworkUnavailable,
+    /// A download or redirect pointed outside the allowed hosts (ADR 0015).
+    HostNotAllowed,
+    /// A download did not match its pinned SHA-256.
+    ChecksumMismatch,
+    /// A download did not have its pinned size.
+    SizeMismatch,
+    /// An archive had an entry the installer refuses (path, link or size).
+    UnsafeArchive,
+    /// Not enough free disk space for the install.
+    NotEnoughSpace,
+    /// A file is in use (antivirus, a running program); try again.
+    FileLocked,
+    /// The install was cancelled; installing again resumes the downloads.
+    InstallCancelled,
+    /// Another install or uninstall is running.
+    InstallBusy,
+    /// Languages cannot be installed on this OS or CPU.
+    UnsupportedPlatform,
     /// Anything else, including the app failing to start.
     Internal,
 }
@@ -88,6 +110,27 @@ impl From<kb_bridge::BridgeError> for AppError {
             B::Unavailable(_) => AppErrorCode::LanguageServerUnavailable,
             B::NotConnected(_) => AppErrorCode::LanguageServerNotConnected,
             B::Io(_) => AppErrorCode::Internal,
+        };
+        AppError::new(code, e.to_string())
+    }
+}
+
+impl From<kb_toolchain::Error> for AppError {
+    fn from(e: kb_toolchain::Error) -> Self {
+        use kb_toolchain::ErrorCode as T;
+        let code = match e.code() {
+            T::DownloadFailed => AppErrorCode::DownloadFailed,
+            T::NetworkUnavailable => AppErrorCode::NetworkUnavailable,
+            T::HostNotAllowed => AppErrorCode::HostNotAllowed,
+            T::ChecksumMismatch => AppErrorCode::ChecksumMismatch,
+            T::SizeMismatch => AppErrorCode::SizeMismatch,
+            T::UnsafeArchive => AppErrorCode::UnsafeArchive,
+            T::NotEnoughSpace => AppErrorCode::NotEnoughSpace,
+            T::FileLocked => AppErrorCode::FileLocked,
+            T::InstallCancelled => AppErrorCode::InstallCancelled,
+            T::InstallBusy => AppErrorCode::InstallBusy,
+            T::UnsupportedPlatform => AppErrorCode::UnsupportedPlatform,
+            T::Internal => AppErrorCode::Internal,
         };
         AppError::new(code, e.to_string())
     }
