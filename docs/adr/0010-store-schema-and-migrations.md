@@ -1,6 +1,6 @@
 # 10. Store schema and migration rules
 
-Date: 2026-11-11 · Status: proposed
+Date: 2026-11-11 · Status: accepted
 
 ## Context
 ADR 0004 split storage into a read-only `content.db` and a read-write `user.db`. This
@@ -13,6 +13,10 @@ and the rules that keep user progress safe across app updates.
 - **sqlx 0.8** (SQLite, bundled with FTS5) with runtime queries only, no compile-time
   checked macros, so building needs no `DATABASE_URL`. The API is async (Tauri commands
   can be async).
+- **Dependencies:** kb-store depends on kb-core only, never on kb-judge or kb-runner.
+  The judge's result types (`Report`, `TestOutcome`, `Failure`, `CompileInfo`,
+  `TestCase`) live in kb-core and kb-judge re-exports them. Their serde shape is the
+  stored submission JSON: fields are never renamed or removed (a kb-core test pins it).
 - **Times** in user.db are `INTEGER` milliseconds since the Unix epoch, UTC. content.db's
   build time is UTC ISO 8601 text.
 
@@ -48,12 +52,15 @@ and the rules that keep user progress safe across app updates.
   1. A database newer than the binary is refused (`NewerSchema`), never downgraded.
   2. If migrations are pending and the file already held a schema (version > 0), it is
      first copied with `VACUUM INTO` to `user.db.bak-v<old version>-<UTC time>` in the
-     same folder (a consistent copy even with a WAL file present).
+     same folder (a consistent copy even with a WAL file present). Then only the newest
+     5 backups are kept (ordered by the UTC time in the name); the one just written is
+     never deleted, and files that do not follow the naming pattern are never touched.
+     Pruning is best effort and never fails the open.
   3. Each pending migration runs in its own transaction, which also sets
      `user_version`, so a failure leaves the previous version intact.
 - **Rules:** a released migration is never edited; every change is a new file with the
   next number. Versions are contiguous from 1 (a unit test checks). New data only via a
-  migration. Backups are not pruned yet.
+  migration.
 - Tables (migration 1): `settings` (JSON values), `drafts` (per problem and language),
   `submissions` (verdict, time, peak memory, full Report JSON), `problem_status`
   (attempted / solved, `first_solved_at`), `snapshots`, `notes` (one Markdown body per

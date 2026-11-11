@@ -20,6 +20,9 @@ use crate::{Result, StoreError, now_ms};
 /// Snapshots kept per problem (all languages together); the oldest go first.
 pub const SNAPSHOT_CAP: i64 = 200;
 
+/// `user.db.bak-*` files kept after a migration backup, the new one included.
+pub const BACKUPS_KEPT: usize = 5;
+
 /// One numbered migration. Versions start at 1 and are contiguous; a released
 /// migration is never edited (ADR 0010).
 #[derive(Debug, Clone, Copy)]
@@ -230,7 +233,7 @@ impl UserDb {
         problem: &str,
         language: Language,
         code: &str,
-        report: &kb_judge::Report,
+        report: &kb_core::Report,
     ) -> Result<i64> {
         let now = now_ms();
         let mut tx = self.pool.begin().await?;
@@ -521,7 +524,59 @@ async fn backup(pool: &SqlitePool, path: &Path, version: i64) -> Result<PathBuf>
         .bind(target_str)
         .execute(pool)
         .await?;
+    prune_backups(path, &target);
     Ok(target)
+}
+
+/// Keep the newest [`BACKUPS_KEPT`] backups of `db` (by the UTC time in their names),
+/// always including `just_written`. Best effort: a file that cannot be deleted stays,
+/// and files that do not follow the backup naming pattern are never touched.
+fn prune_backups(db: &Path, just_written: &Path) {
+    let (Some(dir), Some(name)) = (db.parent(), db.file_name().and_then(|n| n.to_str())) else {
+        return;
+    };
+    let dir = if dir.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        dir
+    };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    let prefix = format!("{name}.bak-v");
+    let mut older: Vec<((String, u32), PathBuf)> = entries
+        .flatten()
+        .filter_map(|e| {
+            let file = e.file_name().into_string().ok()?;
+            let key = backup_key(file.strip_prefix(&prefix)?)?;
+            let p = e.path();
+            (e.file_type().ok()?.is_file() && p.file_name() != just_written.file_name())
+                .then_some((key, p))
+        })
+        .collect();
+    older.sort_by(|a, b| b.0.cmp(&a.0)); // newest first
+    for (_, p) in older.into_iter().skip(BACKUPS_KEPT.saturating_sub(1)) {
+        let _ = std::fs::remove_file(p);
+    }
+}
+
+/// Sort key of a backup name after `<db>.bak-v`: `<version>-<YYYYMMDDTHHMMSSZ>[-<n>]`
+/// gives `(stamp, n)`. `None` for anything else.
+fn backup_key(rest: &str) -> Option<(String, u32)> {
+    let (version, rest) = rest.split_once('-')?;
+    version.parse::<i64>().ok()?;
+    let (stamp, n) = match rest.split_once('-') {
+        Some((stamp, n)) => (stamp, n.parse().ok()?),
+        None => (rest, 0),
+    };
+    let valid = stamp.len() == 16
+        && stamp.as_bytes()[8] == b'T'
+        && stamp.ends_with('Z')
+        && stamp[..8]
+            .bytes()
+            .chain(stamp[9..15].bytes())
+            .all(|b| b.is_ascii_digit());
+    valid.then(|| (stamp.to_string(), n))
 }
 
 async fn put_draft(
@@ -643,8 +698,8 @@ fn parse_status(s: &str) -> Result<ProblemStatus> {
 pub(crate) mod tests {
     use super::*;
     use crate::testutil::temp_dir;
+    use kb_core::{Failure, Report, TestOutcome};
     use kb_core::{Message, MessageCode, TestKind, TestResult};
-    use kb_judge::{Failure, Report, TestOutcome};
     use serde_json::json;
 
     const TABLES: [&str; 7] = [
@@ -753,6 +808,72 @@ pub(crate) mod tests {
                 supported: 1
             })
         ));
+    }
+
+    #[test]
+    fn backup_names_parse() {
+        assert_eq!(
+            backup_key("1-20261111T093000Z"),
+            Some(("20261111T093000Z".into(), 0))
+        );
+        assert_eq!(
+            backup_key("12-20261111T093000Z-2"),
+            Some(("20261111T093000Z".into(), 2))
+        );
+        for bad in [
+            "x-20261111T093000Z",
+            "1-2026",
+            "1-20261111T093000Z-x",
+            "1-20261111X093000Z",
+        ] {
+            assert_eq!(backup_key(bad), None, "{bad}");
+        }
+    }
+
+    #[tokio::test]
+    async fn keeps_the_newest_backups() {
+        let dir = temp_dir("prune");
+        let path = dir.join("user.db");
+        let v1 = &MIGRATIONS[..1];
+        UserDb::open_with(&path, v1).await.unwrap().close().await;
+
+        // Six older backups, one dated in the future (clock skew), and unrelated files.
+        let fake = |n: &str| {
+            let p = dir.join(n);
+            std::fs::write(&p, b"old").unwrap();
+            p
+        };
+        let old: Vec<PathBuf> = (1..=6)
+            .map(|d| fake(&format!("user.db.bak-v1-2020010{d}T000000Z")))
+            .collect();
+        let future = fake("user.db.bak-v1-20991231T000000Z");
+        let notes = fake("user.db.bak-notes.txt");
+        let other = fake("other.db.bak-v1-20200101T000000Z");
+
+        let v2 = [
+            v1[0],
+            Migration {
+                version: 2,
+                sql: "CREATE TABLE extra (x INTEGER);",
+            },
+        ];
+        let db = UserDb::open_with(&path, &v2).await.unwrap();
+        let new = db.backup_path().unwrap().to_path_buf();
+        db.close().await;
+
+        let mut kept = backups(&dir);
+        kept.retain(|p| {
+            p.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .starts_with("user.db.bak-v")
+        });
+        kept.sort();
+        let mut want = vec![new, future, old[5].clone(), old[4].clone(), old[3].clone()];
+        want.sort();
+        assert_eq!(kept, want);
+        assert_eq!(kept.len(), BACKUPS_KEPT);
+        assert!(notes.exists() && other.exists());
     }
 
     #[tokio::test]

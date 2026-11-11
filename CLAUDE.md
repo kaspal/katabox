@@ -11,7 +11,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 | Path | What it is |
 | --- | --- |
 | `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI, `src-tauri/` = thin Rust shell (commands and wiring only) |
-| `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult). No I/O |
+| `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult, the judge Report). No I/O |
 | `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009) |
 | `crates/kb-runner` | Sandboxed execution. **Security-critical** |
 | `crates/kb-store` | SQLite via sqlx (runtime queries only): `content.db` (read-only, FTS5) + `user.db` (WAL, migrations in `migrations/`; ADR 0010) |

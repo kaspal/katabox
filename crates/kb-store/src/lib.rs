@@ -24,8 +24,8 @@ pub use content::{
     ProblemFilter, ProblemSummary, ProblemView, PublicTest, StatusFilter, UiLang, build,
 };
 pub use user::{
-    Draft, ProblemStatus, SNAPSHOT_CAP, Snapshot, SnapshotSource, StatusInfo, Submission,
-    SubmissionSummary, UserDb,
+    BACKUPS_KEPT, Draft, ProblemStatus, SNAPSHOT_CAP, Snapshot, SnapshotSource, StatusInfo,
+    Submission, SubmissionSummary, UserDb,
 };
 
 #[derive(Debug, thiserror::Error)]
