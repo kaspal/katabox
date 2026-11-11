@@ -55,6 +55,8 @@ jobs:
       - run: cargo test -p kb-judge
       # Includes recording a real two-sum judge Report in user.db.
       - run: cargo test -p kb-store
+      # Run and Submit on two-sum through the app service (kb-app), every language.
+      - run: cargo test -p kb-app
       # Every reference solution, every language, through the judge (content pipeline).
       - run: cargo run -p kb-pack -- validate --run
 
@@ -128,7 +130,14 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libseccomp-dev
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo check -p katabox-desktop
+      # build.rs also builds resources/content.db from content/problems.
+      - run: cargo clippy -p katabox-desktop --all-targets -- -D warnings
+      - name: TypeScript bindings are up to date
+        run: |
+          cargo run -p katabox-desktop --bin export-bindings
+          git diff --exit-code apps/desktop/src/bindings.ts

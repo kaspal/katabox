@@ -10,7 +10,8 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 
 | Path | What it is |
 | --- | --- |
-| `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI, `src-tauri/` = thin Rust shell (commands and wiring only) |
+| `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI (`bindings.ts` is generated; `smoke/` is a temporary screen), `src-tauri/` = thin Rust shell (commands and wiring only; ADR 0011) |
+| `crates/kb-app` | App service behind the Tauri commands: state, sandbox root, Run/Submit, typed `AppError` (ADR 0011) |
 | `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult, the judge Report). No I/O |
 | `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009) |
 | `crates/kb-runner` | Sandboxed execution. **Security-critical** |
@@ -34,8 +35,9 @@ cargo run -p kb-pack -- validate # validate every problem (--run: judge every re
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
 pnpm install && pnpm build       # UI build
-pnpm dev                         # run the desktop app (needs WebView2 / WebKitGTK 4.1)
-cargo check -p katabox-desktop   # desktop shell (needs WebKitGTK on Linux)
+pnpm dev                         # run the desktop app (needs WebView2 / WebKitGTK 4.1); dev builds use target/katabox as sandbox root, or KATABOX_SANDBOX_ROOT
+cargo check -p katabox-desktop   # desktop shell (needs WebKitGTK on Linux); build.rs builds resources/content.db
+cargo run -p katabox-desktop --bin export-bindings  # regenerate apps/desktop/src/bindings.ts after changing a command or IPC type
 ```
 
 ## Rules
@@ -43,7 +45,7 @@ cargo check -p katabox-desktop   # desktop shell (needs WebKitGTK on Linux)
 - Small PRs, one concern each, with tests. CI must be green before merge; the maintainer reviews every PR.
 - **Never change `crates/kb-runner` sandbox code, toolchain download verification, or the CSP in `tauri.conf.json` without the maintainer's explicit sign-off in the PR description.**
 - Business logic goes in `crates/`, never in `src-tauri` or React components.
-- The UI never touches the file system or spawns processes; it calls typed Tauri commands.
+- The UI never touches the file system or spawns processes; it calls typed Tauri commands through the generated `bindings.ts` (never `invoke` with strings). Commands return `Result<T, AppError>` with a stable error code (ADR 0011).
 - No network access at runtime except toolchain, pack and update downloads.
 - No telemetry, ever.
 - Every user-facing string goes through i18n (English and Spanish).
