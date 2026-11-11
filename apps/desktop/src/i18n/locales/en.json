@@ -214,7 +214,10 @@
       "vscode": "VS Code",
       "vim": "Vim"
     },
-    "fontSize": "Font size"
+    "fontSize": "Font size",
+    "ligatures": "Font ligatures",
+    "ligaturesOff": "Off",
+    "ligaturesOn": "On"
   },
   "languages": {
     "python": "Python",
@@ -237,7 +240,9 @@
     "sandbox": "The sandbox could not run the code.",
     "judge_internal": "The judge failed. This is not your fault.",
     "store": "The database could not be read or written.",
-    "internal": "KataBox could not start or hit an unexpected error."
+    "internal": "KataBox could not start or hit an unexpected error.",
+    "language_server_unavailable": "No language server for this language here.",
+    "language_server_not_connected": "The language server is not running; it restarts when you type."
   },
   "judge": {
     "verdict": {
@@ -316,5 +321,23 @@
         "type": "Expected a value of type {{type}}."
       }
     }
+  },
+  "lsp": {
+    "status": {
+      "off": "No language server",
+      "starting": "{{language}} language server: starting…",
+      "ready": "{{language}} language server: ready",
+      "restarting": "{{language}} language server: restarting (attempt {{attempt}})…",
+      "stopped": "{{language}} language server: paused while idle; it resumes when you type",
+      "unavailable": "{{language}} language server: unavailable"
+    },
+    "reason": "Why: {{reason}}",
+    "errors_one": "{{count}} error",
+    "errors_other": "{{count}} errors",
+    "warnings_one": "{{count}} warning",
+    "warnings_other": "{{count}} warnings",
+    "position": "Ln {{line}}, Col {{col}}",
+    "format": "Format",
+    "formatHint": "Format document (Shift+Alt+F)"
   }
 }

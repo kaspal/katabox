@@ -14,6 +14,8 @@ import {
   Send,
 } from "lucide-react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
+import type { EditorView } from "@codemirror/view";
+import { formatDocument } from "@codemirror/lsp-client";
 import type { JsonValue, Language } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +32,9 @@ import { api } from "@/lib/api";
 import { useFocusMode } from "@/lib/focus";
 import { useAppInfo, useProblem } from "@/lib/queries";
 import { JUDGE_LANGUAGES, parseLanguage, useEditorPrefs, useSetting } from "@/lib/settings";
-import { CodeEditor } from "@/workspace/editor/CodeEditor";
+import { CodeEditor, type EditorStatus } from "@/workspace/editor/CodeEditor";
+import { EditorStatusBar } from "@/workspace/editor/lsp/EditorStatusBar";
+import { useLanguageServer } from "@/workspace/editor/lsp/useLanguageServer";
 import { useEditorSession, useJudge } from "@/workspace/hooks";
 import { ProblemPane } from "@/workspace/problem/ProblemPane";
 import { ResultsPane, type ResultsTab } from "@/workspace/results/ResultsPane";
@@ -52,13 +56,25 @@ export function WorkspacePage() {
   const { problemId } = route.useParams();
   const problem = useProblem(problemId);
   const info = useAppInfo();
-  const { keymap, fontSize } = useEditorPrefs();
+  const { keymap, fontSize, ligatures } = useEditorPrefs();
   const [lastLanguage, setLastLanguage] = useSetting<Language>("editor.language", "python", parseLanguage, {
     mirror: true,
   });
   const [layouts, setLayouts] = useSetting<Layouts>("workspace.layout", {}, parseLayouts, { mirror: true });
   const [language, setLanguage] = useState<Language | null>(null);
   const session = useEditorSession(problemId, language);
+  const docLang = session.doc?.lang ?? null;
+  const serverInfo = info.data?.language_servers.find((l) => l.language === docLang);
+  const docText = useRef("");
+  docText.current = session.doc?.text ?? "";
+  const server = useLanguageServer(
+    problemId,
+    docLang,
+    serverInfo && !serverInfo.available ? (serverInfo.reason ?? "") : null,
+    () => docText.current,
+  );
+  const [editorStatus, setEditorStatus] = useState<EditorStatus | null>(null);
+  const editorView = useRef<EditorView | null>(null);
   const judge = useJudge(problemId);
   const { focus, setFocus } = useFocusMode();
   const [tab, setTab] = useState<ResultsTab>("testcases");
@@ -294,17 +310,36 @@ export function WorkspacePage() {
               ) : !session.doc ? (
                 <Skeleton className="m-4 h-40" />
               ) : (
-                <CodeEditor
-                  docKey={session.docKey}
-                  value={session.doc.text}
-                  lang={session.doc.lang}
-                  keymap={keymap}
-                  fontSize={fontSize}
-                  ariaLabel={t("workspace.editorLabel", { language: t(`languages.${session.doc.lang}`) })}
-                  onChange={session.onChange}
-                  onRun={() => void run()}
-                  onSubmit={() => void submit()}
-                />
+                <div className="flex h-full min-h-0 flex-col">
+                  <div className="min-h-0 flex-1">
+                    <CodeEditor
+                      docKey={session.docKey}
+                      value={session.doc.text}
+                      lang={session.doc.lang}
+                      keymap={keymap}
+                      fontSize={fontSize}
+                      ligatures={ligatures}
+                      lspExtension={server.extension}
+                      ariaLabel={t("workspace.editorLabel", { language: t(`languages.${session.doc.lang}`) })}
+                      onChange={(text) => {
+                        session.onChange(text);
+                        server.wake();
+                      }}
+                      onRun={() => void run()}
+                      onSubmit={() => void submit()}
+                      onStatus={setEditorStatus}
+                      onView={(v) => (editorView.current = v)}
+                    />
+                  </div>
+                  <EditorStatusBar
+                    language={session.doc.lang}
+                    server={server.status}
+                    status={editorStatus}
+                    onFormat={() => {
+                      if (editorView.current) formatDocument(editorView.current);
+                    }}
+                  />
+                </div>
               )}
             </ResizablePanel>
             <ResizableHandle withHandle />

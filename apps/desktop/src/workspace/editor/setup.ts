@@ -26,7 +26,7 @@ export function keymapExtension(pref: KeymapPref): Extension {
 }
 
 /** Theme from the design tokens: CSS variables, so light and dark need no rebuild. */
-export function themeExtension(fontSize: number): Extension {
+export function themeExtension(fontSize: number, ligatures = false): Extension {
   return EditorView.theme({
     "&": {
       height: "100%",
@@ -37,7 +37,23 @@ export function themeExtension(fontSize: number): Extension {
     ".cm-scroller": {
       fontFamily: '"JetBrains Mono Variable", ui-monospace, "Cascadia Code", monospace',
       lineHeight: "1.6",
+      // JetBrains Mono draws `->`, `!=`, … as single glyphs; off unless the user opts in.
+      fontVariantLigatures: ligatures ? "normal" : "none",
+      fontFeatureSettings: ligatures ? "normal" : '"liga" 0, "calt" 0',
     },
+    ".cm-tooltip": {
+      backgroundColor: "var(--popover)",
+      color: "var(--popover-foreground)",
+      border: "1px solid var(--border)",
+      borderRadius: "6px",
+    },
+    ".cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]": {
+      backgroundColor: "var(--accent)",
+      color: "var(--accent-foreground)",
+    },
+    ".cm-lsp-documentation, .cm-lsp-hover-tooltip": { padding: "4px 8px", maxWidth: "36rem" },
+    ".cm-diagnostic-error": { borderLeft: "3px solid var(--destructive)" },
+    ".cm-diagnostic-warning": { borderLeft: "3px solid var(--difficulty-medium)" },
     ".cm-content": { caretColor: "var(--foreground)" },
     ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--foreground)" },
     "&.cm-focused": { outline: "none" },
