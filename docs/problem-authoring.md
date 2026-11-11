@@ -8,10 +8,11 @@ from LeetCode, HackerRank or similar sites.
 
 | File | What it holds |
 | --- | --- |
-| `problem.toml` | Id (equal to the folder name), title, difficulty, tags, pattern, rank, the typed `[signature]` and the `[judge]` settings |
+| `problem.toml` | Id (equal to the folder name), title, optional `title_es` (Spanish title; English is used without it), difficulty, tags, pattern, rank, the typed `[signature]` and the `[judge]` settings |
 | `statement.md`, `statement.es.md` | The statement in English and Spanish |
-| `hints.md` | Hints, tiers separated by `---` |
+| `hints.md` | Hints, tiers separated by lines containing only `---` |
 | `editorial.md` | The explanation of the solution |
+| `hints.es.md`, `editorial.es.md` | Optional Spanish hints and editorial; English is shown without them |
 | `tests/public/*.json`, `tests/hidden/*.json` | `{"input": {<param>: value, ...}, "output": value}`, one test per file |
 | `solutions/ref.{py,ts,php,rs}` | Reference solutions, standard library only |
 
@@ -58,6 +59,13 @@ Standard library only, in every language.
 ```sh
 cargo run -p kb-pack -- validate        # structure, metadata, tests, signatures
 cargo run -p kb-pack -- validate --run  # also judge every reference solution (Windows)
+```
+
+To compile every problem into the app's `content.db` (it validates first and refuses
+to build if any problem fails):
+
+```sh
+cargo run -p kb-pack -- build --out target/content.db
 ```
 
 `--run` needs the toolchains from `pwsh scripts/fetch-toolchains.ps1` and fails unless

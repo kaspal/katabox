@@ -6,17 +6,17 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, SystemTime};
 
 use kb_core::{
-    Language, Limits, Message, MessageCode, TestKind, TestResult, Verdict, overall_verdict,
+    CompileInfo, Failure, Language, Limits, Message, MessageCode, Report, TestCase, TestOutcome,
+    TestResult, Verdict, overall_verdict,
 };
 use kb_runner::{SandboxSpec, Termination};
-use serde::Serialize;
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 use crate::JudgeError;
 use crate::checker::{CheckOutcome, Checker};
 use crate::codegen::workspace_files;
 use crate::languages::{LanguageDef, definition};
-use crate::problem::{Problem, TestCase};
+use crate::problem::Problem;
 use crate::protocol::{self, Record, Request, Status, TestRecord};
 
 /// Extra CPU time on top of the problem's limit for interpreter startup and module
@@ -84,58 +84,6 @@ impl JudgeEnv {
             .map(|(_, d)| d.as_path())
             .ok_or_else(|| JudgeError::Toolchain(format!("no toolchain configured for {lang}")))
     }
-}
-
-/// Outcome of one test that ran (or was running when the batch stopped).
-#[derive(Debug, Clone, PartialEq, Serialize)]
-pub struct TestOutcome {
-    #[serde(flatten)]
-    pub result: TestResult,
-    /// What the function returned, when it returned.
-    pub actual: Option<Value>,
-    /// The user's prints during this test (stdout and stderr, capped).
-    pub stdout: String,
-}
-
-/// Details of the first test that did not pass. For hidden tests this is the only one
-/// revealed, and only after submitting.
-#[derive(Debug, Clone, PartialEq, Serialize)]
-pub struct Failure {
-    pub kind: TestKind,
-    pub index: u32,
-    pub verdict: Verdict,
-    pub input: Map<String, Value>,
-    pub expected: Value,
-    pub actual: Option<Value>,
-    pub message: Option<Message>,
-    pub stdout: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize)]
-pub struct Report {
-    pub verdict: Verdict,
-    /// Tests that ran, in order. When the batch stopped early (time limit, crash) the
-    /// last entry is the test that was running and later tests are absent.
-    pub tests: Vec<TestOutcome>,
-    pub total_tests: u32,
-    pub first_failure: Option<Failure>,
-    /// Compiler or parser output for `CompilationError`.
-    pub compile_output: Option<Message>,
-    /// Sum of the per-test times, in microseconds.
-    pub time_us: u64,
-    /// Peak memory of the whole run (capped at the limit).
-    pub memory_kb: u32,
-    /// The compile step, for compiled languages.
-    pub compile: Option<CompileInfo>,
-}
-
-/// What the compile step did.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-pub struct CompileInfo {
-    /// The binary came from the cache; nothing was compiled.
-    pub cached: bool,
-    /// Wall time of the compile in microseconds (0 when cached).
-    pub time_us: u64,
 }
 
 /// Judge `source` against `tests` (usually `problem.tests`, or only the public ones for
@@ -773,6 +721,7 @@ fn nonce() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use kb_core::TestKind;
     use serde_json::json;
 
     fn tests3() -> Vec<TestCase> {

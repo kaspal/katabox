@@ -11,13 +11,13 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 | Path | What it is |
 | --- | --- |
 | `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI, `src-tauri/` = thin Rust shell (commands and wiring only) |
-| `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult). No I/O |
+| `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult, the judge Report). No I/O |
 | `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009) |
 | `crates/kb-runner` | Sandboxed execution. **Security-critical** |
-| `crates/kb-store` | SQLite: `content.db` (read-only) + `user.db` |
+| `crates/kb-store` | SQLite via sqlx (runtime queries only): `content.db` (read-only, FTS5) + `user.db` (WAL, migrations in `migrations/`; ADR 0010) |
 | `crates/kb-toolchain` | Download/verify/locate runtimes |
 | `crates/kb-bridge` | LSP + DAP stdio relay |
-| `crates/kb-pack` | `kb-pack validate [--run]` CLI for problem packages |
+| `crates/kb-pack` | `kb-pack validate [--run]` and `kb-pack build` (content.db) CLI for problem packages |
 | `content/problems/` | Problem packages (CC BY-SA 4.0) |
 | `languages/` | Per-language runtime definitions and harness templates |
 
@@ -31,6 +31,7 @@ kb-sandbox probe                 # Linux: what this kernel supports (cargo run -
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
 cargo run -p kb-pack -- validate # validate every problem (--run: judge every reference solution; Windows)
+cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
 pnpm install && pnpm build       # UI build
 pnpm dev                         # run the desktop app (needs WebView2 / WebKitGTK 4.1)
@@ -46,11 +47,11 @@ cargo check -p katabox-desktop   # desktop shell (needs WebKitGTK on Linux)
 - No network access at runtime except toolchain, pack and update downloads.
 - No telemetry, ever.
 - Every user-facing string goes through i18n (English and Spanish).
-- New data in `user.db` only via a numbered migration.
+- New data in `user.db` only via a numbered migration: a new `crates/kb-store/migrations/NNNN_*.sql` added to `MIGRATIONS`. Never edit a released migration (ADR 0010).
 - Problems must be original. Never copy statements or tests from LeetCode, HackerRank or similar sites.
 - Solutions use each language's standard library only.
 - Record significant decisions as a new ADR in `docs/adr/`.
 
 ## Problem package format
 
-See `docs/problem-authoring.md` and `content/problems/two-sum/` for the reference example: `problem.toml`, `statement.md`, `statement.es.md`, `hints.md` (tiers separated by `---`), `editorial.md`, `tests/public/*.json`, `tests/hidden/*.json` (`{"input": {...}, "output": ...}`), `solutions/ref.{py,ts,php,rs}`, optional `gen.py`, `validate.py`, `solutions/brute.py`.
+See `docs/problem-authoring.md` and `content/problems/two-sum/` for the reference example: `problem.toml` (optional `title_es`), `statement.md`, `statement.es.md`, `hints.md` (tiers separated by `---`), `editorial.md`, `tests/public/*.json`, `tests/hidden/*.json` (`{"input": {...}, "output": ...}`), `solutions/ref.{py,ts,php,rs}`, optional `hints.es.md`, `editorial.es.md`, `gen.py`, `validate.py`, `solutions/brute.py`.

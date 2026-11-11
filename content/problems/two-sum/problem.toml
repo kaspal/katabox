@@ -1,5 +1,6 @@
 id = "two-sum"
 title = "Two Sum"
+title_es = "Suma de dos"
 difficulty = "easy"
 tags = ["array", "hash-map"]
 pattern = "arrays-hashing"

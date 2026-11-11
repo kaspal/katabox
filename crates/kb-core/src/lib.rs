@@ -2,6 +2,10 @@
 //!
 //! Keep this crate dependency-light: no I/O, no async, no platform code.
 
+mod report;
+
+pub use report::{CompileInfo, Failure, Report, TestCase, TestOutcome};
+
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
