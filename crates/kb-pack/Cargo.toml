@@ -14,9 +14,14 @@ path = "src/main.rs"
 [dependencies]
 kb-core.workspace = true
 kb-judge.workspace = true
+kb-store.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+tokio.workspace = true
 toml.workspace = true
+
+[dev-dependencies]
+sqlx.workspace = true
 
 [lints]
 workspace = true
