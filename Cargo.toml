@@ -12,8 +12,10 @@ repository = "https://github.com/OWNER/katabox"
 rust-version = "1.85"
 
 [workspace.dependencies]
+kb-app = { path = "crates/kb-app" }
 kb-core = { path = "crates/kb-core" }
 kb-judge = { path = "crates/kb-judge" }
+kb-pack = { path = "crates/kb-pack" }
 kb-store = { path = "crates/kb-store" }
 kb-runner = { path = "crates/kb-runner" }
 kb-toolchain = { path = "crates/kb-toolchain" }
@@ -23,6 +25,7 @@ serde_json = "1"
 toml = "0.9"
 thiserror = "2"
 sha2 = "0.10"
+specta = { version = "=2.0.0-rc.22", features = ["derive", "serde_json"] }
 sqlx = { version = "0.8", default-features = false, features = ["sqlite", "runtime-tokio"] }
 tokio = { version = "1", features = ["rt"] }
 

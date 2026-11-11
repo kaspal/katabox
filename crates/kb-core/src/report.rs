@@ -20,6 +20,7 @@ pub struct TestCase {
 
 /// Outcome of one test that ran (or was running when the batch stopped).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct TestOutcome {
     #[serde(flatten)]
     pub result: TestResult,
@@ -32,6 +33,7 @@ pub struct TestOutcome {
 /// Details of the first test that did not pass. For hidden tests this is the only one
 /// revealed, and only after submitting.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct Failure {
     pub kind: TestKind,
     pub index: u32,
@@ -44,6 +46,7 @@ pub struct Failure {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct Report {
     pub verdict: Verdict,
     /// Tests that ran, in order. When the batch stopped early (time limit, crash) the
@@ -63,11 +66,48 @@ pub struct Report {
 
 /// What the compile step did.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct CompileInfo {
     /// The binary came from the cache; nothing was compiled.
     pub cached: bool,
     /// Wall time of the compile in microseconds (0 when cached).
     pub time_us: u64,
+}
+
+impl Report {
+    /// Hide what hidden tests returned and printed (`actual`, `stdout`), keeping their
+    /// verdict, time and memory. The first failure, hidden or not, stays complete: it is
+    /// the one hidden test a user may see after submitting.
+    pub fn redact_hidden(&mut self) {
+        for t in &mut self.tests {
+            if t.result.kind == TestKind::Hidden {
+                t.actual = None;
+                t.stdout.clear();
+            }
+        }
+    }
+}
+
+/// Progress of one judge run, sent to the UI as it happens. The sandbox returns output
+/// only when the batch ends, so `Checked` events arrive together after `Running`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "event", rename_all = "snake_case")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub enum JudgeEvent {
+    /// A compiled language is being compiled (or its cached binary reused).
+    Compiling,
+    /// The batch of `total` tests is running in the sandbox.
+    Running { total: u32 },
+    /// One test's result, in order; `done` of `total` checked so far.
+    Checked {
+        kind: TestKind,
+        index: u32,
+        verdict: Verdict,
+        done: u32,
+        total: u32,
+    },
+    /// The run is over.
+    Finished { verdict: Verdict },
 }
 
 #[cfg(test)]
@@ -132,5 +172,56 @@ mod tests {
         assert_eq!(serde_json::to_value(&r).unwrap(), want);
         let back: Report = serde_json::from_value(want).unwrap();
         assert_eq!(back, r);
+    }
+
+    #[test]
+    fn redaction_hides_only_hidden_tests() {
+        let outcome = |kind| TestOutcome {
+            result: TestResult {
+                index: 1,
+                kind,
+                verdict: Verdict::Accepted,
+                time_us: 1,
+                memory_kb: 1,
+                message: None,
+            },
+            actual: Some(json!(1)),
+            stdout: "x".into(),
+        };
+        let mut r = Report {
+            verdict: Verdict::Accepted,
+            tests: vec![outcome(TestKind::Public), outcome(TestKind::Hidden)],
+            total_tests: 2,
+            first_failure: None,
+            compile_output: None,
+            time_us: 2,
+            memory_kb: 1,
+            compile: None,
+        };
+        r.redact_hidden();
+        assert_eq!(r.tests[0].actual, Some(json!(1)));
+        assert_eq!(r.tests[0].stdout, "x");
+        assert_eq!(r.tests[1].actual, None);
+        assert_eq!(r.tests[1].stdout, "");
+        assert_eq!(r.tests[1].result.verdict, Verdict::Accepted);
+    }
+
+    #[test]
+    fn judge_events_are_tagged() {
+        let e = JudgeEvent::Checked {
+            kind: TestKind::Hidden,
+            index: 2,
+            verdict: Verdict::Accepted,
+            done: 5,
+            total: 7,
+        };
+        assert_eq!(
+            serde_json::to_value(&e).unwrap(),
+            json!({"event": "checked", "kind": "hidden", "index": 2, "verdict": "accepted", "done": 5, "total": 7})
+        );
+        assert_eq!(
+            serde_json::to_value(JudgeEvent::Compiling).unwrap(),
+            json!({"event": "compiling"})
+        );
     }
 }

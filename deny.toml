@@ -12,6 +12,7 @@ allow = [
     "MIT-0",
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause", # Inflector, via specta-macros (ADR 0011)
     "BSD-3-Clause",
     "Zlib",
     "0BSD",

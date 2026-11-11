@@ -16,11 +16,11 @@ pub mod signature;
 
 pub use checker::{CheckOutcome, Checker};
 pub use codegen::{harness, starter_code};
-pub use judge::{BINARY_CACHE_SIZE, JudgeEnv, STARTUP_ALLOWANCE, judge};
+pub use judge::{BINARY_CACHE_SIZE, JudgeEnv, STARTUP_ALLOWANCE, judge, judge_with_progress};
 /// The judge's data types live in kb-core (so kb-store can store them without the judge);
 /// re-exported here so this crate's API is unchanged.
-pub use kb_core::{CompileInfo, Failure, Report, TestCase, TestOutcome};
-pub use problem::Problem;
+pub use kb_core::{CompileInfo, Failure, JudgeEvent, Report, TestCase, TestOutcome};
+pub use problem::{Problem, check_input};
 pub use signature::{Param, Signature, Type};
 
 use kb_core::Language;

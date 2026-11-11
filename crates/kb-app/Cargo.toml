@@ -1,0 +1,30 @@
+[package]
+name = "kb-app"
+description = "KataBox app service: state, judging orchestration and typed errors behind the Tauri commands"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+kb-core.workspace = true
+kb-judge.workspace = true
+kb-runner.workspace = true
+kb-store.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+specta = { workspace = true, optional = true }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync"] }
+
+[features]
+# TypeScript bindings for the desktop app (tauri-specta).
+specta = ["dep:specta", "kb-core/specta", "kb-store/specta"]
+
+[dev-dependencies]
+kb-pack.workspace = true
+tokio = { workspace = true, features = ["macros"] }
+
+[lints]
+workspace = true

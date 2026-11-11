@@ -21,6 +21,7 @@ const SCHEMA: &str = include_str!("../sql/content.sql");
 /// A UI language. English is always present in a pack; others fall back to it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum UiLang {
     En,
     Es,
@@ -87,6 +88,7 @@ pub struct PackText {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct ContentMeta {
     pub pack_id: String,
     pub pack_version: String,
@@ -95,7 +97,9 @@ pub struct ContentMeta {
 }
 
 /// Which problems to list. Every field is optional; `None` means "any".
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct ProblemFilter {
     pub difficulty: Option<Difficulty>,
     pub tag: Option<String>,
@@ -111,6 +115,7 @@ pub struct ProblemFilter {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum StatusFilter {
     /// Never submitted.
     Todo,
@@ -129,6 +134,7 @@ impl StatusFilter {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct ProblemSummary {
     pub id: String,
     pub title: String,
@@ -142,6 +148,7 @@ pub struct ProblemSummary {
 
 /// A public test as shown in the UI.
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct PublicTest {
     pub index: u32,
     pub input: Map<String, Value>,
@@ -150,6 +157,7 @@ pub struct PublicTest {
 
 /// Everything the problem page shows, in one UI language with English fallback.
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct ProblemView {
     pub id: String,
     /// The language requested; each text falls back to English when missing.

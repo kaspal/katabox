@@ -14,6 +14,8 @@ use crate::signature::{RawSignature, Signature};
 #[derive(Debug, Clone)]
 pub struct Problem {
     pub id: String,
+    /// The package folder for [`Problem::load`]; empty for [`Problem::from_parts`]
+    /// (content.db). Nothing in the judge reads it.
     pub dir: PathBuf,
     pub signature: Signature,
     pub checker: Checker,
@@ -55,32 +57,78 @@ impl Problem {
         let meta: ProblemToml =
             toml::from_str(&src).map_err(|e| bad(format!("problem.toml: {e}")))?;
         let signature: Signature = meta.signature.try_into().map_err(bad)?;
-        let checker: Checker = meta.judge.checker.parse().map_err(bad)?;
-        if checker == Checker::Custom {
-            return Err(bad(
-                "custom checkers are not supported by the judge yet".into()
-            ));
-        }
-        if meta.judge.time_limit_ms == 0 || meta.judge.memory_mb == 0 {
-            return Err(bad("judge limits must be positive".into()));
-        }
-
         let mut tests = load_tests(&dir.join("tests/public"), TestKind::Public, &signature)?;
         tests.extend(load_tests(
             &dir.join("tests/hidden"),
             TestKind::Hidden,
             &signature,
         )?);
-        if tests.is_empty() {
-            return Err(bad("no tests".into()));
+        Problem::new(
+            meta.id,
+            dir.to_path_buf(),
+            signature,
+            &meta.judge.checker,
+            meta.judge.time_limit_ms,
+            meta.judge.memory_mb,
+            tests,
+        )
+        .map_err(bad)
+    }
+
+    /// Build a problem from stored parts (kb-store's `JudgeData`), with the same checks
+    /// as [`Problem::load`]. `signature` is the JSON form of `[signature]`.
+    pub fn from_parts(
+        id: &str,
+        signature: &Value,
+        checker: &str,
+        time_limit_ms: u32,
+        memory_mb: u32,
+        tests: Vec<TestCase>,
+    ) -> Result<Problem, JudgeError> {
+        let bad = |msg: String| JudgeError::Problem(format!("{id}: {msg}"));
+        let signature = Signature::from_json(signature).map_err(bad)?;
+        for t in &tests {
+            check_input(&t.input, &signature)
+                .map_err(|e| bad(format!("{:?} test {}: {e}", t.kind, t.index)))?;
         }
-        Ok(Problem {
-            id: meta.id,
-            dir: dir.to_path_buf(),
+        Problem::new(
+            id.to_string(),
+            PathBuf::new(),
             signature,
             checker,
-            time_limit_ms: meta.judge.time_limit_ms,
-            memory_mb: meta.judge.memory_mb,
+            time_limit_ms,
+            memory_mb,
+            tests,
+        )
+        .map_err(bad)
+    }
+
+    fn new(
+        id: String,
+        dir: PathBuf,
+        signature: Signature,
+        checker: &str,
+        time_limit_ms: u32,
+        memory_mb: u32,
+        tests: Vec<TestCase>,
+    ) -> Result<Problem, String> {
+        let checker: Checker = checker.parse()?;
+        if checker == Checker::Custom {
+            return Err("custom checkers are not supported by the judge yet".into());
+        }
+        if time_limit_ms == 0 || memory_mb == 0 {
+            return Err("judge limits must be positive".into());
+        }
+        if tests.is_empty() {
+            return Err("no tests".into());
+        }
+        Ok(Problem {
+            id,
+            dir,
+            signature,
+            checker,
+            time_limit_ms,
+            memory_mb,
             tests,
         })
     }
@@ -110,18 +158,7 @@ fn load_tests(dir: &Path, kind: TestKind, sig: &Signature) -> Result<Vec<TestCas
         let bad = |msg: String| JudgeError::Problem(format!("{}: {msg}", path.display()));
         let src = std::fs::read_to_string(path).map_err(|e| bad(e.to_string()))?;
         let t: TestFile = serde_json::from_str(&src).map_err(|e| bad(e.to_string()))?;
-        for p in &sig.params {
-            if !t.input.contains_key(&p.name) {
-                return Err(bad(format!("input lacks param {:?}", p.name)));
-            }
-        }
-        if let Some(extra) = t
-            .input
-            .keys()
-            .find(|k| sig.params.iter().all(|p| &p.name != *k))
-        {
-            return Err(bad(format!("input has unknown key {extra:?}")));
-        }
+        check_input(&t.input, sig).map_err(bad)?;
         tests.push(TestCase {
             kind,
             index: u32::try_from(i + 1).unwrap_or(u32::MAX),
@@ -130,6 +167,22 @@ fn load_tests(dir: &Path, kind: TestKind, sig: &Signature) -> Result<Vec<TestCas
         });
     }
     Ok(tests)
+}
+
+/// A test input must hold exactly the signature's params, by name.
+pub fn check_input(input: &Map<String, Value>, sig: &Signature) -> Result<(), String> {
+    for p in &sig.params {
+        if !input.contains_key(&p.name) {
+            return Err(format!("input lacks param {:?}", p.name));
+        }
+    }
+    if let Some(extra) = input
+        .keys()
+        .find(|k| sig.params.iter().all(|p| &p.name != *k))
+    {
+        return Err(format!("input has unknown key {extra:?}"));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -154,5 +207,42 @@ mod tests {
         assert_eq!(p.tests[3].kind, TestKind::Hidden);
         assert_eq!(p.tests[3].index, 1);
         assert!(p.tests[0].input.contains_key("nums"));
+    }
+
+    #[test]
+    fn from_parts_matches_load() {
+        let disk = Problem::load(&two_sum_dir()).unwrap();
+        let sig = serde_json::json!({
+            "name": "twoSum",
+            "params": [{"name": "nums", "type": "int[]"}, {"name": "target", "type": "int"}],
+            "returns": "int[]"
+        });
+        let p = Problem::from_parts("two-sum", &sig, "unordered", 2000, 256, disk.tests.clone())
+            .unwrap();
+        assert_eq!(p.signature, disk.signature);
+        assert_eq!(p.checker, disk.checker);
+        assert_eq!(p.tests, disk.tests);
+        assert_eq!((p.time_limit_ms, p.memory_mb), (2000, 256));
+        assert_eq!(p.dir, PathBuf::new());
+
+        let err = |r: Result<Problem, JudgeError>| r.unwrap_err().to_string();
+        let t = disk.tests.clone();
+        assert!(err(Problem::from_parts("x", &sig, "custom", 1, 1, t.clone())).contains("custom"));
+        assert!(err(Problem::from_parts("x", &sig, "exact", 0, 1, t.clone())).contains("positive"));
+        assert!(err(Problem::from_parts("x", &sig, "exact", 1, 1, vec![])).contains("no tests"));
+        assert!(
+            err(Problem::from_parts(
+                "x",
+                &serde_json::json!({"name": 1}),
+                "exact",
+                1,
+                1,
+                t.clone()
+            ))
+            .contains("signature")
+        );
+        let mut bad = t[0].clone();
+        bad.input.remove("target");
+        assert!(err(Problem::from_parts("x", &sig, "exact", 1, 1, vec![bad])).contains("target"));
     }
 }
