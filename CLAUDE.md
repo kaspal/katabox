@@ -18,7 +18,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 | `crates/kb-store` | SQLite via sqlx (runtime queries only): `content.db` (read-only, FTS5) + `user.db` (WAL, migrations in `migrations/`; ADR 0010) |
 | `crates/kb-toolchain` | Installs languages (runtimes + language servers) into the sandbox root: compiled-in `manifest.toml` (the only place pins live), safe downloader and extractor, receipts; `kb-toolchain` CLI (ADR 0015). **Download verification lives here** |
 | `crates/kb-bridge` | Language servers over stdio, outside the sandbox: sessions, message policy, virtual project per problem (ADR 0014). DAP later |
-| `crates/kb-pack` | `kb-pack validate [--run]` and `kb-pack build` (content.db) CLI for problem packages |
+| `crates/kb-pack` | `kb-pack validate [--run]`, `generate` and `build` (content.db) CLI for problem packages; `--run` runs every problem script in the sandbox (ADR 0016) |
 | `content/problems/` | Problem packages (CC BY-SA 4.0) |
 | `languages/` | Per-language runtime definitions and harness templates |
 
@@ -33,7 +33,8 @@ cargo deny check licenses        # license check (hakoniwa is an approved LGPL e
 kb-sandbox probe                 # Linux: what this kernel supports (cargo run -p kb-runner --bin kb-sandbox -- probe)
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo run -p kb-pack -- validate # validate every problem (--run: judge every reference solution; Windows)
+cargo run -p kb-pack -- validate # validate every problem (--run: sandbox checks: validator, reference speed, 500-seed stress vs brute.py, naive.py TLE; Windows)
+cargo run -p kb-pack -- generate content/problems/<id> --size max --seeds 1,2  # write hidden tests from gen.py (sandbox; committed)
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
 cargo test -p kb-bridge          # language servers: fake-server lifecycle; real basedpyright, typescript-language-server, rust-analyzer on Windows (needs the .ps1 fetch)
@@ -64,4 +65,4 @@ cargo run -p katabox-desktop --bin export-bindings  # regenerate apps/desktop/sr
 
 ## Problem package format
 
-See `docs/problem-authoring.md` and `content/problems/two-sum/` for the reference example: `problem.toml` (optional `title_es`), `statement.md`, `statement.es.md`, `hints.md` (tiers separated by `---`), `editorial.md`, `tests/public/*.json`, `tests/hidden/*.json` (`{"input": {...}, "output": ...}`), `solutions/ref.{py,ts,php,rs}`, optional `hints.es.md`, `editorial.es.md`, `gen.py`, `validate.py`, `solutions/brute.py`.
+See `docs/problem-authoring.md` and `content/problems/budget-pair/` for a complete example: `problem.toml` (with `title_es`), `statement.md`, `statement.es.md`, `hints.md` + `hints.es.md` (3 tiers separated by `---`), `editorial.md` + `editorial.es.md`, `tests/public/*.json` (3-5), `tests/hidden/*.json` (15-40; `{"input": {...}, "output": ...}`), `solutions/ref.{py,ts,php,rs}`, `gen.py`, `validate.py`, `solutions/brute.py`, and `solutions/naive.py` when the complexity matters. Problem scripts never run on the host: kb-pack and the app run them in the sandbox (ADR 0016). `validate --run` must pass before merge; generated tests are committed.

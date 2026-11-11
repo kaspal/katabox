@@ -549,6 +549,32 @@ impl App {
                 expected: Value::Null,
             });
         }
+        // The problem's constraints (validate.py, ADR 0016), run in the sandbox. It needs
+        // Python; without it the reference below still rejects inputs it cannot handle.
+        if let Some(validator) = self.store.content.validator(&p.id).await? {
+            if self.toolchains.runtime_installed(Language::Python) {
+                let env = self.env();
+                let inputs: Vec<Map<String, Value>> =
+                    tests.iter().map(|t| t.input.clone()).collect();
+                let answers = tokio::task::spawn_blocking(move || {
+                    let refs: Vec<&Map<String, Value>> = inputs.iter().collect();
+                    let limits = kb_judge::ScriptLimits {
+                        cpu_time_ms: 10_000,
+                        memory_mb: 512,
+                        max_output_bytes: 1024 * 1024,
+                    };
+                    kb_judge::validate_inputs(&env, &validator, &refs, limits)
+                })
+                .await??;
+                if let Some((i, msg)) = answers
+                    .iter()
+                    .enumerate()
+                    .find_map(|(i, a)| a.as_ref().map(|m| (i, m)))
+                {
+                    return Err(invalid(i, msg.clone()));
+                }
+            }
+        }
         let reference = self
             .store
             .content

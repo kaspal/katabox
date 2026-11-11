@@ -97,6 +97,8 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         texts,
         tests,
         solutions,
+        // The app runs it on custom test inputs (ADR 0016).
+        validator: fs::read_to_string(dir.join("validate.py")).ok(),
     })
 }
 
@@ -177,7 +179,9 @@ mod tests {
             let es = db.get_problem("two-sum", UiLang::Es).await.unwrap();
             assert_eq!(es.title, "Suma de dos");
             assert!(es.statement.contains("índices"));
-            assert_eq!(es.hints, en.hints); // no hints.es.md yet: English
+            assert_eq!(es.hints.len(), 3);
+            assert_ne!(es.hints, en.hints); // hints.es.md
+            assert!(en.has_validator);
 
             let jd = db.judge_data("two-sum").await.unwrap();
             let hidden = jd
@@ -185,7 +189,13 @@ mod tests {
                 .iter()
                 .filter(|t| t.kind == TestKind::Hidden)
                 .count();
-            assert_eq!((jd.tests.len(), hidden), (7, 4));
+            assert_eq!((jd.tests.len(), hidden), (3 + hidden, hidden));
+            assert!(hidden >= 15, "{hidden} hidden tests");
+            assert!(
+                jd.validator
+                    .as_deref()
+                    .is_some_and(|v| v.contains("def validate("))
+            );
             assert_eq!(jd.checker, "unordered");
             let disk = kb_judge::Problem::load(&repo().join("content/problems/two-sum")).unwrap();
             assert_eq!(jd.tests, disk.tests);

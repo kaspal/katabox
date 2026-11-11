@@ -1,0 +1,17 @@
+id = "rising-towers"
+title = "Rising Towers"
+title_es = "Torres crecientes"
+difficulty = "hard"
+tags = ["array", "dynamic-programming", "binary-search"]
+pattern = "dynamic-programming"
+rank = 10
+
+[signature]
+name = "longestRise"
+params = [{ name = "heights", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 2000
+memory_mb = 256

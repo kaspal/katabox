@@ -89,16 +89,15 @@ pub(crate) fn problem_dirs(dir: &Path) -> std::io::Result<Vec<PathBuf>> {
     Ok(dirs)
 }
 
-/// Judge every reference solution in every supported language; all must be Accepted.
+/// Every sandbox check (crate::checks) on every problem; prints one line per check.
 pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
-    let root = match std::path::absolute(root) {
-        Ok(r) => r,
+    let env = match crate::checks::env_for(root) {
+        Ok(e) => e,
         Err(e) => {
-            eprintln!("{}: {e}", root.display());
+            eprintln!("{e}");
             return ExitCode::FAILURE;
         }
     };
-    let env = kb_judge::JudgeEnv::dev(root);
     let dirs = match problem_dirs(dir) {
         Ok(d) => d,
         Err(e) => {
@@ -106,65 +105,19 @@ pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
-    let (mut runs, mut failed) = (0, 0);
     println!();
+    let mut checks = 0;
+    let mut failed = 0;
     for p in &dirs {
-        let problem = match kb_judge::Problem::load(p) {
-            Ok(pr) => pr,
-            Err(e) => {
-                failed += 1;
-                println!("FAIL  {}: {e}", p.display());
-                continue;
-            }
-        };
-        for lang in kb_judge::languages::SUPPORTED {
-            runs += 1;
-            let name = lang.id();
-            let file = p
-                .join("solutions")
-                .join(format!("ref.{}", lang.extension()));
-            let outcome = fs::read_to_string(&file)
-                .map_err(|e| e.to_string())
-                .and_then(|src| {
-                    kb_judge::judge(&problem, &problem.tests, lang, &src, &env)
-                        .map_err(|e| e.to_string())
-                });
-            match outcome {
-                Ok(r) if r.verdict.is_accepted() => {
-                    println!(
-                        "run   {} {name:<10} AC  {}/{} tests, {} us",
-                        problem.id, r.total_tests, r.total_tests, r.time_us
-                    );
-                }
-                Ok(r) => {
-                    failed += 1;
-                    let why = r
-                        .first_failure
-                        .as_ref()
-                        .and_then(|f| f.message.as_ref())
-                        .or(r.compile_output.as_ref())
-                        .map(|m| {
-                            m.text
-                                .lines()
-                                .take(8)
-                                .collect::<Vec<_>>()
-                                .join("\n        ")
-                        })
-                        .unwrap_or_default();
-                    println!(
-                        "FAIL  {} {name:<10} {}\n        {why}",
-                        problem.id,
-                        r.verdict.code()
-                    );
-                }
-                Err(e) => {
-                    failed += 1;
-                    println!("FAIL  {} {name:<10} {e}", problem.id);
-                }
-            }
-        }
+        let findings = crate::checks::check_problem(p, &env);
+        checks += findings.len();
+        failed += crate::checks::print_findings(&findings);
     }
-    println!("\n{runs} reference run(s), {failed} failed");
+    println!(
+        "
+{} problem(s), {checks} check(s), {failed} failed",
+        dirs.len()
+    );
     if failed == 0 {
         ExitCode::SUCCESS
     } else {
@@ -263,6 +216,20 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
     if meta.profile && !dir.join("gen.py").exists() {
         errs.push("profile = true requires gen.py".into());
     }
+    // Problem tooling (ADR 0016): gen.py and brute.py drive the stress test together.
+    if dir.join("gen.py").exists() != dir.join("solutions/brute.py").exists() {
+        errs.push("gen.py and solutions/brute.py come as a pair".into());
+    }
+    for (file, def) in [
+        ("gen.py", "def generate("),
+        ("validate.py", "def validate("),
+    ] {
+        if let Ok(src) = fs::read_to_string(dir.join(file)) {
+            if !src.lines().any(|l| l.trim_start().starts_with(def)) {
+                errs.push(format!("{file} must define {def}...)"));
+            }
+        }
+    }
 
     for f in [
         "statement.md",
@@ -328,15 +295,27 @@ fn check_reference_signatures(dir: &Path, errs: &mut Vec<String>) {
         let Some(line) = signature_line(&stub) else {
             continue;
         };
-        let file = dir
-            .join("solutions")
-            .join(format!("ref.{}", lang.extension()));
-        let src = fs::read_to_string(&file).unwrap_or_default();
-        if !src.lines().any(|l| normalize(l) == line) {
-            errs.push(format!(
-                "{} does not declare the stub's signature: {line}",
-                file.display()
-            ));
+        let mut files = vec![
+            dir.join("solutions")
+                .join(format!("ref.{}", lang.extension())),
+        ];
+        // brute.py and naive.py are Python solutions of the same function.
+        if lang == kb_core::Language::Python {
+            files.extend(
+                ["brute.py", "naive.py"]
+                    .iter()
+                    .map(|f| dir.join("solutions").join(f))
+                    .filter(|f| f.exists()),
+            );
+        }
+        for file in files {
+            let src = fs::read_to_string(&file).unwrap_or_default();
+            if !src.lines().any(|l| normalize(l) == line) {
+                errs.push(format!(
+                    "{} does not declare the stub's signature: {line}",
+                    file.display()
+                ));
+            }
         }
     }
 }

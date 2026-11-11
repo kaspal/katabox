@@ -1,0 +1,17 @@
+id = "warehouse-robot"
+title = "Warehouse Robot"
+title_es = "Robot del almacén"
+difficulty = "medium"
+tags = ["matrix", "bfs", "graph"]
+pattern = "graphs"
+rank = 8
+
+[signature]
+name = "shortestRoute"
+params = [{ name = "grid", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 2000
+memory_mb = 256

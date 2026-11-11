@@ -49,6 +49,22 @@ fn run(lang: Language, source: &str) -> Report {
     report
 }
 
+/// The two-sum tests small enough to print every input (not the 10⁴-number max tests).
+fn small_tests() -> Vec<kb_core::TestCase> {
+    two_sum()
+        .tests
+        .into_iter()
+        .filter(|t| serde_json::to_string(&t.input).unwrap().len() < 1000)
+        .collect()
+}
+
+/// Judge `source` against the small tests only (tests that print every input).
+fn run_small(lang: Language, source: &str) -> Report {
+    let report = judge(&two_sum(), &small_tests(), lang, source, &env()).unwrap();
+    eprintln!("{lang}: {}", serde_json::to_string_pretty(&report).unwrap());
+    report
+}
+
 fn reference(lang: Language) -> String {
     let path = repo()
         .join("content/problems/two-sum/solutions")
@@ -80,8 +96,8 @@ fn compile_output(r: &Report, code: MessageCode) -> String {
 fn accepted_python_reference() {
     let r = run(Language::Python, &reference(Language::Python));
     assert_eq!(r.verdict, Verdict::Accepted);
-    assert_eq!(r.tests.len(), 7);
-    assert_eq!(r.total_tests, 7);
+    assert_eq!(r.tests.len(), two_sum().tests.len());
+    assert_eq!(r.total_tests as usize, two_sum().tests.len());
     assert!(r.first_failure.is_none());
     assert!(
         r.tests
@@ -97,7 +113,7 @@ fn accepted_python_reference() {
 fn accepted_typescript_reference() {
     let r = run(Language::TypeScript, &reference(Language::TypeScript));
     assert_eq!(r.verdict, Verdict::Accepted);
-    assert_eq!(r.tests.len(), 7);
+    assert_eq!(r.tests.len(), two_sum().tests.len());
 }
 
 #[test]
@@ -116,19 +132,19 @@ fn unordered_checker_accepts_reversed_pair() {
 fn wrong_answer_python_reports_first_failing_input() {
     let r = run(
         Language::Python,
-        "def two_sum(nums, target):\n    return [0, 1]\n",
+        "def two_sum(nums, target):\n    return [2, 4]\n",
     );
     assert_eq!(r.verdict, Verdict::WrongAnswer);
-    // Public 1 and 3 expect [0, 1]; public 2 is the first that does not.
+    // Public 1 expects [2, 4]; public 2 is the first that does not.
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     let f = r.first_failure.unwrap();
     assert_eq!((f.kind, f.index), (TestKind::Public, 2));
-    assert_eq!(f.input.get("target"), Some(&json!(6)));
-    assert_eq!(f.expected, json!([1, 2]));
-    assert_eq!(f.actual, Some(json!([0, 1])));
+    assert_eq!(f.input.get("target"), Some(&json!(2)));
+    assert_eq!(f.expected, json!([1, 3]));
+    assert_eq!(f.actual, Some(json!([2, 4])));
     let m = f.message.unwrap();
     assert_eq!(m.code, MessageCode::OutputMismatch);
-    assert_eq!(m.text, "expected [1,2], got [0,1]");
+    assert_eq!(m.text, "expected [1,3], got [2,4]");
 }
 
 #[test]
@@ -138,7 +154,11 @@ fn wrong_answer_typescript() {
         "export function twoSum(nums: number[], target: number): number[] {\n  return [-1, -1];\n}\n",
     );
     assert_eq!(r.verdict, Verdict::WrongAnswer);
-    assert_eq!(r.tests.len(), 7, "every test still runs");
+    assert_eq!(
+        r.tests.len(),
+        two_sum().tests.len(),
+        "every test still runs"
+    );
     assert_eq!(r.first_failure.unwrap().index, 1);
 }
 
@@ -166,10 +186,10 @@ fn starter_stubs_parse_and_get_wrong_answer() {
 fn time_limit_exceeded_python() {
     let r = run(
         Language::Python,
-        "def two_sum(nums, target):\n    if nums[0] == 3:\n        while True:\n            pass\n    return [0, 1]\n",
+        "def two_sum(nums, target):\n    if nums[0] == 7:\n        while True:\n            pass\n    return [2, 4]\n",
     );
     assert_eq!(r.verdict, Verdict::TimeLimitExceeded);
-    // Public 1 passes, public 2 ([3, 2, 4]) spins; later tests never run.
+    // Public 1 passes, public 2 ([7, -3, 10, 5]) spins; later tests never run.
     assert_eq!(r.tests.len(), 2);
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     let f = r.first_failure.clone().unwrap();
@@ -177,7 +197,7 @@ fn time_limit_exceeded_python() {
         (f.kind, f.index, f.verdict),
         (TestKind::Public, 2, Verdict::TimeLimitExceeded)
     );
-    assert_eq!(f.input.get("nums"), Some(&json!([3, 2, 4])));
+    assert_eq!(f.input.get("nums"), Some(&json!([7, -3, 10, 5])));
     assert_eq!(r.tests[1].result.time_us, 2_000_000);
     assert_eq!(
         failure_message(&r, MessageCode::TimeLimit),
@@ -332,12 +352,12 @@ def two_sum(nums, target):
             return [seen[target - n], i]
         seen[n] = i
 "#;
-    let r = run(Language::Python, src);
+    let r = run_small(Language::Python, src);
     assert_eq!(r.verdict, Verdict::Accepted);
-    assert_eq!(r.tests.len(), 7);
+    assert_eq!(r.tests.len(), small_tests().len());
     assert_eq!(
         r.tests[0].stdout,
-        "nums = [2, 7, 11, 15]\n{\"kind\": \"done\"}\nerr line\n"
+        "nums = [5, 8, 12, 1, 3]\n{\"kind\": \"done\"}\nerr line\n"
     );
 }
 
@@ -349,18 +369,18 @@ export function twoSum(nums: number[], target: number): number[] {
   console.log("nums =", nums);
   console.error('{"kind":"done"}');
   writeSync(1, "raw-without-newline");
-  return target === 9 ? [0, 1] : [1, 0];
+  return target === 15 ? [2, 4] : [1, 0];
 }
 "#;
     let r = run(Language::TypeScript, src);
     assert_eq!(
         r.tests[0].stdout,
-        "nums = [ 2, 7, 11, 15 ]\n{\"kind\":\"done\"}\n"
+        "nums = [ 5, 8, 12, 1, 3 ]\n{\"kind\":\"done\"}\n"
     );
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     let f = r.first_failure.unwrap();
     assert_eq!(f.verdict, Verdict::WrongAnswer);
-    assert_eq!(f.stdout, "nums = [ 3, 2, 4 ]\n{\"kind\":\"done\"}\n");
+    assert_eq!(f.stdout, "nums = [ 7, -3, 10, 5 ]\n{\"kind\":\"done\"}\n");
 }
 
 #[test]
@@ -401,7 +421,7 @@ const PHP_HEAD: &str = "<?php\nfunction twoSum(array $nums, int $target): array 
 fn php_accepted_reference() {
     let r = run(Language::Php, &reference(Language::Php));
     assert_eq!(r.verdict, Verdict::Accepted);
-    assert_eq!(r.tests.len(), 7);
+    assert_eq!(r.tests.len(), two_sum().tests.len());
     assert!(r.compile.is_none());
 }
 
@@ -409,12 +429,12 @@ fn php_accepted_reference() {
 fn php_wrong_answer() {
     let r = run(
         Language::Php,
-        &format!("{PHP_HEAD}    return [0, 1];\n}}\n"),
+        &format!("{PHP_HEAD}    return [2, 4];\n}}\n"),
     );
     assert_eq!(r.verdict, Verdict::WrongAnswer);
     let f = r.first_failure.unwrap();
     assert_eq!((f.kind, f.index), (TestKind::Public, 2));
-    assert_eq!(f.actual, Some(json!([0, 1])));
+    assert_eq!(f.actual, Some(json!([2, 4])));
 }
 
 #[test]
@@ -493,15 +513,19 @@ fn php_return_value_not_json() {
 fn php_prints_and_warnings_are_captured_per_test() {
     let src = format!(
         "{PHP_HEAD}    echo 'nums = ', json_encode($nums), \"\\n\";\n    echo '{{\"kind\":\"done\"}}', \"\\n\";\n    \
-         echo $undefined;\n    return $target === 9 ? [0, 1] : [];\n}}\n"
+         echo $undefined;\n    return $target === 15 ? [2, 4] : [];\n}}\n"
     );
-    let r = run(Language::Php, &src);
+    let r = run_small(Language::Php, &src);
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     assert_eq!(
         r.tests[0].stdout,
-        "nums = [2,7,11,15]\n{\"kind\":\"done\"}\nWarning: Undefined variable $undefined in solution.php on line 5\n"
+        "nums = [5,8,12,1,3]\n{\"kind\":\"done\"}\nWarning: Undefined variable $undefined in solution.php on line 5\n"
     );
-    assert_eq!(r.tests.len(), 7, "a fake record must not end the run");
+    assert_eq!(
+        r.tests.len(),
+        small_tests().len(),
+        "a fake record must not end the run"
+    );
 }
 
 #[test]
@@ -529,7 +553,7 @@ fn rust_accepted_reference_then_cached() {
     let src = fresh(&reference(Language::Rust));
     let r = run(Language::Rust, &src);
     assert_eq!(r.verdict, Verdict::Accepted);
-    assert_eq!(r.tests.len(), 7);
+    assert_eq!(r.tests.len(), two_sum().tests.len());
     let c = r.compile.unwrap();
     assert!(!c.cached && c.time_us > 0, "{c:?}");
 
@@ -540,11 +564,11 @@ fn rust_accepted_reference_then_cached() {
 
 #[test]
 fn rust_wrong_answer() {
-    let r = run(Language::Rust, &format!("{RS_HEAD}    vec![0, 1]\n}}\n"));
+    let r = run(Language::Rust, &format!("{RS_HEAD}    vec![2, 4]\n}}\n"));
     assert_eq!(r.verdict, Verdict::WrongAnswer);
     let f = r.first_failure.unwrap();
     assert_eq!((f.kind, f.index), (TestKind::Public, 2));
-    assert_eq!(f.actual, Some(json!([0, 1])));
+    assert_eq!(f.actual, Some(json!([2, 4])));
 }
 
 #[test]
@@ -598,19 +622,23 @@ fn rust_compilation_errors() {
 fn rust_prints_are_captured_per_test() {
     let src = format!(
         "{RS_HEAD}    println!(\"nums = {{:?}}\", nums);\n    println!(\"{{{{\\\"kind\\\":\\\"done\\\"}}}}\");\n    \
-         eprint!(\"no newline\");\n    if target == 9 {{ vec![0, 1] }} else {{ vec![] }}\n}}\n"
+         eprint!(\"no newline\");\n    if target == 15 {{ vec![2, 4] }} else {{ vec![] }}\n}}\n"
     );
-    let r = run(Language::Rust, &src);
-    assert_eq!(r.tests.len(), 7, "a fake record must not end the run");
+    let r = run_small(Language::Rust, &src);
+    assert_eq!(
+        r.tests.len(),
+        small_tests().len(),
+        "a fake record must not end the run"
+    );
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     assert_eq!(
         r.tests[0].stdout,
-        "nums = [2, 7, 11, 15]\n{\"kind\":\"done\"}\nno newline"
+        "nums = [5, 8, 12, 1, 3]\n{\"kind\":\"done\"}\nno newline"
     );
     let f = r.first_failure.unwrap();
     assert_eq!(
         f.stdout,
-        "nums = [3, 2, 4]\n{\"kind\":\"done\"}\nno newline"
+        "nums = [7, -3, 10, 5]\n{\"kind\":\"done\"}\nno newline"
     );
 }
 
@@ -621,4 +649,100 @@ fn rust_printing_too_much_is_output_limit_exceeded() {
     let r = run(Language::Rust, &src);
     assert_eq!(r.verdict, Verdict::OutputLimitExceeded);
     assert_eq!(r.tests[0].stdout.len(), 64 * 1024);
+}
+
+// --- Problem tooling in the sandbox (ADR 0016) ------------------------------------------
+
+const GEN: &str = r#"import random
+
+def generate(seed, size):
+    rng = random.Random(seed)
+    n = 5 if size == "small" else 50
+    return {"nums": [rng.randint(-9, 9) for _ in range(n)], "target": rng.randint(-9, 9)}
+"#;
+
+#[test]
+fn gen_py_runs_in_the_sandbox_deterministically() {
+    let env = env();
+    let a = kb_judge::generate_inputs(&env, GEN, &[1, 2, 3], "small", Default::default()).unwrap();
+    let b = kb_judge::generate_inputs(&env, GEN, &[1, 2, 3], "small", Default::default()).unwrap();
+    assert_eq!(a, b, "same seeds, same inputs");
+    assert_eq!(a.len(), 3);
+    assert_eq!(a[0]["nums"].as_array().unwrap().len(), 5);
+    let max = kb_judge::generate_inputs(&env, GEN, &[7], "max", Default::default()).unwrap();
+    assert_eq!(max[0]["nums"].as_array().unwrap().len(), 50);
+}
+
+#[test]
+fn validate_py_reports_broken_constraints() {
+    let env = env();
+    let src = "def validate(inp):\n    if len(inp['nums']) < 2:\n        return '2 \u{2264} nums.length'\n    return None\n";
+    let ok = json!({"nums": [1, 2], "target": 3});
+    let bad = json!({"nums": [1], "target": 3});
+    let r = kb_judge::validate_inputs(
+        &env,
+        src,
+        &[ok.as_object().unwrap(), bad.as_object().unwrap()],
+        Default::default(),
+    )
+    .unwrap();
+    assert_eq!(r, [None, Some("2 \u{2264} nums.length".to_string())]);
+}
+
+#[test]
+fn script_errors_and_timeouts_are_reported() {
+    let env = env();
+    let err = kb_judge::generate_inputs(
+        &env,
+        "def generate(seed, size):\n    raise ValueError('boom')\n",
+        &[1],
+        "small",
+        Default::default(),
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(
+        err.contains("gen.py") && err.contains("ValueError: boom"),
+        "{err}"
+    );
+    let limits = kb_judge::ScriptLimits {
+        cpu_time_ms: 1000,
+        ..Default::default()
+    };
+    let err = kb_judge::generate_inputs(
+        &env,
+        "def generate(seed, size):\n    while True: pass\n",
+        &[1],
+        "small",
+        limits,
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(err.contains("ran out of time"), "{err}");
+}
+
+/// Scripts get the same sandbox as user code: nothing outside their work folder and the
+/// Python toolchain.
+#[test]
+fn scripts_cannot_read_or_write_outside_the_sandbox() {
+    let env = env();
+    let secret = repo().join("Cargo.toml");
+    let read = format!(
+        "def generate(seed, size):\n    open({:?}).read()\n    return {{}}\n",
+        secret.display().to_string()
+    );
+    let err = kb_judge::generate_inputs(&env, &read, &[1], "small", Default::default())
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("PermissionError"), "{err}");
+    let target = repo().join("target").join("kb-judge-escape.txt");
+    let write = format!(
+        "def generate(seed, size):\n    open({:?}, 'w').write('x')\n    return {{}}\n",
+        target.display().to_string()
+    );
+    let err = kb_judge::generate_inputs(&env, &write, &[1], "small", Default::default())
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("PermissionError"), "{err}");
+    assert!(!target.exists());
 }

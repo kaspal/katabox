@@ -5,15 +5,15 @@ Existe exactamente un par válido y no puedes usar el mismo elemento dos veces. 
 ### Ejemplo 1
 
 ```
-nums = [2, 7, 11, 15], target = 9
-Salida: [0, 1]
+nums = [5, 8, 12, 1, 3], target = 15
+Salida: [2, 4]
 ```
 
 ### Ejemplo 2
 
 ```
-nums = [3, 2, 4], target = 6
-Salida: [1, 2]
+nums = [7, -3, 10, 5], target = 2
+Salida: [1, 3]
 ```
 
 ### Restricciones

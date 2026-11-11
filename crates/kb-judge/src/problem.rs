@@ -201,7 +201,8 @@ mod tests {
         assert_eq!(p.checker, Checker::Unordered);
         assert_eq!(p.time_limit_ms, 2000);
         assert_eq!(p.public_tests().count(), 3);
-        assert_eq!(p.tests.len(), 7);
+        // Public first, then hidden: 3 public, and at least 15 hidden (edge, random, max).
+        assert!(p.tests.len() >= 18, "{}", p.tests.len());
         assert_eq!(p.tests[0].kind, TestKind::Public);
         assert_eq!(p.tests[0].index, 1);
         assert_eq!(p.tests[3].kind, TestKind::Hidden);

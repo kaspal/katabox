@@ -5,15 +5,15 @@ Exactly one pair is a valid answer, and you may not use the same element twice. 
 ### Example 1
 
 ```
-nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
+nums = [5, 8, 12, 1, 3], target = 15
+Output: [2, 4]
 ```
 
 ### Example 2
 
 ```
-nums = [3, 2, 4], target = 6
-Output: [1, 2]
+nums = [7, -3, 10, 5], target = 2
+Output: [1, 3]
 ```
 
 ### Constraints

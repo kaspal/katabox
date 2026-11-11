@@ -1,0 +1,17 @@
+id = "budget-pair"
+title = "Budget Pair"
+title_es = "Pareja dentro del presupuesto"
+difficulty = "easy"
+tags = ["array", "two-pointers", "sorting"]
+pattern = "two-pointers"
+rank = 3
+
+[signature]
+name = "bestPair"
+params = [{ name = "prices", type = "int[]" }, { name = "budget", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 2000
+memory_mb = 256

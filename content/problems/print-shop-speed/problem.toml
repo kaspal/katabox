@@ -1,0 +1,17 @@
+id = "print-shop-speed"
+title = "Print Shop Speed"
+title_es = "Velocidad de la imprenta"
+difficulty = "medium"
+tags = ["array", "binary-search"]
+pattern = "binary-search"
+rank = 7
+
+[signature]
+name = "minSpeed"
+params = [{ name = "pages", type = "int[]" }, { name = "hours", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 2000
+memory_mb = 256

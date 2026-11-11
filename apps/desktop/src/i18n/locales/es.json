@@ -325,7 +325,10 @@
         "empty": "Escribe un valor.",
         "json": "Esto no es JSON válido.",
         "type": "Se esperaba un valor de tipo {{type}}."
-      }
+      },
+      "invalid": "La entrada personalizada {{index}} no es válida: {{message}}",
+      "needsPython": "Las entradas personalizadas se comprueban contra las restricciones del problema solo si Python está instalado.",
+      "installPython": "Instalar Python"
     }
   },
   "lsp": {

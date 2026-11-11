@@ -1,0 +1,1 @@
+{"input": {"text": "f(a[b]{c})"}, "output": true}

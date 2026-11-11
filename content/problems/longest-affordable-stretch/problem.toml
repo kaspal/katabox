@@ -1,0 +1,17 @@
+id = "longest-affordable-stretch"
+title = "Longest Affordable Stretch"
+title_es = "Tramo asequible más largo"
+difficulty = "medium"
+tags = ["array", "sliding-window"]
+pattern = "sliding-window"
+rank = 6
+
+[signature]
+name = "longestStretch"
+params = [{ name = "costs", type = "int[]" }, { name = "budget", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 2000
+memory_mb = 256

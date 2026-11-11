@@ -1,0 +1,17 @@
+id = "nested-brackets"
+title = "Nested Brackets"
+title_es = "Corchetes anidados"
+difficulty = "easy"
+tags = ["string", "stack"]
+pattern = "stack"
+rank = 2
+
+[signature]
+name = "isBalanced"
+params = [{ name = "text", type = "string" }]
+returns = "bool"
+
+[judge]
+checker = "exact"
+time_limit_ms = 2000
+memory_mb = 256

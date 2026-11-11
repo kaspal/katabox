@@ -5,6 +5,7 @@
 //! - [`judge()`]: runs a submission against a batch of tests in one sandboxed run
 //!   (kb-runner), applies the problem's [`Checker`], and returns a [`Report`].
 //! - [`checker`]: built-in output comparisons.
+//! - [`tools`]: problem tooling (`gen.py`, `validate.py`) run in the sandbox like user code.
 
 pub mod checker;
 pub mod codegen;
@@ -13,6 +14,7 @@ pub mod languages;
 pub mod problem;
 mod protocol;
 pub mod signature;
+pub mod tools;
 
 pub use checker::{CheckOutcome, Checker};
 pub use codegen::{harness, starter_code};
@@ -22,6 +24,7 @@ pub use judge::{BINARY_CACHE_SIZE, JudgeEnv, STARTUP_ALLOWANCE, judge, judge_wit
 pub use kb_core::{CompileInfo, Failure, JudgeEvent, Report, TestCase, TestOutcome};
 pub use problem::{Problem, check_input};
 pub use signature::{Param, Signature, Type};
+pub use tools::{ScriptLimits, ScriptOutput, generate_inputs, run_python, validate_inputs};
 
 use kb_core::Language;
 

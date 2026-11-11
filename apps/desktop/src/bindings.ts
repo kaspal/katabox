@@ -707,7 +707,11 @@ export type ProblemView = { id: string;
 /**
  * The language requested; each text falls back to English when missing.
  */
-lang: UiLang; title: string; statement: string; editorial: string | null; hints: string[]; difficulty: Difficulty; pattern: string; rank: number; tags: string[]; signature: JsonValue; time_limit_ms: number; memory_mb: number; public_tests: PublicTest[] }
+lang: UiLang; title: string; statement: string; editorial: string | null; hints: string[]; difficulty: Difficulty; pattern: string; rank: number; tags: string[]; signature: JsonValue; time_limit_ms: number; memory_mb: number; public_tests: PublicTest[]; 
+/**
+ * Custom test inputs are checked by the problem's `validate.py` (needs Python).
+ */
+has_validator: boolean }
 /**
  * A public test as shown in the UI.
  */
