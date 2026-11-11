@@ -38,6 +38,7 @@ pub(crate) const MIGRATIONS: &[Migration] = &[Migration {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum ProblemStatus {
     /// Submitted at least once, never Accepted.
     Attempted,
@@ -46,6 +47,7 @@ pub enum ProblemStatus {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct StatusInfo {
     pub status: ProblemStatus,
     pub first_solved_at: Option<i64>,
@@ -53,6 +55,7 @@ pub struct StatusInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct Draft {
     pub code: String,
     pub updated_at: i64,
@@ -60,6 +63,7 @@ pub struct Draft {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum SnapshotSource {
     Run,
     Submit,
@@ -87,6 +91,7 @@ impl SnapshotSource {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct Snapshot {
     pub id: i64,
     pub problem_id: String,
@@ -97,6 +102,7 @@ pub struct Snapshot {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct SubmissionSummary {
     pub id: i64,
     pub problem_id: String,

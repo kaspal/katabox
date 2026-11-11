@@ -39,6 +39,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "resources": {
+      "resources/content.db": "content.db"
+    },
     "category": "DeveloperTool",
     "shortDescription": "Offline coding practice: problems, tests, editor and debugger"
   }

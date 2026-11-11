@@ -6,6 +6,8 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 authors = ["Ehrlichmann Casas and KataBox contributors"]
+# `tauri dev` / `cargo run` start the app, not the bindings exporter.
+default-run = "katabox-desktop"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -18,13 +20,24 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+# Builds resources/content.db from content/problems (build.rs).
+kb-pack.workspace = true
 
 [dependencies]
 tauri = { version = "2", features = [] }
-kb-core.workspace = true
+kb-app = { workspace = true, features = ["specta"] }
+kb-core = { workspace = true, features = ["specta"] }
+kb-store = { workspace = true, features = ["specta"] }
 serde.workspace = true
 serde_json.workspace = true
+# tauri-specta 2 is a release candidate: versions are pinned exactly (ADR 0011).
+specta.workspace = true
+specta-typescript = "=0.0.9"
+tauri-specta = { version = "=2.0.0-rc.21", features = ["typescript"] }
 
+[target.'cfg(target_os = "linux")'.dependencies]
+# The app binary doubles as the Linux sandbox helper (hidden `__*` subcommands).
+kb-runner.workspace = true
 
 [lints]
 workspace = true

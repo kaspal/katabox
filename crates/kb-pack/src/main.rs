@@ -13,9 +13,7 @@
 //! `target/content.db`, pack `core`, this crate's version). Refuses to build if any
 //! problem fails validation.
 
-mod build;
-mod validate;
-
+use kb_pack::{BuildOptions, build, run_references, validate_all};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -54,16 +52,16 @@ fn validate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
             _ => dir = a.into(),
         }
     }
-    let code = validate::validate_all(&dir);
+    let code = validate_all(&dir);
     if code != ExitCode::SUCCESS || !run {
         return code;
     }
     let root = run_root.unwrap_or_else(|| "target/katabox".into());
-    validate::run_references(&dir, &root)
+    run_references(&dir, &root)
 }
 
 fn build_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
-    let mut opts = build::BuildOptions {
+    let mut opts = BuildOptions {
         dir: "content/problems".into(),
         out: "target/content.db".into(),
         pack_id: "core".into(),
@@ -85,7 +83,7 @@ fn build_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
             return usage(&e);
         }
     }
-    match build::build(&opts) {
+    match build(&opts) {
         Ok(n) => {
             println!("built {} ({n} problem(s))", opts.out.display());
             ExitCode::SUCCESS

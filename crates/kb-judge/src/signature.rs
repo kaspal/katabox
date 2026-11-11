@@ -152,6 +152,14 @@ impl TryFrom<RawSignature> for Signature {
 }
 
 impl Signature {
+    /// Parse and validate a signature stored as JSON (content.db): the same shape as
+    /// `[signature]` in problem.toml, `{"name", "params": [{"name", "type"}], "returns"}`.
+    pub fn from_json(value: &serde_json::Value) -> Result<Signature, String> {
+        let raw: RawSignature =
+            serde_json::from_value(value.clone()).map_err(|e| format!("signature: {e}"))?;
+        raw.try_into()
+    }
+
     /// Function name in `lang`'s convention (`twoSum` -> `two_sum` in Python).
     pub fn function_name(&self, lang: Language) -> String {
         identifier(&self.name, lang)

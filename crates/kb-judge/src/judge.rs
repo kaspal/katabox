@@ -6,8 +6,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, SystemTime};
 
 use kb_core::{
-    CompileInfo, Failure, Language, Limits, Message, MessageCode, Report, TestCase, TestOutcome,
-    TestResult, Verdict, overall_verdict,
+    CompileInfo, Failure, JudgeEvent, Language, Limits, Message, MessageCode, Report, TestCase,
+    TestOutcome, TestResult, Verdict, overall_verdict,
 };
 use kb_runner::{SandboxSpec, Termination};
 use serde_json::Value;
@@ -77,6 +77,19 @@ impl JudgeEnv {
         self
     }
 
+    /// The program the judge would start for `lang` (the compiler for compiled
+    /// languages), or why it is missing.
+    pub fn toolchain_program(&self, lang: Language) -> Result<PathBuf, JudgeError> {
+        let def = definition(lang)?;
+        let toolchain = self.toolchain(lang)?;
+        let (program, _) = if def.compile_limits.is_some() {
+            def.compile_command(toolchain)?
+        } else {
+            def.command(toolchain, 1, None)?
+        };
+        Ok(program)
+    }
+
     fn toolchain(&self, lang: Language) -> Result<&Path, JudgeError> {
         self.toolchains
             .iter()
@@ -95,6 +108,45 @@ pub fn judge(
     source: &str,
     env: &JudgeEnv,
 ) -> Result<Report, JudgeError> {
+    judge_with_progress(problem, tests, language, source, env, &mut |_| {})
+}
+
+/// [`judge`], reporting progress to `on_event`: `Compiling` (compiled languages),
+/// `Running`, one `Checked` per test that ran, then `Finished`. No event follows an
+/// `Err`.
+pub fn judge_with_progress(
+    problem: &Problem,
+    tests: &[TestCase],
+    language: Language,
+    source: &str,
+    env: &JudgeEnv,
+    on_event: &mut dyn FnMut(JudgeEvent),
+) -> Result<Report, JudgeError> {
+    let report = judge_inner(problem, tests, language, source, env, on_event)?;
+    let total = u32::try_from(report.tests.len()).unwrap_or(u32::MAX);
+    for (i, t) in report.tests.iter().enumerate() {
+        on_event(JudgeEvent::Checked {
+            kind: t.result.kind,
+            index: t.result.index,
+            verdict: t.result.verdict,
+            done: u32::try_from(i + 1).unwrap_or(u32::MAX),
+            total,
+        });
+    }
+    on_event(JudgeEvent::Finished {
+        verdict: report.verdict,
+    });
+    Ok(report)
+}
+
+fn judge_inner(
+    problem: &Problem,
+    tests: &[TestCase],
+    language: Language,
+    source: &str,
+    env: &JudgeEnv,
+    on_event: &mut dyn FnMut(JudgeEvent),
+) -> Result<Report, JudgeError> {
     if tests.is_empty() {
         return Err(JudgeError::Problem(format!(
             "{}: no tests to run",
@@ -108,6 +160,7 @@ pub fn judge(
     // Compiled languages: compile (or reuse a cached binary), then run the binary with
     // only the cache folder readable. Interpreted: run the harness from the work folder.
     let (binary, compile) = if def.compile_limits.is_some() {
+        on_event(JudgeEvent::Compiling);
         let function = problem.signature.function_name(language);
         match compile_cached(&def, toolchain, &files, &function, env)? {
             Compiled::Binary(path, info) => (Some(path), Some(info)),
@@ -148,6 +201,9 @@ pub fn judge(
     spec.read_only_dirs = vec![read_only];
     spec.stdin = serde_json::to_vec(&request).map_err(|e| JudgeError::Internal(e.to_string()))?;
     spec.max_output_bytes = RECORD_OUTPUT_ALLOWANCE + print_cap * (tests.len() + 1);
+    on_event(JudgeEvent::Running {
+        total: u32::try_from(tests.len()).unwrap_or(u32::MAX),
+    });
     let outcome = kb_runner::run(&spec)?;
 
     let facts = RunFacts {

@@ -9,7 +9,7 @@ use kb_store::{PackMeta, PackProblem, PackText, UiLang};
 
 use crate::validate::{problem_dirs, read_problem_toml, validate_all};
 
-pub(crate) struct BuildOptions {
+pub struct BuildOptions {
     pub dir: PathBuf,
     pub out: PathBuf,
     pub pack_id: String,
@@ -17,7 +17,7 @@ pub(crate) struct BuildOptions {
 }
 
 /// Validate, read every package and write content.db. Returns the problem count.
-pub(crate) fn build(opts: &BuildOptions) -> Result<usize, String> {
+pub fn build(opts: &BuildOptions) -> Result<usize, String> {
     if validate_all(&opts.dir) != ExitCode::SUCCESS {
         return Err("validation failed; nothing was built".into());
     }

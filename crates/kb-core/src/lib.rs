@@ -4,7 +4,7 @@
 
 mod report;
 
-pub use report::{CompileInfo, Failure, Report, TestCase, TestOutcome};
+pub use report::{CompileInfo, Failure, JudgeEvent, Report, TestCase, TestOutcome};
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -14,6 +14,7 @@ use std::str::FromStr;
 /// (language.toml + harness template) and a variant here.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum Language {
     Python,
     JavaScript,
@@ -81,6 +82,7 @@ impl FromStr for Language {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum Difficulty {
     Easy,
     Medium,
@@ -91,6 +93,7 @@ pub enum Difficulty {
 /// (DMOJ / Judge0) so users recognize them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum Verdict {
     Accepted,
     WrongAnswer,
@@ -126,6 +129,7 @@ impl Verdict {
 /// but the first failing one is revealed afterwards (see the plan).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum TestKind {
     Example,
     Public,
@@ -160,6 +164,7 @@ impl Limits {
 /// snake_case: **never rename a variant**, only add new ones.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum MessageCode {
     // Checker.
     /// The return value differs from the expected output.
@@ -208,6 +213,7 @@ pub enum MessageCode {
 
 /// A judge message: stable code plus English text.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct Message {
     pub code: MessageCode,
     pub text: String,
@@ -224,6 +230,7 @@ impl Message {
 
 /// Result of a single test case.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct TestResult {
     pub index: u32,
     pub kind: TestKind,

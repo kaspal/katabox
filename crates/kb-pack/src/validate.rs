@@ -90,7 +90,7 @@ pub(crate) fn problem_dirs(dir: &Path) -> std::io::Result<Vec<PathBuf>> {
 }
 
 /// Judge every reference solution in every supported language; all must be Accepted.
-pub(crate) fn run_references(dir: &Path, root: &Path) -> ExitCode {
+pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
     let root = match std::path::absolute(root) {
         Ok(r) => r,
         Err(e) => {
@@ -172,7 +172,7 @@ pub(crate) fn run_references(dir: &Path, root: &Path) -> ExitCode {
     }
 }
 
-pub(crate) fn validate_all(dir: &Path) -> ExitCode {
+pub fn validate_all(dir: &Path) -> ExitCode {
     let dirs = match problem_dirs(dir) {
         Ok(d) => d,
         Err(e) => {
