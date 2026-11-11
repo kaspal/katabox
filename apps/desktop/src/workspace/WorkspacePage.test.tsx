@@ -8,6 +8,9 @@ import { AUTOSAVE_MS } from "@/workspace/hooks";
 
 vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
 
+// The workspace route is the heaviest screen (CodeMirror, panes): give it room on a busy machine.
+vi.setConfig({ testTimeout: 15_000 });
+
 /** The CodeMirror view inside the main editor. */
 async function editor() {
   const host = await screen.findByTestId("code-editor", undefined, { timeout: 4000 });
@@ -73,16 +76,16 @@ describe("Workspace: editor and drafts", () => {
   it("offers to install a language that is not installed, then switches to it", async () => {
     const { user } = await openWorkspace();
     await user.click(screen.getByRole("combobox", { name: "Language" }));
-    const rust = await screen.findByRole("option", { name: /Rust/ });
+    const rust = await screen.findByRole("option", { name: /Rust/ }, { timeout: 4000 });
     expect(rust).not.toHaveAttribute("aria-disabled");
     expect(rust).toHaveTextContent("Not installed");
     await user.click(rust);
-    const dialog = await screen.findByRole("dialog", { name: "Install Rust" });
+    const dialog = await screen.findByRole("dialog", { name: "Install Rust" }, { timeout: 4000 });
     // Rust is preselected, with its sizes.
     expect(within(dialog).getByRole("checkbox", { name: "Rust" })).toBeChecked();
     expect(within(dialog).getByTestId("install-total")).toHaveTextContent("244 MB to download, 959 MB on disk");
     await user.click(within(dialog).getByRole("button", { name: "Install selected" }));
-    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+    await user.click(await within(dialog).findByRole("button", { name: "Done" }, { timeout: 4000 }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await waitFor(() => expect(screen.getByRole("combobox", { name: "Language" })).toHaveTextContent("Rust"));
   });
@@ -132,6 +135,33 @@ describe("Workspace: Run and Submit", () => {
     expect(within(view).getByText("2/2 tests passed")).toBeInTheDocument();
     expect(view.querySelector(".kb-celebrate")).not.toBeNull();
     expect(fake.api.submit).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the validator's broken constraint for a custom input in the Testcases tab", async () => {
+    const fake = setFakeApi();
+    const { user } = await openWorkspace();
+    await editor();
+    await user.click(screen.getByRole("button", { name: "Add custom test" }));
+    fake.state.runError = { code: "invalid_custom_input", message: "custom input 1: 2 ≤ nums.length ≤ 10⁴" };
+    await user.click(screen.getByRole("button", { name: "Run" }));
+    const alert = await screen.findByTestId("custom-error");
+    // Visible at once, not inside a collapsed Details.
+    expect(alert).toHaveTextContent("Custom input 1 is not valid: 2 ≤ nums.length ≤ 10⁴");
+    expect(within(alert).queryByText("Details")).toBeNull();
+    // Python is installed in the default fake: no note.
+    expect(screen.queryByTestId("validator-needs-python")).toBeNull();
+  });
+
+  it("says custom inputs skip the constraint check without Python, and offers to install it", async () => {
+    setFakeApi({ installed: ["typescript"], lastLanguage: "typescript" });
+    const { user } = await openWorkspace();
+    await editor();
+    expect(screen.queryByTestId("validator-needs-python")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Add custom test" }));
+    const note = await screen.findByTestId("validator-needs-python");
+    expect(note).toHaveTextContent("only when Python is installed");
+    await user.click(within(note).getByRole("button", { name: "Install Python" }));
+    expect(await screen.findByRole("dialog", { name: "Install Python" })).toBeInTheDocument();
   });
 
   it("validates custom tests as you type and blocks Run while one is invalid", async () => {

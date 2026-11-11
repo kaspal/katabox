@@ -201,6 +201,8 @@ export function createFakeApi(
     releaseInstall: null as (() => void) | null,
     /** The next install fails with this error (after the gate). */
     installError: null as AppError | null,
+    /** The next run fails with this error (e.g. a custom input the validator rejects). */
+    runError: null as AppError | null,
     /** Languages of each installLanguages call. */
     installCalls: [] as Language[][],
   };
@@ -271,6 +273,7 @@ export function createFakeApi(
           { index: 1, input: { nums: [2, 7, 11, 15], target: 9 }, output: [0, 1] },
           { index: 2, input: { nums: [3, 2, 4], target: 6 }, output: [1, 2] },
         ],
+        has_validator: id === "two-sum",
       };
     }),
     continueItem: vi.fn(async () => opts.continueItem ?? null),
@@ -305,6 +308,11 @@ export function createFakeApi(
       return null;
     }),
     run: vi.fn(async (p: string, lang: Language, code: string, custom: CustomInput[], onEvent) => {
+      if (state.runError) {
+        const e = state.runError;
+        state.runError = null;
+        throw e;
+      }
       const r = await judge(onEvent, 2 + custom.length);
       snap(p, lang, code, "run", r.verdict);
       return r;

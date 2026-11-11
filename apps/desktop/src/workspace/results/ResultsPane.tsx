@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import type { JudgeEvent, ProblemView } from "@/bindings";
@@ -51,6 +52,8 @@ export function ResultsPane({
   report,
   error,
   celebrate,
+  validatorNeedsPython = false,
+  onInstallPython,
 }: {
   problem: ProblemView;
   signature: Signature | null;
@@ -63,12 +66,23 @@ export function ResultsPane({
   report: Report | null;
   error: unknown;
   celebrate: boolean;
+  /** The problem has validate.py but Python is not installed (constraints unchecked). */
+  validatorNeedsPython?: boolean;
+  onInstallPython?: () => void;
 }) {
   const { t } = useTranslation();
   const phaseText = usePhaseText()(phase);
   const nextId = () => Math.max(0, ...customs.map((c) => c.id)) + 1;
   const customError =
     isAppError(error) && error.code === "invalid_custom_input" ? error.message : null;
+  // "custom input N: <why>" from the backend: the validator's broken constraint, a wrong
+  // key, or what the reference solution could not handle.
+  const customParts = customError?.match(/^custom input (\d+): ([\s\S]*)$/);
+  // Bring the reason into view: it sits below the custom tests the user just edited.
+  const customErrorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (customError) customErrorRef.current?.scrollIntoView?.({ block: "nearest" });
+  }, [customError]);
 
   return (
     <Tabs value={tab} onValueChange={(v) => onTab(v as ResultsTab)} className="flex h-full min-h-0 flex-col gap-0">
@@ -116,7 +130,27 @@ export function ResultsPane({
                 onRemove={() => onCustoms(customs.filter((x) => x.id !== c.id))}
               />
             ))}
-          {customError && <ErrorNotice error={error} />}
+          {customError && (
+            <div role="alert" data-testid="custom-error" className="space-y-1" ref={customErrorRef}>
+              {customParts ? (
+                <p className="rounded-lg border border-destructive/40 bg-card p-3 text-sm">
+                  {t("results.custom.invalid", { index: customParts[1], message: customParts[2] })}
+                </p>
+              ) : (
+                <ErrorNotice error={error} />
+              )}
+            </div>
+          )}
+          {validatorNeedsPython && customs.length > 0 && (
+            <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" data-testid="validator-needs-python">
+              {t("results.custom.needsPython")}
+              {onInstallPython && (
+                <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={onInstallPython}>
+                  {t("results.custom.installPython")}
+                </Button>
+              )}
+            </p>
+          )}
           {signature && (
             <div className="flex flex-wrap gap-2">
               <Button

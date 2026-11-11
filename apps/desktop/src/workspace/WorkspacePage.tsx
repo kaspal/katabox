@@ -31,6 +31,7 @@ import { ErrorNotice } from "@/components/ErrorNotice";
 import { InstallDialog } from "@/languages/InstallDialog";
 import { DifficultyLabel } from "@/components/Semantic";
 import { api } from "@/lib/api";
+import { isAppError } from "@/lib/errors";
 import { useFocusMode } from "@/lib/focus";
 import { useAppInfo, useProblem } from "@/lib/queries";
 import { JUDGE_LANGUAGES, parseLanguage, useEditorPrefs, useSetting } from "@/lib/settings";
@@ -119,6 +120,12 @@ export function WorkspacePage() {
     await session.flush();
     await judge.run(language, session.code, customInputs.filter((i) => i !== null));
   }, [ready, language, session, customsValid, customInputs, judge]);
+
+  // A custom input was refused (its constraints, keys, or the reference): show why where
+  // the input is edited.
+  useEffect(() => {
+    if (isAppError(judge.error) && judge.error.code === "invalid_custom_input") setTab("testcases");
+  }, [judge.error]);
 
   const submit = useCallback(async () => {
     if (!ready || !language || session.code === null) return;
@@ -390,6 +397,8 @@ export function WorkspacePage() {
                   tab={tab}
                   onTab={setTab}
                   customs={customs}
+                  validatorNeedsPython={p.has_validator && toolchains.get("python")?.present === false}
+                  onInstallPython={() => setInstallFor("python")}
                   onCustoms={setCustoms}
                   busy={busy}
                   phase={judge.phase}
