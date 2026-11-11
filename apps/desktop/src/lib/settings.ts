@@ -77,5 +77,11 @@ export function useEditorPrefs() {
   const [fontSize, setFontSize] = useSetting<number>("editor.font_size", 14, parseFontSize, {
     mirror: true,
   });
-  return { keymap, setKeymap, fontSize, setFontSize };
+  const [ligatures, setLigatures] = useSetting<boolean>(
+    "editor.ligatures",
+    false,
+    (v) => (typeof v === "boolean" ? v : undefined),
+    { mirror: true },
+  );
+  return { keymap, setKeymap, fontSize, setFontSize, ligatures, setLigatures };
 }

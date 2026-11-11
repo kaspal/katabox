@@ -7,8 +7,31 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
+[[bin]]
+# Test-only stand-in for a language server (lifecycle tests); never shipped.
+name = "kb-bridge-fake-lsp"
+path = "src/bin/fake_lsp.rs"
+test = false
+
 [dependencies]
 kb-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+specta = { workspace = true, optional = true }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["process", "io-util", "time", "sync", "rt", "macros"] }
+url = "2"
+
+[target.'cfg(windows)'.dependencies]
+# Kill-on-close Job Object for each server's process tree (ADR 0014).
+win32job = "2.1"
+
+[features]
+# TypeScript bindings for the desktop app (tauri-specta).
+specta = ["dep:specta"]
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 
 [lints]
 workspace = true

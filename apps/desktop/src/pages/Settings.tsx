@@ -100,6 +100,23 @@ export function Settings() {
                 ))}
               </ToggleGroup>
             </Row>
+            <Row label={t("settings.ligatures")}>
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                aria-label={t("settings.ligatures")}
+                value={editor.ligatures ? "on" : "off"}
+                onValueChange={(v) => v && editor.setLigatures(v === "on")}
+              >
+                <ToggleGroupItem value="off" className="px-3">
+                  {t("settings.ligaturesOff")}
+                </ToggleGroupItem>
+                <ToggleGroupItem value="on" className="px-3">
+                  {t("settings.ligaturesOn")}
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </Row>
             <Row label={t("settings.fontSize")}>
               <Select value={String(editor.fontSize)} onValueChange={(v) => editor.setFontSize(Number(v))}>
                 <SelectTrigger size="sm" className="w-28" aria-label={t("settings.fontSize")}>

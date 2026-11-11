@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import type { ProblemView } from "@/bindings";
+import { BookOpen, FileText, History, Lightbulb, ListChecks, NotebookPen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePatternLabel } from "@/components/Semantic";
 import { Markdown } from "@/workspace/problem/Markdown";
 import { HintsTab } from "@/workspace/problem/HintsTab";
@@ -12,6 +14,15 @@ import type { Language } from "@/bindings";
 
 export const PROBLEM_TABS = ["description", "hints", "editorial", "submissions", "notes", "history"] as const;
 export type ProblemTab = (typeof PROBLEM_TABS)[number];
+
+const TAB_ICON: Record<ProblemTab, typeof FileText> = {
+  description: FileText,
+  hints: Lightbulb,
+  editorial: BookOpen,
+  submissions: ListChecks,
+  notes: NotebookPen,
+  history: History,
+};
 
 export function ProblemPane({
   problem,
@@ -27,13 +38,26 @@ export function ProblemPane({
   const { t } = useTranslation();
   const patternLabel = usePatternLabel();
   return (
-    <Tabs defaultValue="description" className="flex h-full min-h-0 flex-col gap-0">
-      <TabsList className="mx-2 mt-2 h-8 w-auto justify-start overflow-x-auto">
-        {PROBLEM_TABS.map((tab) => (
-          <TabsTrigger key={tab} value={tab} className="px-2 text-xs">
-            {t(`workspace.tabs.${tab}`)}
-          </TabsTrigger>
-        ))}
+    <Tabs defaultValue="description" className="@container flex h-full min-h-0 flex-col gap-0">
+      {/* Narrow panes show icons only (with a tooltip and an accessible name); never overflow. */}
+      <TabsList className="mx-2 mt-2 h-8 w-auto max-w-full justify-start" data-testid="problem-tabs">
+        {PROBLEM_TABS.map((tab) => {
+          const Icon = TAB_ICON[tab];
+          const label = t(`workspace.tabs.${tab}`);
+          return (
+            <Tooltip key={tab}>
+              <TooltipTrigger asChild>
+                <TabsTrigger value={tab} aria-label={label} className="min-w-0 gap-1 px-2 text-xs">
+                  <Icon aria-hidden className="size-3.5 shrink-0" />
+                  <span className="hidden truncate @[34rem]:inline" data-tab-label>
+                    {label}
+                  </span>
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent className="@[34rem]:hidden">{label}</TooltipContent>
+            </Tooltip>
+          );
+        })}
       </TabsList>
       <div className="min-h-0 flex-1 overflow-auto p-4">
         <TabsContent value="description" className="space-y-4">

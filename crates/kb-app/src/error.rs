@@ -30,6 +30,10 @@ pub enum AppErrorCode {
     JudgeInternal,
     /// A database error (content.db or user.db).
     Store,
+    /// No language server for this language here (not installed or not supported).
+    LanguageServerUnavailable,
+    /// The language server is not running (stopped or restarting); connect again.
+    LanguageServerNotConnected,
     /// Anything else, including the app failing to start.
     Internal,
 }
@@ -71,6 +75,19 @@ impl From<JudgeError> for AppError {
             JudgeError::Problem(_) | JudgeError::Internal(_) | JudgeError::Io(_) => {
                 AppErrorCode::JudgeInternal
             }
+        };
+        AppError::new(code, e.to_string())
+    }
+}
+
+impl From<kb_bridge::BridgeError> for AppError {
+    fn from(e: kb_bridge::BridgeError) -> Self {
+        use kb_bridge::BridgeError as B;
+        let code = match e {
+            B::InvalidProblem(_) => AppErrorCode::InvalidInput,
+            B::Unavailable(_) => AppErrorCode::LanguageServerUnavailable,
+            B::NotConnected(_) => AppErrorCode::LanguageServerNotConnected,
+            B::Io(_) => AppErrorCode::Internal,
         };
         AppError::new(code, e.to_string())
     }

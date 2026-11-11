@@ -17,7 +17,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 | `crates/kb-runner` | Sandboxed execution. **Security-critical** |
 | `crates/kb-store` | SQLite via sqlx (runtime queries only): `content.db` (read-only, FTS5) + `user.db` (WAL, migrations in `migrations/`; ADR 0010) |
 | `crates/kb-toolchain` | Download/verify/locate runtimes |
-| `crates/kb-bridge` | LSP + DAP stdio relay |
+| `crates/kb-bridge` | Language servers over stdio, outside the sandbox: sessions, message policy, virtual project per problem (ADR 0014). DAP later |
 | `crates/kb-pack` | `kb-pack validate [--run]` and `kb-pack build` (content.db) CLI for problem packages |
 | `content/problems/` | Problem packages (CC BY-SA 4.0) |
 | `languages/` | Per-language runtime definitions and harness templates |
@@ -25,7 +25,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 ## Commands
 
 ```sh
-scripts/fetch-toolchains.sh # Linux: pinned Python + Node for the sandbox and judge tests (.ps1 on Windows adds PHP + Rust)
+scripts/fetch-toolchains.sh # Linux: pinned Python + Node for the sandbox and judge tests (.ps1 on Windows adds PHP + Rust, and the language servers into <root>/tools unless -NoLanguageServers)
 cargo test                       # library crates (default-members); Linux needs libseccomp-dev
 cargo deny check licenses        # license check (hakoniwa is an approved LGPL exception)
 kb-sandbox probe                 # Linux: what this kernel supports (cargo run -p kb-runner --bin kb-sandbox -- probe)
@@ -34,6 +34,7 @@ cargo fmt --all
 cargo run -p kb-pack -- validate # validate every problem (--run: judge every reference solution; Windows)
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
+cargo test -p kb-bridge          # language servers: fake-server lifecycle; real basedpyright, typescript-language-server, rust-analyzer on Windows (needs the .ps1 fetch)
 pnpm install && pnpm build       # UI build (tsc + vite)
 pnpm test                        # UI tests (Vitest + Testing Library; includes token contrast and en/es key parity)
 pnpm licenses:check              # npm license allow-list (scripts/check-npm-licenses.mjs; mirrors deny.toml)
@@ -50,6 +51,7 @@ cargo run -p katabox-desktop --bin export-bindings  # regenerate apps/desktop/sr
 - The UI never touches the file system or spawns processes; it calls typed Tauri commands through the generated `bindings.ts` (never `invoke` with strings). Commands return `Result<T, AppError>` with a stable error code (ADR 0011).
 - No network access at runtime except toolchain, pack and update downloads.
 - No telemetry, ever.
+- Language servers (ADR 0014) run outside the sandbox and **never execute user code**: no build scripts, proc-macros, `cargo check`, interpreters, type acquisition or commands. rust-analyzer never invokes cargo; never add cargo to the bundled Rust toolchain. Server settings and the message policy live in `crates/kb-bridge` (`spec.rs`, `policy.rs`); loosening either needs the maintainer's sign-off.
 - Every user-facing string goes through i18n (English and Spanish): add the key to both `apps/desktop/src/i18n/locales/{en,es}.json` (keys are typed; a parity test checks both). Show errors and judge messages by their stable codes (`errors.<code>`, `judge.verdict.<v>`, `judge.message.<code>`). Colors for verdicts, difficulty and status always come with an icon or label, and design tokens must keep the WCAG AA contrast test passing (ADR 0012).
 - Workspace state (drafts, notes, snapshots with verdicts, layout and editor settings `workspace.layout`, `editor.keymap`, `editor.font_size`, `editor.language`) and its save rules are in ADR 0013; keep CodeMirror and other heavy code inside the lazy workspace route.
 - New data in `user.db` only via a numbered migration: a new `crates/kb-store/migrations/NNNN_*.sql` added to `MIGRATIONS`. Never edit a released migration (ADR 0010).

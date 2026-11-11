@@ -189,6 +189,40 @@ async setSetting(key: string, value: JsonValue) : Promise<Result<null, AppError>
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Start a language server for `language` on `problem`, replacing the language's previous
+ * session (ADR 0014). Server messages and status changes stream over `on_event`.
+ */
+async lspConnect(problem: string, language: Language, text: string, onEvent: TAURI_CHANNEL<LspEvent>) : Promise<Result<LspConnection, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("lsp_connect", { problem, language, text, onEvent }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Relay a JSON-RPC message from the editor's client of `session` to its language server.
+ */
+async lspSend(language: Language, session: number, message: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("lsp_send", { language, session, message }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Stop `session`'s language server (the editor closed).
+ */
+async lspDisconnect(language: Language, session: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("lsp_disconnect", { language, session }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -250,6 +284,14 @@ export type AppErrorCode =
  */
 "store" | 
 /**
+ * No language server for this language here (not installed or not supported).
+ */
+"language_server_unavailable" | 
+/**
+ * The language server is not running (stopped or restarting); connect again.
+ */
+"language_server_not_connected" | 
+/**
  * Anything else, including the app failing to start.
  */
 "internal"
@@ -266,6 +308,10 @@ data_dir: string; content: ContentMeta; user_schema_version: number; sandbox_roo
  * Languages the judge supports, with their toolchain status.
  */
 toolchains: ToolchainInfo[]; 
+/**
+ * Language servers (completion, hover, diagnostics), per judge language.
+ */
+language_servers: LanguageServerInfo[]; 
 /**
  * `windows`, `linux`, ...
  */
@@ -361,6 +407,50 @@ export type JudgeEvent =
  * (language.toml + harness template) and a variant here.
  */
 export type Language = "python" | "javascript" | "typescript" | "php" | "rust"
+/**
+ * Whether a language server can run for a language here, and if not, why.
+ */
+export type LanguageServerInfo = { language: Language; available: boolean; reason: string | null }
+/**
+ * What the editor needs to talk about its document.
+ */
+export type LspConnection = { 
+/**
+ * Pass back with every message; a newer connect for the language replaces it.
+ */
+session: number; root_uri: string; file_uri: string; language_id: string }
+/**
+ * Sent to the UI.
+ */
+export type LspEvent = 
+/**
+ * A JSON-RPC message from the server (already through the policy).
+ */
+{ kind: "message"; message: string } | { kind: "status"; status: LspStatus }
+/**
+ * What the UI shows ("Python language server: ready").
+ */
+export type LspStatus = 
+/**
+ * The process is starting; the UI should (re)initialize its client.
+ */
+{ state: "starting" } | 
+/**
+ * The server answered `initialize`.
+ */
+{ state: "ready" } | 
+/**
+ * The server crashed; it restarts after `delay_ms`.
+ */
+{ state: "restarting"; attempt: number; delay_ms: number } | 
+/**
+ * No server for now (not installed, not supported here, or crashing repeatedly).
+ */
+{ state: "unavailable"; reason: string } | 
+/**
+ * Stopped after being idle, or on request. The next connect starts it again.
+ */
+{ state: "stopped" }
 /**
  * A judge message: stable code plus English text.
  */

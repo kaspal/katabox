@@ -11,9 +11,25 @@ import {
   lineNumbers,
 } from "@codemirror/view";
 import { bracketMatching, indentOnInput } from "@codemirror/language";
+import { forEachDiagnostic } from "@codemirror/lint";
 import type { KeymapPref } from "@/lib/settings";
 import { baseExtensions, keymapExtension, themeExtension } from "@/workspace/editor/setup";
 import { loadLanguageExtension, type EditorLang } from "@/workspace/editor/languages";
+
+/** Shown in the status line under the editor. */
+export type EditorStatus = { line: number; col: number; errors: number; warnings: number };
+
+function statusOf(state: EditorState): EditorStatus {
+  const head = state.selection.main.head;
+  const line = state.doc.lineAt(head);
+  let errors = 0;
+  let warnings = 0;
+  forEachDiagnostic(state, (d) => {
+    if (d.severity === "error") errors++;
+    else if (d.severity === "warning") warnings++;
+  });
+  return { line: line.number, col: head - line.from + 1, errors, warnings };
+}
 
 export type CodeEditorProps = {
   /** Identity of the document (e.g. `two-sum:python:0`). A new key starts a new state. */
@@ -31,6 +47,14 @@ export type CodeEditorProps = {
   onRun?: () => void;
   /** Ctrl+Enter inside the editor. */
   onSubmit?: () => void;
+  /** Language-server support (completion, hover, diagnostics, …); none when null. */
+  lspExtension?: Extension | null;
+  /** Font ligatures (off by default). */
+  ligatures?: boolean;
+  /** Cursor position and diagnostics counts, after every change. */
+  onStatus?: (status: EditorStatus) => void;
+  /** The view, for commands such as Format. */
+  onView?: (view: EditorView | null) => void;
   className?: string;
 };
 
@@ -46,6 +70,7 @@ export function CodeEditor(props: CodeEditorProps) {
     keymap: new Compartment(),
     theme: new Compartment(),
     readOnly: new Compartment(),
+    lsp: new Compartment(),
   });
 
   const makeState = (doc: string): EditorState => {
@@ -68,11 +93,13 @@ export function CodeEditor(props: CodeEditorProps) {
       baseExtensions,
       // The grammar loads on demand; see the language effect below.
       c.lang.of([]),
-      c.theme.of(themeExtension(p.fontSize ?? 14)),
+      c.theme.of(themeExtension(p.fontSize ?? 14, p.ligatures)),
+      c.lsp.of(p.lspExtension ?? []),
       c.readOnly.of([EditorState.readOnly.of(!!p.readOnly), EditorView.editable.of(!p.readOnly)]),
       EditorView.contentAttributes.of({ "aria-label": p.ariaLabel }),
       EditorView.updateListener.of((u) => {
         if (u.docChanged) latest.current.onChange?.(u.state.doc.toString());
+        latest.current.onStatus?.(statusOf(u.state));
       }),
     ];
     return EditorState.create({ doc, extensions });
@@ -84,7 +111,10 @@ export function CodeEditor(props: CodeEditorProps) {
     const v = new EditorView({ parent: host.current, state: makeState(props.value) });
     view.current = v;
     currentKey.current = props.docKey;
+    latest.current.onView?.(v);
+    latest.current.onStatus?.(statusOf(v.state));
     return () => {
+      latest.current.onView?.(null);
       v.destroy();
       view.current = null;
     };
@@ -110,7 +140,8 @@ export function CodeEditor(props: CodeEditorProps) {
     v.dispatch({
       effects: [
         c.keymap.reconfigure(keymapExtension(p.keymap ?? "default")),
-        c.theme.reconfigure(themeExtension(p.fontSize ?? 14)),
+        c.theme.reconfigure(themeExtension(p.fontSize ?? 14, p.ligatures)),
+        c.lsp.reconfigure(p.lspExtension ?? []),
         c.readOnly.reconfigure([
           EditorState.readOnly.of(!!p.readOnly),
           EditorView.editable.of(!p.readOnly),
@@ -119,7 +150,13 @@ export function CodeEditor(props: CodeEditorProps) {
     });
   };
 
-  useEffect(reconfigure, [props.keymap, props.fontSize, props.readOnly]);
+  useEffect(reconfigure, [
+    props.keymap,
+    props.fontSize,
+    props.readOnly,
+    props.ligatures,
+    props.lspExtension,
+  ]);
 
   // Load the grammar for the current language (and after switching documents).
   useEffect(() => {

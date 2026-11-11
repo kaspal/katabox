@@ -26,6 +26,7 @@ kb-pack.workspace = true
 [dependencies]
 tauri = { version = "2", features = [] }
 kb-app = { workspace = true, features = ["specta"] }
+kb-bridge = { workspace = true, features = ["specta"] }
 kb-core = { workspace = true, features = ["specta"] }
 kb-store = { workspace = true, features = ["specta"] }
 serde.workspace = true

@@ -17,4 +17,15 @@
   mode needs Landlock ABI 6 (Linux 6.12+); otherwise the app must explain that code cannot
   run. `kb-sandbox probe` prints what a machine supports.
 - License: hakoniwa is LGPL-3.0-only with the LGPL-3.0 linking exception (approved
-  exception, `deny.toml`); include its license text in the third-party notices.
+  exception, `deny.toml`); include its license text in the third-party notices
+  ([third-party-notices.md](third-party-notices.md)).
+
+## Language servers (ADR 0014)
+
+- Shipped or downloaded into `<sandbox root>/tools`: basedpyright, typescript-language-server
+  and TypeScript (Node packages from `scripts/language-servers/package-lock.json`), and
+  rust-analyzer. rust-src goes into the bundled Rust toolchain. The product download
+  manager must verify them like the toolchains.
+- They run outside the sandbox; their license texts must ship with them (see
+  [third-party-notices.md](third-party-notices.md)).
+- PHP has no language server on Windows (phpactor needs the posix extension).

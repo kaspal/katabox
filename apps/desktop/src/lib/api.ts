@@ -12,6 +12,8 @@ import {
   type JsonValue,
   type JudgeEvent,
   type Language,
+  type LspConnection,
+  type LspEvent,
   type ProblemFilter,
   type ProblemSummary,
   type ProblemView,
@@ -86,6 +88,22 @@ export const api = {
   unlockHint: (problem: string, tier: number): Promise<number[]> =>
     call(commands.unlockHint(problem, tier)),
   unlockedHints: (problem: string): Promise<number[]> => call(commands.unlockedHints(problem)),
+
+  // Language servers (ADR 0014)
+  lspConnect: (
+    problem: string,
+    language: Language,
+    text: string,
+    onEvent: (e: LspEvent) => void,
+  ): Promise<LspConnection> => {
+    const ch = new Channel<LspEvent>();
+    ch.onmessage = onEvent;
+    return call(commands.lspConnect(problem, language, text, ch));
+  },
+  lspSend: (language: Language, session: number, message: string): Promise<null> =>
+    call(commands.lspSend(language, session, message)),
+  lspDisconnect: (language: Language, session: number): Promise<null> =>
+    call(commands.lspDisconnect(language, session)),
 };
 
 export type Api = typeof api;

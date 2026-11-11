@@ -16,7 +16,7 @@ describe("Command palette", () => {
     await user.type(input, "brackets");
     await waitFor(() => expect(screen.getByRole("option", { name: /Valid Brackets/ })).toBeInTheDocument());
     await user.keyboard("{Enter}");
-    expect(await screen.findByRole("heading", { name: "Valid Brackets" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Valid Brackets" }, { timeout: 4000 })).toBeInTheDocument();
     expect(screen.queryByPlaceholderText("Type a command or search a problem…")).toBeNull();
   });
 

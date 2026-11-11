@@ -338,3 +338,32 @@ fn report_with(verdict: Verdict) -> Report {
         compile: None,
     }
 }
+
+#[tokio::test]
+async fn language_servers_are_reported_and_connect_errors_are_typed() {
+    let app = app("lsp").await;
+    let info = app.app_info().await.unwrap();
+    let langs: Vec<Language> = info.language_servers.iter().map(|l| l.language).collect();
+    assert_eq!(langs, kb_judge::languages::SUPPORTED);
+    // A fresh sandbox root has no servers installed.
+    assert!(
+        info.language_servers
+            .iter()
+            .all(|l| !l.available && l.reason.is_some())
+    );
+    let err = app
+        .lsp_connect("two-sum", Language::Python, "", |_| {})
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::LanguageServerUnavailable);
+    let err = app
+        .lsp_connect("../x", Language::Python, "", |_| {})
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::InvalidInput);
+    let err = app
+        .lsp_send(Language::Python, 1, "{}".into())
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::LanguageServerNotConnected);
+}

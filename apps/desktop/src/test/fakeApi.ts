@@ -6,6 +6,7 @@ import type {
   JsonValue,
   JudgeEvent,
   Language,
+  LspEvent,
   ProblemFilter,
   ProblemSummary,
   ProblemView,
@@ -70,6 +71,12 @@ export const APP_INFO: AppInfo = {
     { language: "typescript", present: true, program: "C:\\node\\node.exe", problem: null },
     { language: "php", present: true, program: "C:\\php\\php.exe", problem: null },
     { language: "rust", present: false, program: null, problem: "rustc not found" },
+  ],
+  language_servers: [
+    { language: "python", available: true, reason: null },
+    { language: "typescript", available: true, reason: null },
+    { language: "php", available: false, reason: "phpactor needs the PHP posix extension" },
+    { language: "rust", available: false, reason: "not installed" },
   ],
   platform: "windows",
 };
@@ -146,6 +153,12 @@ export function createFakeApi(
     nextReport: null as Report | null,
     /** When set, run/submit wait for this before answering. */
     gate: null as Promise<void> | null,
+    /** The latest language-server event sink (to push statuses from tests). */
+    lspEmit: null as ((e: LspEvent) => void) | null,
+    /** Messages the editor sent to the fake language server. */
+    lspSent: [] as { method?: string; id?: unknown; params?: unknown }[],
+    /** The current language-server session; older ones are refused, as in the bridge. */
+    lspSession: 0,
   };
 
   const snap = (problem: string, language: Language, code: string, source: Snapshot["source"], verdict: Verdict | null) => {
@@ -278,6 +291,68 @@ export function createFakeApi(
       return t;
     }),
     unlockedHints: vi.fn(async (p: string) => hints.get(p) ?? []),
+
+    // A tiny language server: answers initialize, reports ready, publishes one diagnostic
+    // on didOpen, and offers a completion.
+    lspConnect: vi.fn(async (problem: string, language: Language, _text: string, onEvent: (e: LspEvent) => void) => {
+      state.lspEmit = onEvent;
+      state.lspSession += 1;
+      onEvent({ kind: "status", status: { state: "starting" } });
+      const ext = language === "typescript" ? "ts" : language === "python" ? "py" : language;
+      return {
+        session: state.lspSession,
+        root_uri: `file:///lsp/${problem}/${language}/`,
+        file_uri: `file:///lsp/${problem}/${language}/solution.${ext}`,
+        language_id: language,
+      };
+    }),
+    lspSend: vi.fn(async (_language: Language, session: number, message: string) => {
+      if (session !== state.lspSession) {
+        throw { code: "language_server_not_connected", message: "replaced" };
+      }
+      const m = JSON.parse(message);
+      state.lspSent.push(m);
+      const emit = state.lspEmit;
+      const reply = (result: unknown) =>
+        setTimeout(() => emit?.({ kind: "message", message: JSON.stringify({ jsonrpc: "2.0", id: m.id, result }) }));
+      if (m.method === "initialize") {
+        reply({
+          capabilities: {
+            textDocumentSync: 1,
+            completionProvider: { triggerCharacters: ["."] },
+            hoverProvider: true,
+            documentFormattingProvider: true,
+          },
+        });
+        setTimeout(() => emit?.({ kind: "status", status: { state: "ready" } }));
+      } else if (m.method === "textDocument/didOpen") {
+        setTimeout(() =>
+          emit?.({
+            kind: "message",
+            message: JSON.stringify({
+              jsonrpc: "2.0",
+              method: "textDocument/publishDiagnostics",
+              params: {
+                uri: m.params.textDocument.uri,
+                diagnostics: [
+                  {
+                    range: { start: { line: 0, character: 0 }, end: { line: 0, character: 3 } },
+                    severity: 1,
+                    message: "fake problem",
+                  },
+                ],
+              },
+            }),
+          }),
+        );
+      } else if (m.method === "textDocument/completion") {
+        reply({ isIncomplete: false, items: [{ label: "fake_completion" }] });
+      } else if (m.id !== undefined && m.method) {
+        reply(null);
+      }
+      return null;
+    }),
+    lspDisconnect: vi.fn(async () => null),
   };
   return { api, settings, drafts, notes, snapshots, submissions, state, snap };
 }

@@ -26,7 +26,13 @@ export function keymapExtension(pref: KeymapPref): Extension {
 }
 
 /** Theme from the design tokens: CSS variables, so light and dark need no rebuild. */
-export function themeExtension(fontSize: number): Extension {
+export function themeExtension(fontSize: number, ligatures = false): Extension {
+  // JetBrains Mono draws `->`, `!=`, … as single glyphs; off unless the user opts in.
+  // Also for code in tooltips (server docs), which live outside the scroller.
+  const ligatureStyle = {
+    fontVariantLigatures: ligatures ? "normal" : "none",
+    fontFeatureSettings: ligatures ? "normal" : '"liga" 0, "calt" 0',
+  };
   return EditorView.theme({
     "&": {
       height: "100%",
@@ -37,7 +43,34 @@ export function themeExtension(fontSize: number): Extension {
     ".cm-scroller": {
       fontFamily: '"JetBrains Mono Variable", ui-monospace, "Cascadia Code", monospace',
       lineHeight: "1.6",
+      ...ligatureStyle,
     },
+    ".cm-tooltip": {
+      backgroundColor: "var(--popover)",
+      color: "var(--popover-foreground)",
+      border: "1px solid var(--border)",
+      borderRadius: "6px",
+    },
+    ".cm-tooltip code, .cm-tooltip pre": ligatureStyle,
+    ".cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]": {
+      backgroundColor: "var(--accent)",
+      color: "var(--accent-foreground)",
+    },
+    // Server docs can be long (rust-analyzer's std docs): bounded, scrollable, and long
+    // signatures wrap instead of running off the window.
+    ".cm-lsp-documentation, .cm-lsp-hover-tooltip": {
+      padding: "4px 8px",
+      maxWidth: "min(36rem, 80vw)",
+      maxHeight: "18rem",
+      overflowY: "auto",
+      overflowWrap: "anywhere",
+    },
+    // The signature tooltip scrolls itself; its documentation must not scroll too.
+    ".cm-lsp-signature-tooltip .cm-lsp-documentation": { maxHeight: "none", overflowY: "visible" },
+    ".cm-lsp-documentation pre, .cm-lsp-hover-tooltip pre": { whiteSpace: "pre-wrap", margin: "2px 0" },
+    ".cm-lsp-documentation p, .cm-lsp-hover-tooltip p": { margin: "4px 0" },
+    ".cm-diagnostic-error": { borderLeft: "3px solid var(--destructive)" },
+    ".cm-diagnostic-warning": { borderLeft: "3px solid var(--difficulty-medium)" },
     ".cm-content": { caretColor: "var(--foreground)" },
     ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--foreground)" },
     "&.cm-focused": { outline: "none" },

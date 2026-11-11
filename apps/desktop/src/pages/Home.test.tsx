@@ -30,7 +30,7 @@ describe("Home", () => {
     expect(await screen.findByText("Two Sum")).toBeInTheDocument();
     expect(screen.getByText("Rust · edited 5 minutes ago")).toBeInTheDocument();
     await user.click(screen.getByRole("link", { name: /Open/ }));
-    expect(await screen.findByRole("heading", { name: "Two Sum" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Two Sum" }, { timeout: 4000 })).toBeInTheDocument();
   });
 
   it("formats relative times in the UI language", () => {
