@@ -46,5 +46,6 @@ pub fn paths(name: &str) -> AppPaths {
         user_db: dir.join("data/user.db"),
         local_data_dir: dir.join("local"),
         dev_root: None,
+        dev_data: false,
     }
 }

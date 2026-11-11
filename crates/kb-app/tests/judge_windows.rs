@@ -57,6 +57,7 @@ async fn app(name: &str) -> App {
         user_db: dir.join("user.db"),
         local_data_dir: dir.join("local"),
         dev_root: Some(dev_root()),
+        dev_data: true,
     })
     .await
     .unwrap();

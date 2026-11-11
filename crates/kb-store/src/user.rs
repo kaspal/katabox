@@ -61,6 +61,15 @@ pub struct Draft {
     pub updated_at: i64,
 }
 
+/// Which draft was edited most recently (for "Continue").
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct DraftRef {
+    pub problem_id: String,
+    pub language: Language,
+    pub updated_at: i64,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
@@ -222,6 +231,26 @@ impl UserDb {
             })
         })
         .transpose()
+    }
+
+    /// The most recently edited drafts, newest first (at most `limit`).
+    pub async fn recent_drafts(&self, limit: u32) -> Result<Vec<DraftRef>> {
+        sqlx::query(
+            "SELECT problem_id, language, updated_at FROM drafts
+             ORDER BY updated_at DESC, problem_id, language LIMIT ?",
+        )
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?
+        .iter()
+        .map(|r| {
+            Ok(DraftRef {
+                problem_id: r.try_get("problem_id")?,
+                language: parse_language(&r.try_get::<String, _>("language")?)?,
+                updated_at: r.try_get("updated_at")?,
+            })
+        })
+        .collect()
     }
 
     // --- Runs and submissions -------------------------------------------------------
@@ -896,6 +925,7 @@ pub(crate) mod tests {
         );
 
         assert_eq!(db.load_draft("p", Language::Rust).await.unwrap(), None);
+        assert!(db.recent_drafts(5).await.unwrap().is_empty());
         db.save_draft("p", Language::Rust, "fn a() {}")
             .await
             .unwrap();
@@ -905,6 +935,15 @@ pub(crate) mod tests {
         db.save_draft("p", Language::Python, "pass").await.unwrap();
         let d = db.load_draft("p", Language::Rust).await.unwrap().unwrap();
         assert_eq!(d.code, "fn b() {}");
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        db.save_draft("q", Language::Php, "<?php").await.unwrap();
+        let recent = db.recent_drafts(2).await.unwrap();
+        assert_eq!(recent.len(), 2);
+        assert_eq!(
+            (recent[0].problem_id.as_str(), recent[0].language),
+            ("q", Language::Php)
+        );
+        assert!(recent[0].updated_at >= recent[1].updated_at);
         assert!(d.updated_at > 1_700_000_000_000);
 
         db.set_note("p", "# idea\nuse a stack").await.unwrap();

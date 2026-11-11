@@ -42,6 +42,9 @@ pub struct AppPaths {
     /// Development only: the fetch script's root (`target/katabox`), used when it exists
     /// and nothing else is configured.
     pub dev_root: Option<PathBuf>,
+    /// The folders above are the development ones (debug builds), not the user's real
+    /// data. Shown as "DEV DATA" in the UI.
+    pub dev_data: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -59,6 +62,10 @@ pub struct ToolchainInfo {
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct AppInfo {
     pub app_version: String,
+    /// Development data folders are in use (debug builds).
+    pub dev_data: bool,
+    /// Folder holding user.db.
+    pub data_dir: String,
     pub content: ContentMeta,
     pub user_schema_version: i64,
     pub sandbox_root: String,
@@ -67,6 +74,17 @@ pub struct AppInfo {
     pub toolchains: Vec<ToolchainInfo>,
     /// `windows`, `linux`, ...
     pub platform: String,
+}
+
+/// The draft to continue on Home: the most recently edited one whose problem exists.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct ContinueItem {
+    pub problem_id: String,
+    /// Title in the requested UI language (English fallback).
+    pub title: String,
+    pub language: Language,
+    pub updated_at: i64,
 }
 
 /// A submission as the UI sees it: hidden tests redacted.
@@ -96,6 +114,8 @@ pub struct App {
     env: JudgeEnv,
     root: PathBuf,
     root_source: RootSource,
+    dev_data: bool,
+    data_dir: PathBuf,
     judging: tokio::sync::Mutex<()>,
 }
 
@@ -119,6 +139,12 @@ impl App {
             store,
             root,
             root_source,
+            dev_data: paths.dev_data,
+            data_dir: paths
+                .user_db
+                .parent()
+                .map(Path::to_path_buf)
+                .unwrap_or_default(),
             judging: tokio::sync::Mutex::new(()),
         })
     }
@@ -151,6 +177,8 @@ impl App {
             .collect();
         Ok(AppInfo {
             app_version: env!("CARGO_PKG_VERSION").to_string(),
+            dev_data: self.dev_data,
+            data_dir: self.data_dir.display().to_string(),
             content: self.store.content.meta().await?,
             user_schema_version: self.store.user.schema_version().await?,
             sandbox_root: self.root.display().to_string(),
@@ -196,6 +224,25 @@ impl App {
 
     pub async fn save_draft(&self, problem: &str, language: Language, code: &str) -> Result<()> {
         Ok(self.store.user.save_draft(problem, language, code).await?)
+    }
+
+    /// The most recently edited draft whose problem is still in content.db.
+    pub async fn continue_item(&self, lang: UiLang) -> Result<Option<ContinueItem>> {
+        for d in self.store.user.recent_drafts(20).await? {
+            match self.store.content.get_problem(&d.problem_id, lang).await {
+                Ok(p) => {
+                    return Ok(Some(ContinueItem {
+                        problem_id: d.problem_id,
+                        title: p.title,
+                        language: d.language,
+                        updated_at: d.updated_at,
+                    }));
+                }
+                Err(kb_store::StoreError::NotFound(_)) => continue,
+                Err(e) => return Err(e.into()),
+            }
+        }
+        Ok(None)
     }
 
     // --- Run and Submit -------------------------------------------------------------

@@ -6,7 +6,8 @@
 use std::path::PathBuf;
 
 use kb_app::{
-    App, AppError, AppErrorCode, AppInfo, AppPaths, CustomInput, SubmissionView, SubmitResult,
+    App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, SubmissionView,
+    SubmitResult,
 };
 use kb_core::{JudgeEvent, Language, Report};
 use kb_store::{
@@ -42,6 +43,13 @@ async fn list_problems(
     filter: ProblemFilter,
 ) -> Res<Vec<ProblemSummary>> {
     state.app()?.list_problems(&filter).await
+}
+
+/// The most recently edited draft whose problem exists, for Home's "Continue".
+#[tauri::command]
+#[specta::specta]
+async fn continue_item(state: State<'_, AppState>, ui_lang: UiLang) -> Res<Option<ContinueItem>> {
+    state.app()?.continue_item(ui_lang).await
 }
 
 #[tauri::command]
@@ -180,6 +188,7 @@ async fn set_setting(state: State<'_, AppState>, key: String, value: Value) -> R
 fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::<tauri::Wry>::new().commands(tauri_specta::collect_commands![
         app_info,
+        continue_item,
         list_problems,
         get_problem,
         get_stub,
@@ -228,17 +237,32 @@ fn open_app(handle: &tauri::AppHandle) -> Res<App> {
     let internal =
         |what: &str, e: tauri::Error| AppError::new(AppErrorCode::Internal, format!("{what}: {e}"));
     let path = handle.path();
+    // Debug builds keep their data in `<identifier>-dev` folders, so development and
+    // testing never touch the user's real user.db (ADR 0012).
+    let dev_data = cfg!(debug_assertions);
+    let data_folder = |dir: PathBuf| {
+        if dev_data {
+            let mut name = dir.file_name().unwrap_or_default().to_os_string();
+            name.push("-dev");
+            dir.with_file_name(name)
+        } else {
+            dir
+        }
+    };
     let paths = AppPaths {
         content_db: path
             .resolve("content.db", BaseDirectory::Resource)
             .map_err(|e| internal("content.db resource", e))?,
-        user_db: path
-            .app_data_dir()
-            .map_err(|e| internal("app data folder", e))?
-            .join("user.db"),
-        local_data_dir: path
-            .app_local_data_dir()
-            .map_err(|e| internal("app local data folder", e))?,
+        user_db: data_folder(
+            path.app_data_dir()
+                .map_err(|e| internal("app data folder", e))?,
+        )
+        .join("user.db"),
+        local_data_dir: data_folder(
+            path.app_local_data_dir()
+                .map_err(|e| internal("app local data folder", e))?,
+        ),
+        dev_data,
         // Development builds use the fetch script's root when nothing else is set.
         dev_root: cfg!(debug_assertions)
             .then(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../target/katabox")),

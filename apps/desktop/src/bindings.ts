@@ -15,6 +15,17 @@ async appInfo() : Promise<Result<AppInfo, AppError>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * The most recently edited draft whose problem exists, for Home's "Continue".
+ */
+async continueItem(uiLang: UiLang) : Promise<Result<ContinueItem | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("continue_item", { uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async listProblems(filter: ProblemFilter) : Promise<Result<ProblemSummary[], AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("list_problems", { filter }) };
@@ -220,7 +231,15 @@ export type AppErrorCode =
  * Anything else, including the app failing to start.
  */
 "internal"
-export type AppInfo = { app_version: string; content: ContentMeta; user_schema_version: number; sandbox_root: string; sandbox_root_source: RootSource; 
+export type AppInfo = { app_version: string; 
+/**
+ * Development data folders are in use (debug builds).
+ */
+dev_data: boolean; 
+/**
+ * Folder holding user.db.
+ */
+data_dir: string; content: ContentMeta; user_schema_version: number; sandbox_root: string; sandbox_root_source: RootSource; 
 /**
  * Languages the judge supports, with their toolchain status.
  */
@@ -246,6 +265,14 @@ export type ContentMeta = { pack_id: string; pack_version: string;
  * UTC, ISO 8601 (`2026-11-11T09:30:00Z`).
  */
 built_at: string }
+/**
+ * The draft to continue on Home: the most recently edited one whose problem exists.
+ */
+export type ContinueItem = { problem_id: string; 
+/**
+ * Title in the requested UI language (English fallback).
+ */
+title: string; language: Language; updated_at: number }
 export type Difficulty = "easy" | "medium" | "hard"
 export type Draft = { code: string; updated_at: number }
 /**
