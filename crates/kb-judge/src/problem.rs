@@ -3,7 +3,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kb_core::TestKind;
+use kb_core::{TestCase, TestKind};
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
@@ -22,16 +22,6 @@ pub struct Problem {
     pub memory_mb: u32,
     /// Public tests first, then hidden, each in file-name order (numeric when possible).
     pub tests: Vec<TestCase>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct TestCase {
-    pub kind: TestKind,
-    /// 1-based position within its kind (public 1, 2, ...; hidden 1, 2, ...).
-    pub index: u32,
-    /// Argument values keyed by param name; always exactly the signature's params.
-    pub input: Map<String, Value>,
-    pub expected: Value,
 }
 
 #[derive(Debug, Deserialize)]

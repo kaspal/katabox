@@ -5,8 +5,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use kb_core::{Difficulty, Language, TestKind};
-use kb_judge::TestCase;
+use kb_core::{Difficulty, Language, TestCase, TestKind};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions, SqliteRow};

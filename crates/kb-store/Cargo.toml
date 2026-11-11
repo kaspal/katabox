@@ -9,7 +9,6 @@ rust-version.workspace = true
 
 [dependencies]
 kb-core.workspace = true
-kb-judge.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
@@ -17,6 +16,8 @@ sqlx.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
+# Only for tests/judge_windows.rs (a real judge Report); the library does not use them.
+kb-judge.workspace = true
 kb-runner.workspace = true
 tokio = { workspace = true, features = ["macros"] }
 
