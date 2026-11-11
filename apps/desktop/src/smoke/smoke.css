@@ -1,26 +1,11 @@
 /* TEMPORARY smoke screen styles (ADR 0011). Replaced by the real UI. */
 
-:root {
-  font-family: system-ui, sans-serif;
-  color: #1b1b1b;
-  background: #fafafa;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #e8e8e8;
-    background: #1c1c1c;
-  }
-}
-
-body {
-  margin: 0;
-}
-
+/* Scoped under .smoke so it never styles the real UI (it is mounted inside the shell). */
 .smoke {
   display: grid;
   grid-template-columns: 260px 1fr;
-  min-height: 100vh;
+  min-height: 100%;
+  font-family: system-ui, sans-serif;
 }
 
 .smoke aside {
@@ -53,76 +38,76 @@ body {
   overflow: auto;
 }
 
-.note {
+.smoke .note {
   font-size: 0.8rem;
   opacity: 0.7;
 }
 
-.error {
+.smoke .error {
   color: #c62828;
   white-space: pre-wrap;
 }
 
-.statement {
+.smoke .statement {
   white-space: pre-wrap;
   max-height: 30vh;
   overflow: auto;
 }
 
-.row {
+.smoke .row {
   display: flex;
   gap: 8px;
   align-items: center;
   margin: 8px 0;
 }
 
-.progress {
+.smoke .progress {
   font-size: 0.9rem;
   opacity: 0.8;
 }
 
-textarea {
+.smoke textarea {
   width: 100%;
   font-family: ui-monospace, Consolas, monospace;
   font-size: 0.9rem;
   box-sizing: border-box;
 }
 
-textarea.code {
+.smoke textarea.code {
   height: 260px;
 }
 
-.custom {
+.smoke .custom {
   display: block;
   margin: 8px 0;
   font-size: 0.85rem;
 }
 
-.custom textarea {
+.smoke .custom textarea {
   height: 60px;
 }
 
-.report table {
+.smoke .report table {
   border-collapse: collapse;
 }
 
-.report td,
-.report th {
+.smoke .report td,
+.smoke .report th {
   border: 1px solid #8886;
   padding: 2px 8px;
   text-align: left;
 }
 
-.ok {
+.smoke .ok {
   color: #2e7d32;
 }
 
-.bad {
+.smoke .bad {
   color: #c62828;
 }
 
-.failure pre,
-.report pre {
+.smoke .failure pre,
+.smoke .report pre {
   white-space: pre-wrap;
   background: #8881;
   padding: 6px;

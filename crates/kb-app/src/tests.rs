@@ -23,6 +23,11 @@ async fn opens_with_an_app_data_root() {
     assert_eq!(info.content.pack_id, "test");
     assert_eq!(info.user_schema_version, 1);
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
+    assert!(!info.dev_data);
+    assert_eq!(
+        info.data_dir,
+        p.user_db.parent().unwrap().display().to_string()
+    );
     let langs: Vec<Language> = info.toolchains.iter().map(|t| t.language).collect();
     assert_eq!(langs, kb_judge::languages::SUPPORTED);
     // A fresh root has no toolchains.
@@ -225,4 +230,28 @@ async fn the_root_setting_is_honoured_on_next_open() {
     let app = App::open(&p).await.unwrap();
     assert_eq!(app.sandbox_root(), custom);
     assert_eq!(app.root_source, RootSource::Setting);
+}
+
+#[tokio::test]
+async fn dev_data_is_reported() {
+    let mut p = paths("devdata");
+    p.dev_data = true;
+    let app = App::open(&p).await.unwrap();
+    assert!(app.app_info().await.unwrap().dev_data);
+}
+
+#[tokio::test]
+async fn continue_is_the_latest_existing_draft() {
+    let app = app("continue").await;
+    assert_eq!(app.continue_item(UiLang::En).await.unwrap(), None);
+    app.save_draft("two-sum", Language::Rust, "fn x() {}")
+        .await
+        .unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(5));
+    // A newer draft for a problem that is not in content.db is skipped.
+    app.save_draft("gone", Language::Python, "x").await.unwrap();
+    let c = app.continue_item(UiLang::Es).await.unwrap().unwrap();
+    assert_eq!(c.problem_id, "two-sum");
+    assert_eq!(c.title, "Suma de dos");
+    assert_eq!(c.language, Language::Rust);
 }

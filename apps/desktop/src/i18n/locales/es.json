@@ -1,0 +1,203 @@
+{
+  "app": {
+    "name": "KataBox",
+    "devData": "DATOS DE DESARROLLO",
+    "devDataHint": "Versión de desarrollo: el progreso se guarda en una carpeta aparte, no en tus datos reales."
+  },
+  "nav": {
+    "label": "Navegación principal",
+    "home": "Inicio",
+    "library": "Biblioteca",
+    "workspace": "Espacio de trabajo",
+    "progress": "Progreso",
+    "settings": "Ajustes",
+    "smoke": "Pantalla de prueba (desarrollo)"
+  },
+  "palette": {
+    "open": "Paleta de comandos",
+    "placeholder": "Escribe un comando o busca un problema…",
+    "empty": "Sin resultados.",
+    "pages": "Ir a",
+    "problems": "Abrir problema",
+    "theme": "Tema",
+    "language": "Idioma"
+  },
+  "theme": {
+    "label": "Tema",
+    "system": "Sistema",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "language": {
+    "label": "Idioma",
+    "en": "English",
+    "es": "Español"
+  },
+  "difficulty": {
+    "label": "Dificultad",
+    "any": "Cualquier dificultad",
+    "easy": "Fácil",
+    "medium": "Media",
+    "hard": "Difícil"
+  },
+  "status": {
+    "label": "Estado",
+    "any": "Cualquier estado",
+    "todo": "Pendiente",
+    "attempted": "Intentado",
+    "solved": "Resuelto"
+  },
+  "pattern": {
+    "label": "Patrón",
+    "any": "Cualquier patrón",
+    "arrays-hashing": "Arreglos y hashing",
+    "two-pointers": "Dos punteros",
+    "sliding-window": "Ventana deslizante",
+    "stack": "Pila",
+    "binary-search": "Búsqueda binaria",
+    "linked-list": "Lista enlazada",
+    "trees": "Árboles",
+    "tries": "Tries",
+    "heap": "Montículo",
+    "backtracking": "Backtracking",
+    "graphs": "Grafos",
+    "dynamic-programming": "Programación dinámica",
+    "greedy": "Voraz",
+    "intervals": "Intervalos",
+    "math": "Matemáticas",
+    "bit-manipulation": "Manipulación de bits",
+    "strings": "Cadenas",
+    "union-find": "Union-find",
+    "design": "Diseño",
+    "sorting": "Ordenamiento"
+  },
+  "tag": {
+    "label": "Etiqueta",
+    "any": "Cualquier etiqueta"
+  },
+  "common": {
+    "loading": "Cargando…",
+    "retry": "Reintentar",
+    "details": "Detalles"
+  },
+  "library": {
+    "title": "Biblioteca de problemas",
+    "search": "Buscar problemas",
+    "searchHint": "Pulsa / para buscar",
+    "clear": "Quitar filtros",
+    "count_one": "{{count}} problema",
+    "count_other": "{{count}} problemas",
+    "empty": "Ningún problema coincide con estos filtros.",
+    "table": "Problemas",
+    "keyboardHint": "↑ ↓ para moverte, Intro para abrir",
+    "columns": {
+      "status": "Estado",
+      "title": "Título",
+      "difficulty": "Dificultad",
+      "pattern": "Patrón",
+      "tags": "Etiquetas"
+    },
+    "sortBy": "Ordenar por {{column}}"
+  },
+  "home": {
+    "title": "Inicio",
+    "continue": "Continuar",
+    "continueEdited": "{{language}} · editado {{when}}",
+    "continueOpen": "Abrir",
+    "noDraft": "Aún no hay borradores. Elige un problema para empezar.",
+    "browse": "Ver problemas",
+    "solved": "Resueltos",
+    "solvedOf": "{{solved}} de {{total}}",
+    "daily": "Problema del día",
+    "dailySoon": "La selección diaria llega en una versión posterior."
+  },
+  "workspace": {
+    "title": "Espacio de trabajo",
+    "comingSoon": "El editor, las pruebas y los resultados llegan en la próxima versión.",
+    "smokeLink": "Ábrelo en la pantalla de prueba (desarrollo)",
+    "back": "Volver a la biblioteca"
+  },
+  "progress": {
+    "title": "Progreso",
+    "comingSoon": "Las estadísticas y rachas llegan en una versión posterior."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "appearance": "Apariencia",
+    "about": "Acerca de",
+    "version": "Versión de la app",
+    "contentPack": "Paquete de problemas",
+    "userSchema": "Versión de la base de datos",
+    "dataFolder": "Carpeta de datos",
+    "sandboxRoot": "Carpeta del sandbox",
+    "sandboxSource": "Elegida desde",
+    "rootSource": {
+      "env": "KATABOX_SANDBOX_ROOT",
+      "setting": "Ajuste",
+      "dev": "Raíz de desarrollo",
+      "app_data": "Datos de la app"
+    },
+    "toolchains": "Entornos de los lenguajes",
+    "toolchainLanguage": "Lenguaje",
+    "toolchainStatus": "Estado",
+    "toolchainPath": "Programa",
+    "present": "Instalado",
+    "missing": "Falta"
+  },
+  "languages": {
+    "python": "Python",
+    "javascript": "JavaScript",
+    "typescript": "TypeScript",
+    "php": "PHP",
+    "rust": "Rust"
+  },
+  "time": {
+    "justNow": "ahora mismo"
+  },
+  "errors": {
+    "generic": "Algo salió mal.",
+    "not_found": "No se encontró.",
+    "invalid_input": "Ese dato no es válido.",
+    "invalid_custom_input": "Una entrada de prueba personalizada no es válida.",
+    "unsupported_language": "Este lenguaje aún no está disponible.",
+    "toolchain_missing": "El entorno de este lenguaje no está instalado.",
+    "judge_busy": "Ya hay una ejecución en curso.",
+    "sandbox": "El sandbox no pudo ejecutar el código.",
+    "judge_internal": "El juez falló. No es culpa tuya.",
+    "store": "No se pudo leer o escribir la base de datos.",
+    "internal": "KataBox no pudo iniciar o tuvo un error inesperado."
+  },
+  "judge": {
+    "verdict": {
+      "accepted": "Aceptado",
+      "wrong_answer": "Respuesta incorrecta",
+      "time_limit_exceeded": "Tiempo límite excedido",
+      "memory_limit_exceeded": "Memoria límite excedida",
+      "output_limit_exceeded": "Salida límite excedida",
+      "runtime_error": "Error en ejecución",
+      "compilation_error": "Error de compilación",
+      "internal_error": "Error interno"
+    },
+    "message": {
+      "output_mismatch": "El valor devuelto no coincide con la salida esperada.",
+      "custom_checker_unsupported": "Los verificadores personalizados aún no están disponibles.",
+      "syntax_error": "El código no se puede analizar.",
+      "unsupported_syntax": "Esta sintaxis de TypeScript no está soportada.",
+      "function_not_found": "Falta la función requerida.",
+      "compile_error": "El compilador rechazó el código.",
+      "compile_limit": "El compilador se quedó sin tiempo o memoria.",
+      "load_error": "El código falló al cargarse.",
+      "exception": "La función lanzó un error.",
+      "return_not_serializable": "El valor devuelto no se puede convertir a JSON.",
+      "out_of_memory": "El programa se quedó sin memoria.",
+      "too_much_output": "La prueba imprimió demasiada salida.",
+      "time_limit": "Se alcanzó el tiempo límite durante esta prueba.",
+      "output_limit": "Se alcanzó el límite de salida durante esta prueba.",
+      "memory_limit": "Se alcanzó el límite de memoria durante esta prueba.",
+      "process_exited": "El programa terminó o falló durante esta prueba.",
+      "harness_silent": "El arnés de pruebas se detuvo sin informar.",
+      "bad_harness_record": "El arnés de pruebas informó algo ilegible.",
+      "incomplete_results": "Algunas pruebas no tienen resultado."
+    }
+  }
+}
