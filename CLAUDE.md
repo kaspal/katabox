@@ -10,7 +10,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 
 | Path | What it is |
 | --- | --- |
-| `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI (`bindings.ts` is generated; `smoke/` is a temporary screen), `src-tauri/` = thin Rust shell (commands and wiring only; ADR 0011) |
+| `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI (ADR 0012: `app/` shell, router, palette; `pages/`; `components/ui/` shadcn; `lib/api.ts` is the only door to the generated `bindings.ts`; `i18n/locales/`; `styles/tokens.css`; `smoke/` is a temporary dev-only screen), `src-tauri/` = thin Rust shell (commands and wiring only; ADR 0011) |
 | `crates/kb-app` | App service behind the Tauri commands: state, sandbox root, Run/Submit, typed `AppError` (ADR 0011) |
 | `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult, the judge Report). No I/O |
 | `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009) |
@@ -34,8 +34,9 @@ cargo fmt --all
 cargo run -p kb-pack -- validate # validate every problem (--run: judge every reference solution; Windows)
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
-pnpm install && pnpm build       # UI build
-pnpm dev                         # run the desktop app (needs WebView2 / WebKitGTK 4.1); dev builds use target/katabox as sandbox root, or KATABOX_SANDBOX_ROOT
+pnpm install && pnpm build       # UI build (tsc + vite)
+pnpm test                        # UI tests (Vitest + Testing Library; includes token contrast and en/es key parity)
+pnpm dev                         # run the desktop app (needs WebView2 / WebKitGTK 4.1); debug builds use <identifier>-dev data folders ("DEV DATA" badge) and target/katabox as sandbox root, or KATABOX_SANDBOX_ROOT
 cargo check -p katabox-desktop   # desktop shell (needs WebKitGTK on Linux); build.rs builds resources/content.db
 cargo run -p katabox-desktop --bin export-bindings  # regenerate apps/desktop/src/bindings.ts after changing a command or IPC type
 ```
@@ -48,7 +49,7 @@ cargo run -p katabox-desktop --bin export-bindings  # regenerate apps/desktop/sr
 - The UI never touches the file system or spawns processes; it calls typed Tauri commands through the generated `bindings.ts` (never `invoke` with strings). Commands return `Result<T, AppError>` with a stable error code (ADR 0011).
 - No network access at runtime except toolchain, pack and update downloads.
 - No telemetry, ever.
-- Every user-facing string goes through i18n (English and Spanish).
+- Every user-facing string goes through i18n (English and Spanish): add the key to both `apps/desktop/src/i18n/locales/{en,es}.json` (keys are typed; a parity test checks both). Show errors and judge messages by their stable codes (`errors.<code>`, `judge.verdict.<v>`, `judge.message.<code>`). Colors for verdicts, difficulty and status always come with an icon or label, and design tokens must keep the WCAG AA contrast test passing (ADR 0012).
 - New data in `user.db` only via a numbered migration: a new `crates/kb-store/migrations/NNNN_*.sql` added to `MIGRATIONS`. Never edit a released migration (ADR 0010).
 - Problems must be original. Never copy statements or tests from LeetCode, HackerRank or similar sites.
 - Solutions use each language's standard library only.
