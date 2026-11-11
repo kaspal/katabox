@@ -1,0 +1,17 @@
+id = "booking-rooms"
+title = "Booking Rooms"
+title_es = "Salas de reuniones"
+difficulty = "medium"
+tags = ["array", "sorting", "intervals"]
+pattern = "intervals"
+rank = 9
+
+[signature]
+name = "minRooms"
+params = [{ name = "meetings", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 2000
+memory_mb = 256

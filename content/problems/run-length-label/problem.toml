@@ -1,0 +1,17 @@
+id = "run-length-label"
+title = "Run-Length Label"
+title_es = "Etiqueta comprimida"
+difficulty = "easy"
+tags = ["string"]
+pattern = "strings"
+rank = 5
+
+[signature]
+name = "compress"
+params = [{ name = "text", type = "string" }]
+returns = "string"
+
+[judge]
+checker = "exact"
+time_limit_ms = 2000
+memory_mb = 256
