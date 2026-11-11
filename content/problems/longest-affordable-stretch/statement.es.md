@@ -6,7 +6,7 @@ Devuelve la mayor cantidad de etapas consecutivas cuyo coste total no supere `bu
 
 ```
 costs = [4, 2, 1, 6, 1, 1], budget = 8
-Output: 3
+Salida: 3
 ```
 
 Las etapas 0 a 2 cuestan 4 + 2 + 1 = 7, y las etapas 3 a 5 cuestan 6 + 1 + 1 = 8. No caben cuatro etapas consecutivas.
@@ -15,14 +15,14 @@ Las etapas 0 a 2 cuestan 4 + 2 + 1 = 7, y las etapas 3 a 5 cuestan 6 + 1 + 1 = 8
 
 ```
 costs = [9, 9, 9], budget = 5
-Output: 0
+Salida: 0
 ```
 
 ### Ejemplo 3
 
 ```
 costs = [0, 3, 0, 0], budget = 0
-Output: 2
+Salida: 2
 ```
 
 Las etapas que no cuestan nada siempre caben.

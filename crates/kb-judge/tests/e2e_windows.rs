@@ -132,19 +132,19 @@ fn unordered_checker_accepts_reversed_pair() {
 fn wrong_answer_python_reports_first_failing_input() {
     let r = run(
         Language::Python,
-        "def two_sum(nums, target):\n    return [0, 1]\n",
+        "def two_sum(nums, target):\n    return [2, 4]\n",
     );
     assert_eq!(r.verdict, Verdict::WrongAnswer);
-    // Public 1 and 3 expect [0, 1]; public 2 is the first that does not.
+    // Public 1 expects [2, 4]; public 2 is the first that does not.
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     let f = r.first_failure.unwrap();
     assert_eq!((f.kind, f.index), (TestKind::Public, 2));
-    assert_eq!(f.input.get("target"), Some(&json!(6)));
-    assert_eq!(f.expected, json!([1, 2]));
-    assert_eq!(f.actual, Some(json!([0, 1])));
+    assert_eq!(f.input.get("target"), Some(&json!(2)));
+    assert_eq!(f.expected, json!([1, 3]));
+    assert_eq!(f.actual, Some(json!([2, 4])));
     let m = f.message.unwrap();
     assert_eq!(m.code, MessageCode::OutputMismatch);
-    assert_eq!(m.text, "expected [1,2], got [0,1]");
+    assert_eq!(m.text, "expected [1,3], got [2,4]");
 }
 
 #[test]
@@ -186,10 +186,10 @@ fn starter_stubs_parse_and_get_wrong_answer() {
 fn time_limit_exceeded_python() {
     let r = run(
         Language::Python,
-        "def two_sum(nums, target):\n    if nums[0] == 3:\n        while True:\n            pass\n    return [0, 1]\n",
+        "def two_sum(nums, target):\n    if nums[0] == 7:\n        while True:\n            pass\n    return [2, 4]\n",
     );
     assert_eq!(r.verdict, Verdict::TimeLimitExceeded);
-    // Public 1 passes, public 2 ([3, 2, 4]) spins; later tests never run.
+    // Public 1 passes, public 2 ([7, -3, 10, 5]) spins; later tests never run.
     assert_eq!(r.tests.len(), 2);
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     let f = r.first_failure.clone().unwrap();
@@ -197,7 +197,7 @@ fn time_limit_exceeded_python() {
         (f.kind, f.index, f.verdict),
         (TestKind::Public, 2, Verdict::TimeLimitExceeded)
     );
-    assert_eq!(f.input.get("nums"), Some(&json!([3, 2, 4])));
+    assert_eq!(f.input.get("nums"), Some(&json!([7, -3, 10, 5])));
     assert_eq!(r.tests[1].result.time_us, 2_000_000);
     assert_eq!(
         failure_message(&r, MessageCode::TimeLimit),
@@ -357,7 +357,7 @@ def two_sum(nums, target):
     assert_eq!(r.tests.len(), small_tests().len());
     assert_eq!(
         r.tests[0].stdout,
-        "nums = [2, 7, 11, 15]\n{\"kind\": \"done\"}\nerr line\n"
+        "nums = [5, 8, 12, 1, 3]\n{\"kind\": \"done\"}\nerr line\n"
     );
 }
 
@@ -369,18 +369,18 @@ export function twoSum(nums: number[], target: number): number[] {
   console.log("nums =", nums);
   console.error('{"kind":"done"}');
   writeSync(1, "raw-without-newline");
-  return target === 9 ? [0, 1] : [1, 0];
+  return target === 15 ? [2, 4] : [1, 0];
 }
 "#;
     let r = run(Language::TypeScript, src);
     assert_eq!(
         r.tests[0].stdout,
-        "nums = [ 2, 7, 11, 15 ]\n{\"kind\":\"done\"}\n"
+        "nums = [ 5, 8, 12, 1, 3 ]\n{\"kind\":\"done\"}\n"
     );
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     let f = r.first_failure.unwrap();
     assert_eq!(f.verdict, Verdict::WrongAnswer);
-    assert_eq!(f.stdout, "nums = [ 3, 2, 4 ]\n{\"kind\":\"done\"}\n");
+    assert_eq!(f.stdout, "nums = [ 7, -3, 10, 5 ]\n{\"kind\":\"done\"}\n");
 }
 
 #[test]
@@ -429,12 +429,12 @@ fn php_accepted_reference() {
 fn php_wrong_answer() {
     let r = run(
         Language::Php,
-        &format!("{PHP_HEAD}    return [0, 1];\n}}\n"),
+        &format!("{PHP_HEAD}    return [2, 4];\n}}\n"),
     );
     assert_eq!(r.verdict, Verdict::WrongAnswer);
     let f = r.first_failure.unwrap();
     assert_eq!((f.kind, f.index), (TestKind::Public, 2));
-    assert_eq!(f.actual, Some(json!([0, 1])));
+    assert_eq!(f.actual, Some(json!([2, 4])));
 }
 
 #[test]
@@ -513,13 +513,13 @@ fn php_return_value_not_json() {
 fn php_prints_and_warnings_are_captured_per_test() {
     let src = format!(
         "{PHP_HEAD}    echo 'nums = ', json_encode($nums), \"\\n\";\n    echo '{{\"kind\":\"done\"}}', \"\\n\";\n    \
-         echo $undefined;\n    return $target === 9 ? [0, 1] : [];\n}}\n"
+         echo $undefined;\n    return $target === 15 ? [2, 4] : [];\n}}\n"
     );
     let r = run_small(Language::Php, &src);
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     assert_eq!(
         r.tests[0].stdout,
-        "nums = [2,7,11,15]\n{\"kind\":\"done\"}\nWarning: Undefined variable $undefined in solution.php on line 5\n"
+        "nums = [5,8,12,1,3]\n{\"kind\":\"done\"}\nWarning: Undefined variable $undefined in solution.php on line 5\n"
     );
     assert_eq!(
         r.tests.len(),
@@ -564,11 +564,11 @@ fn rust_accepted_reference_then_cached() {
 
 #[test]
 fn rust_wrong_answer() {
-    let r = run(Language::Rust, &format!("{RS_HEAD}    vec![0, 1]\n}}\n"));
+    let r = run(Language::Rust, &format!("{RS_HEAD}    vec![2, 4]\n}}\n"));
     assert_eq!(r.verdict, Verdict::WrongAnswer);
     let f = r.first_failure.unwrap();
     assert_eq!((f.kind, f.index), (TestKind::Public, 2));
-    assert_eq!(f.actual, Some(json!([0, 1])));
+    assert_eq!(f.actual, Some(json!([2, 4])));
 }
 
 #[test]
@@ -622,7 +622,7 @@ fn rust_compilation_errors() {
 fn rust_prints_are_captured_per_test() {
     let src = format!(
         "{RS_HEAD}    println!(\"nums = {{:?}}\", nums);\n    println!(\"{{{{\\\"kind\\\":\\\"done\\\"}}}}\");\n    \
-         eprint!(\"no newline\");\n    if target == 9 {{ vec![0, 1] }} else {{ vec![] }}\n}}\n"
+         eprint!(\"no newline\");\n    if target == 15 {{ vec![2, 4] }} else {{ vec![] }}\n}}\n"
     );
     let r = run_small(Language::Rust, &src);
     assert_eq!(
@@ -633,12 +633,12 @@ fn rust_prints_are_captured_per_test() {
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     assert_eq!(
         r.tests[0].stdout,
-        "nums = [2, 7, 11, 15]\n{\"kind\":\"done\"}\nno newline"
+        "nums = [5, 8, 12, 1, 3]\n{\"kind\":\"done\"}\nno newline"
     );
     let f = r.first_failure.unwrap();
     assert_eq!(
         f.stdout,
-        "nums = [3, 2, 4]\n{\"kind\":\"done\"}\nno newline"
+        "nums = [7, -3, 10, 5]\n{\"kind\":\"done\"}\nno newline"
     );
 }
 

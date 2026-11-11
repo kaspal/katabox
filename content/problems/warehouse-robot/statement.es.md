@@ -8,7 +8,7 @@ Devuelve el menor número de movimientos para llegar a la celda inferior derecha
 grid = [[0, 0, 0],
         [1, 1, 0],
         [0, 0, 0]]
-Output: 4
+Salida: 4
 ```
 
 Derecha, derecha, abajo, abajo.
@@ -18,14 +18,14 @@ Derecha, derecha, abajo, abajo.
 ```
 grid = [[0, 1],
         [1, 0]]
-Output: -1
+Salida: -1
 ```
 
 ### Ejemplo 3
 
 ```
 grid = [[0]]
-Output: 0
+Salida: 0
 ```
 
 ### Restricciones

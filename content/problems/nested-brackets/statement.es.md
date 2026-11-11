@@ -6,14 +6,14 @@ Devuelve `true` si los corchetes están bien anidados: cada corchete que abre se
 
 ```
 text = "f(a[b]{c})"
-Output: true
+Salida: true
 ```
 
 ### Ejemplo 2
 
 ```
 text = "(x]"
-Output: false
+Salida: false
 ```
 
 El `(` se cierra con un `]`, que es de otro tipo.
@@ -22,7 +22,7 @@ El `(` se cierra con un `]`, que es de otro tipo.
 
 ```
 text = "({)}"
-Output: false
+Salida: false
 ```
 
 La `{` se abre dentro del par `(` pero se cierra después de él.

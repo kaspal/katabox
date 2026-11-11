@@ -171,7 +171,7 @@ describe("Workspace: Run and Submit", () => {
     await user.click(screen.getByRole("button", { name: "Add custom test" }));
     const custom = screen.getByTestId("custom-1");
     const target = within(custom).getByLabelText(/target/);
-    expect(target).toHaveValue("9"); // copied from public test 1
+    expect(target).toHaveValue("15"); // copied from public test 1
     await user.clear(target);
     await user.type(target, "nine");
     expect(within(custom).getByText("This is not valid JSON.")).toBeInTheDocument();
@@ -186,7 +186,7 @@ describe("Workspace: Run and Submit", () => {
     expect(within(custom).queryByText(/Expected a value/)).toBeNull();
     await user.click(screen.getByRole("button", { name: "Run" }));
     await waitFor(() => expect(fake.api.run).toHaveBeenCalledTimes(1));
-    expect(vi.mocked(fake.api.run).mock.calls[0][3]).toEqual([{ nums: [2, 7, 11, 15], target: 18 }]);
+    expect(vi.mocked(fake.api.run).mock.calls[0][3]).toEqual([{ nums: [5, 8, 12, 1, 3], target: 18 }]);
   });
 });
 

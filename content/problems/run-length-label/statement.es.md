@@ -6,7 +6,7 @@ Devuelve la etiqueta acortada.
 
 ```
 text = "aaabcc"
-Output: "a3bc2"
+Salida: "a3bc2"
 ```
 
 Las rachas son `aaa`, `b` y `cc`.
@@ -15,14 +15,14 @@ Las rachas son `aaa`, `b` y `cc`.
 
 ```
 text = "abab"
-Output: "abab"
+Salida: "abab"
 ```
 
 ### Ejemplo 3
 
 ```
 text = "zzzzzzzzzzzz"
-Output: "z12"
+Salida: "z12"
 ```
 
 ### Restricciones

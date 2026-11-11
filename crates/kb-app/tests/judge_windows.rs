@@ -146,7 +146,7 @@ async fn every_reference_is_accepted_with_progress() {
 #[tokio::test]
 async fn a_wrong_answer_shows_the_failing_input_and_hides_the_rest() {
     let app = app("wrong").await;
-    // Right on the public tests (pairs at the start), wrong when the pair comes later.
+    // A constant answer: wrong on the first public test already.
     let code = "def two_sum(nums: list[int], target: int) -> list[int]:\n    return [0, 1]\n";
     let r = app
         .submit("two-sum", Language::Python, code, |_| {})

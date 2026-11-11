@@ -6,7 +6,7 @@ Devuelve el mayor número de torres que puede elegir.
 
 ```
 heights = [5, 1, 8, 3, 6, 9, 4]
-Output: 4
+Salida: 4
 ```
 
 Por ejemplo 1, 3, 6, 9.
@@ -15,7 +15,7 @@ Por ejemplo 1, 3, 6, 9.
 
 ```
 heights = [12, 12, 12]
-Output: 1
+Salida: 1
 ```
 
 Las alturas iguales no crecen.
@@ -24,7 +24,7 @@ Las alturas iguales no crecen.
 
 ```
 heights = [9, 8, 2]
-Output: 1
+Salida: 1
 ```
 
 ### Restricciones

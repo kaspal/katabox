@@ -62,7 +62,10 @@ async fn records_a_real_two_sum_report() {
     assert_eq!(stored.summary.memory_kb, ac.memory_kb);
     assert_eq!(stored.report, serde_json::to_value(&ac).unwrap());
     assert_eq!(stored.report["total_tests"], ac.total_tests);
-    assert!(ac.total_tests >= 18, "two-sum has 3 public and 15+ hidden tests");
+    assert!(
+        ac.total_tests >= 18,
+        "two-sum has 3 public and 15+ hidden tests"
+    );
 
     let failed = db.get_submission(wa_id).await.unwrap();
     assert_eq!(failed.report["verdict"], "wrong_answer");

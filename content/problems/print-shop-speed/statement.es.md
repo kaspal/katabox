@@ -6,7 +6,7 @@ Devuelve la menor `speed` que termina todos los trabajos en `hours` horas como m
 
 ```
 pages = [7, 3, 12], hours = 6
-Output: 4
+Salida: 4
 ```
 
 A velocidad 4 los trabajos tardan 2 + 1 + 3 = 6 horas. A velocidad 3 tardan 3 + 1 + 4 = 8.
@@ -15,14 +15,14 @@ A velocidad 4 los trabajos tardan 2 + 1 + 3 = 6 horas. A velocidad 3 tardan 3 + 
 
 ```
 pages = [10, 10], hours = 2
-Output: 10
+Salida: 10
 ```
 
 ### Ejemplo 3
 
 ```
 pages = [5], hours = 100
-Output: 1
+Salida: 1
 ```
 
 ### Restricciones

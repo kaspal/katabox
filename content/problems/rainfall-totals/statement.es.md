@@ -6,7 +6,7 @@ Los agricultores envían consultas `queries`, cada una `[first, last]`, pregunta
 
 ```
 rain = [3, 0, 7, 2, 5], queries = [[0, 2], [1, 3], [4, 4]]
-Output: [10, 9, 5]
+Salida: [10, 9, 5]
 ```
 
 Entre los días 0 y 2 cayeron 3 + 0 + 7 = 10 mm.
@@ -15,7 +15,7 @@ Entre los días 0 y 2 cayeron 3 + 0 + 7 = 10 mm.
 
 ```
 rain = [0, 0, 0], queries = [[0, 2]]
-Output: [0]
+Salida: [0]
 ```
 
 ### Restricciones

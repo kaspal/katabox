@@ -39,11 +39,11 @@ describe("ResultView", () => {
     render(<ResultView report={makeReport("wrong_answer")} />);
     const f = screen.getByTestId("first-failure");
     expect(within(f).getByText("First failure: Public 2")).toBeInTheDocument();
-    expect(within(f).getByText(/nums = \[3,2,4\]/)).toBeInTheDocument();
+    expect(within(f).getByText(/nums = \[7,-3,10,5\]/)).toBeInTheDocument();
     expect(within(f).getByText("Expected")).toBeInTheDocument();
     expect(within(f).getByText("Your output")).toBeInTheDocument();
     const changed = [...f.querySelectorAll("[data-changed]")].map((e) => e.textContent);
-    expect(changed).toEqual(["1", "2", "0", "1"]); // [1,2] vs [0,1]: both elements differ
+    expect(changed).toEqual(["1", "3", "2", "4"]); // [1,3] vs [2,4]: both elements differ
     expect(within(f).getByText("The returned value differs from the expected output.")).toBeInTheDocument();
     expect(within(f).getByText("debug print")).toBeInTheDocument();
   });
@@ -89,7 +89,7 @@ describe("custom test validation", () => {
     expect(validateCustom(sig, { nums: "[1,2]" }).errors.target).toEqual({ kind: "empty" });
     const ok = validateCustom(sig, { nums: "[1, 2]", target: "3" });
     expect(ok).toEqual({ errors: {}, input: { nums: [1, 2], target: 3 } });
-    expect(valuesFrom(sig, { nums: [2, 7], target: 9 })).toEqual({ nums: "[2,7]", target: "9" });
+    expect(valuesFrom(sig, { nums: [5, -8], target: -3 })).toEqual({ nums: "[5,-8]", target: "-3" });
     expect(parseSignature({ name: 1 } as never)).toBeNull();
   });
 });

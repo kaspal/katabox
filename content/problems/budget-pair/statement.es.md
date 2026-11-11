@@ -6,7 +6,7 @@ Devuelve el mayor total de dos artículos distintos que no supere `budget`, o `-
 
 ```
 prices = [3, 5, 8, 12, 20], budget = 19
-Output: 17
+Salida: 17
 ```
 
 5 + 12 = 17 es el mejor total que no pasa de 19.
@@ -15,7 +15,7 @@ Output: 17
 
 ```
 prices = [4, 4, 9], budget = 8
-Output: 8
+Salida: 8
 ```
 
 Los dos artículos de precio 4 son artículos distintos.
@@ -24,7 +24,7 @@ Los dos artículos de precio 4 son artículos distintos.
 
 ```
 prices = [10, 15], budget = 24
-Output: -1
+Salida: -1
 ```
 
 ### Restricciones

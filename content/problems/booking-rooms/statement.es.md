@@ -6,7 +6,7 @@ Devuelve el menor número de salas que permite celebrar todas las reuniones.
 
 ```
 meetings = [[0, 40], [5, 15], [20, 35]]
-Output: 2
+Salida: 2
 ```
 
 La primera reunión se solapa con las otras dos, pero esas dos no se solapan entre sí.
@@ -15,14 +15,14 @@ La primera reunión se solapa con las otras dos, pero esas dos no se solapan ent
 
 ```
 meetings = [[10, 20], [20, 30], [30, 40]]
-Output: 1
+Salida: 1
 ```
 
 ### Ejemplo 3
 
 ```
 meetings = [[1, 5], [2, 6], [3, 7], [6, 8]]
-Output: 3
+Salida: 3
 ```
 
 ### Restricciones
