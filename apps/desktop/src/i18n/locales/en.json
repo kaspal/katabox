@@ -113,9 +113,73 @@
   },
   "workspace": {
     "title": "Workspace",
-    "comingSoon": "The editor, tests and results arrive in the next version.",
-    "smokeLink": "Open it in the smoke screen (development)",
-    "back": "Back to the library"
+    "back": "Back to the library",
+    "language": "Language",
+    "run": "Run",
+    "submit": "Submit",
+    "toggleProblem": "Show or hide the problem",
+    "toggleResults": "Show or hide tests and results",
+    "focusEnter": "Focus mode",
+    "focusExit": "Leave focus mode",
+    "editorLabel": "{{language}} code editor",
+    "problemPane": "Problem",
+    "resultsPane": "Tests and results",
+    "save": {
+      "saving": "Saving…",
+      "saved": "Saved",
+      "error": "Not saved"
+    },
+    "tabs": {
+      "description": "Description",
+      "hints": "Hints",
+      "editorial": "Editorial",
+      "submissions": "Submissions",
+      "notes": "Notes",
+      "history": "History"
+    },
+    "limits": {
+      "time": "Time limit",
+      "memory": "Memory limit"
+    },
+    "hints": {
+      "none": "This problem has no hints.",
+      "tier": "Hint {{tier}}",
+      "reveal": "Reveal hint {{tier}}",
+      "lockedAfter": "Reveal hint {{tier}} first."
+    },
+    "editorial": {
+      "none": "This problem has no editorial yet.",
+      "locked": "The editorial is locked.",
+      "lockedReason": "It unlocks when you solve the problem, or after {{required}} failed submissions ({{failed}}/{{required}}).",
+      "unlockedSolved": "Unlocked because you solved this problem.",
+      "unlockedAttempts": "Unlocked after several failed submissions."
+    },
+    "submissions": {
+      "none": "No submissions yet.",
+      "back": "All submissions",
+      "code": "Code ({{language}})",
+      "codeLabel": "Submitted code"
+    },
+    "notes": {
+      "mode": "Notes view",
+      "edit": "Edit",
+      "preview": "Preview",
+      "label": "Notes (Markdown)",
+      "empty": "No notes yet."
+    },
+    "history": {
+      "none": "No snapshots yet. Every Run and Submit saves one.",
+      "help": "Select two snapshots to compare them, or one to compare it with the editor.",
+      "select": "Select the snapshot from {{when}}",
+      "restore": "Restore",
+      "restoreLabel": "Restore the snapshot from {{when}}",
+      "current": "Editor (current)",
+      "source": {
+        "run": "Run",
+        "submit": "Submit",
+        "restore": "Before a restore"
+      }
+    }
   },
   "progress": {
     "title": "Progress",
@@ -142,7 +206,15 @@
     "toolchainStatus": "Status",
     "toolchainPath": "Program",
     "present": "Installed",
-    "missing": "Missing"
+    "missing": "Missing",
+    "editor": "Editor",
+    "keymap": "Keymap",
+    "keymaps": {
+      "default": "Default",
+      "vscode": "VS Code",
+      "vim": "Vim"
+    },
+    "fontSize": "Font size"
   },
   "languages": {
     "python": "Python",
@@ -198,6 +270,51 @@
       "harness_silent": "The test harness stopped without reporting.",
       "bad_harness_record": "The test harness reported something unreadable.",
       "incomplete_results": "Some tests have no result."
+    }
+  },
+  "results": {
+    "tabs": {
+      "testcases": "Testcases",
+      "result": "Result"
+    },
+    "phase": {
+      "starting": "Starting…",
+      "compiling": "Compiling…",
+      "running_one": "Running {{count}} test…",
+      "running_other": "Running {{count}} tests…",
+      "checked": "Checked {{done}}/{{total}}"
+    },
+    "testKind": {
+      "example": "Example",
+      "public": "Public",
+      "custom": "Custom",
+      "hidden": "Hidden"
+    },
+    "firstFailure": "First failure: {{test}}",
+    "input": "Input",
+    "expected": "Expected",
+    "actual": "Your output",
+    "stdout": "Printed output",
+    "passed": "{{passed}}/{{total}} tests passed",
+    "time": "{{ms}} ms",
+    "memory": "{{mb}} MB",
+    "compilerOutput": "Compiler output",
+    "test": "Test",
+    "verdict": "Verdict",
+    "timeCol": "Time",
+    "returned": "Returned",
+    "hidden": "(hidden)",
+    "notRun_one": "{{count}} test did not run.",
+    "notRun_other": "{{count}} tests did not run.",
+    "empty": "Run or submit to see results here.",
+    "custom": {
+      "add": "Add custom test",
+      "remove": "Remove custom test {{index}}",
+      "errors": {
+        "empty": "Enter a value.",
+        "json": "This is not valid JSON.",
+        "type": "Expected a value of type {{type}}."
+      }
     }
   }
 }

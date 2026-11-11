@@ -156,6 +156,7 @@ async fn a_wrong_answer_shows_the_failing_input_and_hides_the_rest() {
     assert_eq!(view.code, code);
     let snaps = app.list_snapshots("two-sum").await.unwrap();
     assert_eq!(snaps[0].source, SnapshotSource::Submit);
+    assert_eq!(snaps[0].verdict, Some(Verdict::WrongAnswer));
 }
 
 #[tokio::test]
@@ -219,7 +220,10 @@ async fn run_with_custom_inputs() {
         .unwrap_err();
     assert_eq!(err.code, AppErrorCode::InvalidCustomInput, "{err}");
 
-    // Runs are snapshotted (deduplicated) and never change the status.
-    assert_eq!(app.list_snapshots("two-sum").await.unwrap().len(), 2);
+    // Runs are snapshotted (deduplicated) with their verdict and never change the status.
+    let snaps = app.list_snapshots("two-sum").await.unwrap();
+    assert_eq!(snaps.len(), 2);
+    assert_eq!(snaps[0].verdict, Some(Verdict::WrongAnswer));
+    assert_eq!(snaps[1].verdict, Some(Verdict::Accepted));
     assert!(app.list_submissions("two-sum").await.unwrap().is_empty());
 }

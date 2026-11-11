@@ -87,6 +87,36 @@ pub struct ContinueItem {
     pub updated_at: i64,
 }
 
+/// Failed submissions after which the editorial unlocks.
+pub const EDITORIAL_FAILURES: u32 = 3;
+
+/// Why the editorial is unlocked.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "snake_case")]
+pub enum EditorialReason {
+    /// The problem was solved.
+    Accepted,
+    /// Enough submissions failed.
+    Attempts,
+}
+
+/// The editorial tab's state.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct EditorialState {
+    pub unlocked: bool,
+    pub reason: Option<EditorialReason>,
+    /// Non-Accepted submissions so far.
+    pub failed_submits: u32,
+    /// Failed submissions needed to unlock without solving.
+    pub required_failures: u32,
+    /// The problem has an editorial at all.
+    pub available: bool,
+    /// The editorial (Markdown), only when unlocked.
+    pub text: Option<String>,
+}
+
 /// A submission as the UI sees it: hidden tests redacted.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
@@ -194,8 +224,47 @@ impl App {
         Ok(self.store.list_problems(filter).await?)
     }
 
+    /// The problem page. The editorial is left out on purpose: it is locked until the
+    /// problem is solved or after enough failed submissions; see [`App::editorial`].
     pub async fn get_problem(&self, id: &str, lang: UiLang) -> Result<ProblemView> {
-        Ok(self.store.content.get_problem(id, lang).await?)
+        let mut view = self.store.content.get_problem(id, lang).await?;
+        view.editorial = None;
+        Ok(view)
+    }
+
+    /// The editorial and whether it is unlocked: once the problem is solved, or after
+    /// [`EDITORIAL_FAILURES`] non-Accepted submissions (ADR 0013).
+    pub async fn editorial(&self, id: &str, lang: UiLang) -> Result<EditorialState> {
+        let view = self.store.content.get_problem(id, lang).await?;
+        let subs = self.store.user.list_submissions(id).await?;
+        let solved = subs.iter().any(|s| s.verdict.is_accepted());
+        let failed = u32::try_from(subs.iter().filter(|s| !s.verdict.is_accepted()).count())
+            .unwrap_or(u32::MAX);
+        let reason = if solved {
+            Some(EditorialReason::Accepted)
+        } else if failed >= EDITORIAL_FAILURES {
+            Some(EditorialReason::Attempts)
+        } else {
+            None
+        };
+        Ok(EditorialState {
+            unlocked: reason.is_some(),
+            reason,
+            failed_submits: failed,
+            required_failures: EDITORIAL_FAILURES,
+            available: view.editorial.is_some(),
+            text: reason.and(view.editorial),
+        })
+    }
+
+    /// The language of the most recently edited draft of `problem`, if any.
+    pub async fn last_language(&self, problem: &str) -> Result<Option<Language>> {
+        Ok(self
+            .store
+            .user
+            .latest_draft_for(problem)
+            .await?
+            .map(|d| d.language))
     }
 
     /// The starter code for `problem` in `language`.
@@ -268,7 +337,10 @@ impl App {
             tests.extend(self.custom_tests(&p, language, custom).await?);
         }
         let report = self.judge(p, tests, language, code, on_event).await?;
-        self.store.user.record_run(problem, language, code).await?;
+        self.store
+            .user
+            .record_run(problem, language, code, report.verdict)
+            .await?;
         Ok(report)
     }
 

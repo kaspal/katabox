@@ -6,8 +6,8 @@
 use std::path::{Path, PathBuf};
 
 use kb_app::{
-    App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, SubmissionView,
-    SubmitResult,
+    App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
+    SubmissionView, SubmitResult,
 };
 use kb_core::{JudgeEvent, Language, Report};
 use kb_store::{
@@ -56,6 +56,24 @@ async fn continue_item(state: State<'_, AppState>, ui_lang: UiLang) -> Res<Optio
 #[specta::specta]
 async fn get_problem(state: State<'_, AppState>, id: String, ui_lang: UiLang) -> Res<ProblemView> {
     state.app()?.get_problem(&id, ui_lang).await
+}
+
+/// The editorial and its lock state (unlocked when solved or after 3 failed submits).
+#[tauri::command]
+#[specta::specta]
+async fn editorial(
+    state: State<'_, AppState>,
+    problem: String,
+    ui_lang: UiLang,
+) -> Res<EditorialState> {
+    state.app()?.editorial(&problem, ui_lang).await
+}
+
+/// The language of the problem's most recently edited draft.
+#[tauri::command]
+#[specta::specta]
+async fn last_language(state: State<'_, AppState>, problem: String) -> Res<Option<Language>> {
+    state.app()?.last_language(&problem).await
 }
 
 #[tauri::command]
@@ -191,6 +209,8 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         continue_item,
         list_problems,
         get_problem,
+        editorial,
+        last_language,
         get_stub,
         load_draft,
         save_draft,

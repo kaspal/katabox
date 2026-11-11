@@ -71,7 +71,7 @@ describe("Library", () => {
     expect(grid).toHaveAttribute("aria-activedescendant", "problem-row-merge-meetings");
     await user.keyboard("{Home}{ArrowDown}{Enter}");
     expect(await screen.findByRole("heading", { name: "Valid Brackets" })).toBeInTheDocument();
-    expect(screen.getByText(/The editor, tests and results arrive/)).toBeInTheDocument();
+    expect(await screen.findByTestId("workspace")).toBeInTheDocument();
   });
 
   it("sorts by a column header", async () => {

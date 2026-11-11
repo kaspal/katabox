@@ -45,6 +45,17 @@
   --dev-badge: #8a5a00;
   --dev-badge-foreground: #ffffff;
 
+  /* Code syntax (editor and highlighted blocks; styles/syntax.css) */
+  --syntax-keyword: #6f42c1;
+  --syntax-string: #116329;
+  --syntax-number: #9a4b00;
+  --syntax-comment: #57606a;
+  --syntax-function: #0b5cad;
+  --syntax-type: #8a5a00;
+  --syntax-variable: #16181d;
+  --syntax-operator: #44546a;
+  --syntax-invalid: #b42318;
+
   /* Shape and type */
   --radius: 0.5rem;
   --font-size-ui: 0.875rem;
@@ -86,4 +97,14 @@
   --status-attempted: #e3b341;
   --dev-badge: #e3b341;
   --dev-badge-foreground: #0b0d12;
+
+  --syntax-keyword: #c792ea;
+  --syntax-string: #9ad18b;
+  --syntax-number: #f0b871;
+  --syntax-comment: #8f98a8;
+  --syntax-function: #82aaff;
+  --syntax-type: #e3b341;
+  --syntax-variable: #e6e8ee;
+  --syntax-operator: #a9b3c6;
+  --syntax-invalid: #ff8a80;
 }

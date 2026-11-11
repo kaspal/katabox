@@ -12,7 +12,6 @@ import type { Difficulty, StatusFilter } from "@/bindings";
 import { Shell } from "@/app/Shell";
 import { Home } from "@/pages/Home";
 import { Library } from "@/pages/Library";
-import { Workspace } from "@/pages/Workspace";
 import { Progress } from "@/pages/Progress";
 import { Settings } from "@/pages/Settings";
 
@@ -56,10 +55,11 @@ const libraryRoute = createRoute({
   validateSearch: parseLibrarySearch,
   component: Library,
 });
+// The workspace is lazy: CodeMirror, KaTeX and Markdown load only when a problem opens.
 const problemRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/problems/$problemId",
-  component: Workspace,
+  component: lazyRouteComponent(() => import("@/workspace/WorkspacePage"), "WorkspacePage"),
 });
 const progressRoute = createRoute({
   getParentRoute: () => rootRoute,

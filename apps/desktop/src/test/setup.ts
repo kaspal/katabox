@@ -14,6 +14,10 @@ Element.prototype.scrollIntoView ??= function () {};
 Element.prototype.hasPointerCapture ??= () => false;
 Element.prototype.releasePointerCapture ??= function () {};
 Element.prototype.scrollTo ??= function () {} as typeof Element.prototype.scrollTo;
+// CodeMirror measures text ranges.
+Range.prototype.getClientRects ??= () => ({ length: 0, item: () => null, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
+Range.prototype.getBoundingClientRect ??= () => new DOMRect(0, 0, 0, 0);
+document.elementFromPoint ??= () => null;
 // jsdom has no layout: give elements a size so the virtualized library renders rows.
 Object.defineProperty(HTMLElement.prototype, "clientHeight", { configurable: true, get: () => 600 });
 Object.defineProperty(HTMLElement.prototype, "clientWidth", { configurable: true, get: () => 800 });
@@ -34,6 +38,8 @@ window.matchMedia = vi.fn((query: string) => ({
 })) as unknown as typeof window.matchMedia;
 
 initI18n("en");
+
+vi.mock("@/components/ui/resizable", () => import("@/test/resizableStub"));
 
 afterEach(() => {
   cleanup();

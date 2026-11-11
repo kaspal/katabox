@@ -4,11 +4,17 @@ import type {
   AppInfo,
   ContinueItem,
   JsonValue,
+  JudgeEvent,
+  Language,
   ProblemFilter,
   ProblemSummary,
   ProblemView,
+  Report,
+  Snapshot,
+  SubmissionSummary,
+  Verdict,
 } from "@/bindings";
-import type { Api } from "@/lib/api";
+import type { Api, CustomInput } from "@/lib/api";
 
 type Row = Omit<ProblemSummary, "title"> & { title: { en: string; es: string } };
 
@@ -56,22 +62,108 @@ export const APP_INFO: AppInfo = {
   dev_data: true,
   data_dir: "C:\\data\\dev.katabox.app-dev",
   content: { pack_id: "core", pack_version: "0.1.0", built_at: "2026-11-11T00:00:00Z" },
-  user_schema_version: 1,
+  user_schema_version: 2,
   sandbox_root: "C:\\repo\\target\\katabox",
   sandbox_root_source: "dev",
   toolchains: [
     { language: "python", present: true, program: "C:\\py\\python.exe", problem: null },
+    { language: "typescript", present: true, program: "C:\\node\\node.exe", problem: null },
+    { language: "php", present: true, program: "C:\\php\\php.exe", problem: null },
     { language: "rust", present: false, program: null, problem: "rustc not found" },
   ],
   platform: "windows",
 };
 
-function summary(r: Row, lang: "en" | "es"): ProblemSummary {
-  return { ...r, title: r.title[lang] };
+export const SIGNATURE = {
+  name: "twoSum",
+  params: [
+    { name: "nums", type: "int[]" },
+    { name: "target", type: "int" },
+  ],
+  returns: "int[]",
+};
+
+export function stubFor(lang: Language): string {
+  return `# stub for ${lang}\n`;
 }
 
-export function createFakeApi(opts: { settings?: Record<string, JsonValue>; continueItem?: ContinueItem | null } = {}) {
+/** A report with `verdict`; public tests 1..n. */
+export function makeReport(verdict: Verdict, extra: Partial<Report> = {}): Report {
+  const ok = verdict === "accepted";
+  return {
+    verdict,
+    tests: [
+      { index: 1, kind: "public", verdict: "accepted", time_us: 120, memory_kb: 9000, message: null, actual: [0, 1], stdout: "" },
+      {
+        index: 2,
+        kind: "public",
+        verdict: ok ? "accepted" : verdict,
+        time_us: 80,
+        memory_kb: 9000,
+        message: ok ? null : { code: "output_mismatch", text: "expected [1,2], got [0,1]" },
+        actual: [0, 1],
+        stdout: "",
+      },
+    ],
+    total_tests: 2,
+    first_failure: ok
+      ? null
+      : {
+          kind: "public",
+          index: 2,
+          verdict,
+          input: { nums: [3, 2, 4], target: 6 },
+          expected: [1, 2],
+          actual: [0, 1],
+          message: { code: "output_mismatch", text: "expected [1,2], got [0,1]" },
+          stdout: "debug print\n",
+        },
+    compile_output: null,
+    time_us: 200,
+    memory_kb: 9000,
+    compile: null,
+    ...extra,
+  };
+}
+
+export function createFakeApi(
+  opts: {
+    settings?: Record<string, JsonValue>;
+    continueItem?: ContinueItem | null;
+    drafts?: Record<string, string>;
+    lastLanguage?: Language | null;
+  } = {},
+) {
   const settings = new Map<string, JsonValue>(Object.entries(opts.settings ?? {}));
+  const drafts = new Map<string, string>(Object.entries(opts.drafts ?? {}));
+  const notes = new Map<string, string>();
+  const hints = new Map<string, number[]>();
+  const snapshots: Snapshot[] = [];
+  const submissions: (SubmissionSummary & { code: string; report: Report })[] = [];
+  let nextId = 1;
+  const state = {
+    /** Report returned by the next run/submit (default Accepted). */
+    nextReport: null as Report | null,
+    /** When set, run/submit wait for this before answering. */
+    gate: null as Promise<void> | null,
+  };
+
+  const snap = (problem: string, language: Language, code: string, source: Snapshot["source"], verdict: Verdict | null) => {
+    snapshots.unshift({ id: nextId++, problem_id: problem, language, code, source, verdict, created_at: Date.now() });
+  };
+
+  const judge = async (onEvent: (e: JudgeEvent) => void, count: number): Promise<Report> => {
+    onEvent({ event: "running", total: count });
+    if (state.gate) await state.gate;
+    const r = state.nextReport ?? makeReport("accepted");
+    state.nextReport = null;
+    r.tests.forEach((t, i) =>
+      onEvent({ event: "checked", kind: t.kind, index: t.index, verdict: t.verdict, done: i + 1, total: r.tests.length }),
+    );
+    onEvent({ event: "finished", verdict: r.verdict });
+    return r;
+  };
+
   const api: Api = {
     appInfo: vi.fn(async () => APP_INFO),
     listProblems: vi.fn(async (f: ProblemFilter) => {
@@ -81,26 +173,28 @@ export function createFakeApi(opts: { settings?: Record<string, JsonValue>; cont
           (!f.difficulty || p.difficulty === f.difficulty) &&
           (!f.pattern || p.pattern === f.pattern) &&
           (!f.tag || p.tags.includes(f.tag)) &&
-          (!f.status ||
-            (f.status === "todo" ? p.status === null : p.status === f.status)) &&
-          (!f.query ||
-            `${p.title.en} ${p.title.es}`.toLowerCase().includes(f.query.toLowerCase())),
-      ).map((p) => summary(p, lang));
+          (!f.status || (f.status === "todo" ? p.status === null : p.status === f.status)) &&
+          (!f.query || `${p.title.en} ${p.title.es}`.toLowerCase().includes(f.query.toLowerCase())),
+      ).map((p) => ({ ...p, title: p.title[lang] }));
     }),
-    getProblem: vi.fn(async (id: string, lang): Promise<ProblemView> => {
+    getProblem: vi.fn(async (id: string, lang: "en" | "es"): Promise<ProblemView> => {
       const p = PROBLEMS.find((x) => x.id === id);
       if (!p) throw { code: "not_found", message: `not found: problem ${id}` };
       return {
-        ...summary(p, lang),
+        ...p,
+        title: p.title[lang],
         lang,
-        statement: "…",
+        statement: lang === "es" ? "Devuelve los índices `nums`.\n\n```python\nx = 1\n```" : "Return the indices of `nums`.\n\n```python\nx = 1\n```",
         editorial: null,
-        hints: [],
-        signature: {},
+        hints: ["First hint.", "Second hint.", "Third hint."],
+        signature: SIGNATURE,
         time_limit_ms: 2000,
         memory_mb: 256,
-        public_tests: [],
-      } as ProblemView;
+        public_tests: [
+          { index: 1, input: { nums: [2, 7, 11, 15], target: 9 }, output: [0, 1] },
+          { index: 2, input: { nums: [3, 2, 4], target: 6 }, output: [1, 2] },
+        ],
+      };
     }),
     continueItem: vi.fn(async () => opts.continueItem ?? null),
     getSetting: vi.fn(async (key: string) => settings.get(key) ?? null),
@@ -108,6 +202,82 @@ export function createFakeApi(opts: { settings?: Record<string, JsonValue>; cont
       settings.set(key, value);
       return null;
     }),
+
+    editorial: vi.fn(async (problem: string) => {
+      const subs = submissions.filter((s) => s.problem_id === problem);
+      const solved = subs.some((s) => s.verdict === "accepted");
+      const failed = subs.filter((s) => s.verdict !== "accepted").length;
+      const reason = solved ? "accepted" : failed >= 3 ? "attempts" : null;
+      return {
+        unlocked: reason !== null,
+        reason,
+        failed_submits: failed,
+        required_failures: 3,
+        available: true,
+        text: reason ? "Use a **hash map**." : null,
+      } as const;
+    }),
+    lastLanguage: vi.fn(async () => opts.lastLanguage ?? null),
+    getStub: vi.fn(async (_p: string, lang: Language) => stubFor(lang)),
+    loadDraft: vi.fn(async (p: string, lang: Language) => {
+      const code = drafts.get(`${p}:${lang}`);
+      return code === undefined ? null : { code, updated_at: Date.now() };
+    }),
+    saveDraft: vi.fn(async (p: string, lang: Language, code: string) => {
+      drafts.set(`${p}:${lang}`, code);
+      return null;
+    }),
+    run: vi.fn(async (p: string, lang: Language, code: string, custom: CustomInput[], onEvent) => {
+      const r = await judge(onEvent, 2 + custom.length);
+      snap(p, lang, code, "run", r.verdict);
+      return r;
+    }),
+    submit: vi.fn(async (p: string, lang: Language, code: string, onEvent) => {
+      const report = await judge(onEvent, 7);
+      const id = nextId++;
+      submissions.unshift({
+        id,
+        problem_id: p,
+        language: lang,
+        verdict: report.verdict,
+        time_us: report.time_us,
+        memory_kb: report.memory_kb,
+        created_at: Date.now(),
+        code,
+        report,
+      });
+      snap(p, lang, code, "submit", report.verdict);
+      return { submission_id: id, report };
+    }),
+    listSubmissions: vi.fn(async (p: string) =>
+      submissions.filter((s) => s.problem_id === p).map(({ code: _c, report: _r, ...s }) => s),
+    ),
+    getSubmission: vi.fn(async (id: number) => {
+      const s = submissions.find((x) => x.id === id);
+      if (!s) throw { code: "not_found", message: `submission ${id}` };
+      return s;
+    }),
+    listSnapshots: vi.fn(async (p: string) => snapshots.filter((s) => s.problem_id === p)),
+    restoreSnapshot: vi.fn(async (id: number) => {
+      const s = snapshots.find((x) => x.id === id);
+      if (!s) throw { code: "not_found", message: `snapshot ${id}` };
+      const key = `${s.problem_id}:${s.language}`;
+      const current = drafts.get(key);
+      if (current !== undefined && current !== s.code) snap(s.problem_id, s.language, current, "restore", null);
+      drafts.set(key, s.code);
+      return s;
+    }),
+    getNote: vi.fn(async (p: string) => notes.get(p) ?? null),
+    setNote: vi.fn(async (p: string, body: string) => {
+      notes.set(p, body);
+      return null;
+    }),
+    unlockHint: vi.fn(async (p: string, tier: number) => {
+      const t = [...new Set([...(hints.get(p) ?? []), tier])].sort();
+      hints.set(p, t);
+      return t;
+    }),
+    unlockedHints: vi.fn(async (p: string) => hints.get(p) ?? []),
   };
-  return { api, settings };
+  return { api, settings, drafts, notes, snapshots, submissions, state, snap };
 }

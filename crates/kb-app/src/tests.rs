@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 1);
+    assert_eq!(info.user_schema_version, 2); // migrations 0001 + 0002
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -254,4 +254,87 @@ async fn continue_is_the_latest_existing_draft() {
     assert_eq!(c.problem_id, "two-sum");
     assert_eq!(c.title, "Suma de dos");
     assert_eq!(c.language, Language::Rust);
+}
+
+#[tokio::test]
+async fn editorial_unlocks_after_accepted_or_three_failures() {
+    let first = app("editorial").await;
+    // get_problem never carries the editorial.
+    assert_eq!(
+        first
+            .get_problem("two-sum", UiLang::En)
+            .await
+            .unwrap()
+            .editorial,
+        None
+    );
+    let locked = first.editorial("two-sum", UiLang::En).await.unwrap();
+    assert!(!locked.unlocked && locked.available);
+    assert_eq!((locked.failed_submits, locked.required_failures), (0, 3));
+    assert_eq!(locked.text, None);
+
+    let wa = report_with(Verdict::WrongAnswer);
+    for i in 0..3 {
+        let st = first.editorial("two-sum", UiLang::En).await.unwrap();
+        assert!(!st.unlocked, "after {i} failures");
+        first
+            .store
+            .user
+            .record_submission("two-sum", Language::Python, &format!("x{i}"), &wa)
+            .await
+            .unwrap();
+    }
+    let st = first.editorial("two-sum", UiLang::En).await.unwrap();
+    assert_eq!(
+        (st.unlocked, st.reason),
+        (true, Some(EditorialReason::Attempts))
+    );
+    assert!(st.text.unwrap().len() > 10);
+
+    let other = app("editorial-ac").await;
+    other
+        .store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Rust,
+            "x",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+    let st = other.editorial("two-sum", UiLang::Es).await.unwrap();
+    assert_eq!(
+        (st.unlocked, st.reason),
+        (true, Some(EditorialReason::Accepted))
+    );
+    assert_eq!(st.failed_submits, 0);
+}
+
+#[tokio::test]
+async fn last_language_follows_the_latest_draft() {
+    let app = app("lastlang").await;
+    assert_eq!(app.last_language("two-sum").await.unwrap(), None);
+    app.save_draft("two-sum", Language::Rust, "a")
+        .await
+        .unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(5));
+    app.save_draft("two-sum", Language::Php, "b").await.unwrap();
+    assert_eq!(
+        app.last_language("two-sum").await.unwrap(),
+        Some(Language::Php)
+    );
+}
+
+fn report_with(verdict: Verdict) -> Report {
+    Report {
+        verdict,
+        tests: vec![],
+        total_tests: 7,
+        first_failure: None,
+        compile_output: None,
+        time_us: 1,
+        memory_kb: 1,
+        compile: None,
+    }
 }

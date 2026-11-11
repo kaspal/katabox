@@ -63,7 +63,7 @@ describe("Theme", () => {
     renderApp("/settings");
     expect(await screen.findByTestId("dev-data-badge")).toHaveTextContent("DEV DATA");
     expect(await screen.findByText("C:\\data\\dev.katabox.app-dev")).toBeInTheDocument();
-    expect(screen.getByText("Installed")).toBeInTheDocument();
+    expect(screen.getAllByText("Installed")).toHaveLength(3);
     expect(screen.getByText("rustc not found")).toBeInTheDocument();
   });
 });
