@@ -66,7 +66,7 @@ and the bridge policy. This is configuration, not enforcement (see Follow-ups).
 | --- | --- | --- | --- |
 | basedpyright 1.40.2 | bundled Node 26 | its install folder (bundled typeshed stubs), the project | no interpreter configured (bundled typeshed only, never starts Python); `openFilesOnly`; no auto-search paths, no library code |
 | typescript-language-server 6.0.3 + TypeScript 6.0.3 | bundled Node 26 | its install folder (lib `.d.ts`), the project (`tsconfig.json`: strict, `types: []`, the solution only) | automatic type acquisition off, no plugins, no package auto-imports, tsserver log off |
-| rust-analyzer 1.99.1 | itself | the Rust sysroot (std sources from rust-src 1.99.1), the project (`rust-project.json`, edition 2024) | no build scripts, no proc-macros, no `checkOnSave`, no cargo, `files.watcher: client` |
+| rust-analyzer 1.99.1 | itself | the Rust sysroot and std's sources (rust-src 1.99.1 in `tools/rust-src`, ADR 0015), the project (`rust-project.json`, edition 2024) | no build scripts, no proc-macros, no `checkOnSave`, no cargo, `files.watcher: client` |
 | phpactor 2026.10.07.0 | bundled PHP 8.5 (`-n`, mbstring only) | its phar, the project | analysis only; no extensions such as php-cs-fixer, phpstan, psalm or composer. **Not available on Windows** (below) |
 
 ### The bridge (`crates/kb-bridge`)
@@ -163,8 +163,8 @@ phpactor requires the PHP `posix` extension, which Windows builds of PHP do not 
 - Every connect starts a fresh server. A remount costs one server start (about 1 s for
   Python and TypeScript, a few seconds for rust-analyzer), and stale clients can't
   confuse a server.
-- rust-src is merged into the bundled Rust toolchain folder (std sources only; the judge
-  doesn't read them).
+- rust-src (std's sources) was merged into the bundled Rust toolchain folder; ADR 0015
+  moves it to `tools/rust-src`, which `rust-project.json`'s `sysroot_src` points to.
 
 ## Follow-ups
 - Run servers inside a **long-lived sandbox profile** (read-only toolchains and tools,

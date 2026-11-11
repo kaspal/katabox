@@ -5,6 +5,7 @@ import { Link, getRouteApi } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
+  Download,
   Loader2,
   Maximize2,
   Minimize2,
@@ -27,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ErrorNotice } from "@/components/ErrorNotice";
+import { InstallDialog } from "@/languages/InstallDialog";
 import { DifficultyLabel } from "@/components/Semantic";
 import { api } from "@/lib/api";
 import { useFocusMode } from "@/lib/focus";
@@ -62,6 +64,8 @@ export function WorkspacePage() {
   });
   const [layouts, setLayouts] = useSetting<Layouts>("workspace.layout", {}, parseLayouts, { mirror: true });
   const [language, setLanguage] = useState<Language | null>(null);
+  /** A language to offer installing (picked in the selector, or the current one). */
+  const [installFor, setInstallFor] = useState<Language | null>(null);
   const session = useEditorSession(problemId, language);
   const docLang = session.doc?.lang ?? null;
   const serverInfo = info.data?.language_servers.find((l) => l.language === docLang);
@@ -204,6 +208,13 @@ export function WorkspacePage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col" data-testid="workspace">
+      <InstallDialog
+        language={installFor}
+        onOpenChange={(open) => !open && setInstallFor(null)}
+        onInstalled={(l) => {
+          if (l !== language) void changeLanguage(l);
+        }}
+      />
       <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
         {!focus && (
           <Button asChild variant="ghost" size="icon" className="size-8">
@@ -224,7 +235,17 @@ export function WorkspacePage() {
                   ? t("workspace.save.error")
                   : ""}
           </span>
-          <Select value={language ?? undefined} onValueChange={(v) => void changeLanguage(v as Language)} disabled={busy}>
+          <Select
+            value={language ?? undefined}
+            onValueChange={(v) => {
+              const l = v as Language;
+              const tc = toolchains.get(l);
+              // Not installed: offer to install instead of switching to a dead end.
+              if (tc !== undefined && !tc.present) setInstallFor(l);
+              else void changeLanguage(l);
+            }}
+            disabled={busy}
+          >
             <SelectTrigger size="sm" className="w-36" aria-label={t("workspace.language")}>
               <SelectValue placeholder={t("common.loading")} />
             </SelectTrigger>
@@ -233,9 +254,11 @@ export function WorkspacePage() {
                 const tc = toolchains.get(l);
                 const missing = tc !== undefined && !tc.present;
                 return (
-                  <SelectItem key={l} value={l} disabled={missing}>
+                  <SelectItem key={l} value={l}>
                     {t(`languages.${l}`)}
-                    {missing && <span className="text-xs text-muted-foreground"> · {t("settings.missing")}</span>}
+                    {missing && (
+                      <span className="text-xs text-muted-foreground"> · {t("install.notInstalled")}</span>
+                    )}
                   </SelectItem>
                 );
               })}
@@ -311,6 +334,21 @@ export function WorkspacePage() {
                 <Skeleton className="m-4 h-40" />
               ) : (
                 <div className="flex h-full min-h-0 flex-col">
+                  {toolchains.get(session.doc.lang)?.present === false && (
+                    <div
+                      role="status"
+                      data-testid="language-missing"
+                      className="flex items-center gap-3 border-b bg-muted/40 px-3 py-2 text-sm"
+                    >
+                      <span className="min-w-0 flex-1">
+                        {t("install.missingTitle", { language: t(`languages.${session.doc.lang}`) })}
+                      </span>
+                      <Button size="sm" className="h-7 gap-1.5" onClick={() => setInstallFor(session.doc!.lang)}>
+                        <Download aria-hidden className="size-3.5" />
+                        {t("install.install")}
+                      </Button>
+                    </div>
+                  )}
                   <div className="min-h-0 flex-1">
                     <CodeEditor
                       docKey={session.docKey}
@@ -334,6 +372,7 @@ export function WorkspacePage() {
                   <EditorStatusBar
                     language={session.doc.lang}
                     server={server.status}
+                    onInstall={() => setInstallFor(session.doc!.lang)}
                     status={editorStatus}
                     onFormat={() => {
                       if (editorView.current) formatDocument(editorView.current);

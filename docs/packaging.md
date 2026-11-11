@@ -20,12 +20,21 @@
   exception, `deny.toml`); include its license text in the third-party notices
   ([third-party-notices.md](third-party-notices.md)).
 
-## Language servers (ADR 0014)
+## Languages: runtimes and language servers (ADR 0014, 0015)
 
-- Shipped or downloaded into `<sandbox root>/tools`: basedpyright, typescript-language-server
-  and TypeScript (Node packages from `scripts/language-servers/package-lock.json`), and
-  rust-analyzer. rust-src goes into the bundled Rust toolchain. The product download
-  manager must verify them like the toolchains.
+- Nothing is bundled: on first run the app asks which languages to install and downloads
+  them (kb-toolchain) into the sandbox root (`<local app data>/sandbox` by default):
+  `toolchains/` for the judge, `tools/` for language servers (basedpyright,
+  typescript-language-server + TypeScript, rust-src, rust-analyzer).
+- Sizes on Windows (download / on disk): Python 98 MB / 297 MB, JavaScript/TypeScript
+  46 MB / 140 MB, PHP 87 MB / 103 MB, Rust 244 MB / 959 MB (Node is shared between
+  Python's language server and TypeScript).
+- Network: HTTPS to the manifest's hosts only (github.com and its release-asset hosts,
+  nodejs.org, windows.php.net and downloads.php.net, static.rust-lang.org,
+  registry.npmjs.org), the system proxy, only when the user installs. Firewall or proxy
+  allow-lists need those hosts.
+- Pins are compiled into the app (`crates/kb-toolchain/manifest.toml`); each app version
+  installs exactly its pinned files.
 - They run outside the sandbox; their license texts must ship with them (see
   [third-party-notices.md](third-party-notices.md)).
 - PHP has no language server on Windows (phpactor needs the posix extension).

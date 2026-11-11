@@ -1,6 +1,6 @@
 [package]
 name = "kb-toolchain"
-description = "Download, verify and locate language runtimes"
+description = "Install, verify and locate language runtimes and language servers (ADR 0015)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,7 +8,44 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+base64 = "0.23.1"
+flate2 = "1.1.11"
+fs4 = "1.1.0"
+futures-util = "0.3.34"
 kb-core.workspace = true
+reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider", "system-proxy", "stream", "http2"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-platform-verifier = "0.7.1"
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+sha2.workspace = true
+specta = { workspace = true, optional = true }
+tar = { version = "0.4.46", default-features = false }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["rt", "fs", "sync", "time", "macros", "io-util", "net"] }
+tokio-util = "0.7.20"
+toml.workspace = true
+zip = { version = "7.3.0", default-features = false, features = ["deflate-flate2"] }
+
+[target.'cfg(unix)'.dependencies]
+# syncfs before writing a receipt (safe wrapper; the workspace denies unsafe).
+rustix = { version = "1", features = ["fs"] }
+
+[[bin]]
+name = "kb-toolchain"
+path = "src/bin/kb-toolchain.rs"
 
 [lints]
 workspace = true
+
+[features]
+# TypeScript bindings for the desktop app (tauri-specta).
+specta = ["dep:specta", "kb-core/specta"]
+
+[dev-dependencies]
+rcgen = "0.14.7"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+serde_json.workspace = true
+tempfile = "3.27.0"
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "io-util", "time"] }
+tokio-rustls = { version = "0.26.6", default-features = false, features = ["ring", "tls12"] }

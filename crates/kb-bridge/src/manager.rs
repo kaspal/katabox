@@ -42,6 +42,10 @@ pub struct LspConnection {
     pub language_id: String,
 }
 
+/// Whether `language`'s server components are installed (the app answers from
+/// kb-toolchain's receipts; without it, the files are checked).
+pub type InstalledFn = Arc<dyn Fn(Language) -> bool + Send + Sync>;
+
 /// Builds the server for a language (replaceable in tests).
 pub type SpecFn =
     Arc<dyn Fn(Language, &Project, &Path) -> Result<ServerSpec, String> + Send + Sync>;
@@ -52,6 +56,7 @@ pub struct LspManager {
     state_root: PathBuf,
     config: SessionConfig,
     spec: Option<SpecFn>,
+    installed: Option<InstalledFn>,
     sessions: Mutex<HashMap<Language, Session>>,
     next_id: AtomicU32,
 }
@@ -84,6 +89,7 @@ impl LspManager {
             state_root: data_root.join("lsp-state"),
             config: SessionConfig::default(),
             spec: None,
+            installed: None,
             sessions: Mutex::new(HashMap::new()),
             next_id: AtomicU32::new(1),
         }
@@ -99,6 +105,13 @@ impl LspManager {
         self
     }
 
+    /// Decide availability from install receipts instead of files (ADR 0015): a server
+    /// whose receipt is gone is unavailable at once, even while its files still exist.
+    pub fn with_installed(mut self, installed: InstalledFn) -> Self {
+        self.installed = Some(installed);
+        self
+    }
+
     pub fn toolchains(&self) -> &Toolchains {
         &self.tc
     }
@@ -108,7 +121,17 @@ impl LspManager {
         if self.spec.is_some() {
             return None;
         }
-        spec::unavailable_reason(server_language(language), &self.tc)
+        let key = server_language(language);
+        let reason = spec::unavailable_reason(key, &self.tc);
+        match &self.installed {
+            // Platform reasons (PHP on Windows) come first; then the receipts decide.
+            Some(f) => match reason {
+                Some(r) if !r.starts_with("not installed") => Some(r),
+                _ if !f(key) => Some("not installed".into()),
+                _ => None,
+            },
+            None => reason,
+        }
     }
 
     /// Start a server for `language` on `problem`, replacing (and stopping) the language's
@@ -130,9 +153,10 @@ impl LspManager {
         }
         let project = project::prepare(&self.projects_root, problem, language, text, &self.tc)?;
         let state = self.state_root.join(key.id());
-        let made = match &self.spec {
-            Some(f) => f(key, &project, &state),
-            None => spec::server_for(key, &self.tc, &project, &state),
+        let made = match (&self.spec, self.unavailable_reason(key)) {
+            (Some(f), _) => f(key, &project, &state),
+            (None, Some(reason)) => Err(reason),
+            (None, None) => spec::server_for(key, &self.tc, &project, &state),
         };
         let spec = match made {
             Ok(s) => s,
@@ -181,6 +205,18 @@ impl LspManager {
                 drop(sessions);
                 s.stop().await;
             }
+        }
+    }
+
+    /// Stop `language`'s server, whatever its session (before its files are removed).
+    pub async fn stop_language(&self, language: Language) {
+        let removed = self
+            .sessions
+            .lock()
+            .await
+            .remove(&server_language(language));
+        if let Some(s) = removed {
+            s.stop().await;
         }
     }
 

@@ -15,6 +15,7 @@ mod error;
 mod root;
 
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 
 use kb_core::{JudgeEvent, Language, Report, TestCase, TestKind, Verdict};
 use kb_judge::{JudgeEnv, Problem};
@@ -87,6 +88,18 @@ pub struct AppInfo {
     pub platform: String,
 }
 
+/// What the first-run screen and Settings → Languages show.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct LanguagesInfo {
+    /// Python, JavaScript/TypeScript, PHP, Rust: each a runtime plus its language server.
+    pub languages: Vec<kb_toolchain::LanguageStatus>,
+    /// Free bytes on the sandbox root's volume, when known.
+    pub free_bytes: Option<u64>,
+    /// KataBox can install languages on this OS and CPU.
+    pub platform_supported: bool,
+}
+
 /// The draft to continue on Home: the most recently edited one whose problem exists.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
@@ -152,7 +165,10 @@ pub type CustomInput = Map<String, Value>;
 #[derive(Debug)]
 pub struct App {
     store: Store,
-    env: JudgeEnv,
+    /// Built from kb-toolchain's receipts; rebuilt after every install or uninstall.
+    env: RwLock<JudgeEnv>,
+    /// Installs languages into the sandbox root (ADR 0015).
+    toolchains: Arc<kb_toolchain::Manager>,
     root: PathBuf,
     root_source: RootSource,
     dev_data: bool,
@@ -178,9 +194,18 @@ impl App {
             paths.dev_root.as_deref(),
             &paths.local_data_dir,
         )?;
+        let toolchains = Arc::new(kb_toolchain::Manager::open(&root)?);
+        // Leftovers of an interrupted install go first (skipped while the CLI installs).
+        match toolchains.purge() {
+            Ok(()) | Err(kb_toolchain::Error::Busy) => {}
+            Err(e) => return Err(e.into()),
+        }
+        let installed = toolchains.clone();
         Ok(App {
-            lsp: kb_bridge::LspManager::new(&root, &paths.local_data_dir),
-            env: JudgeEnv::dev(&root),
+            lsp: kb_bridge::LspManager::new(&root, &paths.local_data_dir)
+                .with_installed(Arc::new(move |l| installed.servers_installed(l))),
+            env: RwLock::new(judge_env(&toolchains)),
+            toolchains,
             store,
             root,
             root_source,
@@ -203,20 +228,31 @@ impl App {
     }
 
     pub async fn app_info(&self) -> Result<AppInfo> {
+        let env = self.env();
         let toolchains = kb_judge::languages::SUPPORTED
             .into_iter()
-            .map(|language| match self.env.toolchain_program(language) {
-                Ok(p) => ToolchainInfo {
+            .map(|language| match env.toolchain_program(language) {
+                Ok(p) if self.toolchains.runtime_installed(language) => ToolchainInfo {
                     language,
                     present: true,
                     program: Some(p.display().to_string()),
                     problem: None,
                 },
+                Ok(_) => ToolchainInfo {
+                    language,
+                    present: false,
+                    program: None,
+                    problem: Some("not installed".into()),
+                },
                 Err(e) => ToolchainInfo {
                     language,
                     present: false,
                     program: None,
-                    problem: Some(e.to_string()),
+                    problem: Some(if self.toolchains.runtime_installed(language) {
+                        e.to_string()
+                    } else {
+                        "not installed".into()
+                    }),
                 },
             })
             .collect();
@@ -242,6 +278,67 @@ impl App {
                 .collect(),
             platform: std::env::consts::OS.to_string(),
         })
+    }
+
+    fn env(&self) -> JudgeEnv {
+        self.env.read().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
+    fn refresh_env(&self) {
+        *self.env.write().unwrap_or_else(|e| e.into_inner()) = judge_env(&self.toolchains);
+    }
+
+    // --- Languages (ADR 0015) ---------------------------------------------------------
+
+    pub fn languages(&self) -> LanguagesInfo {
+        LanguagesInfo {
+            languages: self.toolchains.status(),
+            free_bytes: self.toolchains.free_space(),
+            platform_supported: self.toolchains.platform().is_some(),
+        }
+    }
+
+    /// Download and install `languages` (runtime and language server each; Node comes
+    /// with TypeScript and Python's server). Progress goes to `on_event`. A failed or
+    /// cancelled install keeps its partial downloads, so installing again resumes.
+    pub async fn install_languages<F>(&self, languages: &[Language], on_event: F) -> Result<()>
+    where
+        F: Fn(kb_toolchain::InstallEvent) + Send + Sync,
+    {
+        let downloader = kb_toolchain::Downloader::system()?;
+        let result = self
+            .toolchains
+            .install(
+                languages,
+                kb_toolchain::InstallOptions::default(),
+                &downloader,
+                &on_event,
+            )
+            .await;
+        self.refresh_env();
+        Ok(result?)
+    }
+
+    pub fn cancel_install(&self) {
+        self.toolchains.cancel();
+    }
+
+    /// Remove a language (Node stays while another installed language needs it). Refused
+    /// with `judge_busy` while a Run or Submit is in progress.
+    pub async fn uninstall_language(&self, language: Language) -> Result<()> {
+        let _judge = self.judge_slot()?;
+        // 1. Receipts go first: from now on nothing counts the language as installed.
+        let u = self.toolchains.uninstall_prepare(language)?;
+        self.refresh_env();
+        // 2. Stop the language servers whose files are about to go (Windows file locks).
+        for l in kb_judge::languages::SUPPORTED {
+            if !self.toolchains.servers_installed(l) {
+                self.lsp.stop_language(l).await;
+            }
+        }
+        // 3. Then the folders.
+        self.toolchains.uninstall_finish(u)?;
+        Ok(())
     }
 
     // --- Problems -------------------------------------------------------------------
@@ -419,7 +516,7 @@ impl App {
     where
         F: FnMut(JudgeEvent) + Send + 'static,
     {
-        let env = self.env.clone();
+        let env = self.env();
         let code = code.to_string();
         let report = tokio::task::spawn_blocking(move || {
             kb_judge::judge_with_progress(&problem, &tests, language, &code, &env, &mut on_event)
@@ -604,6 +701,25 @@ impl App {
     pub async fn set_setting(&self, key: &str, value: &Value) -> Result<()> {
         Ok(self.store.user.set_setting(key, value).await?)
     }
+}
+
+/// The judge's runtimes: only languages whose runtime has a valid install receipt.
+fn judge_env(toolchains: &kb_toolchain::Manager) -> JudgeEnv {
+    let mut env = JudgeEnv::new(toolchains.root());
+    let manifest = kb_toolchain::Manifest::builtin();
+    for language in kb_judge::languages::SUPPORTED {
+        if !toolchains.runtime_installed(language) {
+            continue;
+        }
+        let dir = manifest
+            .language(language)
+            .and_then(|u| u.runtime.first())
+            .and_then(|id| toolchains.layout().component_dir(id));
+        if let Some(dir) = dir {
+            env = env.with_toolchain(language, dir);
+        }
+    }
+    env
 }
 
 #[cfg(test)]

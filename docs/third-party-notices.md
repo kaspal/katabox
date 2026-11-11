@@ -12,6 +12,10 @@ the app are checked against the allow-lists in `deny.toml` and
 | --- | --- | --- |
 | hakoniwa | LGPL-3.0-only WITH LGPL-3.0-linking-exception | Linux sandbox (kb-runner, ADR 0007); approved exception in `deny.toml`; include its license text |
 | win32job | MIT OR Apache-2.0 | Windows Job Object for language servers (kb-bridge, ADR 0014) |
+| reqwest, hyper, rustls, rustls-platform-verifier | MIT OR Apache-2.0 (rustls also ISC) | HTTPS downloads of languages (kb-toolchain, ADR 0015) |
+| ring, rustls-webpki, untrusted | ISC (ring: Apache-2.0 AND ISC) | TLS cryptography and certificate checks |
+| tar, flate2, zip | MIT OR Apache-2.0 / MIT | Archive extraction (kb-toolchain) |
+| fs4, rustix | MIT OR Apache-2.0 (rustix: also Apache-2.0 WITH LLVM-exception) | Install lock, free space, syncfs |
 | url | MIT OR Apache-2.0 | kb-bridge |
 | @codemirror/lsp-client 6.3.0 | MIT | Editor ↔ language server client (ADR 0014) |
 
@@ -26,7 +30,7 @@ go into the bundle's generated notices.
 | typescript-language-server | 6.0.3 | Apache-2.0 | npm, same lockfile |
 | TypeScript | 6.0.3 | Apache-2.0 | npm, same lockfile |
 | rust-analyzer | 1.99.1 | MIT OR Apache-2.0 | static.rust-lang.org dist 2026-10-15 |
-| rust-src (Rust standard library sources) | 1.99.1 | MIT OR Apache-2.0 | static.rust-lang.org dist 2026-10-15 |
+| rust-src (Rust standard library sources) | 1.99.1 | MIT OR Apache-2.0 | static.rust-lang.org dist 2026-10-15 (`tools/rust-src`) |
 | phpactor | 2026.10.07.0 | MIT | GitHub release (Linux only; unavailable on Windows) |
 
 ## Language runtimes (downloaded; ADR 0002)

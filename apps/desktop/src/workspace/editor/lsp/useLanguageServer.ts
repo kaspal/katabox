@@ -107,8 +107,25 @@ export function useLanguageServer(
     }
     const { language, conn } = connected;
     let live = true;
+    // Requests this client is still waiting for (id → method), and its message handler.
+    const pending = new Map<number | string, string>();
+    let own: ((m: string) => void) | null = null;
+    const track = (message: string) => {
+      try {
+        const m = JSON.parse(message) as { id?: number | string; method?: string };
+        if (m.id !== undefined && m.method === undefined) pending.delete(m.id);
+      } catch {
+        // not JSON: nothing to track
+      }
+    };
     const transport: Transport = {
       send(message) {
+        try {
+          const m = JSON.parse(message) as { id?: number | string; method?: string };
+          if (m.id !== undefined && m.method !== undefined) pending.set(m.id, m.method);
+        } catch {
+          // not JSON: nothing to track
+        }
         api.lspSend(language, conn.session, message).catch((e) => {
           // The session ended (stopped while idle): show it; typing wakes it.
           if (live && isAppError(e) && e.code === "language_server_not_connected") {
@@ -117,8 +134,16 @@ export function useLanguageServer(
           }
         });
       },
-      subscribe: (h) => void handlers.current.add(h),
-      unsubscribe: (h) => void handlers.current.delete(h),
+      subscribe: (h) => {
+        own = (m) => {
+          track(m);
+          h(m);
+        };
+        handlers.current.add(own);
+      },
+      unsubscribe: () => {
+        if (own) handlers.current.delete(own);
+      },
     };
     const client = new LSPClient({
       rootUri: conn.root_uri,
@@ -129,6 +154,15 @@ export function useLanguageServer(
     setExtension(client.plugin(conn.file_uri, conn.language_id));
     return () => {
       live = false;
+      // A replaced client's requests will never be answered (its session or process is
+      // gone). Answer them here, so none times out later as an unhandled rejection:
+      // initialize with no capabilities, everything else with "nothing".
+      const deliver = own;
+      for (const [id, method] of pending) {
+        const result = method === "initialize" ? { capabilities: {} } : null;
+        deliver?.(JSON.stringify({ jsonrpc: "2.0", id, result }));
+      }
+      pending.clear();
       client.disconnect();
       setExtension(null);
     };

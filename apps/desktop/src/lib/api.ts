@@ -9,9 +9,11 @@ import {
   type ContinueItem,
   type Draft,
   type EditorialState,
+  type InstallEvent,
   type JsonValue,
   type JudgeEvent,
   type Language,
+  type LanguagesInfo,
   type LspConnection,
   type LspEvent,
   type ProblemFilter,
@@ -104,6 +106,16 @@ export const api = {
     call(commands.lspSend(language, session, message)),
   lspDisconnect: (language: Language, session: number): Promise<null> =>
     call(commands.lspDisconnect(language, session)),
+
+  // Languages: runtimes and language servers (ADR 0015)
+  languages: (): Promise<LanguagesInfo> => call(commands.languages()),
+  installLanguages: (languages: Language[], onEvent: (e: InstallEvent) => void): Promise<null> => {
+    const ch = new Channel<InstallEvent>();
+    ch.onmessage = onEvent;
+    return call(commands.installLanguages(languages, ch));
+  },
+  cancelInstall: (): Promise<null> => call(commands.cancelInstall()),
+  uninstallLanguage: (language: Language): Promise<null> => call(commands.uninstallLanguage(language)),
 };
 
 export type Api = typeof api;

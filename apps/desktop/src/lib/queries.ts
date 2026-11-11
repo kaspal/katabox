@@ -16,6 +16,7 @@ export const EMPTY_FILTER: ProblemFilter = {
 
 export const queryKeys = {
   appInfo: ["app_info"] as const,
+  languages: ["languages"] as const,
   problems: (filter: ProblemFilter) => ["problems", filter] as const,
   problem: (id: string, lang: string) => ["problem", id, lang] as const,
   continueItem: (lang: string) => ["continue", lang] as const,
@@ -23,6 +24,11 @@ export const queryKeys = {
 
 export function useAppInfo() {
   return useQuery({ queryKey: queryKeys.appInfo, queryFn: api.appInfo });
+}
+
+/** Install state of each language, with sizes and free space (ADR 0015). */
+export function useLanguages() {
+  return useQuery({ queryKey: queryKeys.languages, queryFn: api.languages });
 }
 
 /** Problems matching `filter`, titles in the UI language. */

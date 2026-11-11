@@ -24,7 +24,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install libseccomp (kb-runner, ADR 0007)
         run: sudo apt-get update && sudo apt-get install -y libseccomp-dev
-      - name: Fetch pinned Python and Node toolchains (Linux attack suite)
+      # kb-toolchain installs Python and JS/TS from the compiled-in pins (ADR 0015).
+      - name: Install Python and JS/TS (Linux attack suite, judge, language servers)
         run: scripts/fetch-toolchains.sh
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
@@ -47,10 +48,13 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      # Also fetches the pinned language servers into target/katabox/tools (ADR 0014).
-      - name: Fetch pinned Python, Node, PHP and Rust toolchains and language servers
+      # kb-toolchain installs every language, runtimes and language servers, from the
+      # compiled-in pins into target/katabox (ADR 0015): the tests below use that root.
+      - name: Install every language through kb-toolchain
         run: pwsh scripts/fetch-toolchains.ps1
-      - run: cargo clippy -p kb-runner -p kb-judge -p kb-store -p kb-bridge --all-targets -- -D warnings
+      - run: cargo clippy -p kb-runner -p kb-judge -p kb-store -p kb-bridge -p kb-toolchain --all-targets -- -D warnings
+      # Downloads against a local HTTPS server: checksums, redirects, zip/tar-slip, resume.
+      - run: cargo test -p kb-toolchain
       - run: cargo test -p kb-runner -- --nocapture
       # Judge end-to-end tests on two-sum (Python, TypeScript, PHP, Rust in the sandbox).
       - run: cargo test -p kb-judge
@@ -77,8 +81,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install libseccomp
         run: sudo apt-get update && sudo apt-get install -y libseccomp-dev
-      - name: Fetch pinned Python toolchain
-        run: scripts/fetch-toolchains.sh
+      - name: Install Python and JS/TS runtimes through kb-toolchain
+        run: scripts/fetch-toolchains.sh --runtimes-only
       - run: cargo clippy -p kb-runner --all-targets --features unscoped-fallback-for-tests -- -D warnings
       - name: Probe (user namespaces restricted)
         run: cargo run -q -p kb-runner --bin kb-sandbox -- probe

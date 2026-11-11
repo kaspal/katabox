@@ -16,7 +16,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 | `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009) |
 | `crates/kb-runner` | Sandboxed execution. **Security-critical** |
 | `crates/kb-store` | SQLite via sqlx (runtime queries only): `content.db` (read-only, FTS5) + `user.db` (WAL, migrations in `migrations/`; ADR 0010) |
-| `crates/kb-toolchain` | Download/verify/locate runtimes |
+| `crates/kb-toolchain` | Installs languages (runtimes + language servers) into the sandbox root: compiled-in `manifest.toml` (the only place pins live), safe downloader and extractor, receipts; `kb-toolchain` CLI (ADR 0015). **Download verification lives here** |
 | `crates/kb-bridge` | Language servers over stdio, outside the sandbox: sessions, message policy, virtual project per problem (ADR 0014). DAP later |
 | `crates/kb-pack` | `kb-pack validate [--run]` and `kb-pack build` (content.db) CLI for problem packages |
 | `content/problems/` | Problem packages (CC BY-SA 4.0) |
@@ -25,7 +25,9 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 ## Commands
 
 ```sh
-scripts/fetch-toolchains.sh # Linux: pinned Python + Node for the sandbox and judge tests (.ps1 on Windows adds PHP + Rust, and the language servers into <root>/tools unless -NoLanguageServers)
+scripts/fetch-toolchains.sh # Linux: Python + JS/TS into target/katabox via `kb-toolchain install` (.ps1 on Windows: every language; -NoLanguageServers for runtimes only)
+cargo run -p kb-toolchain -- list            # what is installed in the dev root (install/uninstall LANG; --root DIR)
+KB_REAL_PINS=1 cargo test -p kb-toolchain --release --test real_pins -- --nocapture  # download and check every pin (network; required before changing manifest.toml)
 cargo test                       # library crates (default-members); Linux needs libseccomp-dev
 cargo deny check licenses        # license check (hakoniwa is an approved LGPL exception)
 kb-sandbox probe                 # Linux: what this kernel supports (cargo run -p kb-runner --bin kb-sandbox -- probe)
@@ -51,6 +53,7 @@ cargo run -p katabox-desktop --bin export-bindings  # regenerate apps/desktop/sr
 - The UI never touches the file system or spawns processes; it calls typed Tauri commands through the generated `bindings.ts` (never `invoke` with strings). Commands return `Result<T, AppError>` with a stable error code (ADR 0011).
 - No network access at runtime except toolchain, pack and update downloads.
 - No telemetry, ever.
+- Pins (URL, size, SHA-256) change only in `crates/kb-toolchain/manifest.toml`, and only after the real-pins test downloaded and matched them. Installs never execute anything (no npm, no installers) and keep ADR 0015's rules: allow-listed HTTPS hosts and redirects, verify before extract, whole-folder promotion, receipt last.
 - Language servers (ADR 0014) run outside the sandbox and **never execute user code**: no build scripts, proc-macros, `cargo check`, interpreters, type acquisition or commands. rust-analyzer never invokes cargo; never add cargo to the bundled Rust toolchain. Server settings and the message policy live in `crates/kb-bridge` (`spec.rs`, `policy.rs`); loosening either needs the maintainer's sign-off.
 - Every user-facing string goes through i18n (English and Spanish): add the key to both `apps/desktop/src/i18n/locales/{en,es}.json` (keys are typed; a parity test checks both). Show errors and judge messages by their stable codes (`errors.<code>`, `judge.verdict.<v>`, `judge.message.<code>`). Colors for verdicts, difficulty and status always come with an icon or label, and design tokens must keep the WCAG AA contrast test passing (ADR 0012).
 - Workspace state (drafts, notes, snapshots with verdicts, layout and editor settings `workspace.layout`, `editor.keymap`, `editor.font_size`, `editor.language`) and its save rules are in ADR 0013; keep CodeMirror and other heavy code inside the lazy workspace route.

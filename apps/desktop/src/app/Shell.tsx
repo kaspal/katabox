@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Outlet } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Boxes, Command as CommandIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,22 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CommandPalette } from "@/app/CommandPalette";
 import { DEV_NAV, NAV } from "@/app/nav";
 import { useFocusMode } from "@/lib/focus";
-import { useAppInfo } from "@/lib/queries";
+import { useAppInfo, useLanguages } from "@/lib/queries";
+import { FirstRun } from "@/languages/FirstRun";
+
+/**
+ * The first-run screen (ADR 0015): decided once, when the language list first loads, and
+ * kept until the user finishes or skips it (so an install's success state stays visible).
+ */
+function useFirstRun() {
+  const langs = useLanguages();
+  const [show, setShow] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (show !== null || !langs.data) return;
+    setShow(langs.data.platform_supported && !langs.data.languages.some((l) => l.runtime_installed));
+  }, [langs.data, show]);
+  return { show: show === true, hide: () => setShow(false) };
+}
 
 /** Left navigation rail, top bar (DEV DATA badge, palette) and the page. */
 export function Shell() {
@@ -16,6 +31,11 @@ export function Shell() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const info = useAppInfo();
   const { focus } = useFocusMode();
+  const firstRun = useFirstRun();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Settings and the dev screens stay reachable from the rail.
+  const gated = firstRun.show && !pathname.startsWith("/settings") && !pathname.startsWith("/dev");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -91,7 +111,17 @@ export function Shell() {
       </header>
 
       <main className="min-h-0 overflow-auto">
-        <Outlet />
+        {gated ? (
+          <FirstRun
+            onDone={() => {
+              firstRun.hide();
+              void navigate({ to: "/" });
+            }}
+            onSkip={firstRun.hide}
+          />
+        ) : (
+          <Outlet />
+        )}
       </main>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />

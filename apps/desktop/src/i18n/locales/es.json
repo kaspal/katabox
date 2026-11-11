@@ -201,12 +201,6 @@
       "dev": "Raíz de desarrollo",
       "app_data": "Datos de la app"
     },
-    "toolchains": "Entornos de los lenguajes",
-    "toolchainLanguage": "Lenguaje",
-    "toolchainStatus": "Estado",
-    "toolchainPath": "Programa",
-    "present": "Instalado",
-    "missing": "Falta",
     "editor": "Editor",
     "keymap": "Atajos de teclado",
     "keymaps": {
@@ -217,7 +211,8 @@
     "fontSize": "Tamaño de letra",
     "ligatures": "Ligaduras de la fuente",
     "ligaturesOff": "Desactivadas",
-    "ligaturesOn": "Activadas"
+    "ligaturesOn": "Activadas",
+    "languages": "Lenguajes"
   },
   "languages": {
     "python": "Python",
@@ -242,7 +237,18 @@
     "store": "No se pudo leer o escribir la base de datos.",
     "internal": "KataBox no pudo iniciar o tuvo un error inesperado.",
     "language_server_unavailable": "No hay servidor de lenguaje para este lenguaje aquí.",
-    "language_server_not_connected": "El servidor de lenguaje no está en marcha; se reinicia al escribir."
+    "language_server_not_connected": "El servidor de lenguaje no está en marcha; se reinicia al escribir.",
+    "download_failed": "Una descarga falló. Reintentar continúa donde se detuvo.",
+    "network_unavailable": "No se pudo conectar con el servidor de descarga. Revisa tu conexión y vuelve a intentarlo.",
+    "host_not_allowed": "Una descarga apuntaba a un sitio en el que KataBox no confía, así que se detuvo.",
+    "checksum_mismatch": "Una descarga no coincidía con su suma de verificación y se descartó.",
+    "size_mismatch": "Una descarga tenía un tamaño incorrecto y se descartó.",
+    "unsafe_archive": "Un archivo descargado contenía algo inseguro y no se instaló.",
+    "not_enough_space": "No hay espacio libre suficiente en el disco para esta instalación.",
+    "file_locked": "Un archivo está en uso (un antivirus o un programa abierto). Espera un momento y vuelve a intentarlo.",
+    "install_cancelled": "Se canceló la instalación.",
+    "install_busy": "Hay otra instalación o desinstalación en curso.",
+    "unsupported_platform": "KataBox todavía no puede instalar lenguajes en este sistema."
   },
   "judge": {
     "verdict": {
@@ -339,5 +345,64 @@
     "position": "Lín {{line}}, Col {{col}}",
     "format": "Formatear",
     "formatHint": "Formatear documento (Mayús+Alt+F)"
+  },
+  "install": {
+    "firstRunTitle": "Elige los lenguajes que quieres instalar",
+    "firstRunIntro": "KataBox ejecuta tu código con su propia copia de cada lenguaje: se descarga una vez de los sitios oficiales, se comprueba con sumas de verificación fijadas y se guarda dentro de la carpeta de KataBox. Elige los lenguajes que quieras; podrás añadir o quitar lenguajes más tarde en Ajustes.",
+    "notNow": "Ahora no",
+    "unit": {
+      "python": "Python",
+      "typescript": "JavaScript / TypeScript",
+      "php": "PHP",
+      "rust": "Rust"
+    },
+    "includes": {
+      "python": "Python 3.14, Node.js 26 y el servidor de lenguaje basedpyright",
+      "typescript": "Node.js 26, TypeScript 6 y su servidor de lenguaje",
+      "php": "PHP 8.5",
+      "rust": "Rust 1.99, las fuentes de su biblioteca estándar y rust-analyzer"
+    },
+    "sizes": "{{download}} de descarga · {{disk}} en disco",
+    "installed": "Instalado",
+    "notInstalled": "No instalado",
+    "unavailable": "No disponible en este sistema",
+    "freeSpace": "Espacio libre en disco: {{size}}",
+    "selected": "Seleccionado: {{download}} de descarga, {{disk}} en disco",
+    "install": "Instalar",
+    "installSelected": "Instalar selección",
+    "cancel": "Cancelar",
+    "retry": "Reintentar",
+    "done": "Listo",
+    "uninstall": "Desinstalar",
+    "uninstallTitle": "¿Desinstalar {{language}}?",
+    "uninstallHint": "Se quitan su entorno de ejecución y su servidor de lenguaje (Node.js se mantiene mientras otro lenguaje lo necesite). Tus borradores, notas y envíos se conservan.",
+    "phase": {
+      "queued": "En espera",
+      "downloading": "Descargando {{done}} de {{total}}",
+      "verifying": "Comprobando",
+      "extracting": "Descomprimiendo",
+      "installing": "Instalando",
+      "installed": "Instalado"
+    },
+    "component": {
+      "python": "Python",
+      "node": "Node.js",
+      "basedpyright": "basedpyright",
+      "typescript": "TypeScript",
+      "typescript-language-server": "Servidor de lenguaje de TypeScript",
+      "php": "PHP",
+      "rust": "Compilador de Rust",
+      "rust-src": "Fuentes de la biblioteca estándar de Rust",
+      "rust-analyzer": "rust-analyzer"
+    },
+    "cancelled": "Instalación cancelada. Lo descargado se conserva: Reintentar continúa donde se detuvo.",
+    "failed": "La instalación no terminó. Lo descargado se conserva: Reintentar continúa donde se detuvo.",
+    "success": "Todo listo para programar.",
+    "missingTitle": "{{language}} no está instalado",
+    "missingHint": "Instálalo para ejecutar y enviar en {{language}}.",
+    "installLanguage": "Instalar {{language}}",
+    "licenses": "Se descargan de sus sitios oficiales: Python (licencia PSF), Node.js (MIT), PHP (licencia PHP), Rust y rust-analyzer (MIT o Apache-2.0), TypeScript y su servidor de lenguaje (Apache-2.0), basedpyright (MIT).",
+    "unsupportedPlatform": "KataBox todavía no puede instalar lenguajes en este sistema.",
+    "onDisk": "{{disk}} en disco"
   }
 }

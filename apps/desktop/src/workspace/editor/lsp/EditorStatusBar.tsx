@@ -1,5 +1,15 @@
 import { useTranslation } from "react-i18next";
-import { AlertCircle, AlertTriangle, CircleCheck, CircleDashed, CircleSlash, Loader2, PauseCircle, WandSparkles } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  CircleCheck,
+  CircleDashed,
+  CircleSlash,
+  Download,
+  Loader2,
+  PauseCircle,
+  WandSparkles,
+} from "lucide-react";
 import type { Language } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -13,11 +23,14 @@ export function EditorStatusBar({
   server,
   status,
   onFormat,
+  onInstall,
 }: {
   language: Language;
   server: ServerState;
   status: EditorStatus | null;
   onFormat: () => void;
+  /** Offered when the server is unavailable because it is not installed. */
+  onInstall?: () => void;
 }) {
   const { t } = useTranslation();
   const name = t(`languages.${language}`);
@@ -79,6 +92,12 @@ export function EditorStatusBar({
         </Tooltip>
       ) : (
         label
+      )}
+      {onInstall && reason === "not installed" && (
+        <Button variant="ghost" size="sm" className="h-6 gap-1 px-2 text-xs" onClick={onInstall}>
+          <Download aria-hidden className="size-3.5" />
+          {t("install.install")}
+        </Button>
       )}
       {status && (
         <span className="inline-flex items-center gap-3" data-testid="problems-count">

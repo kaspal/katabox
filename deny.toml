@@ -3,6 +3,13 @@
 
 [graph]
 all-features = true
+# The platforms KataBox ships on (ADR 0015). Others (wasm32, Android, Apple) are never
+# built, so their target-only dependencies are not checked.
+targets = [
+    "x86_64-pc-windows-msvc",
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+]
 
 [licenses]
 version = 2
@@ -19,6 +26,8 @@ allow = [
     "CC0-1.0",
     "Unlicense",
     "Unicode-3.0",
+    # ring, rustls-webpki, untrusted (TLS for toolchain downloads, ADR 0015): permissive.
+    "ISC",
     # Weak copyleft, file-level (Tauri's dependency tree).
     "MPL-2.0",
 ]

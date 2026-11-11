@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, Monitor, Moon, Sun, XCircle } from "lucide-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { Page } from "@/components/Page";
+import { InstallPanel } from "@/languages/InstallPanel";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { Badge } from "@/components/ui/badge";
 import { MiddleEllipsis } from "@/components/MiddleEllipsis";
@@ -134,74 +135,43 @@ export function Settings() {
           </dl>
         </Section>
 
+        <Section title={t("settings.languages")}>
+          <InstallPanel allowUninstall />
+        </Section>
+
         <Section title={t("settings.about")}>
           {info.isPending ? (
             <Skeleton className="h-32 w-full" />
           ) : info.error ? (
             <ErrorNotice error={info.error} onRetry={() => void info.refetch()} />
           ) : (
-            <>
-              <dl className="space-y-2">
-                <Row label={t("settings.version")}>
-                  <span className="font-mono">{info.data.app_version}</span>
-                  {info.data.dev_data && (
-                    <Badge className="ml-2 bg-dev-badge font-mono text-dev-badge-foreground">
-                      {t("app.devData")}
-                    </Badge>
-                  )}
-                </Row>
-                <Row label={t("settings.contentPack")}>
-                  <span className="font-mono">
-                    {info.data.content.pack_id} {info.data.content.pack_version}
-                  </span>
-                </Row>
-                <Row label={t("settings.userSchema")}>
-                  <span className="font-mono">{info.data.user_schema_version}</span>
-                </Row>
-                <Row label={t("settings.dataFolder")}>
-                  <MiddleEllipsis className="font-mono text-xs" text={info.data.data_dir} />
-                </Row>
-                <Row label={t("settings.sandboxRoot")}>
-                  <MiddleEllipsis className="font-mono text-xs" text={info.data.sandbox_root} />
-                </Row>
-                <Row label={t("settings.sandboxSource")}>
-                  {t(`settings.rootSource.${info.data.sandbox_root_source}`)}
-                </Row>
-              </dl>
-              <h3 className="pt-2 text-sm font-semibold">{t("settings.toolchains")}</h3>
-              <table className="w-full text-sm">
-                <thead className="text-left text-xs text-muted-foreground">
-                  <tr>
-                    <th className="w-32 py-1 pr-4 font-medium">{t("settings.toolchainLanguage")}</th>
-                    <th className="w-32 py-1 pr-4 font-medium">{t("settings.toolchainStatus")}</th>
-                    <th className="py-1 font-medium">{t("settings.toolchainPath")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {info.data.toolchains.map((tc) => (
-                    <tr key={tc.language} className="border-t">
-                      <td className="py-1.5 pr-4">{t(`languages.${tc.language}`)}</td>
-                      <td className="py-1.5 pr-4 whitespace-nowrap">
-                        {tc.present ? (
-                          <span className="inline-flex items-center gap-1 text-verdict-accepted">
-                            <CheckCircle2 aria-hidden className="size-4" />
-                            {t("settings.present")}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-verdict-wrong">
-                            <XCircle aria-hidden className="size-4" />
-                            {t("settings.missing")}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-1.5 font-mono text-xs text-muted-foreground">
-                        <MiddleEllipsis text={tc.program ?? tc.problem ?? ""} max={48} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </>
+            <dl className="space-y-2">
+              <Row label={t("settings.version")}>
+                <span className="font-mono">{info.data.app_version}</span>
+                {info.data.dev_data && (
+                  <Badge className="ml-2 bg-dev-badge font-mono text-dev-badge-foreground">
+                    {t("app.devData")}
+                  </Badge>
+                )}
+              </Row>
+              <Row label={t("settings.contentPack")}>
+                <span className="font-mono">
+                  {info.data.content.pack_id} {info.data.content.pack_version}
+                </span>
+              </Row>
+              <Row label={t("settings.userSchema")}>
+                <span className="font-mono">{info.data.user_schema_version}</span>
+              </Row>
+              <Row label={t("settings.dataFolder")}>
+                <MiddleEllipsis className="font-mono text-xs" text={info.data.data_dir} />
+              </Row>
+              <Row label={t("settings.sandboxRoot")}>
+                <MiddleEllipsis className="font-mono text-xs" text={info.data.sandbox_root} />
+              </Row>
+              <Row label={t("settings.sandboxSource")}>
+                {t(`settings.rootSource.${info.data.sandbox_root_source}`)}
+              </Row>
+            </dl>
           )}
         </Section>
       </div>
