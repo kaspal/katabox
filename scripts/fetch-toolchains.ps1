@@ -7,10 +7,13 @@
 # Also creates the dev sandbox root (target/katabox, marked with .katabox-sandbox-root),
 # which mirrors the app layout: <root>/toolchains/<runtime> and <root>/runs/<run>.
 #
-# Usage: pwsh scripts/fetch-toolchains.ps1 [-Root target/katabox]
+# Also fetches the language servers (ADR 0014) into <root>/tools unless -NoLanguageServers.
+#
+# Usage: pwsh scripts/fetch-toolchains.ps1 [-Root target/katabox] [-NoLanguageServers]
 
 param(
-    [string]$Root = (Join-Path $PSScriptRoot "..\target\katabox")
+    [string]$Root = (Join-Path $PSScriptRoot "..\target\katabox"),
+    [switch]$NoLanguageServers
 )
 
 $ErrorActionPreference = "Stop"
@@ -161,3 +164,78 @@ Install-RustComponents -Version "1.99.1" -Date "2026-10-15" -Dest (Join-Path $Ro
     "rust-std"   = "b17e3bc962ff24b3bc47a750d838defed85b280746250e3a3ad029e6c1a29dd7"
     "rust-mingw" = "1dca8e0d253565dbf21296eabc3e8d6e06e607e92c59dc00e3ecff902fe3d5ae"
 }
+
+# --- Language servers (ADR 0014) ------------------------------------------------------
+# They run outside the judge sandbox and never execute user code; see the ADR for the
+# settings that guarantee it. Everything is pinned and verified here.
+if ($NoLanguageServers) {
+    Write-Host "Skipping language servers (-NoLanguageServers)"
+    return
+}
+$Tools = Join-Path $Root "tools"
+New-Item -ItemType Directory -Force $Tools | Out-Null
+
+# rust-src: std's sources, so rust-analyzer can resolve std (merged into the sysroot).
+$RustSysroot = Join-Path $Root "toolchains\rust-1.99"
+$RustSrcCheck = Join-Path $RustSysroot "lib\rustlib\src\rust\library\std\src\lib.rs"
+if (-not (Test-Path $RustSrcCheck)) {
+    $Work = Join-Path $Tools ("_fetch-" + [guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Force $Work | Out-Null
+    try {
+        $Base = "rust-src-1.99.1"
+        $Archive = Join-Path $Work "$Base.tar.xz"
+        Write-Host "Downloading $Base"
+        Invoke-WebRequest -Uri "https://static.rust-lang.org/dist/2026-10-15/$Base.tar.xz" -OutFile $Archive -Headers @{ "User-Agent" = "katabox-dev" }
+        $Actual = (Get-FileHash -Algorithm SHA256 $Archive).Hash.ToLowerInvariant()
+        $Expected = "e485a88c45db546b73571df7bebfcb4454ba4fb552c492e25fc5b00eeb5bf22d"
+        if ($Actual -ne $Expected) { throw "SHA-256 mismatch for $Base`n expected $Expected`n actual   $Actual" }
+        & "$env:SystemRoot\System32\tar.exe" -xf $Archive -C $Work
+        if ($LASTEXITCODE -ne 0) { throw "tar failed with exit code $LASTEXITCODE" }
+        Copy-Item (Join-Path $Work "$Base\rust-src\*") $RustSysroot -Recurse -Force
+        if (-not (Test-Path $RustSrcCheck)) { throw "rust-src did not install std sources" }
+        Write-Host "rust-src installed into $RustSysroot"
+    }
+    finally {
+        Remove-Item -Recurse -Force $Work -ErrorAction SilentlyContinue
+    }
+}
+
+# rust-analyzer matching the pinned Rust (channel-rust-stable.toml, rust-analyzer-preview).
+Install-Toolchain -Name "rust-analyzer 1.99.1" `
+    -Url "https://static.rust-lang.org/dist/2026-10-15/rust-analyzer-1.99.1-x86_64-pc-windows-gnu.tar.xz" `
+    -Sha256 "15542a6a2a264f1b3daf7141640690d8ae5a594719ff283ff1750358fdbbc8f1" `
+    -Inner "rust-analyzer-1.99.1-x86_64-pc-windows-gnu\rust-analyzer-preview" -Check "bin\rust-analyzer.exe" `
+    -Dest (Join-Path $Tools "rust-analyzer")
+
+# phpactor is not fetched on Windows: it requires the PHP posix extension, which Windows
+# builds of PHP do not have (ADR 0014). Pinned for Linux: 2026.10.07.0, phpactor.phar
+# SHA-256 b28bf6166e016d539fc2f2aec18ef918b12590e436a6f1ccbdf30b5bbdbdb16b.
+
+# basedpyright, typescript-language-server and typescript from the committed lockfile
+# (scripts/language-servers/package-lock.json, integrity hashes checked by npm), with the
+# bundled Node's npm. No install scripts run.
+$LsSource = Join-Path $PSScriptRoot "language-servers"
+$LsDest = Join-Path $Tools "language-servers"
+$LockHash = (Get-FileHash -Algorithm SHA256 (Join-Path $LsSource "package-lock.json")).Hash
+$Stamp = Join-Path $LsDest ".lock-sha256"
+if (-not (Test-Path $Stamp) -or (Get-Content $Stamp -Raw).Trim() -ne $LockHash) {
+    if (Test-Path $LsDest) { Remove-Item -Recurse -Force $LsDest }
+    New-Item -ItemType Directory -Force $LsDest | Out-Null
+    Copy-Item (Join-Path $LsSource "package.json"), (Join-Path $LsSource "package-lock.json") $LsDest
+    $NodeDir = Join-Path $Root "toolchains\node-26"
+    $env:Path = "$NodeDir;$env:Path"
+    Push-Location $LsDest
+    try {
+        & (Join-Path $NodeDir "npm.cmd") ci --ignore-scripts --no-audit --no-fund --omit=optional
+        if ($LASTEXITCODE -ne 0) { throw "npm ci failed with exit code $LASTEXITCODE" }
+    }
+    finally {
+        Pop-Location
+    }
+    foreach ($Check in "node_modules\basedpyright\langserver.index.js", "node_modules\typescript-language-server\lib\cli.mjs", "node_modules\typescript\lib\tsserver.js") {
+        if (-not (Test-Path (Join-Path $LsDest $Check))) { throw "$Check missing after npm ci" }
+    }
+    Set-Content -Path $Stamp -Value $LockHash
+    Write-Host "Node language servers installed at $LsDest"
+}
+

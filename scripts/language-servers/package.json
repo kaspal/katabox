@@ -1,0 +1,11 @@
+{
+  "name": "katabox-language-servers",
+  "private": true,
+  "description": "Pinned language servers for KataBox (ADR 0014). Installed with `npm ci --ignore-scripts` by scripts/fetch-toolchains.ps1; the lockfile's integrity hashes are verified by npm.",
+  "license": "MIT OR Apache-2.0",
+  "dependencies": {
+    "basedpyright": "1.40.2",
+    "typescript": "6.0.3",
+    "typescript-language-server": "6.0.3"
+  }
+}
