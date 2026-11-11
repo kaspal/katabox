@@ -3,7 +3,7 @@
 //! it belongs in `crates/` (mostly kb-app). Every command is a short forward to kb-app
 //! and returns `Result<T, AppError>`.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, SubmissionView,
@@ -264,8 +264,11 @@ fn open_app(handle: &tauri::AppHandle) -> Res<App> {
         ),
         dev_data,
         // Development builds use the fetch script's root when nothing else is set.
+        // (`<repo>/apps/desktop/src-tauri` → `<repo>/target/katabox`.)
         dev_root: cfg!(debug_assertions)
-            .then(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../target/katabox")),
+            .then(|| Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(3))
+            .flatten()
+            .map(|repo| repo.join("target").join("katabox")),
     };
     tauri::async_runtime::block_on(App::open(&paths))
 }
