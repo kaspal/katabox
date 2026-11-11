@@ -6,3 +6,10 @@ compile = ""
 run = "python -I -X utf8 {main}"
 language_server = "basedpyright"
 debug_adapter = "debugpy"
+
+# Time limit for this language (ADR 0017): the problem's base limit (`time_limit_ms`,
+# set for Rust) times `factor`, plus `startup_ms` of CPU for starting the runtime and
+# loading the harness, which the user does not control.
+[time]
+factor = 10
+startup_ms = 1000

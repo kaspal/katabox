@@ -139,7 +139,9 @@
     },
     "limits": {
       "time": "Tiempo límite",
-      "memory": "Memoria límite"
+      "memory": "Memoria límite",
+      "timeFor": "Tiempo límite ({{language}})",
+      "scaled": "ajustado ×{{factor}} para este equipo"
     },
     "hints": {
       "none": "Este problema no tiene pistas.",
@@ -212,7 +214,19 @@
     "ligatures": "Ligaduras de la fuente",
     "ligaturesOff": "Desactivadas",
     "ligaturesOn": "Activadas",
-    "languages": "Lenguajes"
+    "languages": "Lenguajes",
+    "calibration": {
+      "title": "Velocidad del juez",
+      "description": "Los límites de tiempo se fijan en un equipo de referencia. KataBox mide este equipo una vez con una prueba corta y ajusta cada límite según el resultado, entre ×0,5 y ×3.",
+      "factor": "Factor de velocidad",
+      "factorValue": "×{{factor}}",
+      "clamped": "(medido {{measured}})",
+      "runtime": "Medido con",
+      "measuredAt": "Medido",
+      "notMeasured": "Aún sin medir: se mide en tu primera ejecución o envío, o ahora.",
+      "recalibrate": "Volver a medir",
+      "measuring": "Midiendo…"
+    }
   },
   "languages": {
     "python": "Python",
@@ -248,7 +262,8 @@
     "file_locked": "Un archivo está en uso (un antivirus o un programa abierto). Espera un momento y vuelve a intentarlo.",
     "install_cancelled": "Se canceló la instalación.",
     "install_busy": "Hay otra instalación o desinstalación en curso.",
-    "unsupported_platform": "KataBox todavía no puede instalar lenguajes en este sistema."
+    "unsupported_platform": "KataBox todavía no puede instalar lenguajes en este sistema.",
+    "calibration_unavailable": "Para medir este equipo hace falta tener Python o JavaScript/TypeScript instalado."
   },
   "judge": {
     "verdict": {

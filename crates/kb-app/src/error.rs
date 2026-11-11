@@ -56,6 +56,8 @@ pub enum AppErrorCode {
     InstallBusy,
     /// Languages cannot be installed on this OS or CPU.
     UnsupportedPlatform,
+    /// Measuring this machine's speed needs Python or JavaScript/TypeScript installed.
+    CalibrationUnavailable,
     /// Anything else, including the app failing to start.
     Internal,
 }

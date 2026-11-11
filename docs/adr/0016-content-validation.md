@@ -75,12 +75,12 @@ kept so a problem's tests stay around 1 MB.
 - Every problem in `content/problems` (10 now) passes these checks before merge. Authors
   get a precise failure (seed and input) instead of a wrong problem in production.
 - The weak-test guard proves the complexity for Python. Compiled languages share the same
-  time limit, so an O(n²) Rust solution may still pass n = 5·10⁴; per-language limits are
-  a follow-up.
+  time limit, so an O(n²) Rust solution may still pass n = 5·10⁴. ADR 0017 adds
+  per-language limits and `naive.rs`, and judges the speed rule per language.
 - `validate --run` takes a few seconds per problem (each check is one sandboxed run).
 
 ## Follow-ups
 - Per-language time limits (or calibration), so the guard also applies to compiled
-  languages.
+  languages: done in ADR 0017.
 - Custom checkers (`checker = "custom"`) through the same sandboxed script mechanism.
 - Running `validate --run` in CI on Windows once Actions is available.

@@ -20,7 +20,7 @@ Salida: [0]
 
 ### Restricciones
 
-- 1 ≤ rain.length ≤ 5·10⁴
+- 1 ≤ rain.length ≤ 10⁵
 - 0 ≤ rain[d] ≤ 10⁴
-- 1 ≤ queries.length ≤ 5·10⁴
+- 1 ≤ queries.length ≤ 10⁵
 - queries[j] = [first, last] con 0 ≤ first ≤ last < rain.length

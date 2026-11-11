@@ -6,6 +6,7 @@ import {
   commands,
   type AppError,
   type AppInfo,
+  type CalibrationInfo,
   type ContinueItem,
   type Draft,
   type EditorialState,
@@ -55,6 +56,9 @@ export const api = {
   getSetting: (key: string): Promise<JsonValue | null> => call(commands.getSetting(key)),
   setSetting: (key: string, value: JsonValue): Promise<null> =>
     call(commands.setSetting(key, value)),
+  // This machine's speed factor for time limits (ADR 0017)
+  calibration: (): Promise<CalibrationInfo | null> => call(commands.calibration()),
+  recalibrate: (): Promise<CalibrationInfo> => call(commands.recalibrate()),
 
   // Workspace
   editorial: (problem: string, lang: UiLang): Promise<EditorialState> =>

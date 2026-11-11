@@ -4,27 +4,36 @@
 //!
 //! Per problem:
 //! 1. `validate.py` accepts every committed test input;
-//! 2. every reference, in every language, is Accepted on all tests within half the time
-//!    limit (the limit is one CPU budget per run, so the sum of test times counts);
+//! 2. every reference, in every language, is Accepted on all tests using at most half of
+//!    its language's CPU budget for the run (ADR 0017: the problem's base limit × the
+//!    language factor, plus its startup allowance);
 //! 3. with `gen.py` + `solutions/brute.py`: 500 seeded small inputs, each accepted by
 //!    `validate.py`, on which every reference agrees with brute (the problem's checker);
-//! 4. with `solutions/naive.py`: it is correct but gets Time Limit Exceeded on the tests.
+//! 4. with `solutions/naive.py` and `solutions/naive.rs`: each is correct but gets Time
+//!    Limit Exceeded under its own language's limit.
+//!
+//! Limits are judged at the env's time scale; `kb-pack validate` uses 1.0, the reference
+//! machine, and prints this machine's factor so a slower machine can be spotted.
 
 use std::fs;
 use std::path::Path;
 
 use kb_core::{Language, TestCase, TestKind, Verdict};
-use kb_judge::{JudgeEnv, Problem, ScriptLimits};
+use kb_judge::{JudgeEnv, Problem, ScriptLimits, languages, limits};
 use serde_json::{Map, Value};
 
 /// Seeds for the stress test: 1..=STRESS_SEEDS.
 pub const STRESS_SEEDS: u64 = 500;
 
-/// A reference may use at most this share of the time limit (percent).
-pub const SPEED_SHARE: u32 = 50;
+/// A reference may use at most this share of its language's CPU budget (percent).
+pub const SPEED_SHARE: u64 = 50;
 
-/// Time for the brute and stress runs (500 small tests in one run).
-const STRESS_TIME_LIMIT_MS: u32 = 60_000;
+/// Base limit for the brute, stress and generate runs (500 small tests, or a few max
+/// ones, in one run). Python, the slowest language, gets 10× this.
+const RELAXED_BASE_MS: u32 = 6_000;
+
+/// The weak-test guard runs in these languages, with `solutions/naive.<ext>` (ADR 0017).
+pub const NAIVE_LANGUAGES: [Language; 2] = [Language::Python, Language::Rust];
 
 /// What a check is about.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -33,7 +42,7 @@ pub enum Check {
     Validator,
     Reference(Language),
     Stress,
-    Naive,
+    Naive(Language),
 }
 
 impl Check {
@@ -43,7 +52,7 @@ impl Check {
             Check::Validator => "validator".into(),
             Check::Reference(l) => l.id().into(),
             Check::Stress => "stress".into(),
-            Check::Naive => "naive".into(),
+            Check::Naive(l) => format!("naive.{}", l.extension()),
         }
     }
 }
@@ -120,10 +129,17 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
         }
     }
 
-    // 2. References: Accepted, within half the time limit.
-    let budget_us = u64::from(problem.time_limit_ms) * 1000 * u64::from(SPEED_SHARE) / 100;
+    // 2. References: Accepted, within half of their language's CPU budget.
     let mut references = Vec::new();
-    for lang in kb_judge::languages::SUPPORTED {
+    for lang in languages::SUPPORTED {
+        let cap_ms = match languages::definition(lang) {
+            Ok(def) => limits::cpu_cap_ms(problem.time_limit_ms, &def, env.time_scale),
+            Err(e) => {
+                add(Check::Reference(lang), false, e.to_string());
+                continue;
+            }
+        };
+        let budget_us = u64::from(cap_ms) * 1000 * SPEED_SHARE / 100;
         let file = dir
             .join("solutions")
             .join(format!("ref.{}", lang.extension()));
@@ -139,13 +155,17 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
             }
         };
         match kb_judge::judge(&problem, &problem.tests, lang, &src, env) {
-            Ok(r) if r.verdict.is_accepted() && r.time_us <= budget_us => {
+            Ok(r) if r.verdict.is_accepted() && r.cpu_us <= budget_us => {
                 add(
                     Check::Reference(lang),
                     true,
                     format!(
-                        "AC {}/{} tests, {} us (budget {budget_us} us)",
-                        r.total_tests, r.total_tests, r.time_us
+                        "AC {}/{} tests, {} ms CPU of {} ms allowed ({SPEED_SHARE}% of {cap_ms} ms); tests {} ms",
+                        r.total_tests,
+                        r.total_tests,
+                        ms(r.cpu_us),
+                        ms(budget_us),
+                        ms(r.time_us)
                     ),
                 );
             }
@@ -153,8 +173,11 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                 Check::Reference(lang),
                 false,
                 format!(
-                    "too slow: {} us, over {SPEED_SHARE}% of the {} ms limit ({budget_us} us)",
-                    r.time_us, problem.time_limit_ms
+                    "too slow: {} ms CPU, over {SPEED_SHARE}% of the {cap_ms} ms {} budget ({} ms); tests {} ms",
+                    ms(r.cpu_us),
+                    lang.id(),
+                    ms(budget_us),
+                    ms(r.time_us)
                 ),
             ),
             Ok(r) => add(Check::Reference(lang), false, describe_failure(&r)),
@@ -193,42 +216,47 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
         ),
     }
 
-    // 4. The weak-test guard: naive.py is correct but too slow.
-    if let Ok(naive) = fs::read_to_string(dir.join("solutions/naive.py")) {
-        let (ok, detail) = match kb_judge::judge(
-            &problem,
-            &problem.tests,
-            Language::Python,
-            &naive,
-            env,
-        ) {
+    // 4. The weak-test guard: each naive solution is correct but too slow in its own
+    //    language.
+    for lang in NAIVE_LANGUAGES {
+        let name = format!("naive.{}", lang.extension());
+        let Ok(naive) = fs::read_to_string(dir.join("solutions").join(&name)) else {
+            continue;
+        };
+        let (ok, detail) = match kb_judge::judge(&problem, &problem.tests, lang, &naive, env) {
             Ok(r) if r.verdict == Verdict::TimeLimitExceeded => {
                 let at = r
                     .first_failure
                     .as_ref()
                     .map(|f| format!("{} test {}", kind_name(f.kind), f.index))
                     .unwrap_or_default();
-                (true, format!("naive.py gets TLE at {at}"))
+                (true, format!("{name} gets TLE at {at}"))
             }
             Ok(r) if r.verdict.is_accepted() => (
                 false,
                 format!(
-                    "naive.py passed every test in {} us: the max-size tests do not force the intended complexity",
-                    r.time_us
+                    "{name} passed every test with {} ms CPU: the max-size tests do not force the intended complexity in {}",
+                    ms(r.cpu_us),
+                    lang.id()
                 ),
             ),
             Ok(r) => (
                 false,
                 format!(
-                    "naive.py must be correct but slow; it got {}",
+                    "{name} must be correct but slow; it got {}",
                     describe_failure(&r)
                 ),
             ),
             Err(e) => (false, e.to_string()),
         };
-        add(Check::Naive, ok, detail);
+        add(Check::Naive(lang), ok, detail);
     }
     out
+}
+
+/// Microseconds as whole milliseconds, for messages.
+fn ms(us: u64) -> u64 {
+    us / 1000
 }
 
 fn kind_name(k: TestKind) -> &'static str {
@@ -349,7 +377,7 @@ fn stress(
         }
     }
     let mut relaxed = problem.clone();
-    relaxed.time_limit_ms = STRESS_TIME_LIMIT_MS;
+    relaxed.time_limit_ms = RELAXED_BASE_MS;
     let mut tests = generated_tests(inputs);
     let expected = outputs_of(&relaxed, &tests, Language::Python, brute, env, "brute.py")?;
     for (t, e) in tests.iter_mut().zip(expected) {
@@ -409,7 +437,7 @@ pub fn generate_tests(
         }
     }
     let mut relaxed = problem.clone();
-    relaxed.time_limit_ms = STRESS_TIME_LIMIT_MS;
+    relaxed.time_limit_ms = RELAXED_BASE_MS;
     let tests = generated_tests(inputs);
     let outputs = outputs_of(
         &relaxed,

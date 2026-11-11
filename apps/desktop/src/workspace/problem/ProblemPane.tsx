@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "@tanstack/react-router";
 import type { ProblemView } from "@/bindings";
 import { BookOpen, FileText, History, Lightbulb, ListChecks, NotebookPen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +24,30 @@ const TAB_ICON: Record<ProblemTab, typeof FileText> = {
   notes: NotebookPen,
   history: History,
 };
+
+/** The time limit for the editor's language (ADR 0017), adjusted to this machine. */
+function TimeLimit({ problem, language }: { problem: ProblemView; language: Language | null }) {
+  const { t } = useTranslation();
+  const limit = problem.time_limits.find((l) => l.language === language);
+  const scaled = Math.abs(problem.time_scale - 1) >= 0.005;
+  return (
+    <>
+      <dt>
+        {limit && language
+          ? t("workspace.limits.timeFor", { language: t(`languages.${language}`) })
+          : t("workspace.limits.time")}
+      </dt>
+      <dd className="tabular-nums" data-testid="time-limit">
+        {limit ? limit.time_limit_ms : problem.time_limit_ms} ms
+        {scaled && (
+          <Link to="/settings" className="ml-2 underline-offset-2 hover:underline">
+            {t("workspace.limits.scaled", { factor: problem.time_scale.toFixed(2) })}
+          </Link>
+        )}
+      </dd>
+    </>
+  );
+}
 
 export function ProblemPane({
   problem,
@@ -63,8 +88,7 @@ export function ProblemPane({
         <TabsContent value="description" className="space-y-4">
           <Markdown text={problem.statement} />
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-t pt-3 text-xs text-muted-foreground">
-            <dt>{t("workspace.limits.time")}</dt>
-            <dd className="tabular-nums">{problem.time_limit_ms} ms</dd>
+            <TimeLimit problem={problem} language={currentLanguage} />
             <dt>{t("workspace.limits.memory")}</dt>
             <dd className="tabular-nums">{problem.memory_mb} MB</dd>
             <dt>{t("pattern.label")}</dt>

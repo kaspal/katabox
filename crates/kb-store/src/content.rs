@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use kb_core::{Difficulty, Language, TestCase, TestKind};
+use kb_core::{Difficulty, Language, LanguageLimit, TestCase, TestKind};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions, SqliteRow};
@@ -173,11 +173,17 @@ pub struct ProblemView {
     pub rank: u8,
     pub tags: Vec<String>,
     pub signature: Value,
+    /// The base time limit, set for Rust; each language scales it (ADR 0017).
     pub time_limit_ms: u32,
     pub memory_mb: u32,
     pub public_tests: Vec<PublicTest>,
     /// Custom test inputs are checked by the problem's `validate.py` (needs Python).
     pub has_validator: bool,
+    /// Each language's time limit at this machine's time scale. Filled by the app, which
+    /// knows the languages and the calibration; empty as read from content.db.
+    pub time_limits: Vec<LanguageLimit>,
+    /// The time scale in `time_limits` (1.0 = the reference machine; ADR 0017).
+    pub time_scale: f64,
 }
 
 /// What the judge needs: settings and every test (public first, then hidden).
@@ -358,6 +364,8 @@ impl ContentDb {
             memory_mb: p.try_get("memory_mb")?,
             public_tests,
             has_validator: p.try_get::<Option<String>, _>("validator")?.is_some(),
+            time_limits: Vec::new(),
+            time_scale: 1.0,
         })
     }
 

@@ -11,6 +11,7 @@
 //! - Responses redact what hidden tests returned and printed; user.db keeps the full
 //!   Report.
 
+mod calibration;
 mod error;
 mod root;
 
@@ -26,6 +27,7 @@ use kb_store::{
 use serde::Serialize;
 use serde_json::{Map, Value};
 
+pub use calibration::{CALIBRATION_SETTING, CalibrationInfo};
 pub use error::{AppError, AppErrorCode};
 pub use root::{RootSource, SANDBOX_ROOT_ENV, SANDBOX_ROOT_SETTING};
 
@@ -177,6 +179,8 @@ pub struct App {
     /// Language servers (ADR 0014): tools from the sandbox root, projects and state in
     /// the app's local data folder.
     lsp: kb_bridge::LspManager,
+    /// This machine's calibration (ADR 0017), from user.db; `None` until measured.
+    calibration: RwLock<Option<CalibrationInfo>>,
 }
 
 impl App {
@@ -194,6 +198,12 @@ impl App {
             paths.dev_root.as_deref(),
             &paths.local_data_dir,
         )?;
+        // A stored calibration that no longer parses is measured again.
+        let calibration = store
+            .user
+            .get_setting(CALIBRATION_SETTING)
+            .await?
+            .and_then(|v| serde_json::from_value::<CalibrationInfo>(v).ok());
         let toolchains = Arc::new(kb_toolchain::Manager::open(&root)?);
         // Leftovers of an interrupted install go first (skipped while the CLI installs).
         match toolchains.purge() {
@@ -216,6 +226,7 @@ impl App {
                 .map(Path::to_path_buf)
                 .unwrap_or_default(),
             judging: tokio::sync::Mutex::new(()),
+            calibration: RwLock::new(calibration),
         })
     }
 
@@ -280,8 +291,11 @@ impl App {
         })
     }
 
+    /// The judge environment, at this machine's time scale.
     fn env(&self) -> JudgeEnv {
-        self.env.read().unwrap_or_else(|e| e.into_inner()).clone()
+        let mut env = self.env.read().unwrap_or_else(|e| e.into_inner()).clone();
+        env.time_scale = calibration::scale_of(self.calibration().as_ref());
+        env
     }
 
     fn refresh_env(&self) {
@@ -316,7 +330,13 @@ impl App {
             )
             .await;
         self.refresh_env();
-        Ok(result?)
+        result?;
+        // The first runtime installed is the first chance to measure this machine; skipped
+        // while a Run or Submit holds the judge (the next one measures instead).
+        if let Ok(_one) = self.judge_slot() {
+            self.ensure_calibrated().await;
+        }
+        Ok(())
     }
 
     pub fn cancel_install(&self) {
@@ -352,6 +372,8 @@ impl App {
     pub async fn get_problem(&self, id: &str, lang: UiLang) -> Result<ProblemView> {
         let mut view = self.store.content.get_problem(id, lang).await?;
         view.editorial = None;
+        view.time_scale = calibration::scale_of(self.calibration().as_ref());
+        view.time_limits = calibration::time_limits(view.time_limit_ms, view.time_scale);
         Ok(view)
     }
 
@@ -454,6 +476,7 @@ impl App {
         F: FnMut(JudgeEvent) + Send + 'static,
     {
         let _one = self.judge_slot()?;
+        self.ensure_calibrated().await;
         let p = self.problem(problem).await?;
         let mut tests: Vec<TestCase> = p.public_tests().cloned().collect();
         if !custom.is_empty() {
@@ -480,6 +503,7 @@ impl App {
         F: FnMut(JudgeEvent) + Send + 'static,
     {
         let _one = self.judge_slot()?;
+        self.ensure_calibrated().await;
         let p = self.problem(problem).await?;
         let tests = p.tests.clone();
         let mut report = self.judge(p, tests, language, code, on_event).await?;

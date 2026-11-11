@@ -17,4 +17,4 @@ Buscar antes de guardar es lo que impide usar el mismo elemento dos veces.
 
 Con `nums = [9, 2, 9]` y `target = 18`, la pareja del primer 9 es el propio 9, pero en `i = 0` el mapa todavía está vacío, así que un elemento nunca se empareja consigo mismo; el segundo 9 encuentra al primero.
 
-**Complejidad:** O(n) en tiempo y O(n) de espacio extra. Probar todos los pares cuesta O(n²), demasiado lento para 10⁴ números.
+**Complejidad:** O(n) en tiempo y O(n) de espacio extra. Probar todos los pares cuesta O(n²), demasiado lento para 10⁵ números.

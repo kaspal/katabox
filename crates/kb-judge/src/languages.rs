@@ -20,6 +20,8 @@ pub struct LanguageDef {
     pub run: String,
     /// Limits for the compile step (compiled languages only).
     pub compile_limits: Option<CompileLimits>,
+    /// The language's time limit factor and startup allowance (ADR 0017).
+    pub time: TimeDef,
     pub stub_template: &'static str,
     pub harness_template: &'static str,
 }
@@ -41,6 +43,17 @@ impl CompileLimits {
     }
 }
 
+/// `[time]` in language.toml: how this language's time limit derives from a problem's
+/// base limit (ADR 0017). See [`crate::limits`].
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TimeDef {
+    /// Multiplier on the problem's base limit (Rust is 1).
+    pub factor: f64,
+    /// CPU allowed on top of the limit for starting the runtime and the harness.
+    pub startup_ms: u32,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct LanguageToml {
@@ -50,6 +63,7 @@ struct LanguageToml {
     run: String,
     #[serde(default)]
     compile_limits: Option<CompileLimits>,
+    time: TimeDef,
     #[allow(dead_code)] // used by kb-bridge later
     language_server: String,
     #[allow(dead_code)]
@@ -112,11 +126,15 @@ pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
             "compiled languages need `compile` and `[compile_limits]`; others neither".into(),
         ));
     }
+    if !(t.time.factor.is_finite() && t.time.factor >= 1.0) {
+        return Err(bad("[time] factor must be a number ≥ 1".into()));
+    }
     Ok(LanguageDef {
         language: lang,
         compile: t.compile,
         run: t.run,
         compile_limits: t.compile_limits,
+        time: t.time,
         stub_template,
         harness_template,
     })
@@ -231,7 +249,10 @@ mod tests {
             let d = definition(lang).unwrap();
             assert!(d.run.contains("{main}") || d.run == "{binary}", "{lang}");
             assert_eq!(d.compile_limits.is_some(), lang.is_compiled(), "{lang}");
+            assert!(d.time.factor >= 1.0 && d.time.startup_ms > 0, "{lang}");
         }
+        // Rust is the base language: every other factor is relative to it.
+        assert_eq!(definition(Language::Rust).unwrap().time.factor, 1.0);
         assert!(matches!(
             definition(Language::JavaScript),
             Err(JudgeError::Unsupported(Language::JavaScript))

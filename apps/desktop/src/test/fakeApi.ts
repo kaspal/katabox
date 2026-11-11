@@ -3,6 +3,7 @@ import { vi } from "vitest";
 import type {
   AppError,
   AppInfo,
+  CalibrationInfo,
   ComponentPhase,
   ContinueItem,
   InstallEvent,
@@ -160,6 +161,7 @@ export function makeReport(verdict: Verdict, extra: Partial<Report> = {}): Repor
         },
     compile_output: null,
     time_us: 200,
+    cpu_us: 150_000,
     memory_kb: 9000,
     compile: null,
     ...extra,
@@ -174,6 +176,8 @@ export function createFakeApi(
     lastLanguage?: Language | null;
     /** Installed language units (default: Python, TypeScript and PHP, not Rust). */
     installed?: Language[];
+    /** This machine's stored calibration (default: not measured). */
+    calibration?: CalibrationInfo | null;
   } = {},
 ) {
   const installed = new Set<Language>(opts.installed ?? ["python", "typescript", "php"]);
@@ -205,6 +209,11 @@ export function createFakeApi(
     runError: null as AppError | null,
     /** Languages of each installLanguages call. */
     installCalls: [] as Language[][],
+    /** The stored calibration (ADR 0017); the problem's limits follow `applied`. */
+    calibration: (opts.calibration ?? null) as CalibrationInfo | null,
+    /** What the next recalibrate measures (a factor), or the error it fails with. */
+    nextFactor: 1.25,
+    recalibrateError: null as AppError | null,
   };
   /** Hold the next install mid-download; returns the function that lets it go on. */
   const holdInstall = () => {
@@ -267,8 +276,20 @@ export function createFakeApi(
         editorial: null,
         hints: ["First hint.", "Second hint.", "Third hint."],
         signature: SIGNATURE,
-        time_limit_ms: 2000,
+        time_limit_ms: 300,
         memory_mb: 256,
+        time_scale: state.calibration?.applied ?? 1,
+        time_limits: (
+          [
+            ["python", 10],
+            ["typescript", 2],
+            ["php", 5],
+            ["rust", 1],
+          ] as const
+        ).map(([language, factor]) => ({
+          language,
+          time_limit_ms: Math.ceil(300 * factor * (state.calibration?.applied ?? 1)),
+        })),
         public_tests: [
           { index: 1, input: { nums: [5, 8, 12, 1, 3], target: 15 }, output: [2, 4] },
           { index: 2, input: { nums: [7, -3, 10, 5], target: 2 }, output: [1, 3] },
@@ -281,6 +302,20 @@ export function createFakeApi(
     setSetting: vi.fn(async (key: string, value: JsonValue) => {
       settings.set(key, value);
       return null;
+    }),
+    calibration: vi.fn(async () => state.calibration),
+    recalibrate: vi.fn(async (): Promise<CalibrationInfo> => {
+      if (state.recalibrateError) throw state.recalibrateError;
+      const factor = state.nextFactor;
+      state.calibration = {
+        factor,
+        applied: Math.min(3, Math.max(0.5, factor)),
+        runtime: "python",
+        measured_us: Math.round(216_000 * factor),
+        reference_us: 216_000,
+        measured_at: 1_767_225_600,
+      };
+      return state.calibration;
     }),
 
     editorial: vi.fn(async (problem: string) => {

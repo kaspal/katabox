@@ -49,7 +49,7 @@ fn run(lang: Language, source: &str) -> Report {
     report
 }
 
-/// The two-sum tests small enough to print every input (not the 10⁴-number max tests).
+/// The two-sum tests small enough to print every input (not the 10⁵-number max test).
 fn small_tests() -> Vec<kb_core::TestCase> {
     two_sum()
         .tests
@@ -123,7 +123,11 @@ fn unordered_checker_accepts_reversed_pair() {
                  for (let j = i + 1; j < nums.length; j++)\n\
                    if (nums[i] + nums[j] === target) return [j, i];\n\
                return [];\n}\n";
-    assert_eq!(run(Language::TypeScript, src).verdict, Verdict::Accepted);
+    // O(n²): the small tests only (the max-size test is a TLE in TypeScript, ADR 0017).
+    assert_eq!(
+        run_small(Language::TypeScript, src).verdict,
+        Verdict::Accepted
+    );
 }
 
 // ---- Wrong Answer -----------------------------------------------------------------
@@ -198,10 +202,11 @@ fn time_limit_exceeded_python() {
         (TestKind::Public, 2, Verdict::TimeLimitExceeded)
     );
     assert_eq!(f.input.get("nums"), Some(&json!([7, -3, 10, 5])));
-    assert_eq!(r.tests[1].result.time_us, 2_000_000);
+    // Python's limit: two-sum's 300 ms base × 10 (ADR 0017).
+    assert_eq!(r.tests[1].result.time_us, 3_000_000);
     assert_eq!(
         failure_message(&r, MessageCode::TimeLimit),
-        "time limit of 2000 ms exceeded"
+        "time limit of 3000 ms exceeded"
     );
 }
 
@@ -576,6 +581,63 @@ fn rust_time_limit_exceeded() {
     let r = run(Language::Rust, &format!("{RS_HEAD}    loop {{}}\n}}\n"));
     assert_eq!(r.verdict, Verdict::TimeLimitExceeded);
     assert_eq!(r.tests.len(), 1);
+}
+
+// ---- Per-language limits and the time scale (ADR 0017) --------------------------
+
+/// Spin about `ms` of CPU once (on the first test), then answer correctly.
+fn python_spin(ms: u32) -> String {
+    format!(
+        "import time\nspun = False\n\ndef two_sum(nums, target):\n    global spun\n    if not spun:\n        spun = True\n        t = time.process_time()\n        while time.process_time() - t < {ms} / 1000:\n            pass\n    seen = {{}}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n    return []\n"
+    )
+}
+
+fn rust_spin(ms: u32) -> String {
+    format!(
+        "use std::sync::atomic::{{AtomicBool, Ordering}};\nstatic SPUN: AtomicBool = AtomicBool::new(false);\n\n{RS_HEAD}    if !SPUN.swap(true, Ordering::Relaxed) {{\n        let t = std::time::Instant::now();\n        while t.elapsed().as_millis() < {ms} {{\n            std::hint::black_box(0);\n        }}\n    }}\n    let mut seen = std::collections::HashMap::new();\n    for (i, n) in nums.iter().enumerate() {{\n        if let Some(&j) = seen.get(&(target - n)) {{\n            return vec![j as i64, i as i64];\n        }}\n        seen.insert(*n, i);\n    }}\n    vec![]\n}}\n"
+    )
+}
+
+#[test]
+fn the_same_work_fits_python_but_not_rust() {
+    // 900 ms of CPU: three times two-sum's 300 ms base. Python's limit is 3000 ms.
+    let py = run_small(Language::Python, &python_spin(900));
+    assert_eq!(py.verdict, Verdict::Accepted, "{py:?}");
+    assert!(py.cpu_us >= 800_000, "cpu_us {}", py.cpu_us);
+    // Rust's is the base itself.
+    let rs = run_small(Language::Rust, &rust_spin(900));
+    assert_eq!(rs.verdict, Verdict::TimeLimitExceeded);
+    assert_eq!(rs.tests.len(), 1);
+    assert_eq!(rs.tests[0].result.time_us, 300_000);
+    assert_eq!(
+        failure_message(&rs, MessageCode::TimeLimit),
+        "time limit of 300 ms exceeded"
+    );
+}
+
+#[test]
+fn the_time_scale_stretches_and_shrinks_limits() {
+    let p = two_sum();
+    let tests = small_tests();
+    let src = rust_spin(250);
+    // Scale 1.0: 250 ms fits Rust's 400 ms cap (300 ms + 100 ms startup).
+    let ok = judge(&p, &tests, Language::Rust, &src, &env()).unwrap();
+    assert_eq!(ok.verdict, Verdict::Accepted, "{ok:?}");
+    assert!(ok.cpu_us > 0);
+    // Half speed allowance: the cap is 200 ms, and the message names the scaled limit.
+    let mut fast = env();
+    fast.time_scale = 0.5;
+    let tle = judge(&p, &tests, Language::Rust, &src, &fast).unwrap();
+    assert_eq!(tle.verdict, Verdict::TimeLimitExceeded);
+    assert_eq!(
+        failure_message(&tle, MessageCode::TimeLimit),
+        "time limit of 150 ms exceeded"
+    );
+    // A slow machine: 2× gives 600 ms of limit.
+    let mut slow = env();
+    slow.time_scale = 2.0;
+    let r = judge(&p, &tests, Language::Rust, &rust_spin(500), &slow).unwrap();
+    assert_eq!(r.verdict, Verdict::Accepted, "{r:?}");
 }
 
 #[test]

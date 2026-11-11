@@ -1,4 +1,4 @@
-//! The sandbox checks of `kb-pack validate --run` (ADR 0016) on copies of two-sum, each
+//! The sandbox checks of `kb-pack validate --run` (ADR 0016, 0017) on copies of two-sum, each
 //! altered to break one rule. Needs the dev sandbox root:
 //!
 //! ```text
@@ -70,7 +70,8 @@ fn a_complete_problem_passes_every_check() {
         Check::Reference(Language::Php),
         Check::Reference(Language::Rust),
         Check::Stress,
-        Check::Naive,
+        Check::Naive(Language::Python),
+        Check::Naive(Language::Rust),
     ] {
         finding(&f, check);
     }
@@ -105,13 +106,50 @@ fn a_reference_that_disagrees_with_brute_is_reported_with_the_input() {
 #[test]
 fn naive_passing_means_the_tests_are_too_weak() {
     let (_base, dir) = two_sum("weak");
-    // Without the max-size tests, the O(n²) solution is fast enough.
-    for t in ["15", "16"] {
-        std::fs::remove_file(dir.join(format!("tests/hidden/{t}.json"))).unwrap();
-    }
+    // Without the max-size test, the O(n²) solutions are fast enough in both languages.
+    std::fs::remove_file(dir.join("tests/hidden/15.json")).unwrap();
     let f = check_problem(&dir, &env());
-    let n = finding(&f, Check::Naive);
-    assert!(!n.ok && n.detail.contains("do not force"), "{}", n.detail);
+    for lang in [Language::Python, Language::Rust] {
+        let n = finding(&f, Check::Naive(lang));
+        assert!(!n.ok && n.detail.contains("do not force"), "{}", n.detail);
+    }
+}
+
+#[test]
+fn a_naive_rs_that_is_too_fast_is_rejected() {
+    let (_base, dir) = two_sum("fast-naive-rs");
+    // The O(n) reference posing as the naive solution: the Rust limit lets it through.
+    std::fs::copy(dir.join("solutions/ref.rs"), dir.join("solutions/naive.rs")).unwrap();
+    let f = check_problem(&dir, &env());
+    let n = finding(&f, Check::Naive(Language::Rust));
+    assert!(
+        !n.ok && n.detail.contains("naive.rs passed") && n.detail.ends_with("in rust"),
+        "{}",
+        n.detail
+    );
+    assert!(finding(&f, Check::Naive(Language::Python)).ok);
+}
+
+#[test]
+fn a_rust_reference_over_half_its_budget_fails() {
+    let (_base, dir) = two_sum("slow-rs");
+    // About 250 ms of CPU on the max-size test: Accepted (Rust cap 400 ms = 300 ms base
+    // + 100 ms startup) but over half of it.
+    let src = std::fs::read_to_string(dir.join("solutions/ref.rs")).unwrap();
+    let spin = "    if nums.len() == 100_000 {\n        let t = std::time::Instant::now();\n        while t.elapsed().as_millis() < 250 {\n            std::hint::black_box(0);\n        }\n    }\n";
+    let src = src.replacen("-> Vec<i64> {\n", &format!("-> Vec<i64> {{\n{spin}"), 1);
+    assert!(src.contains("Instant"), "ref.rs changed shape:\n{src}");
+    std::fs::write(dir.join("solutions/ref.rs"), src).unwrap();
+    let r = finding(
+        &check_problem(&dir, &env()),
+        Check::Reference(Language::Rust),
+    )
+    .clone();
+    assert!(
+        !r.ok && r.detail.starts_with("too slow") && r.detail.contains("400 ms rust budget"),
+        "{}",
+        r.detail
+    );
 }
 
 #[test]
@@ -122,7 +160,7 @@ fn a_wrong_naive_is_rejected() {
         "def two_sum(nums: list[int], target: int) -> list[int]:\n    return [0, 1]\n",
     )
     .unwrap();
-    let n = finding(&check_problem(&dir, &env()), Check::Naive).clone();
+    let n = finding(&check_problem(&dir, &env()), Check::Naive(Language::Python)).clone();
     assert!(
         !n.ok && n.detail.contains("must be correct"),
         "{}",
@@ -141,7 +179,7 @@ fn the_validator_rejecting_a_committed_test_fails() {
     let v = finding(&check_problem(&dir, &env()), Check::Validator).clone();
     assert!(!v.ok, "{v:?}");
     assert!(
-        v.detail.contains("hidden test") && v.detail.contains("2 ≤ nums.length ≤ 10⁴"),
+        v.detail.contains("hidden test") && v.detail.contains("2 ≤ nums.length ≤ 10⁵"),
         "{}",
         v.detail
     );
@@ -150,10 +188,11 @@ fn the_validator_rejecting_a_committed_test_fails() {
 #[test]
 fn a_reference_over_half_the_time_limit_fails() {
     let (_base, dir) = two_sum("slow");
-    // About 0.7 s per max-size test: Accepted (limit 2 s) but over the 1 s budget.
+    // About 2.2 s of CPU on the max-size test: Accepted (Python cap 4 s = 300 ms base
+    // × 10 + 1 s startup) but over half of it.
     std::fs::write(
         dir.join("solutions/ref.py"),
-        "import time\n\ndef two_sum(nums: list[int], target: int) -> list[int]:\n    if len(nums) == 10000:\n        t = time.perf_counter()\n        while time.perf_counter() - t < 0.7:\n            pass\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n    return []\n",
+        "import time\n\ndef two_sum(nums: list[int], target: int) -> list[int]:\n    if len(nums) == 100000:\n        t = time.perf_counter()\n        while time.perf_counter() - t < 2.2:\n            pass\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n    return []\n",
     )
     .unwrap();
     let r = finding(

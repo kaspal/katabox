@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { JudgeEvent, Language, Report } from "@/bindings";
 import { api, type CustomInput } from "@/lib/api";
+import { queryKeys, useCalibration } from "@/lib/queries";
 
 export const AUTOSAVE_MS = 600;
 
@@ -129,6 +130,8 @@ export type Phase = { kind: "idle" } | { kind: "starting" } | { kind: "event"; e
 /** Run and Submit with progress; one at a time. */
 export function useJudge(problem: string) {
   const queryClient = useQueryClient();
+  // Unmeasured (null) until the first Run or Submit measures this machine.
+  const measured = useCalibration().data != null;
   const [busy, setBusy] = useState<"run" | "submit" | null>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [report, setReport] = useState<Report | null>(null);
@@ -155,6 +158,11 @@ export function useJudge(problem: string) {
         running.current = false;
         setBusy(null);
         void queryClient.invalidateQueries({ queryKey: ["snapshots", problem] });
+        // The first Run or Submit measures this machine (ADR 0017): refresh the limits.
+        if (!measured) {
+          void queryClient.invalidateQueries({ queryKey: queryKeys.calibration });
+          void queryClient.invalidateQueries({ queryKey: ["problem", problem] });
+        }
         if (kind === "submit") {
           for (const key of [["submissions", problem], ["editorial", problem], ["problems"], ["continue"]]) {
             void queryClient.invalidateQueries({ queryKey: key });
@@ -162,7 +170,7 @@ export function useJudge(problem: string) {
         }
       }
     },
-    [problem, queryClient],
+    [problem, queryClient, measured],
   );
 
   const run = useCallback(

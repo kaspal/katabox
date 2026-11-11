@@ -17,4 +17,4 @@ Checking before inserting is what prevents using the same element twice.
 
 With `nums = [9, 2, 9]` and `target = 18`, the partner of the first 9 is 9 itself, but the map is still empty at `i = 0`, so an element is never paired with itself; the second 9 finds the first one.
 
-**Complexity:** O(n) time, O(n) extra space. Trying every pair is O(n²), which is too slow for 10⁴ numbers.
+**Complexity:** O(n) time, O(n) extra space. Trying every pair is O(n²), which is too slow for 10⁵ numbers.

@@ -20,6 +20,7 @@ export const queryKeys = {
   problems: (filter: ProblemFilter) => ["problems", filter] as const,
   problem: (id: string, lang: string) => ["problem", id, lang] as const,
   continueItem: (lang: string) => ["continue", lang] as const,
+  calibration: ["calibration"] as const,
 };
 
 export function useAppInfo() {
@@ -48,6 +49,11 @@ export function useProblem(id: string) {
     queryKey: queryKeys.problem(id, lang),
     queryFn: () => api.getProblem(id, lang),
   });
+}
+
+/** This machine's speed factor (ADR 0017); `null` until it is measured. */
+export function useCalibration() {
+  return useQuery({ queryKey: queryKeys.calibration, queryFn: api.calibration });
 }
 
 export function useContinue() {

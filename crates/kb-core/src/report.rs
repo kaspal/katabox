@@ -58,6 +58,11 @@ pub struct Report {
     pub compile_output: Option<Message>,
     /// Sum of the per-test times, in microseconds.
     pub time_us: u64,
+    /// CPU time of the whole run (user + kernel, every test plus the runtime's startup),
+    /// in microseconds: what the time limit measures (ADR 0017). 0 when nothing ran, and
+    /// in reports stored before it existed.
+    #[serde(default)]
+    pub cpu_us: u64,
     /// Peak memory of the whole run (capped at the limit).
     pub memory_kb: u32,
     /// The compile step, for compiled languages.
@@ -146,6 +151,7 @@ mod tests {
             }),
             compile_output: None,
             time_us: 5,
+            cpu_us: 6,
             memory_kb: 7,
             compile: Some(CompileInfo {
                 cached: true,
@@ -166,12 +172,18 @@ mod tests {
             },
             "compile_output": null,
             "time_us": 5,
+            "cpu_us": 6,
             "memory_kb": 7,
             "compile": {"cached": true, "time_us": 0}
         });
         assert_eq!(serde_json::to_value(&r).unwrap(), want);
-        let back: Report = serde_json::from_value(want).unwrap();
+        let back: Report = serde_json::from_value(want.clone()).unwrap();
         assert_eq!(back, r);
+        // Reports stored before `cpu_us` existed still load (as 0).
+        let mut old = want;
+        old.as_object_mut().unwrap().remove("cpu_us");
+        let back: Report = serde_json::from_value(old).unwrap();
+        assert_eq!(back.cpu_us, 0);
     }
 
     #[test]
@@ -195,6 +207,7 @@ mod tests {
             first_failure: None,
             compile_output: None,
             time_us: 2,
+            cpu_us: 0,
             memory_kb: 1,
             compile: None,
         };

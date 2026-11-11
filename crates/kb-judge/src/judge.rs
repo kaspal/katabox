@@ -3,7 +3,7 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 use kb_core::{
     CompileInfo, Failure, JudgeEvent, Language, Limits, Message, MessageCode, Report, TestCase,
@@ -16,13 +16,9 @@ use crate::JudgeError;
 use crate::checker::{CheckOutcome, Checker};
 use crate::codegen::workspace_files;
 use crate::languages::{LanguageDef, definition};
+use crate::limits;
 use crate::problem::Problem;
 use crate::protocol::{self, Record, Request, Status, TestRecord};
-
-/// Extra CPU time on top of the problem's limit for interpreter startup and module
-/// loading, which the user does not control. The problem's limit covers the user's code
-/// across the whole batch (kb-core `Limits`).
-pub const STARTUP_ALLOWANCE: Duration = Duration::from_millis(1_000);
 
 /// Room on stdout for the harness records themselves (return values included), on top
 /// of the user's captured prints.
@@ -44,6 +40,10 @@ pub struct JudgeEnv {
     /// Compiled binaries, as `<cache_dir>/<language>/<hash>.exe`; must be inside
     /// `sandbox_root` and outside `runs_dir`. The sandbox may read and run it.
     pub cache_dir: PathBuf,
+    /// This machine's calibration factor (ADR 0017): every language's time limit is
+    /// multiplied by it, clamped to [`limits::MIN_SCALE`], [`limits::MAX_SCALE`]. 1.0 is
+    /// the reference machine (and the default).
+    pub time_scale: f64,
     toolchains: Vec<(Language, PathBuf)>,
 }
 
@@ -54,6 +54,7 @@ impl JudgeEnv {
             runs_dir: sandbox_root.join("runs"),
             cache_dir: sandbox_root.join("cache"),
             sandbox_root,
+            time_scale: 1.0,
             toolchains: Vec::new(),
         }
     }
@@ -179,8 +180,9 @@ fn judge_inner(
 
     let mut limits = Limits::default_for(language);
     limits.memory_mb = problem.memory_mb;
-    let startup_ms = u32::try_from(STARTUP_ALLOWANCE.as_millis()).unwrap_or(u32::MAX);
-    limits.cpu_time_ms = problem.time_limit_ms.saturating_add(startup_ms);
+    // The problem's base limit, scaled for this language and machine, plus the
+    // language's startup allowance (ADR 0017).
+    limits.cpu_time_ms = limits::cpu_cap_ms(problem.time_limit_ms, &def, env.time_scale);
     let print_cap = limits.max_output_kb as usize * 1024;
 
     let work = WorkDir::create(&env.runs_dir)?;
@@ -213,7 +215,9 @@ fn judge_inner(
         memory_kb: u32::try_from(outcome.peak_memory_bytes.min(spec.memory_bytes) / 1024)
             .unwrap_or(u32::MAX),
         stderr: String::from_utf8_lossy(&outcome.stderr).into_owned(),
-        time_limit_ms: problem.time_limit_ms,
+        time_limit_ms: limits::effective_limit_ms(problem.time_limit_ms, &def, env.time_scale),
+        cpu_us: u64::try_from((outcome.user_time + outcome.kernel_time).as_micros())
+            .unwrap_or(u64::MAX),
     };
     let records = protocol::parse(&outcome.stdout, &nonce);
     let mut report = assemble(&problem.checker, tests, records, &facts);
@@ -377,6 +381,7 @@ fn compile_failure(tests: &[TestCase], message: Message, info: CompileInfo) -> R
         first_failure: None,
         compile_output: Some(message),
         time_us: 0,
+        cpu_us: 0,
         memory_kb: 0,
         compile: Some(info),
     }
@@ -390,7 +395,10 @@ struct RunFacts {
     memory_limit_hit: bool,
     memory_kb: u32,
     stderr: String,
+    /// The language's effective limit (what the TLE message names).
     time_limit_ms: u32,
+    /// CPU time of the whole run (user + kernel), in microseconds.
+    cpu_us: u64,
 }
 
 fn assemble(
@@ -407,6 +415,7 @@ fn assemble(
         first_failure: None,
         compile_output: None,
         time_us: 0,
+        cpu_us: facts.cpu_us,
         memory_kb: facts.memory_kb,
         compile: None,
     };
@@ -803,6 +812,7 @@ mod tests {
             memory_kb: 1000,
             stderr: String::new(),
             time_limit_ms: 2000,
+            cpu_us: 3_100,
         }
     }
 
@@ -841,6 +851,7 @@ mod tests {
         assert_eq!(r.verdict, Verdict::Accepted);
         assert_eq!(r.tests.len(), 3);
         assert_eq!(r.time_us, 4_200);
+        assert_eq!(r.cpu_us, 3_100);
         assert_eq!(r.first_failure, None);
     }
 
@@ -1025,12 +1036,12 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("kbj-evict-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let base = SystemTime::now() - Duration::from_secs(1000);
+        let base = SystemTime::now() - std::time::Duration::from_secs(1000);
         for i in 0..5u64 {
             let f = dir.join(format!("{i}.exe"));
             std::fs::write(&f, "").unwrap();
             let file = std::fs::File::options().write(true).open(&f).unwrap();
-            file.set_modified(base + Duration::from_secs(i * 10))
+            file.set_modified(base + std::time::Duration::from_secs(i * 10))
                 .unwrap();
         }
         std::fs::write(dir.join(".tmp-in-progress"), "").unwrap();

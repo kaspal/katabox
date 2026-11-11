@@ -191,6 +191,28 @@ async setSetting(key: string, value: JsonValue) : Promise<Result<null, AppError>
 }
 },
 /**
+ * This machine's calibration (ADR 0017), if it was measured.
+ */
+async calibration() : Promise<Result<CalibrationInfo | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("calibration") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Measure this machine again; the judge's limits follow the new factor.
+ */
+async recalibrate() : Promise<Result<CalibrationInfo, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("recalibrate") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Start a language server for `language` on `problem`, replacing the language's previous
  * session (ADR 0014). Server messages and status changes stream over `on_event`.
  */
@@ -375,6 +397,10 @@ export type AppErrorCode =
  */
 "unsupported_platform" | 
 /**
+ * Measuring this machine's speed needs Python or JavaScript/TypeScript installed.
+ */
+"calibration_unavailable" | 
+/**
  * Anything else, including the app failing to start.
  */
 "internal"
@@ -399,6 +425,30 @@ language_servers: LanguageServerInfo[];
  * `windows`, `linux`, ...
  */
 platform: string }
+/**
+ * What Settings shows about the calibration.
+ */
+export type CalibrationInfo = { 
+/**
+ * Measured time ÷ the reference machine's: above 1 is a slower machine.
+ */
+factor: number; 
+/**
+ * The time scale the judge applies: `factor` within 0.5-3.0.
+ */
+applied: number; 
+/**
+ * The runtime that ran the benchmark (Python, or TypeScript for Node).
+ */
+runtime: Language; 
+/**
+ * Fastest benchmark round here and on the reference machine, in microseconds.
+ */
+measured_us: number; reference_us: number; 
+/**
+ * When it was measured (Unix seconds).
+ */
+measured_at: number }
 /**
  * What the compile step did.
  */
@@ -495,6 +545,11 @@ export type JudgeEvent =
  * (language.toml + harness template) and a variant here.
  */
 export type Language = "python" | "javascript" | "typescript" | "php" | "rust"
+/**
+ * A language's time limit on one problem (ADR 0017): the problem's base limit × the
+ * language's factor, at this machine's time scale. CPU time for the whole batch of tests.
+ */
+export type LanguageLimit = { language: Language; time_limit_ms: number }
 /**
  * Whether a language server can run for a language here, and if not, why.
  */
@@ -707,11 +762,24 @@ export type ProblemView = { id: string;
 /**
  * The language requested; each text falls back to English when missing.
  */
-lang: UiLang; title: string; statement: string; editorial: string | null; hints: string[]; difficulty: Difficulty; pattern: string; rank: number; tags: string[]; signature: JsonValue; time_limit_ms: number; memory_mb: number; public_tests: PublicTest[]; 
+lang: UiLang; title: string; statement: string; editorial: string | null; hints: string[]; difficulty: Difficulty; pattern: string; rank: number; tags: string[]; signature: JsonValue; 
+/**
+ * The base time limit, set for Rust; each language scales it (ADR 0017).
+ */
+time_limit_ms: number; memory_mb: number; public_tests: PublicTest[]; 
 /**
  * Custom test inputs are checked by the problem's `validate.py` (needs Python).
  */
-has_validator: boolean }
+has_validator: boolean; 
+/**
+ * Each language's time limit at this machine's time scale. Filled by the app, which
+ * knows the languages and the calibration; empty as read from content.db.
+ */
+time_limits: LanguageLimit[]; 
+/**
+ * The time scale in `time_limits` (1.0 = the reference machine; ADR 0017).
+ */
+time_scale: number }
 /**
  * A public test as shown in the UI.
  */
@@ -730,6 +798,12 @@ compile_output: Message | null;
  * Sum of the per-test times, in microseconds.
  */
 time_us: number; 
+/**
+ * CPU time of the whole run (user + kernel, every test plus the runtime's startup),
+ * in microseconds: what the time limit measures (ADR 0017). 0 when nothing ran, and
+ * in reports stored before it existed.
+ */
+cpu_us?: number; 
 /**
  * Peak memory of the whole run (capped at the limit).
  */

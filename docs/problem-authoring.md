@@ -21,7 +21,7 @@ are fine; the wording, names, examples and tests must be our own.
 | `gen.py` | Random inputs for a seed (see below) |
 | `validate.py` | The constraints, checked on every test and on custom inputs in the app |
 | `solutions/brute.py` | Slow but obviously correct (stress test) |
-| `solutions/naive.py` | Correct but too slow (weak-test guard), where the complexity matters |
+| `solutions/naive.py`, `solutions/naive.rs` | Correct but too slow (weak-test guard), where the complexity matters; always both |
 
 Test files are `{"input": {<param>: value, ...}, "output": value}`, one test per file, in
 numeric order. `rank` (1-10) orders the library list.
@@ -43,7 +43,25 @@ Names: the function name is camelCase in `problem.toml` (`twoSum`). Python and R
 snake_case (`two_sum`); TypeScript and PHP keep camelCase. A name that is a keyword gets a
 trailing `_`.
 
-Each reference solution (and `brute.py`, `naive.py`) must declare the function exactly as
+## Time limit (ADR 0017)
+
+`[judge] time_limit_ms` is the **base limit**: CPU time for the whole batch of tests in
+Rust, the fastest language. Each language scales it with its `[time]` table in
+`languages/<lang>/language.toml` and adds a startup allowance:
+
+| Language | Limit | CPU cap of the run |
+| --- | --- | --- |
+| Rust | base × 1 | + 100 ms |
+| TypeScript | base × 2 | + 500 ms |
+| PHP | base × 5 | + 500 ms |
+| Python | base × 10 | + 1000 ms |
+
+The app also multiplies every limit by the machine's speed factor (0.5-3.0), measured
+once with a short benchmark; kb-pack always judges at 1.0. Start with `time_limit_ms =
+300` (every current problem uses it). Lower it only if a naive solution gets through;
+raise it only if a reference needs more than half of its language's cap.
+
+Each reference solution (and `brute.py`, `naive.py`, `naive.rs`) must declare the function exactly as
 the generated starter code does (whitespace aside); `kb-pack validate` checks this. To see
 the starter code:
 
@@ -71,6 +89,11 @@ app run them in the same sandbox as user code.
   It is **required** when the editorial promises a better complexity than that approach;
   it proves the max-size tests really test complexity. This is a review rule: kb-pack
   cannot tell what the editorial promises.
+- **`solutions/naive.rs`** is the same algorithm in Rust, required whenever `naive.py`
+  exists (kb-pack checks the pair). Compiled code is 10-100× faster, so it shows whether
+  the max tests also stop the slow approach in the fastest language. If it passes, raise
+  the constraint (larger n in the statements, `validate.py` and `gen.py`'s `max`) and
+  regenerate the max tests.
 
 `gen.py` and `brute.py` come as a pair.
 
@@ -81,14 +104,16 @@ cargo run -p kb-pack -- validate        # structure, metadata, tests, signatures
 cargo run -p kb-pack -- validate --run  # the sandbox checks below (Windows; needs the toolchains)
 ```
 
-`--run` needs `pwsh scripts/fetch-toolchains.ps1` and checks, per problem:
+`--run` needs `pwsh scripts/fetch-toolchains.ps1`. It first prints this machine's speed
+factor (the limits are still judged at 1.0; a warning appears when the machine is far
+from the reference one), then checks, per problem:
 
 | Check | Rule |
 | --- | --- |
 | validator | `validate.py` accepts every public and hidden test |
-| python, typescript, php, rust | each reference is Accepted on every test, and its total test time is at most **50% of `time_limit_ms`** (the limit is one CPU budget per run) |
+| python, typescript, php, rust | each reference is Accepted on every test using at most **50% of its language's CPU cap** for the run (startup included) |
 | stress | `gen.py` makes 500 small inputs (seeds 1-500); each passes `validate.py`; `brute.py`'s answers are the expected outputs; every reference agrees with them (the problem's checker). The first disagreement is printed with its seed and input |
-| naive | `naive.py` is Accepted on every test it reaches and gets **Time Limit Exceeded** on at least one |
+| naive.py, naive.rs | each is Accepted on every test it reaches and gets **Time Limit Exceeded** under its own language's limit |
 
 ## Generating tests
 
@@ -103,8 +128,10 @@ numbered files in `tests/hidden/` (`--from N` to choose the first number).
 
 **Generated tests are committed.** Building `content.db` never runs scripts, so the app
 and CI build without toolchains. Keep max sizes so a problem's tests stay around 1 MB in
-total (for example n ≤ 5·10⁴ with values ≤ 10⁶); one max test is enough when it already
-makes `naive.py` run out of time.
+total (for example n ≤ 10⁵ with values ≤ 10⁹ is about 1 MB); one max test is enough when
+it already makes both naive solutions run out of time. The CPU cap covers the whole run,
+so several max tests add up. To replace max tests, delete their files and run `generate`
+with `--from` set to the first freed number.
 
 ## Review checklist
 

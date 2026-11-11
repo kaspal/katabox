@@ -7,10 +7,12 @@
 //! - [`checker`]: built-in output comparisons.
 //! - [`tools`]: problem tooling (`gen.py`, `validate.py`) run in the sandbox like user code.
 
+pub mod calibration;
 pub mod checker;
 pub mod codegen;
 mod judge;
 pub mod languages;
+pub mod limits;
 pub mod problem;
 mod protocol;
 pub mod signature;
@@ -18,13 +20,15 @@ pub mod tools;
 
 pub use checker::{CheckOutcome, Checker};
 pub use codegen::{harness, starter_code};
-pub use judge::{BINARY_CACHE_SIZE, JudgeEnv, STARTUP_ALLOWANCE, judge, judge_with_progress};
+pub use judge::{BINARY_CACHE_SIZE, JudgeEnv, judge, judge_with_progress};
 /// The judge's data types live in kb-core (so kb-store can store them without the judge);
 /// re-exported here so this crate's API is unchanged.
 pub use kb_core::{CompileInfo, Failure, JudgeEvent, Report, TestCase, TestOutcome};
 pub use problem::{Problem, check_input};
 pub use signature::{Param, Signature, Type};
-pub use tools::{ScriptLimits, ScriptOutput, generate_inputs, run_python, validate_inputs};
+pub use tools::{
+    ScriptLimits, ScriptOutput, generate_inputs, run_python, run_script, validate_inputs,
+};
 
 use kb_core::Language;
 
