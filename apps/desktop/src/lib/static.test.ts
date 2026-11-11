@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import i18next from "i18next";
 import en from "@/i18n/locales/en.json";
 import es from "@/i18n/locales/es.json";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describeError, describeMessage } from "@/lib/errors";
 import { resources } from "@/i18n";
@@ -27,6 +27,14 @@ describe("i18n resources", () => {
       });
       expect(empty, lang).toEqual([]);
     }
+  });
+});
+
+describe("generated shadcn components", () => {
+  it("import cn from our utils, never the unrelated npm package \"cn\"", () => {
+    const dir = path.resolve(process.cwd(), "src/components/ui");
+    const bad = readdirSync(dir).filter((f) => readFileSync(path.join(dir, f), "utf8").includes('from "cn"'));
+    expect(bad).toEqual([]);
   });
 });
 
@@ -100,6 +108,15 @@ const SEMANTIC = [
   "status-solved",
   "status-attempted",
   "destructive",
+  "syntax-keyword",
+  "syntax-string",
+  "syntax-number",
+  "syntax-comment",
+  "syntax-function",
+  "syntax-type",
+  "syntax-variable",
+  "syntax-operator",
+  "syntax-invalid",
 ];
 
 describe.each([

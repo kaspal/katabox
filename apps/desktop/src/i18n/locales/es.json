@@ -113,9 +113,73 @@
   },
   "workspace": {
     "title": "Espacio de trabajo",
-    "comingSoon": "El editor, las pruebas y los resultados llegan en la próxima versión.",
-    "smokeLink": "Ábrelo en la pantalla de prueba (desarrollo)",
-    "back": "Volver a la biblioteca"
+    "back": "Volver a la biblioteca",
+    "language": "Lenguaje",
+    "run": "Ejecutar",
+    "submit": "Enviar",
+    "toggleProblem": "Mostrar u ocultar el problema",
+    "toggleResults": "Mostrar u ocultar pruebas y resultados",
+    "focusEnter": "Modo concentración",
+    "focusExit": "Salir del modo concentración",
+    "editorLabel": "Editor de código {{language}}",
+    "problemPane": "Problema",
+    "resultsPane": "Pruebas y resultados",
+    "save": {
+      "saving": "Guardando…",
+      "saved": "Guardado",
+      "error": "Sin guardar"
+    },
+    "tabs": {
+      "description": "Descripción",
+      "hints": "Pistas",
+      "editorial": "Solución",
+      "submissions": "Envíos",
+      "notes": "Notas",
+      "history": "Historial"
+    },
+    "limits": {
+      "time": "Tiempo límite",
+      "memory": "Memoria límite"
+    },
+    "hints": {
+      "none": "Este problema no tiene pistas.",
+      "tier": "Pista {{tier}}",
+      "reveal": "Mostrar la pista {{tier}}",
+      "lockedAfter": "Primero muestra la pista {{tier}}."
+    },
+    "editorial": {
+      "none": "Este problema aún no tiene solución explicada.",
+      "locked": "La solución está bloqueada.",
+      "lockedReason": "Se desbloquea cuando resuelves el problema, o tras {{required}} envíos fallidos ({{failed}}/{{required}}).",
+      "unlockedSolved": "Desbloqueada porque resolviste este problema.",
+      "unlockedAttempts": "Desbloqueada tras varios envíos fallidos."
+    },
+    "submissions": {
+      "none": "Aún no hay envíos.",
+      "back": "Todos los envíos",
+      "code": "Código ({{language}})",
+      "codeLabel": "Código enviado"
+    },
+    "notes": {
+      "mode": "Vista de notas",
+      "edit": "Editar",
+      "preview": "Vista previa",
+      "label": "Notas (Markdown)",
+      "empty": "Aún no hay notas."
+    },
+    "history": {
+      "none": "Aún no hay versiones. Cada Ejecutar y Enviar guarda una.",
+      "help": "Selecciona dos versiones para compararlas, o una para compararla con el editor.",
+      "select": "Seleccionar la versión de {{when}}",
+      "restore": "Restaurar",
+      "restoreLabel": "Restaurar la versión de {{when}}",
+      "current": "Editor (actual)",
+      "source": {
+        "run": "Ejecutar",
+        "submit": "Enviar",
+        "restore": "Antes de restaurar"
+      }
+    }
   },
   "progress": {
     "title": "Progreso",
@@ -142,7 +206,15 @@
     "toolchainStatus": "Estado",
     "toolchainPath": "Programa",
     "present": "Instalado",
-    "missing": "Falta"
+    "missing": "Falta",
+    "editor": "Editor",
+    "keymap": "Atajos de teclado",
+    "keymaps": {
+      "default": "Predeterminado",
+      "vscode": "VS Code",
+      "vim": "Vim"
+    },
+    "fontSize": "Tamaño de letra"
   },
   "languages": {
     "python": "Python",
@@ -198,6 +270,51 @@
       "harness_silent": "El arnés de pruebas se detuvo sin informar.",
       "bad_harness_record": "El arnés de pruebas informó algo ilegible.",
       "incomplete_results": "Algunas pruebas no tienen resultado."
+    }
+  },
+  "results": {
+    "tabs": {
+      "testcases": "Casos de prueba",
+      "result": "Resultado"
+    },
+    "phase": {
+      "starting": "Iniciando…",
+      "compiling": "Compilando…",
+      "running_one": "Ejecutando {{count}} prueba…",
+      "running_other": "Ejecutando {{count}} pruebas…",
+      "checked": "Revisadas {{done}}/{{total}}"
+    },
+    "testKind": {
+      "example": "Ejemplo",
+      "public": "Pública",
+      "custom": "Personalizada",
+      "hidden": "Oculta"
+    },
+    "firstFailure": "Primer fallo: {{test}}",
+    "input": "Entrada",
+    "expected": "Esperado",
+    "actual": "Tu salida",
+    "stdout": "Salida impresa",
+    "passed": "{{passed}}/{{total}} pruebas superadas",
+    "time": "{{ms}} ms",
+    "memory": "{{mb}} MB",
+    "compilerOutput": "Salida del compilador",
+    "test": "Prueba",
+    "verdict": "Veredicto",
+    "timeCol": "Tiempo",
+    "returned": "Devolvió",
+    "hidden": "(oculto)",
+    "notRun_one": "{{count}} prueba no se ejecutó.",
+    "notRun_other": "{{count}} pruebas no se ejecutaron.",
+    "empty": "Ejecuta o envía para ver los resultados aquí.",
+    "custom": {
+      "add": "Añadir prueba personalizada",
+      "remove": "Quitar la prueba personalizada {{index}}",
+      "errors": {
+        "empty": "Escribe un valor.",
+        "json": "Esto no es JSON válido.",
+        "type": "Se esperaba un valor de tipo {{type}}."
+      }
     }
   }
 }

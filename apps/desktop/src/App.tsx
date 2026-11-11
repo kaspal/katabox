@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, type RouterHistory } from "@tanstack/react-router";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { createAppRouter } from "@/app/router";
+import { FocusModeProvider } from "@/lib/focus";
 import { PrefsProvider } from "@/lib/prefs";
 
 export function createQueryClient() {
@@ -21,7 +22,9 @@ export default function App({ history }: { history?: RouterHistory }) {
     <QueryClientProvider client={queryClient}>
       <PrefsProvider>
         <TooltipProvider delayDuration={400}>
-          <RouterProvider router={router} />
+          <FocusModeProvider>
+            <RouterProvider router={router} />
+          </FocusModeProvider>
         </TooltipProvider>
       </PrefsProvider>
     </QueryClientProvider>

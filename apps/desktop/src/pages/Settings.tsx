@@ -3,11 +3,14 @@ import { CheckCircle2, Monitor, Moon, Sun, XCircle } from "lucide-react";
 import { Page } from "@/components/Page";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { Badge } from "@/components/ui/badge";
+import { MiddleEllipsis } from "@/components/MiddleEllipsis";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { UI_LANGS, type UiLangCode } from "@/i18n";
 import { THEMES, usePrefs, type ThemePref } from "@/lib/prefs";
 import { useAppInfo } from "@/lib/queries";
+import { FONT_SIZES, KEYMAPS, useEditorPrefs, type KeymapPref } from "@/lib/settings";
 
 const THEME_ICON: Record<ThemePref, typeof Sun> = { system: Monitor, light: Sun, dark: Moon };
 
@@ -33,6 +36,7 @@ export function Settings() {
   const { t } = useTranslation();
   const { theme, lang, setTheme, setLang } = usePrefs();
   const info = useAppInfo();
+  const editor = useEditorPrefs();
 
   return (
     <Page title={t("settings.title")}>
@@ -78,6 +82,41 @@ export function Settings() {
           </dl>
         </Section>
 
+        <Section title={t("settings.editor")}>
+          <dl className="space-y-3">
+            <Row label={t("settings.keymap")}>
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                aria-label={t("settings.keymap")}
+                value={editor.keymap}
+                onValueChange={(v) => v && editor.setKeymap(v as KeymapPref)}
+              >
+                {KEYMAPS.map((k) => (
+                  <ToggleGroupItem key={k} value={k} className="px-3">
+                    {t(`settings.keymaps.${k}`)}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </Row>
+            <Row label={t("settings.fontSize")}>
+              <Select value={String(editor.fontSize)} onValueChange={(v) => editor.setFontSize(Number(v))}>
+                <SelectTrigger size="sm" className="w-28" aria-label={t("settings.fontSize")}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FONT_SIZES.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n} px
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Row>
+          </dl>
+        </Section>
+
         <Section title={t("settings.about")}>
           {info.isPending ? (
             <Skeleton className="h-32 w-full" />
@@ -103,10 +142,10 @@ export function Settings() {
                   <span className="font-mono">{info.data.user_schema_version}</span>
                 </Row>
                 <Row label={t("settings.dataFolder")}>
-                  <span className="font-mono text-xs">{info.data.data_dir}</span>
+                  <MiddleEllipsis className="font-mono text-xs" text={info.data.data_dir} />
                 </Row>
                 <Row label={t("settings.sandboxRoot")}>
-                  <span className="font-mono text-xs">{info.data.sandbox_root}</span>
+                  <MiddleEllipsis className="font-mono text-xs" text={info.data.sandbox_root} />
                 </Row>
                 <Row label={t("settings.sandboxSource")}>
                   {t(`settings.rootSource.${info.data.sandbox_root_source}`)}
@@ -138,8 +177,8 @@ export function Settings() {
                           </span>
                         )}
                       </td>
-                      <td className="py-1.5 font-mono text-xs break-all text-muted-foreground">
-                        {tc.program ?? tc.problem}
+                      <td className="py-1.5 font-mono text-xs text-muted-foreground">
+                        <MiddleEllipsis text={tc.program ?? tc.problem ?? ""} max={48} />
                       </td>
                     </tr>
                   ))}

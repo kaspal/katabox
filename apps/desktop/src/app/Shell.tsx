@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CommandPalette } from "@/app/CommandPalette";
 import { DEV_NAV, NAV } from "@/app/nav";
+import { useFocusMode } from "@/lib/focus";
 import { useAppInfo } from "@/lib/queries";
 
 /** Left navigation rail, top bar (DEV DATA badge, palette) and the page. */
@@ -14,6 +15,7 @@ export function Shell() {
   const { t } = useTranslation();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const info = useAppInfo();
+  const { focus } = useFocusMode();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -27,8 +29,14 @@ export function Shell() {
   }, []);
 
   return (
-    <div className="grid h-full grid-cols-[56px_1fr] grid-rows-[44px_1fr]">
+    <div
+      className={
+        focus ? "grid h-full grid-cols-[1fr] grid-rows-[1fr]" : "grid h-full grid-cols-[56px_1fr] grid-rows-[44px_1fr]"
+      }
+      data-focus={focus || undefined}
+    >
       <nav
+        hidden={focus}
         aria-label={t("nav.label")}
         className="row-span-2 flex flex-col items-center gap-1 border-r bg-rail py-2"
       >
@@ -52,7 +60,7 @@ export function Shell() {
         ))}
       </nav>
 
-      <header className="flex items-center justify-between gap-3 border-b px-4">
+      <header hidden={focus} className="flex items-center justify-between gap-3 border-b px-4">
         <span className="font-semibold">{t("app.name")}</span>
         <div className="flex items-center gap-3">
           {info.data?.dev_data && (
