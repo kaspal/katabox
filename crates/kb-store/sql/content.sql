@@ -16,7 +16,9 @@ CREATE TABLE problems (
     checker       TEXT NOT NULL,
     time_limit_ms INTEGER NOT NULL,
     memory_mb     INTEGER NOT NULL,
-    profile       INTEGER NOT NULL DEFAULT 0
+    profile       INTEGER NOT NULL DEFAULT 0,
+    -- validate.py (constraint checks for custom tests, run in the sandbox; ADR 0016)
+    validator     TEXT
 ) WITHOUT ROWID;
 
 CREATE TABLE problem_tags (

@@ -409,3 +409,26 @@ fn toolchain_errors_keep_their_codes() {
         json!("not_enough_space")
     );
 }
+
+#[tokio::test]
+async fn without_python_the_validator_is_skipped_and_the_reference_decides() {
+    let app = app("no-python").await;
+    // two-sum has validate.py; a fresh root has no Python, so the input that breaks a
+    // constraint is not refused by the validator: the flow goes on to the reference,
+    // which cannot run here either.
+    let short = json!({"nums": [1], "target": 2})
+        .as_object()
+        .unwrap()
+        .clone();
+    let err = app
+        .run("two-sum", Language::Rust, "x", vec![short], |_| {})
+        .await
+        .unwrap_err();
+    assert_ne!(err.code, AppErrorCode::InvalidCustomInput, "{err}");
+    assert!(
+        app.get_problem("two-sum", UiLang::En)
+            .await
+            .unwrap()
+            .has_validator
+    );
+}

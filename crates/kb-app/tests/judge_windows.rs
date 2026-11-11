@@ -32,6 +32,14 @@ fn dev_root() -> PathBuf {
     root
 }
 
+/// Public plus hidden tests of two-sum, from the package.
+fn two_sum_tests() -> u32 {
+    kb_judge::Problem::load(&repo().join("content/problems/two-sum"))
+        .unwrap()
+        .tests
+        .len() as u32
+}
+
 fn content_db() -> PathBuf {
     static DB: OnceLock<PathBuf> = OnceLock::new();
     DB.get_or_init(|| {
@@ -105,7 +113,8 @@ async fn every_reference_is_accepted_with_progress() {
             "{lang}: {:?}",
             r.report
         );
-        assert_eq!(r.report.tests.len(), 7);
+        let n = two_sum_tests();
+        assert_eq!(r.report.tests.len(), n as usize);
 
         let events = events.lock().unwrap().clone();
         let mut i = 0;
@@ -113,15 +122,15 @@ async fn every_reference_is_accepted_with_progress() {
             assert_eq!(events[0], JudgeEvent::Compiling);
             i = 1;
         }
-        assert_eq!(events[i], JudgeEvent::Running { total: 7 });
+        assert_eq!(events[i], JudgeEvent::Running { total: n });
         let checked: Vec<u32> = events
             .iter()
             .filter_map(|e| match e {
-                JudgeEvent::Checked { done, total: 7, .. } => Some(*done),
+                JudgeEvent::Checked { done, total, .. } if *total == n => Some(*done),
                 _ => None,
             })
             .collect();
-        assert_eq!(checked, (1..=7).collect::<Vec<_>>(), "{lang}");
+        assert_eq!(checked, (1..=n).collect::<Vec<_>>(), "{lang}");
         assert_eq!(
             events.last(),
             Some(&JudgeEvent::Finished {
@@ -316,4 +325,45 @@ async fn a_runtime_replaced_by_rename_still_runs_in_the_sandbox() {
             .unwrap(),
     );
     app.close().await;
+}
+
+/// With Python installed, custom inputs go through the problem's validate.py (in the
+/// sandbox) before the reference runs: the broken constraint is the message.
+#[tokio::test]
+async fn custom_inputs_breaking_a_constraint_get_the_validators_message() {
+    let app = app("validator").await;
+    let ok = json!({"nums": [4, 6], "target": 10})
+        .as_object()
+        .unwrap()
+        .clone();
+    let short = json!({"nums": [5], "target": 5})
+        .as_object()
+        .unwrap()
+        .clone();
+    for lang in [Language::Python, Language::Rust] {
+        let err = app
+            .run(
+                "two-sum",
+                lang,
+                &reference(lang),
+                vec![ok.clone(), short.clone()],
+                |_| {},
+            )
+            .await
+            .unwrap_err();
+        assert_eq!(err.code, AppErrorCode::InvalidCustomInput, "{err}");
+        assert_eq!(err.message, "custom input 2: 2 ≤ nums.length ≤ 10⁴");
+    }
+    // Valid custom inputs still run.
+    let r = app
+        .run(
+            "two-sum",
+            Language::Python,
+            &reference(Language::Python),
+            vec![ok],
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert!(r.verdict.is_accepted(), "{r:?}");
 }

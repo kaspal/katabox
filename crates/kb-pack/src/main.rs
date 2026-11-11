@@ -3,10 +3,15 @@
 //! `kb-pack validate [DIR] [--run] [--root ROOT]` — checks every problem folder under DIR
 //! (default `content/problems`) against the package format in the plan: structure,
 //! metadata, test files, and that each reference solution matches its generated stub.
-//! `--run` also judges every reference solution in every language against all tests in
-//! the sandbox (content pipeline step 2) and fails unless each one is Accepted. ROOT is
-//! the sandbox root with the toolchains (default `target/katabox`, created by
-//! `scripts/fetch-toolchains.ps1`).
+//! `--run` adds the sandbox checks (ADR 0016): `validate.py` accepts every test; every
+//! reference, in every language, is Accepted within half the time limit; with `gen.py`
+//! and `solutions/brute.py`, the references agree with brute on 500 seeded inputs; and
+//! `solutions/naive.py` gets Time Limit Exceeded. ROOT is the sandbox root with the
+//! toolchains (default `target/katabox`, created by `scripts/fetch-toolchains.ps1`).
+//!
+//! `kb-pack generate PROBLEM_DIR [--size max] --seeds 1,2 [--from N] [--root ROOT]` —
+//! writes `tests/hidden/<N..>.json` from `gen.py` (outputs from `solutions/ref.py`), all
+//! run in the sandbox. Generated tests are committed: the build never runs scripts.
 //!
 //! `kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]` — validates as
 //! above (without `--run`), then compiles every problem into content.db (default
@@ -18,6 +23,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run] [--root ROOT]\n  \
+                     kb-pack generate PROBLEM_DIR [--size max|small] --seeds 1,2 [--from N] [--root ROOT]\n  \
                      kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]";
 
 fn main() -> ExitCode {
@@ -25,6 +31,7 @@ fn main() -> ExitCode {
     match args.next().as_deref() {
         Some("validate") => validate_cmd(args),
         Some("build") => build_cmd(args),
+        Some("generate") => generate_cmd(args),
         _ => usage(""),
     }
 }
@@ -58,6 +65,80 @@ fn validate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
     }
     let root = run_root.unwrap_or_else(|| "target/katabox".into());
     run_references(&dir, &root)
+}
+
+fn generate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
+    let mut dir: Option<PathBuf> = None;
+    let mut size = "max".to_string();
+    let mut seeds: Vec<u64> = Vec::new();
+    let mut first: Option<u32> = None;
+    let mut root = PathBuf::from("target/katabox");
+    while let Some(a) = args.next() {
+        let mut value = |name: &str| args.next().ok_or_else(|| format!("{name} needs a value"));
+        let set = match a.as_str() {
+            "--size" => value("--size").map(|v| size = v),
+            "--root" => value("--root").map(|v| root = v.into()),
+            "--from" => value("--from").and_then(|v| {
+                v.parse()
+                    .map(|n| first = Some(n))
+                    .map_err(|_| "--from needs a number".to_string())
+            }),
+            "--seeds" => value("--seeds").and_then(|v| {
+                v.split(',')
+                    .map(|s| s.trim().parse::<u64>().map_err(|_| format!("bad seed {s}")))
+                    .collect::<Result<Vec<_>, _>>()
+                    .map(|s| seeds = s)
+            }),
+            s if s.starts_with("--") => Err(format!("unknown option {s}")),
+            _ => {
+                dir = Some(a.into());
+                Ok(())
+            }
+        };
+        if let Err(e) = set {
+            return usage(&e);
+        }
+    }
+    let Some(dir) = dir else {
+        return usage("generate needs a problem folder");
+    };
+    if seeds.is_empty() {
+        return usage("generate needs --seeds");
+    }
+    // Default: after the last numbered hidden test.
+    let first = first.unwrap_or_else(|| {
+        std::fs::read_dir(dir.join("tests/hidden"))
+            .map(|rd| {
+                rd.flatten()
+                    .filter_map(|e| {
+                        e.path()
+                            .file_stem()
+                            .and_then(|s| s.to_str())
+                            .and_then(|s| s.parse::<u32>().ok())
+                    })
+                    .max()
+                    .unwrap_or(0)
+                    + 1
+            })
+            .unwrap_or(1)
+    });
+    let env = match kb_pack::env_for(&root) {
+        Ok(e) => e,
+        Err(e) => return usage(&e),
+    };
+    match kb_pack::generate_tests(&dir, &env, &size, &seeds, first) {
+        Ok(files) => {
+            for f in files {
+                let bytes = std::fs::metadata(&f).map(|m| m.len()).unwrap_or(0);
+                println!("wrote {} ({bytes} bytes)", f.display());
+            }
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("kb-pack generate: {e}");
+            ExitCode::FAILURE
+        }
+    }
 }
 
 fn build_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {

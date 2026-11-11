@@ -15,7 +15,7 @@ use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 1;
+pub const CONTENT_SCHEMA_VERSION: i64 = 2;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -74,6 +74,8 @@ pub struct PackProblem {
     /// Public and hidden tests (`kind` and 1-based `index` as loaded by kb-judge).
     pub tests: Vec<TestCase>,
     pub solutions: Vec<(Language, String)>,
+    /// `validate.py`, when the problem has one (ADR 0016).
+    pub validator: Option<String>,
 }
 
 /// The texts of a problem in one UI language. A missing editorial or empty hint list
@@ -174,6 +176,8 @@ pub struct ProblemView {
     pub time_limit_ms: u32,
     pub memory_mb: u32,
     pub public_tests: Vec<PublicTest>,
+    /// Custom test inputs are checked by the problem's `validate.py` (needs Python).
+    pub has_validator: bool,
 }
 
 /// What the judge needs: settings and every test (public first, then hidden).
@@ -185,6 +189,8 @@ pub struct JudgeData {
     pub time_limit_ms: u32,
     pub memory_mb: u32,
     pub tests: Vec<TestCase>,
+    /// `validate.py`, checking custom inputs (ADR 0016).
+    pub validator: Option<String>,
 }
 
 /// Read-only handle to content.db.
@@ -351,6 +357,7 @@ impl ContentDb {
             time_limit_ms: p.try_get("time_limit_ms")?,
             memory_mb: p.try_get("memory_mb")?,
             public_tests,
+            has_validator: p.try_get::<Option<String>, _>("validator")?.is_some(),
         })
     }
 
@@ -364,10 +371,20 @@ impl ContentDb {
         .await?)
     }
 
+    /// The problem's `validate.py`, if it has one (custom tests; ADR 0016).
+    pub async fn validator(&self, id: &str) -> Result<Option<String>> {
+        let v: Option<Option<String>> =
+            sqlx::query_scalar("SELECT validator FROM problems WHERE id = ?")
+                .bind(id)
+                .fetch_optional(&self.pool)
+                .await?;
+        v.ok_or_else(|| StoreError::NotFound(format!("problem {id}")))
+    }
+
     /// Settings and all tests for judging `id` (public first, then hidden).
     pub async fn judge_data(&self, id: &str) -> Result<JudgeData> {
         let p = sqlx::query(
-            "SELECT signature, checker, time_limit_ms, memory_mb FROM problems WHERE id = ?",
+            "SELECT signature, checker, time_limit_ms, memory_mb, validator FROM problems WHERE id = ?",
         )
         .bind(id)
         .fetch_optional(&self.pool)
@@ -397,6 +414,7 @@ impl ContentDb {
             time_limit_ms: p.try_get("time_limit_ms")?,
             memory_mb: p.try_get("memory_mb")?,
             tests,
+            validator: p.try_get("validator")?,
         })
     }
 
@@ -510,8 +528,8 @@ async fn write_pack(path: &Path, meta: &PackMeta, problems: &[PackProblem]) -> R
 async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<()> {
     sqlx::query(
         "INSERT INTO problems (id, difficulty, pattern, rank, signature, checker,
-                               time_limit_ms, memory_mb, profile)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               time_limit_ms, memory_mb, profile, validator)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&p.id)
     .bind(difficulty_code(p.difficulty))
@@ -522,6 +540,7 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
     .bind(p.time_limit_ms)
     .bind(p.memory_mb)
     .bind(p.profile)
+    .bind(&p.validator)
     .execute(&mut *conn)
     .await?;
 
@@ -700,6 +719,12 @@ pub(crate) mod tests {
             pattern: "sorting".into(),
             rank,
             profile: false,
+            validator: (id == "gap-a").then(|| {
+                "def validate(inp):
+    return None
+"
+                .to_string()
+            }),
             signature: json!({"name": "widestGap", "params": [{"name": "nums", "type": "int[]"}], "returns": "int"}),
             checker: "exact".into(),
             time_limit_ms: 2000,
@@ -775,6 +800,16 @@ pub(crate) mod tests {
             ]
         );
         assert_eq!(jd.checker, "exact");
+        // validate.py travels with the problem (ADR 0016); gap-b has none.
+        assert_eq!(
+            jd.validator.as_deref(),
+            Some(
+                "def validate(inp):
+    return None
+"
+            )
+        );
+        assert_eq!(db.judge_data("gap-b").await.unwrap().validator, None);
         assert_eq!(
             db.reference_solution("gap-a", Language::Python)
                 .await
@@ -806,7 +841,9 @@ pub(crate) mod tests {
         assert_eq!(es.public_tests[0].index, 1);
 
         // No Spanish text at all: everything in English.
+        assert!(es.has_validator);
         let b = db.get_problem("gap-b", UiLang::Es).await.unwrap();
+        assert!(!b.has_validator);
         assert_eq!(b.title, "Title of gap-b");
         let list = db
             .list_problems(&ProblemFilter {

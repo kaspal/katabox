@@ -90,7 +90,7 @@ impl JudgeEnv {
         Ok(program)
     }
 
-    fn toolchain(&self, lang: Language) -> Result<&Path, JudgeError> {
+    pub(crate) fn toolchain(&self, lang: Language) -> Result<&Path, JudgeError> {
         self.toolchains
             .iter()
             .find(|(l, _)| *l == lang)
@@ -669,13 +669,13 @@ fn stderr_tail(stderr: &str) -> String {
 
 /// A fresh per-run folder under `runs_dir`. kb-runner deletes it after a run; this
 /// removes it if the run never started.
-struct WorkDir {
-    path: PathBuf,
+pub(crate) struct WorkDir {
+    pub(crate) path: PathBuf,
     id: u64,
 }
 
 impl WorkDir {
-    fn create(runs_dir: &Path) -> Result<WorkDir, JudgeError> {
+    pub(crate) fn create(runs_dir: &Path) -> Result<WorkDir, JudgeError> {
         static COUNTER: AtomicU64 = AtomicU64::new(0);
         let n = COUNTER.fetch_add(1, Ordering::Relaxed);
         std::fs::create_dir_all(runs_dir)?;

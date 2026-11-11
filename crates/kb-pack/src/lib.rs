@@ -2,9 +2,11 @@
 //! CLI (see `main.rs`) and the desktop app's build script.
 
 mod build;
+pub mod checks;
 mod validate;
 
 pub use build::{BuildOptions, build};
+pub use checks::{Check, Finding, check_problem, env_for, generate_tests};
 pub use validate::{run_references, validate_all};
 
 /// Validate every problem under `dir` and compile them into content.db at `out` (see
