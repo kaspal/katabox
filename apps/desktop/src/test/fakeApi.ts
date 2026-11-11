@@ -1,11 +1,15 @@
 // An in-memory backend standing in for `@/lib/api` in component tests.
 import { vi } from "vitest";
 import type {
+  AppError,
   AppInfo,
+  ComponentPhase,
   ContinueItem,
+  InstallEvent,
   JsonValue,
   JudgeEvent,
   Language,
+  LanguageStatus,
   LspEvent,
   ProblemFilter,
   ProblemSummary,
@@ -81,6 +85,35 @@ export const APP_INFO: AppInfo = {
   platform: "windows",
 };
 
+/** The install units and what each needs (sizes as in the real manifest). */
+export const UNITS: { language: Language; components: string[]; download: number; disk: number }[] = [
+  { language: "python", components: ["python", "node", "basedpyright"], download: 98_400_212, disk: 297_374_740 },
+  { language: "typescript", components: ["node", "typescript", "typescript-language-server"], download: 46_187_298, disk: 139_678_693 },
+  { language: "php", components: ["php"], download: 87_342_829, disk: 102_812_390 },
+  { language: "rust", components: ["rust", "rust-src", "rust-analyzer"], download: 243_768_816, disk: 958_739_395 },
+];
+
+const unitOf = (l: Language): Language => (l === "javascript" ? "typescript" : l);
+
+/** App info as the backend derives it from what is installed. */
+export function appInfoFor(installed: Set<Language>): AppInfo {
+  return {
+    ...APP_INFO,
+    toolchains: APP_INFO.toolchains.map((t) =>
+      installed.has(unitOf(t.language))
+        ? { ...t, present: true, program: t.program ?? `C:\\tc\\${t.language}`, problem: null }
+        : { ...t, present: false, program: null, problem: "not installed" },
+    ),
+    language_servers: APP_INFO.language_servers.map((ls) =>
+      ls.language === "php"
+        ? ls
+        : installed.has(unitOf(ls.language))
+          ? { ...ls, available: true, reason: null }
+          : { ...ls, available: false, reason: "not installed" },
+    ),
+  };
+}
+
 export const SIGNATURE = {
   name: "twoSum",
   params: [
@@ -139,8 +172,11 @@ export function createFakeApi(
     continueItem?: ContinueItem | null;
     drafts?: Record<string, string>;
     lastLanguage?: Language | null;
+    /** Installed language units (default: Python, TypeScript and PHP, not Rust). */
+    installed?: Language[];
   } = {},
 ) {
+  const installed = new Set<Language>(opts.installed ?? ["python", "typescript", "php"]);
   const settings = new Map<string, JsonValue>(Object.entries(opts.settings ?? {}));
   const drafts = new Map<string, string>(Object.entries(opts.drafts ?? {}));
   const notes = new Map<string, string>();
@@ -159,7 +195,35 @@ export function createFakeApi(
     lspSent: [] as { method?: string; id?: unknown; params?: unknown }[],
     /** The current language-server session; older ones are refused, as in the bridge. */
     lspSession: 0,
+    /** When set, installs wait here after the first download progress. */
+    installGate: null as Promise<void> | null,
+    /** Opens `installGate` (also called by cancelInstall). */
+    releaseInstall: null as (() => void) | null,
+    /** The next install fails with this error (after the gate). */
+    installError: null as AppError | null,
+    /** Languages of each installLanguages call. */
+    installCalls: [] as Language[][],
   };
+  /** Hold the next install mid-download; returns the function that lets it go on. */
+  const holdInstall = () => {
+    state.installGate = new Promise<void>((r) => (state.releaseInstall = r));
+    return () => state.releaseInstall?.();
+  };
+
+  const languageStatus = (): LanguageStatus[] =>
+    UNITS.map((u) => {
+      const yes = installed.has(u.language);
+      return {
+        language: u.language,
+        available: true,
+        installed: yes,
+        runtime_installed: yes,
+        servers_installed: yes,
+        components: u.components,
+        download_bytes: yes ? 0 : u.download,
+        installed_bytes: u.disk,
+      };
+    });
 
   const snap = (problem: string, language: Language, code: string, source: Snapshot["source"], verdict: Verdict | null) => {
     snapshots.unshift({ id: nextId++, problem_id: problem, language, code, source, verdict, created_at: Date.now() });
@@ -178,7 +242,7 @@ export function createFakeApi(
   };
 
   const api: Api = {
-    appInfo: vi.fn(async () => APP_INFO),
+    appInfo: vi.fn(async () => appInfoFor(installed)),
     listProblems: vi.fn(async (f: ProblemFilter) => {
       const lang = f.lang ?? "en";
       return PROBLEMS.filter(
@@ -353,6 +417,46 @@ export function createFakeApi(
       return null;
     }),
     lspDisconnect: vi.fn(async () => null),
+
+    languages: vi.fn(async () => ({ languages: languageStatus(), free_bytes: 50_000_000_000, platform_supported: true })),
+    installLanguages: vi.fn(async (languages: Language[], onEvent: (e: InstallEvent) => void) => {
+      state.installCalls.push(languages);
+      const units = UNITS.filter((u) => languages.map(unitOf).includes(u.language) && !installed.has(u.language));
+      const components = [...new Set(units.flatMap((u) => u.components))];
+      onEvent({
+        kind: "plan",
+        items: components.map((c) => ({ component: c, download_bytes: 10_000_000, installed_bytes: 30_000_000 })),
+      });
+      const progress = (component: string, phase: ComponentPhase, done = 0, total = 0) =>
+        onEvent({ kind: "progress", component, phase, done, total });
+      components.forEach((c) => progress(c, "queued"));
+      if (components[0]) progress(components[0], "downloading", 5_000_000, 10_000_000);
+      if (state.installGate) await state.installGate;
+      state.installGate = null;
+      if (state.installError) {
+        const e = state.installError;
+        state.installError = null;
+        throw e;
+      }
+      for (const c of components) {
+        progress(c, "downloading", 10_000_000, 10_000_000);
+        progress(c, "verifying");
+        progress(c, "extracting");
+        progress(c, "installing");
+        progress(c, "installed");
+      }
+      units.forEach((u) => installed.add(u.language));
+      return null;
+    }),
+    cancelInstall: vi.fn(async () => {
+      state.installError = { code: "install_cancelled", message: "cancelled" };
+      state.releaseInstall?.();
+      return null;
+    }),
+    uninstallLanguage: vi.fn(async (language: Language) => {
+      installed.delete(unitOf(language));
+      return null;
+    }),
   };
-  return { api, settings, drafts, notes, snapshots, submissions, state, snap };
+  return { api, settings, drafts, notes, snapshots, submissions, state, snap, installed, holdInstall };
 }

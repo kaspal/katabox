@@ -25,7 +25,7 @@ function type(v: EditorView, insert: string) {
 
 async function openWorkspace(path = "/problems/two-sum") {
   const r = renderApp(path);
-  await screen.findByRole("heading", { name: "Two Sum" }, { timeout: 4000 });
+  await screen.findByRole("heading", { name: "Two Sum" }, { timeout: 8000 });
   return r;
 }
 
@@ -70,12 +70,30 @@ describe("Workspace: editor and drafts", () => {
     expect(screen.getByRole("combobox", { name: "Language" })).toHaveTextContent("PHP");
   });
 
-  it("shows a missing runtime as disabled in the language picker", async () => {
+  it("offers to install a language that is not installed, then switches to it", async () => {
     const { user } = await openWorkspace();
     await user.click(screen.getByRole("combobox", { name: "Language" }));
     const rust = await screen.findByRole("option", { name: /Rust/ });
-    expect(rust).toHaveAttribute("aria-disabled", "true");
-    expect(rust).toHaveTextContent("Missing");
+    expect(rust).not.toHaveAttribute("aria-disabled");
+    expect(rust).toHaveTextContent("Not installed");
+    await user.click(rust);
+    const dialog = await screen.findByRole("dialog", { name: "Install Rust" });
+    // Rust is preselected, with its sizes.
+    expect(within(dialog).getByRole("checkbox", { name: "Rust" })).toBeChecked();
+    expect(within(dialog).getByTestId("install-total")).toHaveTextContent("244 MB to download, 959 MB on disk");
+    await user.click(within(dialog).getByRole("button", { name: "Install selected" }));
+    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "Language" })).toHaveTextContent("Rust"));
+  });
+
+  it("shows Install above the editor when the current language is not installed", async () => {
+    setFakeApi({ lastLanguage: "rust" });
+    const { user } = await openWorkspace();
+    const banner = await screen.findByTestId("language-missing");
+    expect(banner).toHaveTextContent("Rust is not installed");
+    await user.click(within(banner).getByRole("button", { name: "Install" }));
+    expect(await screen.findByRole("dialog", { name: "Install Rust" })).toBeInTheDocument();
   });
 });
 

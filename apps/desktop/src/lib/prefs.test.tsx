@@ -63,7 +63,8 @@ describe("Theme", () => {
     renderApp("/settings");
     expect(await screen.findByTestId("dev-data-badge")).toHaveTextContent("DEV DATA");
     expect(await screen.findByText("C:\\data\\dev.katabox.app-dev")).toBeInTheDocument();
-    expect(screen.getAllByText("Installed")).toHaveLength(3);
-    expect(screen.getByText("rustc not found")).toBeInTheDocument();
+    // Settings → Languages: three installed, Rust not.
+    expect(await screen.findAllByText("Installed")).toHaveLength(3);
+    expect(screen.getByTestId("language-rust")).not.toHaveAttribute("data-installed");
   });
 });
