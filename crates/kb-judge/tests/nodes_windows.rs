@@ -9,7 +9,7 @@
 //! ```
 #![cfg(windows)]
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use kb_core::{Language, MessageCode, TestCase, TestKind, Verdict};
 use kb_judge::{JudgeEnv, Problem, judge, starter_code};
@@ -55,7 +55,7 @@ fn problem(name: &str, param: &str, ty: &str, ret: &str, cases: &[(Value, Value)
 /// The starter code with its body replaced by `body` (the node definitions stay).
 fn solution(lang: Language, p: &Problem, body: &str) -> String {
     let stub = starter_code(lang, &p.signature).unwrap();
-    let stub = match lang {
+    match lang {
         Language::Python => stub.replace("    pass\n", body),
         Language::TypeScript | Language::Php => stub.replacen("{\n\n}", &format!("{{\n{body}}}"), 1),
         Language::Rust => stub.replace(
@@ -63,8 +63,7 @@ fn solution(lang: Language, p: &Problem, body: &str) -> String {
             body,
         ),
         _ => unreachable!(),
-    };
-    stub
+    }
 }
 
 fn skewed(depth: usize) -> Value {
