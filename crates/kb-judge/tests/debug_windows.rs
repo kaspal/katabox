@@ -369,7 +369,49 @@ fn new_problems_are_debuggable() {
         ),
         ("toll-grid", "cheapest_crossing", Some(("neighbours", 1))),
     ];
-    for (id, entry, helper) in problems {
+    assert_debuggable(&problems);
+}
+
+/// Content batch 5: the same checks for the next 15 problems.
+#[test]
+fn batch_5_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 15] = [
+        (
+            "shelf-codes",
+            "count_below",
+            Some(("<locals>.first_at_least", 1)),
+        ),
+        ("lamp-hours", "lit_time", None),
+        ("path-tiles", "tilings", None),
+        ("fewest-hops", "fewest_hops", None),
+        ("club-merges", "clubs_left", Some(("<locals>.find", 1))),
+        ("balanced-streaks", "balanced_stretches", None),
+        (
+            "spice-market",
+            "best_haul",
+            Some(("<locals>.richer_first", 1)),
+        ),
+        ("first-match", "first_matches", Some(("Trie.", 1))),
+        ("shelf-order", "natural_order", Some(("chunk_key", 1))),
+        ("feature-flags", "users_with_all", None),
+        ("page-wrap", "wrap_lines", None),
+        ("undo-notebook", "notebook", Some(("Notebook.", 1))),
+        (
+            "shelf-packing",
+            "fewest_shelves",
+            Some(("<locals>.place", 1)),
+        ),
+        ("pocket-calculator", "evaluate", Some(("Parser.", 3))),
+        ("thermostat-swings", "window_swings", None),
+    ];
+    assert_debuggable(&problems);
+}
+
+/// Each problem's ref.py on its first public test: the traced result passes the checker,
+/// a stop halfway and at the last step shows only user frames (the entry function
+/// outermost), and the deepest step shows the problem's helper frame.
+fn assert_debuggable(problems: &[(&str, &str, Option<Helper>)]) {
+    for &(id, entry, helper) in problems {
         let dir = repo().join("content/problems").join(id);
         let p = Problem::load(&dir).unwrap();
         let src = std::fs::read_to_string(dir.join("solutions/ref.py")).unwrap();

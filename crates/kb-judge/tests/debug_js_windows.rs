@@ -408,3 +408,64 @@ fn exceptions_load_errors_and_unsupported_languages() {
     assert!(!debug::supported(Language::Php));
     assert!(!debug::supported(Language::Rust));
 }
+
+/// Content batch 5: every new problem's ref.ts on its first public test, within the JS
+/// step cap: the result passes the checker, and stops halfway and at the last step show
+/// the entry function outermost.
+#[test]
+fn batch_5_problems_are_debuggable_in_typescript() {
+    let problems = [
+        ("shelf-codes", "countBelow"),
+        ("lamp-hours", "litTime"),
+        ("path-tiles", "tilings"),
+        ("fewest-hops", "fewestHops"),
+        ("club-merges", "clubsLeft"),
+        ("balanced-streaks", "balancedStretches"),
+        ("spice-market", "bestHaul"),
+        ("first-match", "firstMatches"),
+        ("shelf-order", "naturalOrder"),
+        ("feature-flags", "usersWithAll"),
+        ("page-wrap", "wrapLines"),
+        ("undo-notebook", "notebook"),
+        ("shelf-packing", "fewestShelves"),
+        ("pocket-calculator", "evaluate"),
+        ("thermostat-swings", "windowSwings"),
+    ];
+    for (id, entry) in problems {
+        let p = problem(id);
+        let src = reference(id);
+        let public = &p.tests[0];
+        let started = Instant::now();
+        let t = trace(&p, &src, &public.input);
+        assert!(t.truncated.is_none(), "{id}: truncated");
+        assert!(t.steps.len() as u32 <= debug::JS_MAX_STEPS, "{id}");
+        let o = t.outcome.clone().unwrap();
+        assert_eq!(o.status, OutcomeStatus::Ok, "{id}: {:?}", o.error);
+        assert!(
+            matches!(
+                p.checker.check(&public.expected, &o.value),
+                kb_judge::CheckOutcome::Ok
+            ),
+            "{id}: {} is not {}",
+            o.value,
+            public.expected
+        );
+        let last = t.steps.len() - 1;
+        for step in [last / 2, last] {
+            let s = stop(&p, &src, &public.input, &t, at(step));
+            assert!(!s.stack.is_empty(), "{id}@{step}: empty stack");
+            assert_eq!(
+                s.stack.last().unwrap().function,
+                entry,
+                "{id}@{step}: {:?}",
+                s.stack
+            );
+        }
+        println!(
+            "{id:<20} {:>5} steps, max depth {}, {:?} for the trace and two stops",
+            t.steps.len(),
+            t.steps.iter().map(|s| s.depth).max().unwrap(),
+            started.elapsed()
+        );
+    }
+}
