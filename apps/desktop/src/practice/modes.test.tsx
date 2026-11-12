@@ -12,7 +12,12 @@ vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
 vi.setConfig({ testTimeout: 15_000 });
 
 const editors = async () => {
-  await waitFor(() => expect(document.querySelectorAll("[data-testid=code-editor] .cm-editor").length).toBeGreaterThan(0));
+  // The workspace loads CodeMirror lazily; under load that can take more than the
+  // default 1 s.
+  await waitFor(
+    () => expect(document.querySelectorAll("[data-testid=code-editor] .cm-editor").length).toBeGreaterThan(0),
+    { timeout: 5000 },
+  );
   return [...document.querySelectorAll("[data-testid=code-editor] .cm-editor")].map(
     (e) => EditorView.findFromDOM(e as HTMLElement)!,
   );
