@@ -4,7 +4,7 @@
 
 [Read in English](README.md)
 
-> **Estado:** desarrollo temprano (pre-alfa). Todavía no hay nada para instalar.
+> **Estado:** desarrollo temprano (pre-alfa). Los instaladores para Windows llegan con la primera versión.
 
 ## Funciones planeadas
 
@@ -16,6 +16,17 @@
 - Perfilador de complejidad y visualizador de estructuras de datos
 - Tutor de IA local opcional con Ollama (nada sale de tu computador)
 - Interfaz en inglés y español
+
+## Instalación
+
+**Windows 10/11 (x64):** descarga `KataBox_<versión>_x64-setup.exe` desde la página de [Releases](https://github.com/kaspal/katabox/releases) y ejecútalo.
+
+- Se instala solo para tu usuario; no hace falta ser administrador. También hay un `.msi` para equipos administrados.
+- Mientras los instaladores no estén firmados, Windows SmartScreen puede avisar al abrirlo por primera vez: elige **Más información → Ejecutar de todas formas**.
+- Al iniciarse por primera vez, KataBox pregunta qué lenguajes instalar y los descarga (Python ocupa unos 100 MB). Después funciona sin conexión.
+- **Desinstala** desde Configuración → Aplicaciones. Tu progreso se conserva salvo que marques **Eliminar los datos de la aplicación**.
+
+Los paquetes para Linux (.deb, .rpm, AppImage) salen del mismo flujo de publicación; consulta [docs/packaging.md](docs/packaging.md) para sus requisitos.
 
 ## Licencia
 

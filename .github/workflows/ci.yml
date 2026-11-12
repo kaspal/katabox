@@ -155,7 +155,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       # build.rs also builds resources/content.db from content/problems.
       - run: cargo clippy -p katabox-desktop --all-targets -- -D warnings
+      # Auto-update is off by default; keep the opt-in feature compiling (ADR 0021).
+      - run: cargo clippy -p katabox-desktop --features updater -- -D warnings
       - name: TypeScript bindings are up to date
         run: |
-          cargo run -p katabox-desktop --bin export-bindings
+          cargo run -p katabox-desktop --features bindings --bin export-bindings
           git diff --exit-code apps/desktop/src/bindings.ts

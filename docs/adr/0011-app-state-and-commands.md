@@ -70,7 +70,7 @@ startup.
 ### TypeScript bindings
 - tauri-specta generates `apps/desktop/src/bindings.ts`. The file is checked in, and
   the UI calls only `commands.*` from it, never `invoke` with strings.
-- To regenerate: `cargo run -p katabox-desktop --bin export-bindings`. Debug builds of
+- To regenerate: `cargo run -p katabox-desktop --features bindings --bin export-bindings`. Debug builds of
   the app also regenerate it at startup.
 - CI (Linux desktop job) regenerates it and fails on any diff; `pnpm build` typechecks it.
 - Command errors come back as `{status: "error", error: AppError}` (tauri-specta's Result

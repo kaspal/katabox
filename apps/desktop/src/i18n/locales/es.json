@@ -209,7 +209,41 @@
   },
   "progress": {
     "title": "Progreso",
-    "comingSoon": "Las estadísticas y rachas llegan en una versión posterior."
+    "stats": {
+      "solved": "Problemas resueltos",
+      "activeDays": "Días activos (12 meses)",
+      "submissions": "Envíos (12 meses)"
+    },
+    "heatmap": {
+      "title": "Actividad",
+      "label": "Envíos por día en los últimos 12 meses",
+      "help": "Usa las flechas para moverte entre días; Inicio y Fin saltan al primer y al último día.",
+      "empty": "{{date}}: sin envíos",
+      "day": "{{date}}: {{submissions}}, {{solved}}",
+      "submissions_one": "{{count}} envío",
+      "submissions_other": "{{count}} envíos",
+      "solved_one": "{{count}} problema resuelto",
+      "solved_other": "{{count}} problemas resueltos",
+      "less": "Menos",
+      "more": "Más"
+    },
+    "difficulty": {
+      "title": "Resueltos por dificultad"
+    },
+    "topics": {
+      "title": "Resueltos por tema",
+      "empty": "Aún no hay temas."
+    },
+    "reviews": {
+      "title": "Cola de repaso",
+      "overdue": "Atrasados",
+      "today": "Para hoy",
+      "week": "Próximos 7 días",
+      "later": "Más adelante",
+      "next": "Próximo repaso: {{date}}",
+      "none": "No hay repasos programados. Tu primer Aceptado en un problema programa su repaso en 3 días.",
+      "reviewNow": "Repasar ahora ({{count}})"
+    }
   },
   "settings": {
     "title": "Ajustes",
@@ -250,7 +284,12 @@
       "notMeasured": "Aún sin medir: se mide en tu primera ejecución o envío, o ahora.",
       "recalibrate": "Volver a medir",
       "measuring": "Midiendo…"
-    }
+    },
+    "notices": "Avisos de terceros",
+    "noticesView": "Ver…",
+    "noticesIntro": "KataBox incluye los componentes siguientes, cada uno con su propia licencia.",
+    "noticesDev": "Los avisos se incluyen en las versiones publicadas (los genera pnpm notices).",
+    "close": "Cerrar"
   },
   "languages": {
     "python": "Python",

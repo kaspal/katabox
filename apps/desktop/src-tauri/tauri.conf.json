@@ -40,9 +40,34 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "resources/content.db": "content.db"
+      "resources/content.db": "content.db",
+      "resources/THIRD_PARTY_NOTICES.txt": "THIRD_PARTY_NOTICES.txt"
     },
     "category": "DeveloperTool",
-    "shortDescription": "Offline coding practice: problems, tests, editor and debugger"
+    "shortDescription": "Offline coding practice: problems, tests, editor and debugger",
+    "longDescription": "KataBox is a free, open-source desktop app for coding practice. Solve original problems in Python, JavaScript/TypeScript, PHP and Rust; your code runs locally in a sandbox and is judged against public and hidden tests. Works offline.",
+    "publisher": "KataBox contributors",
+    "copyright": "Copyright © 2026 Ehrlichmann Casas and KataBox contributors",
+    "homepage": "https://github.com/kaspal/katabox",
+    "license": "MIT OR Apache-2.0",
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["English", "Spanish"],
+        "displayLanguageSelector": false,
+        "installerIcon": "icons/icon.ico",
+        "uninstallerIcon": "icons/icon.ico",
+        "installerHooks": "windows/hooks.nsh"
+      },
+      "wix": {
+        "language": ["en-US", "es-ES"],
+        "fragmentPaths": ["windows/cleanup.wxs"],
+        "componentGroupRefs": ["KbUninstallCleanup"]
+      }
+    }
   }
 }

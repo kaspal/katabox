@@ -6,5 +6,6 @@
 # will have schema files for capabilities auto-completion
 /gen/schemas
 
-# Built by build.rs from content/problems (kb-pack)
+# Built by build.rs from content/problems (kb-pack), and THIRD_PARTY_NOTICES.txt
+# from `pnpm notices` (ADR 0021)
 /resources/

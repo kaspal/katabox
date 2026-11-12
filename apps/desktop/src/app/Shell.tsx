@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Boxes, Command as CommandIcon } from "lucide-react";
+import { Command as CommandIcon } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -62,7 +63,7 @@ export function Shell() {
         className="row-span-2 flex flex-col items-center gap-1 border-r bg-rail py-2"
       >
         <span className="mb-2 flex size-9 items-center justify-center text-primary" aria-hidden>
-          <Boxes className="size-6" />
+          <Logo className="size-6" />
         </span>
         {[...NAV, ...DEV_NAV].map((item) => (
           <Tooltip key={item.to}>

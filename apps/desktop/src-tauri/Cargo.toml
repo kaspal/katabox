@@ -37,6 +37,21 @@ specta.workspace = true
 specta-typescript = "=0.0.9"
 tauri-specta = { version = "=2.0.0-rc.21", features = ["typescript"] }
 tauri-plugin-dialog = "2"
+# The data folders for `--uninstall-cleanup`, located before Tauri starts (as Tauri does).
+dirs = "6"
+# Auto-update, prepared but off (ADR 0021): only `--features updater` registers it.
+tauri-plugin-updater = { version = "2", optional = true }
+
+[features]
+updater = ["dep:tauri-plugin-updater"]
+# The bindings generator is a development tool: behind a feature so `tauri build` never
+# compiles or bundles it next to the app (ADR 0021).
+bindings = []
+
+[[bin]]
+name = "export-bindings"
+path = "src/bin/export-bindings.rs"
+required-features = ["bindings"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # The app binary doubles as the Linux sandbox helper (hidden `__*` subcommands).

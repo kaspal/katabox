@@ -4,7 +4,7 @@
 
 [Leer en español](README.es.md)
 
-> **Status:** early development (pre-alpha). Nothing to install yet.
+> **Status:** early development (pre-alpha). Windows installers come with the first release.
 
 ## Planned features
 
@@ -16,6 +16,17 @@
 - Complexity profiler and data-structure visualizer
 - Optional local AI tutor through Ollama (nothing leaves your machine)
 - English and Spanish interface
+
+## Install
+
+**Windows 10/11 (x64):** download `KataBox_<version>_x64-setup.exe` from the [Releases](https://github.com/kaspal/katabox/releases) page and run it.
+
+- It installs for your user only; no administrator rights are needed. An `.msi` is also available for managed machines.
+- Until the installers are code-signed, Windows SmartScreen may warn on first launch: choose **More info → Run anyway**.
+- On first start KataBox asks which languages to install and downloads them (Python is about 100 MB). After that it works offline.
+- **Uninstall** from Settings → Apps. Your progress is kept unless you tick **Delete the application data**.
+
+Linux packages (.deb, .rpm, AppImage) are built by the same release workflow; see [docs/packaging.md](docs/packaging.md) for their requirements.
 
 ## Why desktop?
 

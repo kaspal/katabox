@@ -1,0 +1,78 @@
+name: Release
+
+# Builds the installers and attaches them to a DRAFT GitHub release (ADR 0021).
+# Runs only for a version tag (`v0.1.0`) or by hand; never on normal pushes or PRs.
+# Follow docs/release-checklist.md before pushing a tag.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # create the draft release and upload its assets
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Installers (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest # NSIS (per-user) and MSI
+            bundles: nsis,msi
+          - platform: ubuntu-22.04 # glibc baseline for .deb, .rpm and AppImage
+            bundles: deb,rpm,appimage
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install WebKitGTK and libseccomp (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libseccomp-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Third-party notices are bundled; a release build refuses to ship without them.
+      - run: pnpm notices
+
+      # --- Code signing (off until the repo is public; docs/packaging.md) ---------------
+      # SignPath Foundation signs the Windows installers after the build: add the
+      # signpath/github-action-submit-signing-request step here with the organization id,
+      # project slug and signing policy from SignPath, and the SIGNPATH_API_TOKEN secret.
+
+      - name: Build installers (draft release)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # --- Auto-update (off; maintainer-steps in docs/packaging.md) ---------------
+          # When enabled, add the signing key secrets and the build args below:
+          # TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          tauriScript: pnpm tauri
+          # Add `--features updater --config src-tauri/tauri.updater.conf.json` to turn
+          # auto-update on (and set includeUpdaterJson: true).
+          args: --bundles ${{ matrix.bundles }}
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: KataBox ${{ github.ref_type == 'tag' && github.ref_name || 'manual build' }}
+          releaseBody: See CHANGELOG.md. Installers are unsigned until code signing is set up.
+          releaseDraft: true
+          prerelease: true
+          includeUpdaterJson: false
