@@ -1,6 +1,6 @@
 # 17. Fair time limits per language
 
-Date: 2026-11-11 · Status: proposed
+Date: 2026-11-11 · Status: accepted
 
 ## Context
 Until now every language shared a problem's `time_limit_ms`, plus a fixed 1 s startup
