@@ -222,10 +222,10 @@ impl Manager {
                         let mut download = 0;
                         for c in comps.iter().filter(|c| !self.receipt_valid(c, p)) {
                             for s in &c.sources {
-                                if let Some(a) = self.manifest.artifact(&s.artifact, p) {
-                                    if seen.insert(a.id.clone()) {
-                                        download += a.size;
-                                    }
+                                if let Some(a) = self.manifest.artifact(&s.artifact, p)
+                                    && seen.insert(a.id.clone())
+                                {
+                                    download += a.size;
                                 }
                             }
                         }
@@ -407,10 +407,10 @@ impl Manager {
         let installed: u64 = comps.iter().map(|c| c.installed_size).sum();
         on_event(InstallEvent::Plan { items });
         let needed = need_download + installed + installed / 10 + (200 << 20);
-        if let Some(available) = self.free_space() {
-            if available < needed {
-                return Err(Error::NotEnoughSpace { needed, available });
-            }
+        if let Some(available) = self.free_space()
+            && available < needed
+        {
+            return Err(Error::NotEnoughSpace { needed, available });
         }
         for c in &comps {
             on_event(progress(&c.id, crate::ComponentPhase::Queued, 0, 0));
@@ -514,10 +514,8 @@ impl Manager {
                     let later = comps[i + 1..]
                         .iter()
                         .any(|n| n.sources.iter().any(|s| s.artifact == a.id));
-                    if !later {
-                        if let Some(path) = fetched.get(&a.id) {
-                            let _ = remove_file(path);
-                        }
+                    if !later && let Some(path) = fetched.get(&a.id) {
+                        let _ = remove_file(path);
                     }
                 }
             }

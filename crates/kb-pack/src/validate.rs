@@ -310,10 +310,10 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
         ("gen.py", "def generate("),
         ("validate.py", "def validate("),
     ] {
-        if let Ok(src) = fs::read_to_string(dir.join(file)) {
-            if !src.lines().any(|l| l.trim_start().starts_with(def)) {
-                errs.push(format!("{file} must define {def}...)"));
-            }
+        if let Ok(src) = fs::read_to_string(dir.join(file))
+            && !src.lines().any(|l| l.trim_start().starts_with(def))
+        {
+            errs.push(format!("{file} must define {def}...)"));
         }
     }
 

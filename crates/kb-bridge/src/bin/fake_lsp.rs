@@ -22,10 +22,10 @@ fn read(r: &mut impl BufRead) -> Option<Value> {
         if line.is_empty() {
             break;
         }
-        if let Some((k, v)) = line.split_once(':') {
-            if k.eq_ignore_ascii_case("content-length") {
-                len = v.trim().parse::<usize>().ok();
-            }
+        if let Some((k, v)) = line.split_once(':')
+            && k.eq_ignore_ascii_case("content-length")
+        {
+            len = v.trim().parse::<usize>().ok();
         }
     }
     let mut body = vec![0; len?];

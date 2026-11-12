@@ -93,10 +93,10 @@ pub(crate) fn extract_source(
         Format::TarGz => x.tar(f)?,
         Format::Zip => x.zip(f)?,
     }
-    if let Some(member) = &source.member {
-        if !x.member_found {
-            return Err(x.unsafe_entry(member, "member not found in the archive"));
-        }
+    if let Some(member) = &source.member
+        && !x.member_found
+    {
+        return Err(x.unsafe_entry(member, "member not found in the archive"));
     }
     x.copy_links()
 }

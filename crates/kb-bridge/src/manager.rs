@@ -200,11 +200,11 @@ impl LspManager {
     pub async fn disconnect(&self, language: Language, session: u32) {
         let key = server_language(language);
         let mut sessions = self.sessions.lock().await;
-        if sessions.get(&key).is_some_and(|s| s.id == session) {
-            if let Some(s) = sessions.remove(&key) {
-                drop(sessions);
-                s.stop().await;
-            }
+        if sessions.get(&key).is_some_and(|s| s.id == session)
+            && let Some(s) = sessions.remove(&key)
+        {
+            drop(sessions);
+            s.stop().await;
         }
     }
 

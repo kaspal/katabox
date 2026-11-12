@@ -200,10 +200,10 @@ async fn run(
             tasks.push(tokio::spawn(async move {
                 let mut r = BufReader::new(stdout);
                 while let Ok(Some(body)) = read_message(&mut r).await {
-                    if let Ok(v) = serde_json::from_slice::<Value>(&body) {
-                        if srv_tx.send(v).is_err() {
-                            break;
-                        }
+                    if let Ok(v) = serde_json::from_slice::<Value>(&body)
+                        && srv_tx.send(v).is_err()
+                    {
+                        break;
                     }
                 }
             }));
@@ -314,11 +314,9 @@ async fn run(
                         if spec.pull_diagnostics
                             && (method == Some("workspace/diagnostic/refresh")
                                 || (settled && v.pointer("/params/quiescent") == Some(&Value::Bool(true))))
-                        {
-                            if let Some(uri) = &last_doc {
+                            && let Some(uri) = &last_doc {
                                 pull = Some((Instant::now() + PULL_DELAY, uri.clone()));
                             }
-                        }
                         if settled {
                             // The bridge asked for it; the editor has no use for it.
                             continue;
