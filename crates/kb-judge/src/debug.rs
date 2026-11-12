@@ -1,0 +1,499 @@
+//! The debugger's replay runs (ADR 0022).
+//!
+//! kb-runner runs a process to completion (stdin up front, stdout at the end), so the
+//! debugger never pauses a live process. Instead every debugger action is one ordinary
+//! sandboxed run of the language's debug harness:
+//!
+//! - [`trace`] runs one test and records every step (a line of the user's file, with its
+//!   call depth), the prints and the result;
+//! - [`stop`] replays the same test to one step, describes the stack, variables, requested
+//!   expansions and evaluations there, and exits without running further.
+//!
+//! A replay must take the same path: the harness reports a hash of the steps it took and
+//! [`stop`] compares it with the trace ([`DebugRun::Diverged`] otherwise). Python's debug
+//! run fixes `PYTHONHASHSEED` and seeds `random` so ordinary programs replay exactly.
+
+use kb_core::debug::{
+    DebugOutcome, EvalResult, Expansion, PrintChunk, StackFrame, Step, StopInfo, Trace, Truncation,
+    VarInfo,
+};
+use kb_core::{Language, Limits};
+use kb_runner::{SandboxSpec, Termination};
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
+
+use crate::JudgeError;
+use crate::codegen::debug_files;
+use crate::judge::{JudgeEnv, WorkDir, new_nonce};
+use crate::languages::definition;
+use crate::limits;
+use crate::problem::Problem;
+
+/// The most steps one trace records; longer runs are truncated (still navigable).
+pub const MAX_STEPS: u32 = 200_000;
+/// The most bytes of encoded steps one trace sends (one byte per step for the first 91
+/// distinct (line, depth) pairs, three after that).
+pub const TRACE_BUDGET_BYTES: usize = 1 << 20;
+/// Room on stdout for everything else: the code table, the result, the prints, a
+/// stop's variables, expansions and evaluations.
+const RECORD_ALLOWANCE: usize = 512 * 1024;
+/// Tracing slows the program down: the debug CPU cap is the language's Run cap times this.
+pub const CPU_FACTOR: u32 = 5;
+/// … but never more than this.
+pub const CPU_MAX_MS: u32 = 60_000;
+
+/// Trace tokens: printable ASCII without `"`, `\` and `~` (the harness's `ALPHABET`).
+fn alphabet() -> Vec<char> {
+    (33u8..126)
+        .map(char::from)
+        .filter(|c| !matches!(c, '"' | '\\' | '~'))
+        .collect()
+}
+
+/// What to describe at a stop.
+#[derive(Debug, Clone, Default, PartialEq, Serialize)]
+pub struct StopRequest {
+    pub step: u32,
+    /// Index into the stack (0 = innermost).
+    pub frame: u32,
+    /// Paths to expand: `[scope, name, i, j, …]`.
+    pub expand: Vec<Vec<Value>>,
+    /// Watch and console expressions.
+    pub evals: Vec<String>,
+}
+
+/// The result of one replay run.
+#[derive(Debug, Clone, PartialEq)]
+pub enum DebugRun {
+    Trace(Trace),
+    Stop(StopInfo),
+    /// This replay went another way than the trace: the program is not deterministic.
+    Diverged,
+    /// The solution did not load (syntax error, exception at import, missing function).
+    LoadError(String),
+    /// The run hit a sandbox limit before it could report.
+    Limit(DebugLimit),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DebugLimit {
+    Time,
+    Memory,
+    Output,
+}
+
+/// Whether `lang` can be debugged.
+pub fn supported(lang: Language) -> bool {
+    definition(lang).is_ok_and(|d| d.debug.is_some())
+}
+
+/// Record every step of one test (`input` is checked against the signature by the caller).
+pub fn trace(
+    problem: &Problem,
+    language: Language,
+    source: &str,
+    input: &Map<String, Value>,
+    env: &JudgeEnv,
+) -> Result<DebugRun, JudgeError> {
+    let request = serde_json::json!({
+        "mode": "trace",
+        "input": input,
+        "max_steps": MAX_STEPS,
+        "trace_budget": TRACE_BUDGET_BYTES,
+    });
+    let (records, facts) = run(problem, language, source, request, env)?;
+    interpret(records, &facts, None)
+}
+
+/// Replay the test of `trace` to `req.step` and describe it there.
+pub fn stop(
+    problem: &Problem,
+    language: Language,
+    source: &str,
+    input: &Map<String, Value>,
+    trace: &Trace,
+    req: &StopRequest,
+    env: &JudgeEnv,
+) -> Result<DebugRun, JudgeError> {
+    if req.step as usize >= trace.steps.len() {
+        return Err(JudgeError::Internal(format!(
+            "step {} is outside the trace ({} steps)",
+            req.step,
+            trace.steps.len()
+        )));
+    }
+    let request = serde_json::json!({
+        "mode": "stop",
+        "input": input,
+        "step": req.step,
+        "frame": req.frame,
+        "expand": req.expand,
+        "evals": req.evals,
+        "max_steps": MAX_STEPS,
+    });
+    let (records, facts) = run(problem, language, source, request, env)?;
+    interpret(records, &facts, Some((trace, req.step)))
+}
+
+/// What the sandbox reported besides stdout.
+struct RunFacts {
+    termination: Termination,
+    memory_limit_hit: bool,
+    stderr: String,
+    prefixes: Vec<String>,
+}
+
+fn run(
+    problem: &Problem,
+    language: Language,
+    source: &str,
+    mut request: Value,
+    env: &JudgeEnv,
+) -> Result<(Vec<Result<Record, String>>, RunFacts), JudgeError> {
+    let def = definition(language)?;
+    if def.debug.is_none() {
+        return Err(JudgeError::Unsupported(language));
+    }
+    let toolchain = env.toolchain(language)?;
+    let files = debug_files(&def, &problem.signature, source)?;
+    let (program, args) = def.debug_command(toolchain, problem.memory_mb)?;
+
+    let mut limits = Limits::default_for(language);
+    limits.memory_mb = problem.memory_mb;
+    limits.cpu_time_ms = limits::cpu_cap_ms(problem.time_limit_ms, &def, env.time_scale)
+        .saturating_mul(CPU_FACTOR)
+        .min(CPU_MAX_MS);
+    let print_cap = limits.max_output_kb as usize * 1024;
+
+    let work = WorkDir::create(&env.runs_dir)?;
+    for (name, contents) in &files {
+        std::fs::write(work.path.join(name), contents)?;
+    }
+    let nonce = new_nonce();
+    request["nonce"] = Value::String(nonce.clone());
+    request["max_output_bytes"] = Value::from(print_cap);
+
+    let mut spec = SandboxSpec::new(&env.sandbox_root, program, &work.path, &limits);
+    spec.args = args;
+    spec.read_only_dirs = vec![toolchain.to_path_buf()];
+    // Fixed string hashing, so sets and dicts iterate the same way on every replay. The
+    // child gets no other environment from kb-runner.
+    if language == Language::Python {
+        spec.env = vec![("PYTHONHASHSEED".into(), "0".into())];
+    }
+    spec.stdin = serde_json::to_vec(&request).map_err(|e| JudgeError::Internal(e.to_string()))?;
+    // An explicit budget: the encoded trace, the records around it and the prints.
+    spec.max_output_bytes = TRACE_BUDGET_BYTES + RECORD_ALLOWANCE + 2 * print_cap;
+    let outcome = kb_runner::run(&spec)?;
+
+    let facts = RunFacts {
+        termination: outcome.termination,
+        memory_limit_hit: outcome.memory_limit_hit,
+        stderr: String::from_utf8_lossy(&outcome.stderr).into_owned(),
+        prefixes: work.prefixes(),
+    };
+    Ok((parse(&outcome.stdout, &nonce), facts))
+}
+
+/// Records of the debug harness.
+#[derive(Debug, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+enum Record {
+    Trace {
+        table: Vec<[u32; 2]>,
+        tokens: String,
+        steps: u32,
+        truncated: Option<Truncation>,
+        prints: Vec<(u32, String)>,
+        prints_truncated: bool,
+    },
+    Outcome(DebugOutcome),
+    Stop(RawStop),
+    Diverged {},
+    LoadError {
+        message: String,
+    },
+}
+
+#[derive(Debug, Deserialize)]
+struct RawStop {
+    step: u32,
+    hash: u64,
+    stack: Vec<StackFrame>,
+    frame: u32,
+    locals: Vec<VarInfo>,
+    globals: Vec<VarInfo>,
+    expanded: Vec<Expansion>,
+    evals: Vec<EvalResult>,
+}
+
+fn parse(stdout: &[u8], nonce: &str) -> Vec<Result<Record, String>> {
+    let prefix = format!("{nonce} ");
+    String::from_utf8_lossy(stdout)
+        .lines()
+        .filter_map(|line| line.trim_end_matches('\r').strip_prefix(&prefix))
+        .map(|json| serde_json::from_str(json).map_err(|e| format!("{e}")))
+        .collect()
+}
+
+/// Steps from the harness's code table and tokens.
+fn decode(table: &[[u32; 2]], tokens: &str, steps: u32) -> Result<Vec<Step>, String> {
+    let alpha = alphabet();
+    let index_of = |c: char| alpha.iter().position(|a| *a == c);
+    let mut out = Vec::with_capacity(steps as usize);
+    let mut chars = tokens.chars();
+    while let Some(c) = chars.next() {
+        let code = if c == '~' {
+            let hi = chars.next().and_then(index_of);
+            let lo = chars.next().and_then(index_of);
+            match (hi, lo) {
+                (Some(hi), Some(lo)) => alpha.len() + hi * alpha.len() + lo,
+                _ => return Err("bad trace token".into()),
+            }
+        } else {
+            index_of(c).ok_or("bad trace token")?
+        };
+        let [line, depth] = *table.get(code).ok_or("trace token outside the table")?;
+        out.push(Step { line, depth });
+    }
+    if out.len() != steps as usize {
+        return Err(format!("trace has {} steps, expected {steps}", out.len()));
+    }
+    Ok(out)
+}
+
+fn strip(text: &mut String, prefixes: &[String]) {
+    for p in prefixes {
+        if text.contains(p.as_str()) {
+            *text = text.replace(p.as_str(), "");
+        }
+    }
+}
+
+fn interpret(
+    records: Vec<Result<Record, String>>,
+    facts: &RunFacts,
+    stop_of: Option<(&Trace, u32)>,
+) -> Result<DebugRun, JudgeError> {
+    let mut trace: Option<Trace> = None;
+    for record in records {
+        let record = record.map_err(|e| JudgeError::Internal(format!("debug record: {e}")))?;
+        match record {
+            Record::LoadError { mut message } => {
+                strip(&mut message, &facts.prefixes);
+                return Ok(DebugRun::LoadError(message));
+            }
+            Record::Diverged {} => return Ok(DebugRun::Diverged),
+            Record::Stop(raw) => {
+                let Some((trace, step)) = stop_of else {
+                    return Err(JudgeError::Internal("unexpected stop record".into()));
+                };
+                if raw.step != step || raw.hash != trace.prefix_hash(step as usize) {
+                    return Ok(DebugRun::Diverged);
+                }
+                return Ok(DebugRun::Stop(StopInfo {
+                    step: raw.step,
+                    stack: raw.stack,
+                    frame: raw.frame,
+                    locals: raw.locals,
+                    globals: raw.globals,
+                    expanded: raw.expanded,
+                    evals: raw.evals,
+                }));
+            }
+            Record::Trace {
+                table,
+                tokens,
+                steps,
+                truncated,
+                prints,
+                prints_truncated,
+            } => {
+                let steps = decode(&table, &tokens, steps).map_err(JudgeError::Internal)?;
+                trace = Some(Trace {
+                    steps,
+                    truncated,
+                    prints: prints
+                        .into_iter()
+                        .map(|(step, text)| PrintChunk { step, text })
+                        .collect(),
+                    prints_truncated,
+                    outcome: None,
+                });
+                if truncated.is_some() {
+                    break;
+                }
+            }
+            Record::Outcome(mut outcome) => {
+                if let Some(e) = outcome.error.as_mut() {
+                    strip(e, &facts.prefixes);
+                }
+                if let Some(t) = trace.as_mut() {
+                    t.outcome = Some(outcome);
+                }
+            }
+        }
+    }
+    if let Some(t) = trace
+        && stop_of.is_none()
+    {
+        return Ok(DebugRun::Trace(t));
+    }
+    // No usable record: the sandbox stopped the run first.
+    Ok(match facts.termination {
+        Termination::CpuTimeLimit | Termination::WallTimeLimit => DebugRun::Limit(DebugLimit::Time),
+        Termination::OutputLimit => DebugRun::Limit(DebugLimit::Output),
+        Termination::Exited if facts.memory_limit_hit => DebugRun::Limit(DebugLimit::Memory),
+        Termination::Exited => {
+            let tail: String = facts
+                .stderr
+                .chars()
+                .rev()
+                .take(2000)
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .collect();
+            return Err(JudgeError::Internal(format!(
+                "the debug harness ended without a record: {tail}"
+            )));
+        }
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn facts() -> RunFacts {
+        RunFacts {
+            termination: Termination::Exited,
+            memory_limit_hit: false,
+            stderr: String::new(),
+            prefixes: vec!["C:\\work\\".into()],
+        }
+    }
+
+    #[test]
+    fn alphabet_has_91_json_safe_characters() {
+        let a = alphabet();
+        assert_eq!(a.len(), 91);
+        assert!(
+            a.iter()
+                .all(|c| c.is_ascii_graphic() && !matches!(c, '"' | '\\' | '~'))
+        );
+    }
+
+    #[test]
+    fn decodes_short_and_long_tokens() {
+        let a = alphabet();
+        let mut table: Vec<[u32; 2]> = (0..100).map(|i| [i + 1, 1]).collect();
+        table[0] = [3, 1];
+        // code 0, code 90 (last short), code 91 ("~" + a[0] + a[0]), code 99.
+        let tokens: String = [
+            a[0].to_string(),
+            a[90].to_string(),
+            format!("~{}{}", a[0], a[0]),
+            format!("~{}{}", a[0], a[8]),
+        ]
+        .concat();
+        let steps = decode(&table, &tokens, 4).unwrap();
+        assert_eq!(
+            steps.iter().map(|s| s.line).collect::<Vec<_>>(),
+            [3, 91, 92, 100]
+        );
+        assert!(decode(&table, &tokens, 5).is_err());
+        assert!(decode(&table, "\"", 1).is_err());
+        assert!(decode(&table[..1], &a[5].to_string(), 1).is_err());
+    }
+
+    #[test]
+    fn interprets_a_trace_with_its_outcome() {
+        let out = b"noise\nN {\"kind\":\"trace\",\"table\":[[3,1],[4,1]],\"tokens\":\"!#!#\",\"steps\":4,\"truncated\":null,\"prints\":[[1,\"hi\\n\"]],\"prints_truncated\":false}\n\
+N {\"kind\":\"outcome\",\"status\":\"error\",\"error\":\"File C:\\\\work\\\\solution.py, line 4\",\"line\":4,\"step\":3}\n";
+        let run = interpret(parse(out, "N"), &facts(), None).unwrap();
+        let DebugRun::Trace(t) = run else {
+            panic!("{run:?}")
+        };
+        assert_eq!(t.steps.len(), 4);
+        assert_eq!(t.steps[1], Step { line: 4, depth: 1 });
+        assert_eq!(
+            t.prints,
+            [PrintChunk {
+                step: 1,
+                text: "hi\n".into()
+            }]
+        );
+        let o = t.outcome.unwrap();
+        assert_eq!(o.error.as_deref(), Some("File solution.py, line 4"));
+        assert_eq!(o.line, Some(4));
+    }
+
+    #[test]
+    fn a_truncated_trace_has_no_outcome() {
+        let out = b"N {\"kind\":\"trace\",\"table\":[[2,1]],\"tokens\":\"!!\",\"steps\":2,\"truncated\":\"steps\",\"prints\":[],\"prints_truncated\":false}\n";
+        let DebugRun::Trace(t) = interpret(parse(out, "N"), &facts(), None).unwrap() else {
+            panic!()
+        };
+        assert_eq!(t.truncated, Some(Truncation::Steps));
+        assert!(t.outcome.is_none());
+    }
+
+    #[test]
+    fn a_stop_with_the_wrong_hash_is_divergence() {
+        let trace = Trace {
+            steps: vec![Step { line: 3, depth: 1 }, Step { line: 4, depth: 1 }],
+            truncated: None,
+            prints: vec![],
+            prints_truncated: false,
+            outcome: None,
+        };
+        let good = trace.prefix_hash(1);
+        let rec = |hash: u64| {
+            format!(
+                "N {{\"kind\":\"stop\",\"step\":1,\"hash\":{hash},\"stack\":[{{\"function\":\"f\",\"line\":4}}],\"frame\":0,\"locals\":[{{\"name\":\"x\",\"type\":\"int\",\"value\":\"1\",\"children\":0}}],\"globals\":[],\"expanded\":[],\"evals\":[]}}\n"
+            )
+        };
+        let ok = interpret(
+            parse(rec(good).as_bytes(), "N"),
+            &facts(),
+            Some((&trace, 1)),
+        )
+        .unwrap();
+        let DebugRun::Stop(s) = ok else {
+            panic!("{ok:?}")
+        };
+        assert_eq!(s.locals[0].name, "x");
+        assert_eq!(s.stack[0].line, 4);
+        let bad = interpret(
+            parse(rec(good ^ 1).as_bytes(), "N"),
+            &facts(),
+            Some((&trace, 1)),
+        )
+        .unwrap();
+        assert_eq!(bad, DebugRun::Diverged);
+    }
+
+    #[test]
+    fn limits_and_errors() {
+        let mut f = facts();
+        f.termination = Termination::CpuTimeLimit;
+        assert_eq!(
+            interpret(vec![], &f, None).unwrap(),
+            DebugRun::Limit(DebugLimit::Time)
+        );
+        f.termination = Termination::OutputLimit;
+        assert_eq!(
+            interpret(vec![], &f, None).unwrap(),
+            DebugRun::Limit(DebugLimit::Output)
+        );
+        f.termination = Termination::Exited;
+        assert!(interpret(vec![], &f, None).is_err());
+        let load = b"N {\"kind\":\"load_error\",\"message\":\"C:\\\\work\\\\solution.py: boom\"}\n";
+        assert_eq!(
+            interpret(parse(load, "N"), &facts(), None).unwrap(),
+            DebugRun::LoadError("solution.py: boom".into())
+        );
+        assert!(interpret(parse(b"N {\"kind\":\"bogus\"}\n", "N"), &facts(), None).is_err());
+    }
+}

@@ -10,6 +10,7 @@
 pub mod calibration;
 pub mod checker;
 pub mod codegen;
+pub mod debug;
 mod judge;
 pub mod languages;
 pub mod limits;

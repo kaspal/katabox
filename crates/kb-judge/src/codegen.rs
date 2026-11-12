@@ -42,6 +42,25 @@ pub(crate) fn workspace_files(
     Ok(files)
 }
 
+/// Files for a debugger replay run (ADR 0022): the debug harness and the solution.
+pub(crate) fn debug_files(
+    def: &LanguageDef,
+    sig: &Signature,
+    source: &str,
+) -> Result<Vec<(String, String)>, JudgeError> {
+    let (_, template) = def
+        .debug
+        .as_ref()
+        .ok_or(JudgeError::Unsupported(def.language))?;
+    Ok(vec![
+        (
+            def.main_file(),
+            render(template, template_context(def, sig))?,
+        ),
+        (def.solution_file(), source.to_string()),
+    ])
+}
+
 fn template_context(def: &LanguageDef, sig: &Signature) -> Value {
     let lang = def.language;
     let function = sig.function_name(lang);

@@ -1,3 +1,4 @@
+import { DebugThisCase } from "@/workspace/debug/context";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import type { Failure, JsonValue, Report, TestKind } from "@/bindings";
@@ -41,6 +42,9 @@ export function FailureView({ failure }: { failure: Failure }) {
       <h4 className="flex flex-wrap items-center gap-2 text-sm font-semibold">
         {t("results.firstFailure", { test: testLabel(t, failure.kind, failure.index) })}
         <VerdictBadge verdict={failure.verdict} />
+        <span className="ml-auto font-normal">
+          <DebugThisCase input={failure.input} label={testLabel(t, failure.kind, failure.index)} />
+        </span>
       </h4>
       <div>
         <p className="mb-1 text-xs font-medium text-muted-foreground">{t("results.input")}</p>

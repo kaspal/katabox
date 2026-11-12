@@ -4,8 +4,11 @@ id = "python"
 extension = "py"
 compile = ""
 run = "python -I -X utf8 {main}"
+# The debugger's replay runs (ADR 0022): `-P -s` instead of `-I` so PYTHONHASHSEED=0
+# (set by kb-judge) applies; kb-runner gives the child no other environment.
+debug = "python -P -s -X utf8 {main}"
 language_server = "basedpyright"
-debug_adapter = "debugpy"
+debug_adapter = "replay (debug.py.j2, ADR 0022)"
 
 # Time limit for this language (ADR 0017): the problem's base limit (`time_limit_ms`,
 # set for Rust) times `factor`, plus `startup_ms` of CPU for starting the runtime and

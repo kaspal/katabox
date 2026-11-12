@@ -3,6 +3,7 @@
 //! Keep this crate dependency-light: no I/O, no async, no platform code.
 
 mod day;
+pub mod debug;
 mod report;
 
 pub use day::Day;

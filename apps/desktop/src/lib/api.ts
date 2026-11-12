@@ -7,6 +7,11 @@ import {
   type AppError,
   type AppInfo,
   type AcceptedSolution,
+  type DebugAction,
+  type DebugInspect,
+  type DebugStart,
+  type DebugView,
+  type EvalResult,
   type ActivityRow,
   type ReviewSummary,
   type SolvedBreakdown,
@@ -182,6 +187,19 @@ export const api = {
   },
   cancelInstall: (): Promise<null> => call(commands.cancelInstall()),
   uninstallLanguage: (language: Language): Promise<null> => call(commands.uninstallLanguage(language)),
+
+  // Debugger (ADR 0022): replay runs in the sandbox, one session at a time
+  debugLanguages: (): Promise<Language[]> => commands.debugLanguages(),
+  debugStart: (start: DebugStart): Promise<DebugView> => call(commands.debugStart(start)),
+  debugAction: (session: number, action: DebugAction): Promise<DebugView> =>
+    call(commands.debugAction(session, action)),
+  debugSetBreakpoints: (session: number, lines: number[]): Promise<null> =>
+    call(commands.debugSetBreakpoints(session, lines)),
+  debugInspect: (session: number, inspect: DebugInspect): Promise<DebugView> =>
+    call(commands.debugInspect(session, inspect)),
+  debugEvaluate: (session: number, frame: number, expr: string): Promise<EvalResult> =>
+    call(commands.debugEvaluate(session, frame, expr)),
+  debugEnd: (session: number): Promise<null> => call(commands.debugEnd(session)),
 };
 
 export type Api = typeof api;

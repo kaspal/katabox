@@ -6,6 +6,7 @@
 use std::path::{Path, PathBuf};
 
 use kb_app::LanguageCount;
+use kb_app::debug::{DebugAction, DebugInspect, DebugStart, DebugView};
 use kb_app::interview::{InterviewResult, InterviewSetup, InterviewView};
 use kb_app::practice::{
     DailyProblem, ListView, PatternProgress, ReviewItem, ReviewState, ReviewSummary,
@@ -16,6 +17,7 @@ use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
     LanguagesInfo, SubmissionView, SubmitOptions, SubmitResult,
 };
+use kb_core::debug::EvalResult;
 use kb_core::{JudgeEvent, Language, Report};
 use kb_store::{AcceptedSolution, ActivityRow};
 use kb_store::{
@@ -515,6 +517,72 @@ async fn import_cancel(state: State<'_, AppState>, id: u32) -> Res<()> {
     Ok(())
 }
 
+// --- Debugger (ADR 0022): replay runs in the sandbox, one session at a time ----------
+
+/// Languages the debugger supports.
+#[tauri::command]
+#[specta::specta]
+fn debug_languages() -> Vec<Language> {
+    kb_app::debug::languages()
+}
+
+/// Record one test and stop at its first breakpoint (or show the result).
+#[tauri::command]
+#[specta::specta]
+async fn debug_start(state: State<'_, AppState>, start: DebugStart) -> Res<DebugView> {
+    state.app()?.debug_start(start).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn debug_action(
+    state: State<'_, AppState>,
+    session: u32,
+    action: DebugAction,
+) -> Res<DebugView> {
+    state.app()?.debug_action(session, action).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn debug_set_breakpoints(
+    state: State<'_, AppState>,
+    session: u32,
+    lines: Vec<u32>,
+) -> Res<()> {
+    state.app()?.debug_set_breakpoints(session, lines)
+}
+
+/// Show the current step again with another frame, expansions or watches.
+#[tauri::command]
+#[specta::specta]
+async fn debug_inspect(
+    state: State<'_, AppState>,
+    session: u32,
+    inspect: DebugInspect,
+) -> Res<DebugView> {
+    state.app()?.debug_inspect(session, inspect).await
+}
+
+/// Evaluate a console expression in a frame at the current step (never changes the run).
+#[tauri::command]
+#[specta::specta]
+async fn debug_evaluate(
+    state: State<'_, AppState>,
+    session: u32,
+    frame: u32,
+    expr: String,
+) -> Res<EvalResult> {
+    state.app()?.debug_evaluate(session, frame, expr).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn debug_end(state: State<'_, AppState>, session: u32) -> Res<()> {
+    state.app()?.debug_end(session);
+    Ok(())
+}
+
 /// This machine's calibration (ADR 0017), if it was measured.
 #[tauri::command]
 #[specta::specta]
@@ -663,6 +731,13 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         import_preview,
         import_apply,
         import_cancel,
+        debug_languages,
+        debug_start,
+        debug_action,
+        debug_set_breakpoints,
+        debug_inspect,
+        debug_evaluate,
+        debug_end,
         lsp_connect,
         lsp_send,
         lsp_disconnect,

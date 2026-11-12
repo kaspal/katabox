@@ -24,6 +24,9 @@ pub struct LanguageDef {
     pub time: TimeDef,
     pub stub_template: &'static str,
     pub harness_template: &'static str,
+    /// The debugger's replay run (ADR 0022): its command line and harness template, for
+    /// languages that can be debugged (Python today).
+    pub debug: Option<(String, &'static str)>,
 }
 
 /// Sandbox limits for one compile, from `[compile_limits]` in language.toml. Larger than
@@ -64,6 +67,9 @@ struct LanguageToml {
     #[serde(default)]
     compile_limits: Option<CompileLimits>,
     time: TimeDef,
+    /// The debug run line (ADR 0022); empty or absent when the language has no debugger.
+    #[serde(default)]
+    debug: String,
     #[allow(dead_code)] // used by kb-bridge later
     language_server: String,
     #[allow(dead_code)]
@@ -91,6 +97,10 @@ pub const SUPPORTED: [Language; 4] = [
 ];
 
 pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
+    let debug_template = match lang {
+        Language::Python => Some(lang_file!("python", "debug.py.j2")),
+        _ => None,
+    };
     let (toml_src, stub_template, harness_template) = match lang {
         Language::Python => (
             lang_file!("python", "language.toml"),
@@ -129,6 +139,11 @@ pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
     if !(t.time.factor.is_finite() && t.time.factor >= 1.0) {
         return Err(bad("[time] factor must be a number ≥ 1".into()));
     }
+    let debug = match (t.debug.is_empty(), debug_template) {
+        (true, None) => None,
+        (false, Some(template)) => Some((t.debug, template)),
+        _ => return Err(bad("`debug` and the debug template go together".into())),
+    };
     Ok(LanguageDef {
         language: lang,
         compile: t.compile,
@@ -137,6 +152,7 @@ pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
         time: t.time,
         stub_template,
         harness_template,
+        debug,
     })
 }
 
@@ -163,6 +179,19 @@ impl LanguageDef {
     /// Compiler (resolved inside `toolchain`) and arguments.
     pub fn compile_command(&self, toolchain: &Path) -> Result<(PathBuf, Vec<String>), JudgeError> {
         self.expand(&self.compile, toolchain, 0, None)
+    }
+
+    /// Program and arguments for a debugger replay run (ADR 0022), if the language has one.
+    pub fn debug_command(
+        &self,
+        toolchain: &Path,
+        memory_mb: u32,
+    ) -> Result<(PathBuf, Vec<String>), JudgeError> {
+        let (line, _) = self
+            .debug
+            .as_ref()
+            .ok_or(JudgeError::Unsupported(self.language))?;
+        self.expand(line, toolchain, memory_mb, None)
     }
 
     /// Program and arguments for one batch run. `binary` is the compiled program for

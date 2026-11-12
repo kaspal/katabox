@@ -683,6 +683,10 @@ pub(crate) struct WorkDir {
     id: u64,
 }
 
+pub(crate) fn new_nonce() -> String {
+    nonce()
+}
+
 impl WorkDir {
     pub(crate) fn create(runs_dir: &Path) -> Result<WorkDir, JudgeError> {
         static COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -702,7 +706,7 @@ impl WorkDir {
 
     /// This folder's absolute path as it appears in messages: as a `file:///` URL (Node)
     /// and as a plain path, each with a trailing separator.
-    fn prefixes(&self) -> Vec<String> {
+    pub(crate) fn prefixes(&self) -> Vec<String> {
         let Ok(canon) = std::fs::canonicalize(&self.path).or_else(|_| {
             // Already deleted by the runner: rebuild the canonical form from the parent.
             let parent = self.path.parent().unwrap_or(&self.path);
