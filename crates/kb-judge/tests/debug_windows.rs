@@ -332,3 +332,112 @@ fn exceptions_load_errors_and_other_languages() {
     let r = debug::trace(&p, Language::Rust, "", &first_public(), &env());
     assert!(matches!(r, Err(JudgeError::Unsupported(Language::Rust))));
 }
+
+/// Content batch 4: every new problem's Python reference can be debugged on its first
+/// public test. The trace ends with the expected answer, a stop halfway and at the last
+/// step shows the user's frames only (the entry function outermost), and the deepest
+/// step shows the problem's helper: a class method, a recursive function or a
+/// generator.
+#[test]
+fn new_problems_are_debuggable() {
+    // (id, entry function, helper frame at the deepest step, frames of it there)
+    let problems: [(&str, &str, Option<(&str, usize)>); 15] = [
+        ("catalog-prefixes", "prefix_counts", Some(("Trie.", 1))),
+        ("fun-run-results", "finish_order", None),
+        ("family-generations", "generations", None),
+        ("corner-shop", "shop", Some(("Shop.", 1))),
+        ("outfit-picker", "outfits", Some(("<locals>.choose", 3))),
+        ("short-names", "short_names", Some(("Trie.", 1))),
+        (
+            "postage-stamps",
+            "exact_postage",
+            Some(("<locals>.search", 3)),
+        ),
+        ("queue-swaps", "swaps_to_sort", Some(("<locals>.sort", 2))),
+        ("sales-teams", "team_totals", None),
+        ("library-holds", "holds", Some(("Library.", 1))),
+        ("seed-rows", "plantings", None),
+        ("ring-road", "ring_length", None),
+        ("common-boss", "common_boss", Some(("<locals>.decide", 1))),
+        (
+            "delivery-round",
+            "shortest_round",
+            Some(("<locals>.best", 3)),
+        ),
+        ("toll-grid", "cheapest_crossing", Some(("neighbours", 1))),
+    ];
+    for (id, entry, helper) in problems {
+        let dir = repo().join("content/problems").join(id);
+        let p = Problem::load(&dir).unwrap();
+        let src = std::fs::read_to_string(dir.join("solutions/ref.py")).unwrap();
+        let public = &p.tests[0];
+        let started = Instant::now();
+        let t = trace(&p, &src, &public.input);
+        assert!(t.truncated.is_none(), "{id}: truncated");
+        let o = t.outcome.clone().unwrap();
+        assert_eq!(o.status, OutcomeStatus::Ok, "{id}: {:?}", o.error);
+        assert!(
+            matches!(
+                p.checker.check(&public.expected, &o.value),
+                kb_judge::CheckOutcome::Ok
+            ),
+            "{id}: {} is not {}",
+            o.value,
+            public.expected
+        );
+        let last = t.steps.len() - 1;
+        for step in [last / 2, last] {
+            let s = stop(
+                &p,
+                &src,
+                &public.input,
+                &t,
+                StopRequest {
+                    step: step as u32,
+                    ..Default::default()
+                },
+            );
+            assert!(!s.stack.is_empty(), "{id}@{step}: empty stack");
+            assert_eq!(
+                s.stack.last().unwrap().function,
+                entry,
+                "{id}@{step}: {:?}",
+                s.stack
+            );
+            assert!(!s.locals.is_empty(), "{id}@{step}: no locals");
+        }
+        if let Some((frame, count)) = helper {
+            let deepest = (0..t.steps.len())
+                .max_by_key(|&i| (t.steps[i].depth, std::cmp::Reverse(i)))
+                .unwrap();
+            let s = stop(
+                &p,
+                &src,
+                &public.input,
+                &t,
+                StopRequest {
+                    step: deepest as u32,
+                    ..Default::default()
+                },
+            );
+            let names: Vec<&str> = s.stack.iter().map(|f| f.function.as_str()).collect();
+            assert_eq!(
+                s.stack.len() as u32,
+                t.steps[deepest].depth,
+                "{id}: {names:?}"
+            );
+            assert!(names[0].contains(frame), "{id}: {names:?}");
+            assert!(
+                names.iter().filter(|n| n.contains(frame)).count() >= count,
+                "{id}: {names:?}"
+            );
+            assert_eq!(*names.last().unwrap(), entry, "{id}: {names:?}");
+        }
+        println!(
+            "{id:<20} {:>5} steps, max depth {}, {:?} for the trace and its stops",
+            t.steps.len(),
+            t.steps.iter().map(|s| s.depth).max().unwrap(),
+            started.elapsed()
+        );
+    }
+}

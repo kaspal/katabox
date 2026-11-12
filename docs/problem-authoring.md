@@ -49,6 +49,19 @@ Names: the function name is camelCase in `problem.toml` (`twoSum`). Python and R
 snake_case (`two_sum`); TypeScript and PHP keep camelCase. A name that is a keyword gets a
 trailing `_`.
 
+There are no tree, linked-list or class types yet, so these shapes stand in for them:
+
+- **Trees:** a parent array (`int[]`, the root's parent is `-1`, any numbering; see
+  `family-generations`, `sales-teams`, `common-boss`) or an edge list (`int[][]`).
+  `validate.py` checks for one root and no loops.
+- **Design problems** (a structure driven by operations): `ops: string[]` names each
+  operation and `args: int[][]` holds its numbers, one row per operation; the result is
+  `int[]` with one value per operation that reports something (see `corner-shop`,
+  `library-holds`). `validate.py` checks each operation's arity and any rule the
+  statement promises.
+- **Backtracking:** return a count or one canonical answer with an exact tie rule
+  (`outfit-picker`, `postage-stamps`), so outputs stay small and checkable with `exact`.
+
 ## Time limit (ADR 0017)
 
 `[judge] time_limit_ms` is the **base limit**: CPU time for the whole batch of tests in

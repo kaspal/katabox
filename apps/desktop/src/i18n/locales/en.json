@@ -52,6 +52,7 @@
     "label": "Pattern",
     "any": "Any pattern",
     "arrays-hashing": "Arrays & hashing",
+    "sorting": "Sorting",
     "two-pointers": "Two pointers",
     "sliding-window": "Sliding window",
     "stack": "Stack",
@@ -69,18 +70,24 @@
     "bit-manipulation": "Bit manipulation",
     "strings": "Strings",
     "union-find": "Union-find",
-    "design": "Design",
-    "sorting": "Sorting"
+    "design": "Design"
   },
   "tag": {
     "label": "Tag",
     "any": "Any tag",
     "names": {
       "array": "Array",
+      "backtracking": "Backtracking",
       "bfs": "Breadth-first search",
+      "binary-lifting": "Binary lifting",
       "binary-search": "Binary search",
       "bit-manipulation": "Bit manipulation",
+      "bitmask": "Bitmask",
       "counting": "Counting",
+      "cycle": "Cycle",
+      "design": "Design",
+      "dfs": "Depth-first search",
+      "divide-and-conquer": "Divide and conquer",
       "dynamic-programming": "Dynamic programming",
       "floating-point": "Floating point",
       "graph": "Graph",
@@ -94,6 +101,7 @@
       "monotonic-stack": "Monotonic stack",
       "number-theory": "Number theory",
       "prefix-sum": "Prefix sums",
+      "queue": "Queue",
       "shortest-path": "Shortest path",
       "simulation": "Simulation",
       "sliding-window": "Sliding window",
@@ -101,6 +109,8 @@
       "stack": "Stack",
       "string": "String",
       "topological-sort": "Topological sort",
+      "tree": "Tree",
+      "trie": "Trie",
       "two-pointers": "Two pointers",
       "union-find": "Union-find"
     }

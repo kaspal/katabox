@@ -52,6 +52,7 @@
     "label": "Patrón",
     "any": "Cualquier patrón",
     "arrays-hashing": "Arreglos y hashing",
+    "sorting": "Ordenamiento",
     "two-pointers": "Dos punteros",
     "sliding-window": "Ventana deslizante",
     "stack": "Pila",
@@ -69,18 +70,24 @@
     "bit-manipulation": "Manipulación de bits",
     "strings": "Cadenas",
     "union-find": "Union-find",
-    "design": "Diseño",
-    "sorting": "Ordenamiento"
+    "design": "Diseño"
   },
   "tag": {
     "label": "Etiqueta",
     "any": "Cualquier etiqueta",
     "names": {
       "array": "Arreglo",
+      "backtracking": "Backtracking",
       "bfs": "Búsqueda en anchura",
+      "binary-lifting": "Salto binario",
       "binary-search": "Búsqueda binaria",
       "bit-manipulation": "Manipulación de bits",
+      "bitmask": "Máscara de bits",
       "counting": "Conteo",
+      "cycle": "Ciclo",
+      "design": "Diseño",
+      "dfs": "Búsqueda en profundidad",
+      "divide-and-conquer": "Divide y vencerás",
       "dynamic-programming": "Programación dinámica",
       "floating-point": "Coma flotante",
       "graph": "Grafo",
@@ -94,6 +101,7 @@
       "monotonic-stack": "Pila monótona",
       "number-theory": "Teoría de números",
       "prefix-sum": "Sumas prefijas",
+      "queue": "Cola",
       "shortest-path": "Camino más corto",
       "simulation": "Simulación",
       "sliding-window": "Ventana deslizante",
@@ -101,6 +109,8 @@
       "stack": "Pila",
       "string": "Cadena",
       "topological-sort": "Orden topológico",
+      "tree": "Árbol",
+      "trie": "Trie",
       "two-pointers": "Dos punteros",
       "union-find": "Unión-búsqueda"
     }
