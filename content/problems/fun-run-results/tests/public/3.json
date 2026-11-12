@@ -1,0 +1,1 @@
+{"input": {"names": ["tom", "al", "tomas"], "times": [500, 500, 500]}, "output": ["al", "tom", "tomas"]}

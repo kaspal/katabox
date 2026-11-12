@@ -1,0 +1,17 @@
+id = "postage-stamps"
+title = "Postage Stamps"
+title_es = "Sellos de correo"
+difficulty = "medium"
+tags = ["backtracking", "dfs"]
+pattern = "backtracking"
+rank = 7
+
+[signature]
+name = "exactPostage"
+params = [{ name = "values", type = "int[]" }, { name = "target", type = "int" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

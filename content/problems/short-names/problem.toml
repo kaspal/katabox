@@ -1,0 +1,17 @@
+id = "short-names"
+title = "Short Names"
+title_es = "Nombres cortos"
+difficulty = "medium"
+tags = ["trie", "string"]
+pattern = "tries"
+rank = 7
+
+[signature]
+name = "shortNames"
+params = [{ name = "names", type = "string[]" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

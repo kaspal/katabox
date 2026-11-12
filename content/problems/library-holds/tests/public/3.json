@@ -1,0 +1,1 @@
+{"input": {"ops": ["hold", "hold", "cancel", "hold", "return", "return"], "args": [[2, 7], [2, 8], [2, 7], [2, 7], [2], [2]]}, "output": [8, 7]}

@@ -1,0 +1,17 @@
+id = "queue-swaps"
+title = "Queue Swaps"
+title_es = "Cambios en la fila"
+difficulty = "medium"
+tags = ["sorting", "divide-and-conquer"]
+pattern = "sorting"
+rank = 7
+
+[signature]
+name = "swapsToSort"
+params = [{ name = "heights", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

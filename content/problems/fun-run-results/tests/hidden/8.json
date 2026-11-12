@@ -1,0 +1,1 @@
+{"input": {"names": ["sol", "luna", "mar", "rio", "sal"], "times": [300, 300, 299, 301, 300]}, "output": ["mar", "luna", "sal", "sol", "rio"]}

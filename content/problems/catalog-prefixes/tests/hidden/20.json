@@ -1,0 +1,1 @@
+{"input":{"titles":["aa","a","aabaa","baaaa","bb"],"typed":["bbbb","bb","abaab","a","a","a"]},"output":[0,1,0,3,3,3]}

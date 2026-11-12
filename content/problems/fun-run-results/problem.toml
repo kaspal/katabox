@@ -1,0 +1,17 @@
+id = "fun-run-results"
+title = "Fun Run Results"
+title_es = "Resultados de la carrera popular"
+difficulty = "easy"
+tags = ["sorting", "string"]
+pattern = "sorting"
+rank = 2
+
+[signature]
+name = "finishOrder"
+params = [{ name = "names", type = "string[]" }, { name = "times", type = "int[]" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

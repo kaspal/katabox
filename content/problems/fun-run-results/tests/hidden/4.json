@@ -1,0 +1,1 @@
+{"input": {"names": ["max", "min", "mid"], "times": [100000, 1, 50000]}, "output": ["min", "mid", "max"]}

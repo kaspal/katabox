@@ -1,0 +1,1 @@
+{"input": {"titles": ["moon", "moonlight", "mars", "moon", "map"], "typed": ["mo", "m", "moonl", "x"]}, "output": [3, 5, 1, 0]}

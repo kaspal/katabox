@@ -19,6 +19,7 @@ use crate::{App, AppError, AppErrorCode, Result};
 /// these, by id.
 pub const PATTERN_TRACK: [&str; 20] = [
     "arrays-hashing",
+    "sorting",
     "two-pointers",
     "sliding-window",
     "stack",
@@ -37,7 +38,6 @@ pub const PATTERN_TRACK: [&str; 20] = [
     "strings",
     "union-find",
     "design",
-    "sorting",
 ];
 
 /// Review intervals in days: after the first Accepted, then after each passed review.
@@ -770,6 +770,50 @@ mod tests {
         assert_eq!((map[0].solved, map[0].total), (1, 4));
         assert_eq!(map[0].next.as_ref().unwrap().id, "a2");
         assert_eq!(map[1].next.as_ref().unwrap().id, "t2");
+    }
+
+    #[test]
+    fn track_matches_the_pattern_order_of_the_ui_locales() {
+        // The doc comment on PATTERN_TRACK promises this; the UI lists pattern.* in
+        // the same order, so the two must not drift apart.
+        for lang in ["en", "es"] {
+            let path = format!(
+                "{}/../../apps/desktop/src/i18n/locales/{lang}.json",
+                env!("CARGO_MANIFEST_DIR")
+            );
+            let text = std::fs::read_to_string(&path).unwrap();
+            // serde_json maps sort their keys, so read the file order from the
+            // top-level "pattern" block (the locale files are formatted with indent 2).
+            let start = text.find("\n  \"pattern\": {\n").expect("a pattern block") + 1;
+            let keys: Vec<&str> = text[start..]
+                .lines()
+                .skip(1)
+                .take_while(|l| !l.starts_with("  }"))
+                .filter_map(|l| l.trim().strip_prefix('"')?.split('"').next())
+                .filter(|k| !["label", "any"].contains(k))
+                .collect();
+            assert_eq!(keys, PATTERN_TRACK, "pattern.* order in {lang}.json");
+        }
+    }
+
+    #[test]
+    fn sorting_comes_right_after_arrays_and_hashing() {
+        let all = vec![
+            p("a1", "arrays-hashing", 1, false),
+            p("s2", "sorting", 2, false),
+            p("t1", "two-pointers", 1, false),
+            p("d3", "design", 3, false),
+        ];
+        let order: Vec<String> = pattern_progress(&all)
+            .into_iter()
+            .map(|m| m.pattern)
+            .collect();
+        assert_eq!(
+            order,
+            ["arrays-hashing", "sorting", "two-pointers", "design"]
+        );
+        assert_eq!(next_problem(&all, "a1").unwrap().id, "s2");
+        assert_eq!(next_problem(&all, "s2").unwrap().id, "t1");
     }
 
     #[test]

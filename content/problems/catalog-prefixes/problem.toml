@@ -1,0 +1,17 @@
+id = "catalog-prefixes"
+title = "Catalogue Prefixes"
+title_es = "Prefijos del catálogo"
+difficulty = "easy"
+tags = ["trie", "string", "counting"]
+pattern = "tries"
+rank = 2
+
+[signature]
+name = "prefixCounts"
+params = [{ name = "titles", type = "string[]" }, { name = "typed", type = "string[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

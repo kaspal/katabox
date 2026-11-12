@@ -10,6 +10,7 @@ use std::process::ExitCode;
 
 const PATTERNS: &[&str] = &[
     "arrays-hashing",
+    "sorting",
     "two-pointers",
     "sliding-window",
     "stack",
@@ -28,7 +29,6 @@ const PATTERNS: &[&str] = &[
     "strings",
     "union-find",
     "design",
-    "sorting",
 ];
 
 #[derive(Debug, Deserialize)]
