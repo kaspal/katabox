@@ -10,10 +10,10 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 
 | Path | What it is |
 | --- | --- |
-| `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI (ADR 0012: `app/` shell, router, palette; `pages/`; `workspace/` editor, problem and results panes (ADR 0013); `components/ui/` shadcn; `lib/api.ts` is the only door to the generated `bindings.ts`; `i18n/locales/`; `styles/tokens.css`; `smoke/` is a temporary dev-only screen), `src-tauri/` = thin Rust shell (commands and wiring only; ADR 0011; `windows/` installer hooks, `icons/katabox.svg` the icon source; ADR 0021) |
-| `crates/kb-app` | App service behind the Tauri commands: state, sandbox root, Run/Submit, typed `AppError` (ADR 0011); `practice.rs`: reviews, daily problem, streak, pattern map, next problem, lists (ADR 0019); `interview.rs`, `transfer.rs` (ADR 0020) |
+| `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI (ADR 0012: `app/` shell, router, palette; `pages/`; `workspace/` editor, problem and results panes (ADR 0013), `workspace/debug/` debugger panels (ADR 0022); `components/ui/` shadcn; `lib/api.ts` is the only door to the generated `bindings.ts`; `i18n/locales/`; `styles/tokens.css`; `smoke/` is a temporary dev-only screen), `src-tauri/` = thin Rust shell (commands and wiring only; ADR 0011; `windows/` installer hooks, `icons/katabox.svg` the icon source; ADR 0021) |
+| `crates/kb-app` | App service behind the Tauri commands: state, sandbox root, Run/Submit, typed `AppError` (ADR 0011); `practice.rs`: reviews, daily problem, streak, pattern map, next problem, lists (ADR 0019); `interview.rs`, `transfer.rs` (ADR 0020); `debug.rs`: debugger sessions and navigation (ADR 0022) |
 | `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult, the judge Report). No I/O |
-| `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009); per-language time limits and the machine calibration benchmark (ADR 0017) |
+| `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009); per-language time limits and the machine calibration benchmark (ADR 0017); `debug.rs`: replay debugger runs (ADR 0022) |
 | `crates/kb-runner` | Sandboxed execution. **Security-critical** |
 | `crates/kb-store` | SQLite via sqlx (runtime queries only): `content.db` (read-only, FTS5, tests zstd-compressed per ADR 0018) + `user.db` (WAL, migrations in `migrations/`; ADR 0010) |
 | `crates/kb-toolchain` | Installs languages (runtimes + language servers) into the sandbox root: compiled-in `manifest.toml` (the only place pins live), safe downloader and extractor, receipts; `kb-toolchain` CLI (ADR 0015). **Download verification lives here** |
@@ -37,6 +37,7 @@ cargo run -p kb-pack -- validate # validate every problem, with each problem's c
 cargo run -p kb-pack -- generate content/problems/<id> --size max --seeds 1,2  # write hidden tests from gen.py (sandbox; committed)
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
+cargo test -p kb-judge --test debug_windows -- --nocapture  # debugger e2e in the sandbox (prints the replay timings)
 cargo test -p kb-judge --test calibration_windows -- --nocapture  # calibration benchmark (prints this machine's rounds; re-measure the reference times when it or a runtime pin changes)
 cargo test -p kb-bridge          # language servers: fake-server lifecycle; real basedpyright, typescript-language-server, rust-analyzer on Windows (needs the .ps1 fetch)
 pnpm install && pnpm build       # UI build (tsc + vite)
@@ -71,6 +72,7 @@ pnpm release:build -- --bundles nsis,msi  # Windows installers into target/relea
 - Packaging (ADR 0021): installers come from `tauri.conf.json` + `src-tauri/windows/`; uninstall cleanup only calls kb-runner's existing `cleanup` (`kb-app/src/uninstall.rs`). Auto-update stays off (cargo feature `updater`, `tauri.updater.conf.json`) and code signing stays off until the maintainer turns them on; never generate, commit or ask for a signing or updater key. The release workflow runs only on `v*` tags. Keep `@tauri-apps/api` and `@tauri-apps/cli` on the same minor as the `tauri` crate (today 2.12; `tauri build` checks it), and `rust-version` (1.99) at the stable toolchain the repo uses.
 - Problems must be original. Never copy statements or tests from LeetCode, HackerRank or similar sites.
 - Solutions use each language's standard library only.
+- Debugger (ADR 0022): replay only. Every debugger action is an ordinary sandboxed run of the language's debug harness (`languages/python/debug.py.j2`, `kb-judge/src/debug.rs`); never add sockets, a loopback exemption, a network capability or a kb-runner change for debugging. Harness frames stay hidden (only `solution.*` is traced). The debug run's output budget (`TRACE_BUDGET_BYTES` + `RECORD_ALLOWANCE` + prints) is its `max_output_bytes`; truncate the trace gracefully, never raise the cap. The editor is read-only during a session.
 - Record significant decisions as a new ADR in `docs/adr/`.
 
 ## Problem package format
