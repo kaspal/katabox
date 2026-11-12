@@ -8,3 +8,7 @@ apps/desktop/src-tauri/gen/
 !.env.example
 __pycache__/
 *.pyc
+
+# Complexity profiler input cache (ADR 0024): regenerated from gen.py and verified
+# against the hashes in profile/reference.json by `kb-pack profile --inputs`.
+content/problems/*/profile/inputs/

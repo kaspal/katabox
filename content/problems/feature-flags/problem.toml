@@ -5,6 +5,8 @@ difficulty = "medium"
 tags = ["bit-manipulation", "bitmask", "dynamic-programming"]
 pattern = "bit-manipulation"
 rank = 8
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
 
 [signature]
 name = "usersWithAll"

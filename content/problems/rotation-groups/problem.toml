@@ -5,6 +5,8 @@ difficulty = "medium"
 tags = ["string", "hash-map"]
 pattern = "strings"
 rank = 7
+profile = true
+profile_sizes = [100, 300, 1000, 3000, 10000, 20000]
 
 [signature]
 name = "rotationGroups"

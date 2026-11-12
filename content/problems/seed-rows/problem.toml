@@ -5,6 +5,8 @@ difficulty = "medium"
 tags = ["dynamic-programming", "counting"]
 pattern = "dynamic-programming"
 rank = 7
+profile = true
+profile_sizes = [10, 14, 18, 22, 1000, 10000]
 
 [signature]
 name = "plantings"

@@ -5,6 +5,8 @@ difficulty = "medium"
 tags = ["array", "binary-search"]
 pattern = "binary-search"
 rank = 7
+profile = true
+profile_sizes = [1000, 10000, 100000, 1000000, 10000000]
 
 [signature]
 name = "longestPiece"

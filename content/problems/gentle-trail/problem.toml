@@ -5,6 +5,8 @@ difficulty = "hard"
 tags = ["matrix", "graph", "shortest-path", "heap"]
 pattern = "graphs"
 rank = 10
+profile = true
+profile_sizes = [100, 400, 1600, 6400, 22500, 40000]
 
 [signature]
 name = "gentlestClimb"

@@ -143,6 +143,14 @@ describe.each([
     expect(levels[4]).toBeGreaterThanOrEqual(3);
   });
 
+  it("the complexity chart's lines stand out (≥ 3:1, WCAG 1.4.11)", () => {
+    for (const line of ["chart-you", "chart-ref"]) {
+      for (const bg of ["background", "card"]) {
+        expect(contrast(t[line], t[bg]), `${line} on ${bg}`).toBeGreaterThanOrEqual(3);
+      }
+    }
+  });
+
   it("the focus ring and inputs stand out (≥ 3:1)", () => {
     for (const bg of ["background", "card"]) {
       expect(contrast(t.ring, t[bg]), `ring on ${bg}`).toBeGreaterThanOrEqual(3);

@@ -59,6 +59,7 @@ export function ResultsPane({
   onInstallPython,
   practice = null,
   debugPanel = null,
+  complexity = null,
 }: {
   problem: ProblemView;
   signature: Signature | null;
@@ -78,6 +79,8 @@ export function ResultsPane({
   practice?: PracticeOutcome | null;
   /** The Debug tab's content (ADR 0022); no tab when null. */
   debugPanel?: ReactNode;
+  /** The complexity profiler under an Accepted result (ADR 0024). */
+  complexity?: ReactNode;
 }) {
   const { t } = useTranslation();
   const phaseText = usePhaseText()(phase);
@@ -199,7 +202,12 @@ export function ResultsPane({
               report={report}
               celebrate={celebrate}
               afterSummary={
-                practice && <SubmitPractice practice={practice} accepted={report.verdict === "accepted"} />
+                (practice || complexity) && (
+                  <>
+                    {practice && <SubmitPractice practice={practice} accepted={report.verdict === "accepted"} />}
+                    {complexity}
+                  </>
+                )
               }
             />
           ) : busy ? (

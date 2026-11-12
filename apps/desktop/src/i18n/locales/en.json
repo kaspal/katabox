@@ -226,6 +226,12 @@
         "submit": "Submit",
         "restore": "Before a restore"
       }
+    },
+    "script": {
+      "label": "Check the code as",
+      "hint": "JS checks plain JavaScript (no type annotations needed); TS checks strict TypeScript. Run and Submit work the same either way.",
+      "js": "JavaScript checking",
+      "ts": "TypeScript checking"
     }
   },
   "progress": {
@@ -353,7 +359,8 @@
     "not_enough_problems": "There are fewer than two unsolved problems you have never opened.",
     "import_invalid": "This file is not a valid KataBox export.",
     "debug_unsupported": "This language cannot be debugged yet. Debugging is available for Python.",
-    "debug_diverged": "This program behaves differently on each run (time, randomness or object identity), so it cannot be replayed step by step."
+    "debug_diverged": "This program behaves differently on each run (time, randomness or object identity), so it cannot be replayed step by step.",
+    "profile_unavailable": "This problem has no complexity profile."
   },
   "judge": {
     "verdict": {
@@ -713,5 +720,41 @@
     "console": "Debug console",
     "evaluate": "Evaluate in the selected frame",
     "consoleHelp": "Each step replays the test, so what you evaluate here never changes the program."
+  },
+  "complexity": {
+    "button": "Complexity",
+    "buttonHint": "Measure how your solution's time grows with the input size",
+    "measuring": "Measuring at growing sizes… (at most about 15 seconds)",
+    "again": "Measure again",
+    "title": "Complexity estimate",
+    "estimated": "Estimated: {{class}}",
+    "estimatedOr": "Estimated: {{class}} or {{other}}",
+    "reference": "Reference solution: about {{class}}",
+    "confidence": {
+      "high": "The curve fits clearly.",
+      "medium": "The curve fits reasonably well.",
+      "low": "Several curves fit about as well; take this one with care."
+    },
+    "noisy": "Most timings are under a millisecond, where noise dominates.",
+    "notEnough": "Not enough sizes ran in time to estimate a class (at least 3 are needed).",
+    "explanation": "Your solution ran on inputs of growing size n, 3 times each (the median counts), and the most common growth curves were fitted to the times. Timings vary between runs and machines, so this is an estimate, not a proof.",
+    "stopped": {
+      "budget": "Stopped before n = {{n}}: it would not have finished within the time budget.",
+      "time_limit": "Stopped at n = {{n}}: it ran out of time.",
+      "failed": "Stopped at n = {{n}}: {{verdict}}. Fix that first; no time was taken from it.",
+      "compile": "The solution did not compile."
+    },
+    "chartLabel": "Log-log chart of time against input size. {{summary}}",
+    "legendYou": "Your solution",
+    "legendRef": "Reference",
+    "axisN": "input size n",
+    "axisTime": "time per call",
+    "table": {
+      "caption": "Measured times (median of 3 runs, milliseconds)",
+      "n": "n",
+      "you": "Yours",
+      "ref": "Reference",
+      "notRun": "not run"
+    }
   }
 }

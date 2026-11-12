@@ -51,6 +51,16 @@ jobs:
       # Third-party notices are bundled; a release build refuses to ship without them.
       - run: pnpm notices
 
+      # Complexity profiles (ADR 0024): their inputs are not committed. Generate them from
+      # gen.py in the sandbox and verify them against the committed hashes, so content.db
+      # carries every profile. (Linux installers ship without profiles until sandboxed
+      # problem scripts run on Linux.)
+      - name: Profile inputs (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          pwsh scripts/fetch-toolchains.ps1 -NoLanguageServers
+          cargo run --release -p kb-pack -- profile --inputs
+
       # --- Code signing (off until the repo is public; docs/packaging.md) ---------------
       # SignPath Foundation signs the Windows installers after the build: add the
       # signpath/github-action-submit-signing-request step here with the organization id,

@@ -154,6 +154,17 @@ async submit(problem: string, language: Language, code: string, opts: SubmitOpti
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Measure the solution at growing sizes and estimate its complexity (ADR 0024).
+ */
+async profileSolution(problem: string, language: Language, code: string) : Promise<Result<ProfileView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("profile_solution", { problem, language, code }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async listSubmissions(problem: string) : Promise<Result<SubmissionSummary[], AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("list_submissions", { problem }) };
@@ -817,6 +828,10 @@ export type AppErrorCode =
  */
 "debug_diverged" | 
 /**
+ * This problem has no complexity profile (ADR 0024).
+ */
+"profile_unavailable" | 
+/**
  * Anything else, including the app failing to start.
  */
 "internal"
@@ -877,6 +892,34 @@ cached: boolean;
  * Wall time of the compile in microseconds (0 when cached).
  */
 time_us: number }
+/**
+ * The growth classes the profiler can name, simplest first.
+ */
+export type ComplexityClass = 
+/**
+ * O(1)
+ */
+"constant" | 
+/**
+ * O(log n)
+ */
+"logarithmic" | 
+/**
+ * O(n)
+ */
+"linear" | 
+/**
+ * O(n log n)
+ */
+"linearithmic" | 
+/**
+ * O(n²)
+ */
+"quadratic" | 
+/**
+ * O(2ⁿ)
+ */
+"exponential"
 export type ComponentPhase = "queued" | "downloading" | "verifying" | "extracting" | "installing" | "installed"
 export type ContentMeta = { pack_id: string; pack_version: string; 
 /**
@@ -1008,6 +1051,22 @@ available: boolean;
  * The editorial (Markdown), only when unlocked.
  */
 text: string | null }
+/**
+ * The fit's answer. Always an estimate: the UI never shows it without saying so.
+ */
+export type Estimate = { class: ComplexityClass; 
+/**
+ * 0 (a coin toss between the two best classes) to 1 (only one class fits).
+ */
+confidence: number; 
+/**
+ * The runner-up, when it fits almost as well: the UI shows both.
+ */
+close_alternative: ComplexityClass | null; 
+/**
+ * The timings are mostly tiny (under a millisecond), where noise dominates.
+ */
+noisy: boolean }
 /**
  * A watch or console expression evaluated at the stop.
  */
@@ -1402,6 +1461,10 @@ time_limit_ms: number; memory_mb: number; public_tests: PublicTest[];
  */
 has_validator: boolean; 
 /**
+ * The complexity profiler can measure solutions of this problem (ADR 0024).
+ */
+profile: boolean; 
+/**
  * Each language's time limit at this machine's time scale. Filled by the app, which
  * knows the languages and the calibration; empty as read from content.db.
  */
@@ -1411,9 +1474,70 @@ time_limits: LanguageLimit[];
  */
 time_scale: number }
 /**
+ * One measured size: the median of the repetitions, with every sample.
+ */
+export type ProfilePoint = { n: number; 
+/**
+ * Median wall time of the call, measured inside the harness (microseconds).
+ */
+median_us: number; samples_us: number[] }
+/**
+ * Why a profile stopped before its last size.
+ */
+export type ProfileStop = 
+/**
+ * The next size would not fit in the time budget (predicted from the last points).
+ */
+{ reason: "budget"; n: number } | 
+/**
+ * A size ran out of time.
+ */
+{ reason: "time_limit"; n: number } | 
+/**
+ * The solution failed at a size (runtime error, memory, output): no numbers from it.
+ */
+{ reason: "failed"; n: number; verdict: Verdict } | 
+/**
+ * The solution did not compile.
+ */
+{ reason: "compile"; output: string }
+/**
+ * What a profile measured and what the fit estimates. Every class is an estimate: the
+ * UI always says so.
+ */
+export type ProfileView = { 
+/**
+ * The user's solution, in increasing n (the sizes that ran in time).
+ */
+points: ProfilePoint[]; 
+/**
+ * The reference solution in the same language, at every size.
+ */
+reference: ReferencePoint[]; 
+/**
+ * `None` with fewer than three points.
+ */
+estimate: Estimate | null; 
+/**
+ * The reference solution's class, fitted the same way.
+ */
+reference_estimate: Estimate | null; 
+/**
+ * Why the profile stopped before the largest size, if it did.
+ */
+stopped: ProfileStop | null; 
+/**
+ * The machine's time scale the reference times were multiplied by (ADR 0017).
+ */
+time_scale: number }
+/**
  * A public test as shown in the UI.
  */
 export type PublicTest = { index: number; input: Partial<{ [key in string]: JsonValue }>; output: JsonValue }
+/**
+ * The reference solution's time at one size, at this machine's time scale.
+ */
+export type ReferencePoint = { n: number; us: number }
 export type Report = { verdict: Verdict; 
 /**
  * Tests that ran, in order. When the batch stopped early (time limit, crash) the

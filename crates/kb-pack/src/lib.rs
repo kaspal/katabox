@@ -3,6 +3,7 @@
 
 mod build;
 pub mod checks;
+pub mod profile;
 mod validate;
 
 pub use build::{BuildOptions, build};

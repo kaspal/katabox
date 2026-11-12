@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { JudgeEvent, Language, PracticeOutcome, Report } from "@/bindings";
+import type { ComplexityState } from "@/workspace/results/ComplexityPanel";
 import { api, type CustomInput } from "@/lib/api";
 import { practiceKeys } from "@/lib/practice";
 import { usePrefs } from "@/lib/prefs";
@@ -149,6 +150,8 @@ export function useJudge(problem: string) {
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [lastKind, setLastKind] = useState<"run" | "submit" | null>(null);
+  /** The code and language the last report judged (the complexity profiler measures it). */
+  const [judged, setJudged] = useState<{ language: Language; code: string } | null>(null);
   const running = useRef(false);
 
   // Another problem (e.g. opened from the Next card): forget the last result.
@@ -157,15 +160,21 @@ export function useJudge(problem: string) {
     setError(null);
     setPractice(null);
     setLastKind(null);
+    setJudged(null);
     setPhase({ kind: "idle" });
   }, [problem]);
 
   const start = useCallback(
-    async (kind: "run" | "submit", job: (onEvent: (e: JudgeEvent) => void) => Promise<Report>) => {
+    async (
+      kind: "run" | "submit",
+      source: { language: Language; code: string },
+      job: (onEvent: (e: JudgeEvent) => void) => Promise<Report>,
+    ) => {
       if (running.current) return;
       running.current = true;
       setBusy(kind);
       setLastKind(kind);
+      setJudged(source);
       setError(null);
       setReport(null);
       setPractice(null);
@@ -203,12 +212,12 @@ export function useJudge(problem: string) {
 
   const run = useCallback(
     (language: Language, code: string, custom: CustomInput[]) =>
-      start("run", (onEvent) => api.run(problem, language, code, custom, onEvent)),
+      start("run", { language, code }, (onEvent) => api.run(problem, language, code, custom, onEvent)),
     [problem, start],
   );
   const submit = useCallback(
     (language: Language, code: string, opts: { review?: boolean } = {}) =>
-      start("submit", async (onEvent) => {
+      start("submit", { language, code }, async (onEvent) => {
         const result = await api.submit(
           problem,
           language,
@@ -222,5 +231,29 @@ export function useJudge(problem: string) {
     [problem, start, lang],
   );
 
-  return { busy, phase, report, error, lastKind, run, submit, practice };
+  return { busy, phase, report, error, lastKind, judged, run, submit, practice };
+}
+
+/**
+ * The complexity profiler (ADR 0024) for the last judged code. It forgets its result
+ * when another report arrives (new code) or the problem changes.
+ */
+export function useComplexity(problem: string, judged: { language: Language; code: string } | null) {
+  const [state, setState] = useState<ComplexityState>({ status: "idle" });
+  const running = useRef(false);
+  useEffect(() => setState({ status: "idle" }), [problem, judged]);
+  const measure = useCallback(async () => {
+    if (running.current || !judged) return;
+    running.current = true;
+    setState({ status: "running" });
+    try {
+      const view = await api.profileSolution(problem, judged.language, judged.code);
+      setState({ status: "done", view });
+    } catch (error) {
+      setState({ status: "error", error });
+    } finally {
+      running.current = false;
+    }
+  }, [problem, judged]);
+  return { state, measure };
 }

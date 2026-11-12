@@ -5,6 +5,8 @@ difficulty = "hard"
 tags = ["array", "dynamic-programming", "binary-search"]
 pattern = "dynamic-programming"
 rank = 10
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 50000]
 
 [signature]
 name = "longestRise"

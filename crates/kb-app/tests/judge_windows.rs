@@ -57,6 +57,11 @@ fn content_db() -> PathBuf {
         let out = dir.join("content.db");
         let o = out.clone();
         std::thread::spawn(move || {
+            // Profile inputs are not committed (ADR 0024): generate the one the profile
+            // test uses, so the pack carries it.
+            let env = kb_pack::env_for(&dev_root()).unwrap();
+            kb_pack::profile::fill_caches(&repo().join("content/problems/balanced-streaks"), &env)
+                .unwrap();
             kb_pack::build_pack(&repo().join("content/problems"), &o, "test", "1").unwrap()
         })
         .join()
@@ -640,4 +645,76 @@ async fn a_typescript_debug_session_on_two_sum() {
     };
     assert_eq!(outcome.as_ref().unwrap().value, json!([2, 4]));
     app.debug_end(id);
+}
+
+/// The complexity profiler (ADR 0024) through the app: the Python reference of
+/// balanced-streaks is estimated O(n) with the reference line at every size; the
+/// nested-loop solution is slower than linear and stops early. Problems without a
+/// profile say so.
+#[tokio::test]
+async fn profiles_a_solution_and_estimates_the_class() {
+    use kb_core::profile::ComplexityClass;
+    let app = app("profile").await;
+    // A fresh app measures the machine once first (ADR 0017); that is not the profile.
+    app.recalibrate().await.unwrap();
+    let dir = repo().join("content/problems/balanced-streaks/solutions");
+    let read = |f: &str| std::fs::read_to_string(dir.join(f)).unwrap();
+    // The rest of the suite runs sandboxes alongside, and under that load the 12 s
+    // budget can stop a profile after a size or two (as designed). Try again then.
+    let mut attempt = 0;
+    let fast = loop {
+        attempt += 1;
+        let started = std::time::Instant::now();
+        let view = app
+            .profile_solution("balanced-streaks", Language::Python, &read("ref.py"))
+            .await
+            .unwrap();
+        assert!(started.elapsed() < std::time::Duration::from_secs(15));
+        if view.points.len() >= 4 || attempt == 3 {
+            break view;
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    };
+    let sizes: Vec<u32> = fast.reference.iter().map(|r| r.n).collect();
+    assert_eq!(sizes, [300, 1000, 3000, 10000, 30000, 100000]);
+    // This file's other tests share the machine, so the 12 s budget may stop the largest
+    // size (that is the designed behaviour); the strict hit rate is the calibration
+    // test's job (kb-judge complexity_windows).
+    assert!(fast.points.len() >= 4, "{fast:?}");
+    assert!(
+        matches!(
+            fast.stopped,
+            None | Some(kb_core::profile::ProfileStop::Budget { .. })
+        ),
+        "{fast:?}"
+    );
+    let estimate = fast.estimate.as_ref().unwrap();
+    assert!(
+        estimate.class == ComplexityClass::Linear
+            || estimate.close_alternative == Some(ComplexityClass::Linear),
+        "{fast:?}"
+    );
+    assert!(fast.reference.iter().all(|r| r.us > 0));
+
+    let slow = app
+        .profile_solution("balanced-streaks", Language::Python, &read("naive.py"))
+        .await
+        .unwrap();
+    assert!(slow.stopped.is_some(), "{slow:?}");
+    let class = slow.estimate.as_ref().map(|e| e.class);
+    assert!(
+        matches!(
+            class,
+            Some(ComplexityClass::Quadratic | ComplexityClass::Exponential)
+        ),
+        "{slow:?}"
+    );
+
+    let none = app
+        .profile_solution("corner-shop", Language::Python, "")
+        .await;
+    assert_eq!(
+        none.err().map(|e| e.code),
+        Some(AppErrorCode::ProfileUnavailable)
+    );
 }

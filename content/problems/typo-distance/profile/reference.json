@@ -1,0 +1,60 @@
+{
+  "sizes": [
+    5,
+    8,
+    11,
+    14,
+    100,
+    300,
+    1000
+  ],
+  "seed": 1,
+  "sha256": [
+    "e800fd8f8ba2fff9b209fdad920489439de83bfcd140bdd03ffa46ff34c203c2",
+    "c9c6d469dd27dccadf6d7e990c2fd346e25c013f4d7fb9760a6df6a6bccdc8ca",
+    "547871ae2eedf93f4a16e3b1c0d51135fe74d949309e35d739bae25986e9bcc2",
+    "a4c293fda8c42360526ef1faf2c7ec6b89f1e4b3c47e9399d87420bfea2219d3",
+    "eae1539a95c9e38a0380c972190e449c0e38c79a4b2cd724cdf454d5f4527288",
+    "a55cac6f5cf02c579555cbbe5743867a853939a4cc3cd1e220953b39fb2bf0c3",
+    "a5c0c886006d7058374cf464ca8efe9dc6def7fe80fe897c76025cbe622a115f"
+  ],
+  "machine_factor": 1.3177083333333333,
+  "times_us": {
+    "php": [
+      4,
+      3,
+      5,
+      8,
+      400,
+      3725,
+      57818
+    ],
+    "python": [
+      3,
+      6,
+      9,
+      13,
+      580,
+      6817,
+      91150
+    ],
+    "rust": [
+      1,
+      1,
+      1,
+      1,
+      12,
+      92,
+      1044
+    ],
+    "typescript": [
+      11,
+      15,
+      80,
+      20,
+      335,
+      640,
+      2323
+    ]
+  }
+}

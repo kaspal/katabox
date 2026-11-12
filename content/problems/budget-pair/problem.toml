@@ -5,6 +5,8 @@ difficulty = "easy"
 tags = ["array", "two-pointers", "sorting"]
 pattern = "two-pointers"
 rank = 3
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 50000]
 
 [signature]
 name = "bestPair"

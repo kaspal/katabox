@@ -44,6 +44,8 @@ pub(crate) struct ProblemToml {
     pub rank: u8,
     #[serde(default)]
     pub profile: bool,
+    /// The complexity profiler's sizes (ADR 0024), with `profile = true`.
+    pub profile_sizes: Option<Vec<u32>>,
     pub signature: Signature,
     pub judge: Judge,
 }
@@ -298,6 +300,22 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
     if meta.profile && !dir.join("gen.py").exists() {
         errs.push("profile = true requires gen.py".into());
     }
+    match (meta.profile, &meta.profile_sizes) {
+        (true, None) => errs.push("profile = true requires profile_sizes".into()),
+        (false, Some(_)) => errs.push("profile_sizes needs profile = true".into()),
+        (true, Some(sizes)) => {
+            if let Some(e) = crate::profile::sizes_error(sizes) {
+                errs.push(e);
+            } else if let Some(e) = crate::profile::files_error(dir, sizes) {
+                errs.push(e);
+            }
+        }
+        (false, None) => {
+            if dir.join("profile").exists() {
+                errs.push("profile/ needs profile = true".into());
+            }
+        }
+    }
     // Problem tooling (ADR 0016): gen.py and brute.py drive the stress test together.
     if dir.join("gen.py").exists() != dir.join("solutions/brute.py").exists() {
         errs.push("gen.py and solutions/brute.py come as a pair".into());
@@ -476,6 +494,52 @@ pub(crate) mod tests {
             normalize("  def  f(a:  int) -> int:  "),
             "def f(a: int) -> int:"
         );
+    }
+
+    #[test]
+    fn profile_keys_go_together() {
+        let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/two-sum");
+        let root = std::env::temp_dir().join(format!("kbp-profile-meta-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        let dir = root.join("two-sum");
+        copy_dir(&src, &dir);
+        let toml = fs::read_to_string(dir.join("problem.toml")).unwrap();
+        let errs = |text: &str| {
+            fs::write(dir.join("problem.toml"), text).unwrap();
+            validate_problem_meta(&dir).1
+        };
+        assert_eq!(errs(&toml), Vec::<String>::new());
+        let sizes_line = toml
+            .lines()
+            .find(|l| l.starts_with("profile_sizes"))
+            .unwrap();
+        let no_sizes = toml.replace(
+            &format!(
+                "{sizes_line}
+"
+            ),
+            "",
+        );
+        assert!(errs(&no_sizes).contains(&"profile = true requires profile_sizes".to_string()));
+        let off = no_sizes.replace(
+            "profile = true
+",
+            "",
+        );
+        assert!(errs(&off).contains(&"profile/ needs profile = true".to_string()));
+        let sizes_only = toml.replace(
+            "profile = true
+",
+            "",
+        );
+        assert!(errs(&sizes_only).contains(&"profile_sizes needs profile = true".to_string()));
+        let bad_sizes = toml.replace(sizes_line, "profile_sizes = [300, 100, 1000, 3000]");
+        assert!(
+            errs(&bad_sizes)
+                .iter()
+                .any(|e| e.contains("strictly increasing"))
+        );
+        fs::remove_dir_all(&root).unwrap();
     }
 
     #[test]
