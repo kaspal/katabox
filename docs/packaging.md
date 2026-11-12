@@ -48,7 +48,12 @@
 - **NSIS (the main download):**
   - installs **per-user**, no administrator rights, into `%LOCALAPPDATA%\KataBox`;
   - is in English and Spanish, following the system language;
-  - adds a Start-menu shortcut.
+  - adds a Start-menu shortcut;
+  - shows the KataBox artwork: `windows/sidebar.bmp` (164 × 314, welcome and finish
+    pages) and `windows/header.bmp` (150 × 57, the other pages, installer and
+    uninstaller). Both are drawn from `icons/katabox.svg` by `pnpm installer-art`
+    (`scripts/gen-installer-art.mjs`, no dependencies) and committed; re-run it after
+    changing the icon.
 - **MSI (managed machines):** Tauri's per-machine WiX template, in en-US and es-ES.
 - **WebView2:** `embedBootstrapper` (silent). Windows 10/11 already have WebView2; the
   bundled bootstrapper (about 1.8 MB) installs it where it is missing.
