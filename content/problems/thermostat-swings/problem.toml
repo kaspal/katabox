@@ -1,0 +1,17 @@
+id = "thermostat-swings"
+title = "Thermostat Swings"
+title_es = "Oscilaciones del termostato"
+difficulty = "hard"
+tags = ["sliding-window", "monotonic-queue", "array"]
+pattern = "sliding-window"
+rank = 9
+
+[signature]
+name = "windowSwings"
+params = [{ name = "readings", type = "int[]" }, { name = "k", type = "int" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

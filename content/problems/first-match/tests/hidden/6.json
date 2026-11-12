@@ -1,0 +1,1 @@
+{"input": {"words": ["mm", "m", "mmm"], "prefixes": ["m", "mm", "mmm", "mmmm"]}, "output": ["m", "mm", "mmm", ""]}

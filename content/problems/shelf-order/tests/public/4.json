@@ -1,0 +1,1 @@
+{"input": {"labels": ["shelf10b", "shelf10a", "shelf9z", "shelf"]}, "output": ["shelf", "shelf9z", "shelf10a", "shelf10b"]}

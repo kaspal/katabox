@@ -1,0 +1,1 @@
+{"input":{"prefixes":["b","a","bab","ca","bab","ca","c","ba"],"words":["a","bbca","bab","cab"]},"output":["bab","a","bab","cab","bab","cab","cab","bab"]}

@@ -1,0 +1,1 @@
+{"input": {"words": ["one", "two", "three", "four", "five", "six"], "width": 8}, "output": ["one two", "three", "four", "five six"]}

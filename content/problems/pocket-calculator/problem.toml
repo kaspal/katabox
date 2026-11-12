@@ -1,0 +1,17 @@
+id = "pocket-calculator"
+title = "Pocket Calculator"
+title_es = "Calculadora de bolsillo"
+difficulty = "hard"
+tags = ["stack", "string", "expression-parsing"]
+pattern = "stack"
+rank = 9
+
+[signature]
+name = "evaluate"
+params = [{ name = "expression", type = "string" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

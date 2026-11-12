@@ -1,0 +1,1 @@
+{"input": {"words": ["tree"], "prefixes": ["tree", "trees", "t"]}, "output": ["tree", "", "tree"]}

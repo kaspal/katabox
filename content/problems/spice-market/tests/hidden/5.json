@@ -1,0 +1,1 @@
+{"input": {"weights": [1, 2, 3, 4], "prices": [4, 6, 6, 4], "capacity": 6}, "output": 16.0}

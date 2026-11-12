@@ -1,0 +1,17 @@
+id = "page-wrap"
+title = "Page Wrap"
+title_es = "Ajuste de página"
+difficulty = "medium"
+tags = ["string", "greedy", "simulation"]
+pattern = "strings"
+rank = 6
+
+[signature]
+name = "wrapLines"
+params = [{ name = "words", type = "string[]" }, { name = "width", type = "int" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,1 @@
+{"input": {"words": ["the", "quick", "brown", "fox", "jumps"], "width": 10}, "output": ["the quick", "brown fox", "jumps"]}

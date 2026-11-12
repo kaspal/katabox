@@ -1,0 +1,1 @@
+{"input": {"words": ["fair", "winds", "and", "following", "seas"], "width": 9}, "output": ["fair", "winds and", "following", "seas"]}

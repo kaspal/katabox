@@ -1,0 +1,1 @@
+{"input": {"ops": ["read", "undo", "redo"], "args": [[7], [], []]}, "output": [-1]}

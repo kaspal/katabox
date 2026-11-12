@@ -1,0 +1,1 @@
+{"input": {"words": ["ab", "a", "abc"], "prefixes": ["a", "ab"]}, "output": ["a", "ab"]}
