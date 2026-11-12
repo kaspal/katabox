@@ -84,6 +84,7 @@ impl From<StoreError> for AppError {
     fn from(e: StoreError) -> Self {
         let code = match e {
             StoreError::NotFound(_) => AppErrorCode::NotFound,
+            StoreError::Invalid(_) => AppErrorCode::InvalidInput,
             _ => AppErrorCode::Store,
         };
         AppError::new(code, e.to_string())

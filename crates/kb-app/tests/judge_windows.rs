@@ -17,6 +17,15 @@ use kb_core::{JudgeEvent, Language, TestKind, Verdict};
 use kb_store::{ProblemStatus, SnapshotSource};
 use serde_json::json;
 
+/// Submit options for tests: a fixed local date, not a review.
+fn submit_opts() -> kb_app::SubmitOptions {
+    kb_app::SubmitOptions {
+        today: "2026-11-14".into(),
+        review: false,
+        lang: kb_store::UiLang::En,
+    }
+}
+
 fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -104,7 +113,7 @@ async fn every_reference_is_accepted_with_progress() {
     for lang in kb_judge::languages::SUPPORTED {
         let (events, on) = recorder();
         let r = app
-            .submit("two-sum", lang, &reference(lang), on)
+            .submit("two-sum", lang, &reference(lang), &submit_opts(), on)
             .await
             .unwrap();
         assert_eq!(
@@ -150,7 +159,7 @@ async fn a_wrong_answer_shows_the_failing_input_and_hides_the_rest() {
     // A constant answer: wrong on the first public test already.
     let code = "def two_sum(nums: list[int], target: int) -> list[int]:\n    return [0, 1]\n";
     let r = app
-        .submit("two-sum", Language::Python, code, |_| {})
+        .submit("two-sum", Language::Python, code, &submit_opts(), |_| {})
         .await
         .unwrap();
     assert_eq!(r.report.verdict, Verdict::WrongAnswer);
@@ -309,7 +318,7 @@ async fn a_runtime_replaced_by_rename_still_runs_in_the_sandbox() {
         |r: kb_app::SubmitResult| assert_eq!(r.report.verdict, Verdict::Accepted, "{:?}", r.report);
     let code = reference(Language::Python);
     accepted(
-        app.submit("two-sum", Language::Python, &code, |_| {})
+        app.submit("two-sum", Language::Python, &code, &submit_opts(), |_| {})
             .await
             .unwrap(),
     );
@@ -321,7 +330,7 @@ async fn a_runtime_replaced_by_rename_still_runs_in_the_sandbox() {
     std::fs::remove_dir_all(root.join("toolchains/python-3.14")).unwrap();
     std::fs::rename(&staged, root.join("toolchains/python-3.14")).unwrap();
     accepted(
-        app.submit("two-sum", Language::Python, &code, |_| {})
+        app.submit("two-sum", Language::Python, &code, &submit_opts(), |_| {})
             .await
             .unwrap(),
     );

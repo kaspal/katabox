@@ -2,8 +2,10 @@
 //!
 //! Keep this crate dependency-light: no I/O, no async, no platform code.
 
+mod day;
 mod report;
 
+pub use day::Day;
 pub use report::{CompileInfo, Failure, JudgeEvent, Report, TestCase, TestOutcome};
 
 use serde::{Deserialize, Serialize};

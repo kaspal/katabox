@@ -102,9 +102,9 @@ async run(problem: string, language: Language, code: string, custom: (Partial<{ 
 /**
  * Every test; the submission is recorded. Progress goes to `on_event`.
  */
-async submit(problem: string, language: Language, code: string, onEvent: TAURI_CHANNEL<JudgeEvent>) : Promise<Result<SubmitResult, AppError>> {
+async submit(problem: string, language: Language, code: string, opts: SubmitOptions, onEvent: TAURI_CHANNEL<JudgeEvent>) : Promise<Result<SubmitResult, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("submit", { problem, language, code, onEvent }) };
+    return { status: "ok", data: await TAURI_INVOKE("submit", { problem, language, code, opts, onEvent }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -207,6 +207,163 @@ async calibration() : Promise<Result<CalibrationInfo | null, AppError>> {
 async recalibrate() : Promise<Result<CalibrationInfo, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("recalibrate") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The pattern map: every pattern with solved/total and its next problem.
+ */
+async patterns(lang: UiLang) : Promise<Result<PatternProgress[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("patterns", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * What to solve after `problem` (never a solved one).
+ */
+async nextProblem(problem: string, lang: UiLang) : Promise<Result<ProblemSummary | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("next_problem", { problem, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Today's daily problem, picked once per local day.
+ */
+async dailyProblem(today: string, lang: UiLang) : Promise<Result<DailyProblem | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("daily_problem", { today, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Consecutive days with the daily problem solved.
+ */
+async streak(today: string) : Promise<Result<number, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("streak", { today }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async reviewsDue(today: string, lang: UiLang) : Promise<Result<ReviewItem[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reviews_due", { today, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async reviewState(problem: string, today: string) : Promise<Result<ReviewState | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("review_state", { problem, today }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async reviewSnooze(problem: string, today: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("review_snooze", { problem, today }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async reviewRemove(problem: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("review_remove", { problem }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async reviewAdd(problem: string, today: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("review_add", { problem, today }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async lists(lang: UiLang) : Promise<Result<ListView[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("lists", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Create a list; returns its id.
+ */
+async createList(name: string) : Promise<Result<number, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_list", { name }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async renameList(id: number, name: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("rename_list", { id, name }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteList(id: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_list", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async addToList(id: number, problem: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("add_to_list", { id, problem }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async removeFromList(id: number, problem: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("remove_from_list", { id, problem }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Put a list's problems in this order (exactly the list's problems).
+ */
+async reorderList(id: number, problems: string[]) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reorder_list", { id, problems }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Ids of the lists holding `problem`.
+ */
+async listsWith(problem: string) : Promise<Result<number[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("lists_with", { problem }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -475,6 +632,14 @@ export type ContinueItem = { problem_id: string;
  * Title in the requested UI language (English fallback).
  */
 title: string; language: Language; updated_at: number }
+/**
+ * The daily problem on Home.
+ */
+export type DailyProblem = { 
+/**
+ * `YYYY-MM-DD`, the local date it is for.
+ */
+day: string; problem: ProblemSummary; solved: boolean; streak: number }
 export type Difficulty = "easy" | "medium" | "hard"
 export type Draft = { code: string; updated_at: number }
 /**
@@ -590,6 +755,19 @@ free_bytes: number | null;
  * KataBox can install languages on this OS and CPU.
  */
 platform_supported: boolean }
+/**
+ * One entry of a list: the problem, or its id when content no longer has it.
+ */
+export type ListEntry = { problem_id: string; 
+/**
+ * `None`: the problem was removed from the problem pack (shown as unavailable).
+ */
+problem: ProblemSummary | null }
+export type ListView = { id: number; name: string; solved: number; 
+/**
+ * Available problems only.
+ */
+total: number; entries: ListEntry[] }
 /**
  * What the editor needs to talk about its document.
  */
@@ -717,6 +895,14 @@ export type MessageCode =
  */
 "incomplete_results"
 /**
+ * One card of the pattern map.
+ */
+export type PatternProgress = { pattern: string; solved: number; total: number; 
+/**
+ * The lowest-ranked unsolved problem of the pattern.
+ */
+next: ProblemSummary | null }
+/**
  * One component of an install plan.
  */
 export type PlanItem = { component: string; 
@@ -724,6 +910,26 @@ export type PlanItem = { component: string;
  * Bytes still to download (shared artifacts counted once, on first use).
  */
 download_bytes: number; installed_bytes: number }
+/**
+ * What a Submit did beyond the verdict.
+ */
+export type PracticeOutcome = { 
+/**
+ * The problem was solved for the first time: its first review is scheduled.
+ */
+first_solve: boolean; 
+/**
+ * The review-mode result, when this Submit was a review.
+ */
+review: ReviewOutcome | null; 
+/**
+ * This Submit solved today's daily problem.
+ */
+daily_solved: boolean; streak: number; 
+/**
+ * What to solve next (after Accepted only).
+ */
+next: ProblemSummary | null }
 /**
  * Which problems to list. Every field is optional; `None` means "any".
  */
@@ -813,6 +1019,34 @@ memory_kb: number;
  */
 compile: CompileInfo | null }
 /**
+ * A due review on Home.
+ */
+export type ReviewItem = { problem: ProblemSummary; review: ReviewState }
+/**
+ * What a review-mode Submit did to the schedule.
+ */
+export type ReviewOutcome = 
+/**
+ * Passed: due again on `due_on`.
+ */
+{ outcome: "scheduled"; due_on: string; interval_days: number } | 
+/**
+ * Passed the last interval: no more reviews.
+ */
+{ outcome: "graduated" } | 
+/**
+ * Not Accepted: the interval is back to 3 days; still due today, try again.
+ */
+{ outcome: "lapsed" }
+/**
+ * A problem's review state, for the workspace and Home.
+ */
+export type ReviewState = { due_on: string; interval_days: number; passes: number; lapsed: boolean; 
+/**
+ * Due today or earlier.
+ */
+due: boolean }
+/**
  * Where the sandbox root came from.
  */
 export type RootSource = 
@@ -853,9 +1087,29 @@ export type SubmissionSummary = { id: number; problem_id: string; language: Lang
  */
 export type SubmissionView = ({ id: number; problem_id: string; language: Language; verdict: Verdict; time_us: number; memory_kb: number; created_at: number }) & { code: string; report: Report }
 /**
+ * The practice context of a Submit (ADR 0019).
+ */
+export type SubmitOptions = { 
+/**
+ * The user's local date, `YYYY-MM-DD`.
+ */
+today: string; 
+/**
+ * Submitted from review mode: the result moves the review schedule.
+ */
+review: boolean; 
+/**
+ * Language of the suggested next problem's title.
+ */
+lang: UiLang }
+/**
  * The result of Submit: the stored submission's id and its (redacted) report.
  */
-export type SubmitResult = { submission_id: number; report: Report }
+export type SubmitResult = { submission_id: number; report: Report; 
+/**
+ * Reviews, the daily problem, the streak and what to solve next (ADR 0019).
+ */
+practice: PracticeOutcome }
 export type TAURI_CHANNEL<TSend> = null
 /**
  * Which set a test case belongs to. Hidden tests are not listed before submit,

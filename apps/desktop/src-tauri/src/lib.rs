@@ -5,9 +5,10 @@
 
 use std::path::{Path, PathBuf};
 
+use kb_app::practice::{DailyProblem, ListView, PatternProgress, ReviewItem, ReviewState};
 use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
-    LanguagesInfo, SubmissionView, SubmitResult,
+    LanguagesInfo, SubmissionView, SubmitOptions, SubmitResult,
 };
 use kb_core::{JudgeEvent, Language, Report};
 use kb_store::{
@@ -131,12 +132,16 @@ async fn submit(
     problem: String,
     language: Language,
     code: String,
+    opts: SubmitOptions,
     on_event: Channel<JudgeEvent>,
 ) -> Res<SubmitResult> {
     let send = move |e| {
         let _ = on_event.send(e);
     };
-    state.app()?.submit(&problem, language, &code, send).await
+    state
+        .app()?
+        .submit(&problem, language, &code, &opts, send)
+        .await
 }
 
 #[tauri::command]
@@ -200,6 +205,133 @@ async fn get_setting(state: State<'_, AppState>, key: String) -> Res<Option<Valu
 #[specta::specta]
 async fn set_setting(state: State<'_, AppState>, key: String, value: Value) -> Res<()> {
     state.app()?.set_setting(&key, &value).await
+}
+
+// --- Practice (ADR 0019): `today` is the user's local date, YYYY-MM-DD ---------------
+
+/// The pattern map: every pattern with solved/total and its next problem.
+#[tauri::command]
+#[specta::specta]
+async fn patterns(state: State<'_, AppState>, lang: UiLang) -> Res<Vec<PatternProgress>> {
+    state.app()?.patterns(lang).await
+}
+
+/// What to solve after `problem` (never a solved one).
+#[tauri::command]
+#[specta::specta]
+async fn next_problem(
+    state: State<'_, AppState>,
+    problem: String,
+    lang: UiLang,
+) -> Res<Option<ProblemSummary>> {
+    state.app()?.next_problem(&problem, lang).await
+}
+
+/// Today's daily problem, picked once per local day.
+#[tauri::command]
+#[specta::specta]
+async fn daily_problem(
+    state: State<'_, AppState>,
+    today: String,
+    lang: UiLang,
+) -> Res<Option<DailyProblem>> {
+    state.app()?.daily_problem(&today, lang).await
+}
+
+/// Consecutive days with the daily problem solved.
+#[tauri::command]
+#[specta::specta]
+async fn streak(state: State<'_, AppState>, today: String) -> Res<u32> {
+    state.app()?.streak(&today).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn reviews_due(
+    state: State<'_, AppState>,
+    today: String,
+    lang: UiLang,
+) -> Res<Vec<ReviewItem>> {
+    state.app()?.reviews_due(&today, lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn review_state(
+    state: State<'_, AppState>,
+    problem: String,
+    today: String,
+) -> Res<Option<ReviewState>> {
+    state.app()?.review_state(&problem, &today).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn review_snooze(state: State<'_, AppState>, problem: String, today: String) -> Res<()> {
+    state.app()?.review_snooze(&problem, &today).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn review_remove(state: State<'_, AppState>, problem: String) -> Res<()> {
+    state.app()?.review_remove(&problem).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn review_add(state: State<'_, AppState>, problem: String, today: String) -> Res<()> {
+    state.app()?.review_add(&problem, &today).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn lists(state: State<'_, AppState>, lang: UiLang) -> Res<Vec<ListView>> {
+    state.app()?.lists(lang).await
+}
+
+/// Create a list; returns its id.
+#[tauri::command]
+#[specta::specta]
+async fn create_list(state: State<'_, AppState>, name: String) -> Res<i64> {
+    state.app()?.create_list(&name).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn rename_list(state: State<'_, AppState>, id: i64, name: String) -> Res<()> {
+    state.app()?.rename_list(id, &name).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn delete_list(state: State<'_, AppState>, id: i64) -> Res<()> {
+    state.app()?.delete_list(id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn add_to_list(state: State<'_, AppState>, id: i64, problem: String) -> Res<()> {
+    state.app()?.add_to_list(id, &problem).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn remove_from_list(state: State<'_, AppState>, id: i64, problem: String) -> Res<()> {
+    state.app()?.remove_from_list(id, &problem).await
+}
+
+/// Put a list's problems in this order (exactly the list's problems).
+#[tauri::command]
+#[specta::specta]
+async fn reorder_list(state: State<'_, AppState>, id: i64, problems: Vec<String>) -> Res<()> {
+    state.app()?.reorder_list(id, &problems).await
+}
+
+/// Ids of the lists holding `problem`.
+#[tauri::command]
+#[specta::specta]
+async fn lists_with(state: State<'_, AppState>, problem: String) -> Res<Vec<i64>> {
+    state.app()?.lists_with(&problem).await
 }
 
 /// This machine's calibration (ADR 0017), if it was measured.
@@ -317,6 +449,23 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         set_setting,
         calibration,
         recalibrate,
+        patterns,
+        next_problem,
+        daily_problem,
+        streak,
+        reviews_due,
+        review_state,
+        review_snooze,
+        review_remove,
+        review_add,
+        lists,
+        create_list,
+        rename_list,
+        delete_list,
+        add_to_list,
+        remove_from_list,
+        reorder_list,
+        lists_with,
         lsp_connect,
         lsp_send,
         lsp_disconnect,

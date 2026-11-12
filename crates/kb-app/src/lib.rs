@@ -13,6 +13,7 @@
 
 mod calibration;
 mod error;
+pub mod practice;
 mod root;
 
 use std::path::{Path, PathBuf};
@@ -159,6 +160,20 @@ pub struct SubmissionView {
 pub struct SubmitResult {
     pub submission_id: i64,
     pub report: Report,
+    /// Reviews, the daily problem, the streak and what to solve next (ADR 0019).
+    pub practice: practice::PracticeOutcome,
+}
+
+/// The practice context of a Submit (ADR 0019).
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct SubmitOptions {
+    /// The user's local date, `YYYY-MM-DD`.
+    pub today: String,
+    /// Submitted from review mode: the result moves the review schedule.
+    pub review: bool,
+    /// Language of the suggested next problem's title.
+    pub lang: UiLang,
 }
 
 /// A user-written test input for Run: argument values keyed by parameter name.
@@ -497,25 +512,44 @@ impl App {
         problem: &str,
         language: Language,
         code: &str,
+        opts: &SubmitOptions,
         on_event: F,
     ) -> Result<SubmitResult>
     where
         F: FnMut(JudgeEvent) + Send + 'static,
     {
+        let today = practice::parse_day(&opts.today)?;
         let _one = self.judge_slot()?;
         self.ensure_calibrated().await;
         let p = self.problem(problem).await?;
         let tests = p.tests.clone();
         let mut report = self.judge(p, tests, language, code, on_event).await?;
+        let was_solved = self
+            .store
+            .user
+            .problem_status(problem)
+            .await?
+            .is_some_and(|s| s.status == kb_store::ProblemStatus::Solved);
         let submission_id = self
             .store
             .user
             .record_submission(problem, language, code, &report)
             .await?;
+        let practice = self
+            .after_submit(
+                problem,
+                report.verdict,
+                was_solved,
+                today,
+                opts.review,
+                opts.lang,
+            )
+            .await?;
         report.redact_hidden();
         Ok(SubmitResult {
             submission_id,
             report,
+            practice,
         })
     }
 

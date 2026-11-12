@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 2); // migrations 0001 + 0002
+    assert_eq!(info.user_schema_version, 3); // migrations 0001-0003
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -87,7 +87,7 @@ async fn judge_errors_are_typed() {
     let app = app("errors").await;
     // No toolchains in a fresh root.
     let err = app
-        .submit("two-sum", Language::Python, "x", |_| {})
+        .submit("two-sum", Language::Python, "x", &submit_opts(), |_| {})
         .await
         .unwrap_err();
     assert_eq!(err.code, AppErrorCode::ToolchainMissing, "{err}");
@@ -105,7 +105,7 @@ async fn judge_errors_are_typed() {
     assert_eq!(err.code, AppErrorCode::InvalidCustomInput);
     assert!(err.message.contains("custom input 1") && err.message.contains("target"));
     let err = app
-        .submit("nope", Language::Python, "x", |_| {})
+        .submit("nope", Language::Python, "x", &submit_opts(), |_| {})
         .await
         .unwrap_err();
     assert_eq!(err.code, AppErrorCode::NotFound);
@@ -118,7 +118,7 @@ async fn one_judge_at_a_time() {
     let app = app("busy").await;
     let _held = app.judge_slot().unwrap();
     let err = app
-        .submit("two-sum", Language::Python, "x", |_| {})
+        .submit("two-sum", Language::Python, "x", &submit_opts(), |_| {})
         .await
         .unwrap_err();
     assert_eq!(err.code, AppErrorCode::JudgeBusy);
@@ -327,6 +327,15 @@ async fn last_language_follows_the_latest_draft() {
     );
 }
 
+/// Submit options for tests: a fixed local date, not a review.
+fn submit_opts() -> SubmitOptions {
+    SubmitOptions {
+        today: "2026-11-14".into(),
+        review: false,
+        lang: kb_store::UiLang::En,
+    }
+}
+
 fn report_with(verdict: Verdict) -> Report {
     Report {
         verdict,
@@ -480,5 +489,193 @@ async fn recalibrating_needs_python_or_node() {
     // A Run without runtimes does not measure (nor fail because of it).
     app.ensure_calibrated().await;
     assert_eq!(app.calibration(), None);
+    app.close().await;
+}
+
+/// The practice bookkeeping of a Submit (ADR 0019), with recorded submissions and no
+/// toolchain: the first Accepted schedules a review, the daily problem and the streak.
+#[tokio::test]
+async fn submits_drive_reviews_daily_problem_and_streak() {
+    use crate::practice::ReviewOutcome;
+    let app = app("practice").await;
+    let today = "2026-11-14";
+    let day: kb_core::Day = today.parse().unwrap();
+
+    // The daily problem is picked once and kept for the day.
+    let daily = app.daily_problem(today, UiLang::En).await.unwrap().unwrap();
+    assert_eq!(daily.day, today);
+    assert!(!daily.solved);
+    for _ in 0..3 {
+        let again = app.daily_problem(today, UiLang::En).await.unwrap().unwrap();
+        assert_eq!(again.problem.id, daily.problem.id);
+    }
+    let id = daily.problem.id.clone();
+
+    // A wrong answer changes nothing.
+    app.store
+        .user
+        .record_submission(
+            &id,
+            Language::Python,
+            "x",
+            &report_with(Verdict::WrongAnswer),
+        )
+        .await
+        .unwrap();
+    let out = app
+        .after_submit(&id, Verdict::WrongAnswer, false, day, false, UiLang::En)
+        .await
+        .unwrap();
+    assert!(!out.first_solve && !out.daily_solved && out.next.is_none());
+
+    // The first Accepted: a review in 3 days, the daily problem solved, streak 1.
+    app.store
+        .user
+        .record_submission(&id, Language::Python, "x", &report_with(Verdict::Accepted))
+        .await
+        .unwrap();
+    let out = app
+        .after_submit(&id, Verdict::Accepted, false, day, false, UiLang::En)
+        .await
+        .unwrap();
+    assert!(out.first_solve && out.daily_solved);
+    assert_eq!(out.streak, 1);
+    let next = out.next.unwrap();
+    assert_ne!(next.id, id);
+    assert_ne!(next.status, Some(kb_store::ProblemStatus::Solved));
+    let state = app.review_state(&id, today).await.unwrap().unwrap();
+    assert_eq!((state.due_on.as_str(), state.due), ("2026-11-17", false));
+    assert!(app.reviews_due(today, UiLang::En).await.unwrap().is_empty());
+    let daily = app.daily_problem(today, UiLang::En).await.unwrap().unwrap();
+    assert!(daily.solved);
+    assert_eq!(
+        daily.problem.id, id,
+        "the pick stays all day, even once solved"
+    );
+
+    // Three days later it is due; a review-mode Accepted moves it to 7 days.
+    let later = "2026-11-17";
+    let due = app.reviews_due(later, UiLang::En).await.unwrap();
+    assert_eq!(due.len(), 1);
+    assert_eq!(due[0].problem.id, id);
+    let out = app
+        .after_submit(
+            &id,
+            Verdict::Accepted,
+            true,
+            later.parse().unwrap(),
+            true,
+            UiLang::En,
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        out.review,
+        Some(ReviewOutcome::Scheduled {
+            due_on: "2026-11-24".into(),
+            interval_days: 7
+        })
+    );
+    assert!(
+        !out.first_solve,
+        "only the first Accepted schedules a first review"
+    );
+    // The last solved daily problem was on the 14th: no streak on the 17th.
+    assert_eq!(out.streak, 0);
+
+    // Snooze, remove, add back.
+    app.review_snooze(&id, "2026-11-24").await.unwrap();
+    assert_eq!(
+        app.review_state(&id, "2026-11-24")
+            .await
+            .unwrap()
+            .unwrap()
+            .due_on,
+        "2026-11-25"
+    );
+    app.review_remove(&id).await.unwrap();
+    assert_eq!(app.review_state(&id, "2026-11-24").await.unwrap(), None);
+    app.review_add(&id, "2026-11-24").await.unwrap();
+    assert_eq!(
+        app.review_state(&id, "2026-11-24")
+            .await
+            .unwrap()
+            .unwrap()
+            .due_on,
+        "2026-11-27"
+    );
+
+    // A new day picks a new daily problem among the unsolved ones.
+    let tomorrow = app
+        .daily_problem("2026-11-15", UiLang::En)
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(!tomorrow.solved);
+    assert_ne!(
+        tomorrow.problem.status,
+        Some(kb_store::ProblemStatus::Solved)
+    );
+    assert!(app.daily_problem("15/11/2026", UiLang::En).await.is_err());
+    app.close().await;
+}
+
+#[tokio::test]
+async fn lists_with_unavailable_problems_and_the_pattern_map() {
+    let app = app("lists").await;
+    let id = app.create_list("  Warm-up ").await.unwrap();
+    app.add_to_list(id, "two-sum").await.unwrap();
+    app.add_to_list(id, "gone-problem").await.unwrap(); // not in content
+    app.add_to_list(id, "nested-brackets").await.unwrap();
+    let lists = app.lists(UiLang::Es).await.unwrap();
+    assert_eq!(lists[0].name, "Warm-up");
+    assert_eq!(lists[0].total, 2, "unavailable problems do not count");
+    let ids: Vec<&str> = lists[0]
+        .entries
+        .iter()
+        .map(|e| e.problem_id.as_str())
+        .collect();
+    assert_eq!(ids, ["two-sum", "gone-problem", "nested-brackets"]);
+    assert!(lists[0].entries[1].problem.is_none());
+    assert_eq!(
+        lists[0].entries[0].problem.as_ref().unwrap().title,
+        "Suma de dos"
+    );
+    app.reorder_list(
+        id,
+        &[
+            "nested-brackets".into(),
+            "two-sum".into(),
+            "gone-problem".into(),
+        ],
+    )
+    .await
+    .unwrap();
+    assert_eq!(app.lists_with("two-sum").await.unwrap(), [id]);
+    assert_eq!(
+        app.create_list("").await.unwrap_err().code,
+        AppErrorCode::InvalidInput
+    );
+    assert_eq!(
+        app.reorder_list(id, &["two-sum".into()])
+            .await
+            .unwrap_err()
+            .code,
+        AppErrorCode::InvalidInput
+    );
+    app.rename_list(id, "Basics").await.unwrap();
+    app.delete_list(id).await.unwrap();
+    assert!(app.lists(UiLang::En).await.unwrap().is_empty());
+
+    let map = app.patterns(UiLang::En).await.unwrap();
+    assert_eq!(map[0].pattern, "arrays-hashing");
+    let total: u32 = map.iter().map(|m| m.total).sum();
+    assert_eq!(
+        total as usize,
+        app.list_problems(&ProblemFilter::default())
+            .await
+            .unwrap()
+            .len()
+    );
     app.close().await;
 }
