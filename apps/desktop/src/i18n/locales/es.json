@@ -11,7 +11,8 @@
     "workspace": "Espacio de trabajo",
     "progress": "Progreso",
     "settings": "Ajustes",
-    "smoke": "Pantalla de prueba (desarrollo)"
+    "smoke": "Pantalla de prueba (desarrollo)",
+    "interview": "Entrevista"
   },
   "palette": {
     "open": "Paleta de comandos",
@@ -286,7 +287,11 @@
     "install_cancelled": "Se canceló la instalación.",
     "install_busy": "Hay otra instalación o desinstalación en curso.",
     "unsupported_platform": "KataBox todavía no puede instalar lenguajes en este sistema.",
-    "calibration_unavailable": "Para medir este equipo hace falta tener Python o JavaScript/TypeScript instalado."
+    "calibration_unavailable": "Para medir este equipo hace falta tener Python o JavaScript/TypeScript instalado.",
+    "locked_in_interview": "Esto está bloqueado durante la entrevista simulada.",
+    "interview_active": "Ya hay una entrevista simulada en curso.",
+    "not_enough_problems": "Hay menos de dos problemas sin resolver que nunca hayas abierto.",
+    "import_invalid": "Este archivo no es una exportación válida de KataBox."
   },
   "judge": {
     "verdict": {
@@ -487,7 +492,8 @@
       "browse": "Ver",
       "next": "Siguiente: {{title}}",
       "done": "Todo resuelto",
-      "empty": "Aún no hay problemas."
+      "empty": "Aún no hay problemas.",
+      "byLanguage": "Resueltos por lenguaje"
     },
     "lists": {
       "tabProblems": "Problemas",
@@ -522,6 +528,76 @@
       "daily": "Problema del día en Inicio",
       "on": "Sí",
       "off": "No"
+    },
+    "interview": {
+      "title": "Entrevista simulada",
+      "intro": "Dos problemas que nunca has abierto, contra el reloj. Las pistas, el editorial, tus intentos anteriores y las soluciones quedan bloqueados hasta que se acabe el tiempo o la termines.",
+      "setup": "Empezar una entrevista simulada",
+      "duration": "Duración",
+      "minutes": "{{count}} min",
+      "mix": "Dificultad",
+      "mixes": {
+        "easy+easy": "Fácil · Fácil",
+        "easy+medium": "Fácil · Media",
+        "medium+medium": "Media · Media",
+        "medium+hard": "Media · Difícil",
+        "hard+hard": "Difícil · Difícil"
+      },
+      "languages": "Lenguajes",
+      "start": "Empezar",
+      "cancel": "Cancelar",
+      "running": "En curso",
+      "remaining": "Quedan {{time}}",
+      "timerLabel": "Entrevista simulada: quedan {{time}}",
+      "open": "Abrir",
+      "end": "Terminar la entrevista",
+      "locked": "Bloqueado durante la entrevista simulada.",
+      "scorecard": "Resultado",
+      "solved": "Resueltos: {{solved}} / {{total}}",
+      "firstTry": "Aciertos a la primera: {{count}}",
+      "used": "Tiempo usado: {{time}}",
+      "problemSolved": "Resuelto en {{time}}",
+      "problemUnsolved": "Sin resolver",
+      "submits": "Envíos: {{count}}",
+      "firstTryBadge": "A la primera",
+      "history": "Entrevistas simuladas anteriores",
+      "none": "Aún no hay entrevistas simuladas.",
+      "again": "Empezar otra",
+      "unavailable": "Problema no disponible",
+      "details": "Detalles"
+    },
+    "data": {
+      "title": "Datos",
+      "intro": "Exporta tu progreso a un archivo, o importa un archivo exportado por KataBox en otro equipo. La importación combina por problema y conserva el registro más reciente.",
+      "export": "Exportar…",
+      "import": "Importar…",
+      "exported": "Se exportaron {{count}} registros.",
+      "previewTitle": "¿Importar este archivo?",
+      "previewFrom": "Exportado el {{date}} por KataBox {{version}}.",
+      "conflicts": "{{count}} registros ya existen aquí; se conservará el más reciente.",
+      "apply": "Importar",
+      "cancel": "Cancelar",
+      "imported": "Importado: {{added}} añadidos, {{updated}} actualizados, {{unchanged}} sin cambios.",
+      "kinds": {
+        "statuses": "Estados de problemas",
+        "submissions": "Envíos",
+        "snapshots": "Instantáneas del historial",
+        "notes": "Notas",
+        "drafts": "Borradores",
+        "hint_unlocks": "Pistas desbloqueadas",
+        "opens": "Problemas abiertos",
+        "reviews": "Repasos",
+        "daily_picks": "Problemas del día",
+        "lists": "Listas",
+        "interviews": "Entrevistas simuladas",
+        "settings": "Ajustes"
+      }
+    },
+    "crossLang": {
+      "solveIn": "Resolver en…",
+      "accepted": "Tu solución aceptada en {{language}} (solo lectura)",
+      "close": "Cerrar",
+      "none": "No hay una solución aceptada en {{language}}."
     }
   }
 }

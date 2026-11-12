@@ -1,7 +1,7 @@
 // The workspace (ADR 0013): problem pane | editor over tests/results. Loaded lazily, so
 // CodeMirror, KaTeX and Markdown stay out of the library route.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, getRouteApi } from "@tanstack/react-router";
+import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -35,6 +35,9 @@ import { api } from "@/lib/api";
 import { isAppError } from "@/lib/errors";
 import { useFocusMode } from "@/lib/focus";
 import { useReviewActions, useReviewState } from "@/lib/practice";
+import { useInterviewActive, useSolvedLanguages } from "@/lib/modes";
+import { InterviewTimer } from "@/practice/interview";
+import { CompareView, SolveInMenu } from "@/practice/crossLanguage";
 import { useAppInfo, useProblem } from "@/lib/queries";
 import { AddToListMenu, formatDay } from "@/practice/shared";
 import { JUDGE_LANGUAGES, parseLanguage, useEditorPrefs, useSetting } from "@/lib/settings";
@@ -61,7 +64,14 @@ const KEYS = { run: "Ctrl+'", submit: "Ctrl+Enter", focus: "Ctrl+Shift+F" };
 export function WorkspacePage() {
   const { t, i18n } = useTranslation();
   const { problemId } = route.useParams();
-  const reviewMode = route.useSearch().review === true;
+  const navigate = useNavigate({ from: "/problems/$problemId" });
+  const search = route.useSearch();
+  const reviewMode = search.review === true;
+  const compare = search.compare ?? null;
+  const interview = useInterviewActive();
+  const inInterview = interview.data?.problems.some((x) => x.id === problemId) === true;
+  const allowed = inInterview ? interview.data!.languages : JUDGE_LANGUAGES;
+  const solvedIn = useSolvedLanguages(problemId, !inInterview);
   const reviewState = useReviewState(problemId);
   const reviewActions = useReviewActions();
   const problem = useProblem(problemId);
@@ -101,6 +111,16 @@ export function WorkspacePage() {
   const problemPanel = useRef<PanelImperativeHandle | null>(null);
   const resultsPanel = useRef<PanelImperativeHandle | null>(null);
   const layoutTimer = useRef<number | undefined>(undefined);
+
+  // In a mock interview only its languages may be used on its problems.
+  useEffect(() => {
+    if (inInterview && language && !allowed.includes(language)) void changeLanguage(allowed[0]);
+  }, [inInterview, language]);
+
+  // Mock interviews pick problems never opened (ADR 0020).
+  useEffect(() => {
+    void api.markOpened(problemId).catch(() => {});
+  }, [problemId]);
 
   // Starting language: this problem's latest draft, else the last language used.
   useEffect(() => {
@@ -246,6 +266,17 @@ export function WorkspacePage() {
         <h1 className="truncate text-base font-semibold">{p.title}</h1>
         <DifficultyLabel difficulty={p.difficulty} className="text-xs" />
         <div className="ml-auto flex items-center gap-2">
+          {inInterview && <InterviewTimer compact />}
+          {!inInterview && (solvedIn.data?.length ?? 0) > 0 && (
+            <SolveInMenu
+              solved={solvedIn.data ?? []}
+              current={language}
+              onPick={(from, to) => {
+                void navigate({ search: (prev) => ({ ...prev, compare: from }), replace: true });
+                if (to !== language) void changeLanguage(to);
+              }}
+            />
+          )}
           <AddToListMenu problem={p.id} size="sm" />
           {reviewState.data ? (
             <span
@@ -293,7 +324,7 @@ export function WorkspacePage() {
               <SelectValue placeholder={t("common.loading")} />
             </SelectTrigger>
             <SelectContent>
-              {JUDGE_LANGUAGES.map((l) => {
+              {allowed.map((l) => {
                 const tc = toolchains.get(l);
                 const missing = tc !== undefined && !tc.present;
                 return (
@@ -373,7 +404,13 @@ export function WorkspacePage() {
               problem={p}
               currentCode={session.code}
               currentLanguage={language}
-              locked={locked}
+              locks={
+                inInterview
+                  ? { tabs: ["hints", "editorial", "submissions", "history"], reason: "interview" }
+                  : locked
+                    ? { tabs: ["submissions", "history"], reason: "review" }
+                    : null
+              }
               onRestored={(l) => {
                 session.reload(l);
                 if (l !== language) setLanguage(l);
@@ -412,7 +449,17 @@ export function WorkspacePage() {
                       </Button>
                     </div>
                   )}
-                  <div className="min-h-0 flex-1">
+                  <div className="flex min-h-0 flex-1">
+                    {compare && !inInterview && (
+                      <CompareView
+                        problem={p.id}
+                        language={compare}
+                        onClose={() =>
+                          void navigate({ search: (prev) => ({ ...prev, compare: undefined }), replace: true })
+                        }
+                      />
+                    )}
+                    <div className="min-h-0 min-w-0 flex-1">
                     <CodeEditor
                       docKey={session.docKey}
                       value={session.doc.text}
@@ -431,6 +478,7 @@ export function WorkspacePage() {
                       onStatus={setEditorStatus}
                       onView={(v) => (editorView.current = v)}
                     />
+                    </div>
                   </div>
                   <EditorStatusBar
                     language={session.doc.lang}

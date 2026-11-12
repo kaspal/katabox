@@ -8,10 +8,11 @@ import {
   lazyRouteComponent,
   type RouterHistory,
 } from "@tanstack/react-router";
-import type { Difficulty, StatusFilter } from "@/bindings";
+import type { Difficulty, Language, StatusFilter } from "@/bindings";
 import { Shell } from "@/app/Shell";
 import { Home } from "@/pages/Home";
 import { Library } from "@/pages/Library";
+import { Interview } from "@/pages/Interview";
 import { Progress } from "@/pages/Progress";
 import { Settings } from "@/pages/Settings";
 
@@ -60,10 +61,12 @@ const libraryRoute = createRoute({
   validateSearch: parseLibrarySearch,
   component: Library,
 });
-/** `?review=true` opens a problem in review mode (ADR 0019). */
-export type ProblemSearch = { review?: boolean };
+/** `?review=true` opens a problem in review mode (ADR 0019); `?compare=<language>` shows
+ * the accepted solution in that language beside the editor (ADR 0020). */
+export type ProblemSearch = { review?: boolean; compare?: Language };
 export const parseProblemSearch = (s: Record<string, unknown>): ProblemSearch => ({
   review: s.review === true || s.review === "true" ? true : undefined,
+  compare: oneOf(s.compare, ["python", "typescript", "php", "rust"] as const),
 });
 
 // The workspace is lazy: CodeMirror, KaTeX and Markdown load only when a problem opens.
@@ -72,6 +75,11 @@ const problemRoute = createRoute({
   path: "/problems/$problemId",
   validateSearch: parseProblemSearch,
   component: lazyRouteComponent(() => import("@/workspace/WorkspacePage"), "WorkspacePage"),
+});
+const interviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/interview",
+  component: Interview,
 });
 const progressRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -100,6 +108,7 @@ const routeTree = rootRoute.addChildren([
   homeRoute,
   libraryRoute,
   problemRoute,
+  interviewRoute,
   progressRoute,
   settingsRoute,
   ...devRoutes,

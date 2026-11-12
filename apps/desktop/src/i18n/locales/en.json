@@ -11,7 +11,8 @@
     "workspace": "Workspace",
     "progress": "Progress",
     "settings": "Settings",
-    "smoke": "Smoke screen (dev)"
+    "smoke": "Smoke screen (dev)",
+    "interview": "Interview"
   },
   "palette": {
     "open": "Command palette",
@@ -286,7 +287,11 @@
     "install_cancelled": "The install was cancelled.",
     "install_busy": "Another install or uninstall is running.",
     "unsupported_platform": "KataBox cannot install languages on this system yet.",
-    "calibration_unavailable": "Measuring this computer needs Python or JavaScript/TypeScript installed."
+    "calibration_unavailable": "Measuring this computer needs Python or JavaScript/TypeScript installed.",
+    "locked_in_interview": "This is locked during the mock interview.",
+    "interview_active": "A mock interview is already running.",
+    "not_enough_problems": "There are fewer than two unsolved problems you have never opened.",
+    "import_invalid": "This file is not a valid KataBox export."
   },
   "judge": {
     "verdict": {
@@ -487,7 +492,8 @@
       "browse": "Browse",
       "next": "Next: {{title}}",
       "done": "All solved",
-      "empty": "No problems yet."
+      "empty": "No problems yet.",
+      "byLanguage": "Solved by language"
     },
     "lists": {
       "tabProblems": "Problems",
@@ -522,6 +528,76 @@
       "daily": "Daily problem on Home",
       "on": "On",
       "off": "Off"
+    },
+    "interview": {
+      "title": "Mock interview",
+      "intro": "Two problems you have never opened, against the clock. Hints, the editorial, your earlier attempts and solutions stay locked until the time is up or you end it.",
+      "setup": "Start a mock interview",
+      "duration": "Duration",
+      "minutes": "{{count}} min",
+      "mix": "Difficulty",
+      "mixes": {
+        "easy+easy": "Easy · Easy",
+        "easy+medium": "Easy · Medium",
+        "medium+medium": "Medium · Medium",
+        "medium+hard": "Medium · Hard",
+        "hard+hard": "Hard · Hard"
+      },
+      "languages": "Languages",
+      "start": "Start",
+      "cancel": "Cancel",
+      "running": "In progress",
+      "remaining": "{{time}} left",
+      "timerLabel": "Mock interview: {{time}} left",
+      "open": "Open",
+      "end": "End interview",
+      "locked": "Locked during the mock interview.",
+      "scorecard": "Scorecard",
+      "solved": "Solved: {{solved}} / {{total}}",
+      "firstTry": "First-try passes: {{count}}",
+      "used": "Time used: {{time}}",
+      "problemSolved": "Solved in {{time}}",
+      "problemUnsolved": "Not solved",
+      "submits": "Submits: {{count}}",
+      "firstTryBadge": "First try",
+      "history": "Past mock interviews",
+      "none": "No mock interviews yet.",
+      "again": "Start another",
+      "unavailable": "Unavailable problem",
+      "details": "Details"
+    },
+    "data": {
+      "title": "Data",
+      "intro": "Export your progress to one file, or import a file exported by KataBox on another computer. Import merges by problem and keeps the newer record.",
+      "export": "Export…",
+      "import": "Import…",
+      "exported": "Exported {{count}} records.",
+      "previewTitle": "Import this file?",
+      "previewFrom": "Exported on {{date}} by KataBox {{version}}.",
+      "conflicts": "{{count}} records already exist here; the newer one will be kept.",
+      "apply": "Import",
+      "cancel": "Cancel",
+      "imported": "Imported: {{added}} added, {{updated}} updated, {{unchanged}} unchanged.",
+      "kinds": {
+        "statuses": "Problem statuses",
+        "submissions": "Submissions",
+        "snapshots": "History snapshots",
+        "notes": "Notes",
+        "drafts": "Drafts",
+        "hint_unlocks": "Unlocked hints",
+        "opens": "Opened problems",
+        "reviews": "Reviews",
+        "daily_picks": "Daily problems",
+        "lists": "Lists",
+        "interviews": "Mock interviews",
+        "settings": "Settings"
+      }
+    },
+    "crossLang": {
+      "solveIn": "Solve in…",
+      "accepted": "Your accepted {{language}} solution (read-only)",
+      "close": "Close",
+      "none": "No accepted solution in {{language}}."
     }
   }
 }

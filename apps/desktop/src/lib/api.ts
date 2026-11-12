@@ -6,7 +6,15 @@ import {
   commands,
   type AppError,
   type AppInfo,
+  type AcceptedSolution,
   type CalibrationInfo,
+  type ImportPreview,
+  type ImportResult,
+  type InterviewResult,
+  type InterviewSetup,
+  type InterviewView,
+  type LanguageCount,
+  type TransferCounts,
   type DailyProblem,
   type ListView,
   type PatternProgress,
@@ -123,6 +131,24 @@ export const api = {
   removeFromList: (id: number, problem: string): Promise<null> => call(commands.removeFromList(id, problem)),
   reorderList: (id: number, problems: string[]): Promise<null> => call(commands.reorderList(id, problems)),
   listsWith: (problem: string): Promise<number[]> => call(commands.listsWith(problem)),
+
+  // Practice modes (ADR 0020)
+  markOpened: (problem: string): Promise<null> => call(commands.markOpened(problem)),
+  startInterview: (setup: InterviewSetup, lang: UiLang): Promise<InterviewView> =>
+    call(commands.startInterview(setup, lang)),
+  interviewActive: (lang: UiLang): Promise<InterviewView | null> => call(commands.interviewActive(lang)),
+  endInterview: (lang: UiLang): Promise<InterviewResult> => call(commands.endInterview(lang)),
+  interviews: (lang: UiLang): Promise<InterviewResult[]> => call(commands.interviews(lang)),
+  acceptedSolution: (problem: string, language: Language): Promise<AcceptedSolution | null> =>
+    call(commands.acceptedSolution(problem, language)),
+  solvedLanguages: (problem: string): Promise<Language[]> => call(commands.solvedLanguages(problem)),
+  solvedByLanguage: (): Promise<LanguageCount[]> => call(commands.solvedByLanguage()),
+  /** Opens a native Save dialog (in Rust); null when cancelled. */
+  exportProgress: (): Promise<TransferCounts | null> => call(commands.exportProgress()),
+  /** Opens a native Open dialog (in Rust), reads and checks the file; null when cancelled. */
+  importPreview: (): Promise<ImportPreview | null> => call(commands.importPreview()),
+  importApply: (id: number): Promise<ImportResult> => call(commands.importApply(id)),
+  importCancel: (id: number): Promise<null> => call(commands.importCancel(id)),
 
   // Language servers (ADR 0014)
   lspConnect: (
