@@ -33,11 +33,11 @@ cargo deny check licenses        # license check (hakoniwa is an approved LGPL e
 kb-sandbox probe                 # Linux: what this kernel supports (cargo run -p kb-runner --bin kb-sandbox -- probe)
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo run -p kb-pack -- validate # validate every problem, with each problem's compressed test size (budget 512 KB; --run: machine factor, then sandbox checks: validator, reference speed per language, 500-seed stress vs brute.py, naive.py and naive.rs TLE; Windows)
+cargo run -p kb-pack -- validate # validate every problem, with each problem's compressed test size (budget 512 KB; --run: machine factor, then sandbox checks: validator, reference speed per language, 500-seed stress vs brute.py, naive.py TLE, naive.rs needs ≥ 1.5× the Rust CPU cap (ratio printed); Windows)
 cargo run -p kb-pack -- generate content/problems/<id> --size max --seeds 1,2  # write hidden tests from gen.py (sandbox; committed)
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
-cargo test -p kb-judge --test debug_windows -- --nocapture  # debugger e2e in the sandbox (prints the replay timings)
+cargo test -p kb-judge --test debug_windows -- --nocapture  # debugger e2e in the sandbox (prints the replay timings; debug_js_windows for JS/TS)
 cargo test -p kb-judge --test calibration_windows -- --nocapture  # calibration benchmark (prints this machine's rounds; re-measure the reference times when it or a runtime pin changes)
 cargo test -p kb-bridge          # language servers: fake-server lifecycle; real basedpyright, typescript-language-server, rust-analyzer on Windows (needs the .ps1 fetch)
 pnpm install && pnpm build       # UI build (tsc + vite)
@@ -72,7 +72,7 @@ pnpm release:build -- --bundles nsis,msi  # Windows installers into target/relea
 - Packaging (ADR 0021): installers come from `tauri.conf.json` + `src-tauri/windows/`; uninstall cleanup only calls kb-runner's existing `cleanup` (`kb-app/src/uninstall.rs`). Auto-update stays off (cargo feature `updater`, `tauri.updater.conf.json`) and code signing stays off until the maintainer turns them on; never generate, commit or ask for a signing or updater key. The release workflow runs only on `v*` tags. Keep `@tauri-apps/api` and `@tauri-apps/cli` on the same minor as the `tauri` crate (today 2.12; `tauri build` checks it), and `rust-version` (1.99) at the stable toolchain the repo uses.
 - Problems must be original. Never copy statements or tests from LeetCode, HackerRank or similar sites.
 - Solutions use each language's standard library only.
-- Debugger (ADR 0022): replay only. Every debugger action is an ordinary sandboxed run of the language's debug harness (`languages/python/debug.py.j2`, `kb-judge/src/debug.rs`); never add sockets, a loopback exemption, a network capability or a kb-runner change for debugging. Harness frames stay hidden (only `solution.*` is traced). The debug run's output budget (`TRACE_BUDGET_BYTES` + `RECORD_ALLOWANCE` + prints) is its `max_output_bytes`; truncate the trace gracefully, never raise the cap. The editor is read-only during a session.
+- Debugger (ADR 0022): replay only. Every debugger action is an ordinary sandboxed run of the language's debug harness (`languages/python/debug.py.j2`; `languages/typescript/debug.ts.j2` steps the solution through Node's in-process inspector from a worker thread, ADR 0023; `kb-judge/src/debug.rs`); never add sockets, a loopback exemption, a network capability or a kb-runner change for debugging. Harness frames stay hidden (only `solution.*` is traced). The debug run's output budget (`TRACE_BUDGET_BYTES` + `RECORD_ALLOWANCE` + prints) is its `max_output_bytes`; truncate the trace gracefully, never raise the cap. The editor is read-only during a session.
 - Record significant decisions as a new ADR in `docs/adr/`.
 
 ## Problem package format

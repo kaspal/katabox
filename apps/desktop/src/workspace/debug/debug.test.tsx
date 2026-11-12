@@ -5,21 +5,20 @@ import { renderApp } from "@/test/renderApp";
 import { setFakeApi, useFakeApi } from "@/test/mockApi";
 
 vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
-vi.setConfig({ testTimeout: 20_000 });
 
 const REFERENCE =
   "def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        need = target - n\n        if need in seen:\n            return [seen[need], i]\n        seen[n] = i\n    return []\n";
 
 async function editor() {
-  const host = await screen.findByTestId("code-editor", undefined, { timeout: 4000 });
+  const host = await screen.findByTestId("code-editor");
   await waitFor(() => expect(host.querySelector(".cm-editor")).not.toBeNull());
   return EditorView.findFromDOM(host.querySelector(".cm-editor") as HTMLElement)!;
 }
 
-async function openTwoSum(lang: "python" | "typescript" = "python") {
+async function openTwoSum(lang: "python" | "typescript" | "php" = "python") {
   const fake = setFakeApi({ lastLanguage: lang, drafts: { [`two-sum:${lang}`]: REFERENCE } });
   const r = renderApp("/problems/two-sum");
-  await screen.findByRole("heading", { name: "Two Sum" }, { timeout: 8000 });
+  await screen.findByRole("heading", { name: "Two Sum" });
   const view = await editor();
   return { ...r, fake, view };
 }
@@ -126,16 +125,24 @@ describe("Debugger (ADR 0022)", () => {
   });
 
   it("is disabled for languages without a debugger", async () => {
-    await openTwoSum("typescript");
+    await openTwoSum("php");
     const card = screen.getByText("Public 1").closest("section")!;
     expect(within(card).getByRole("button", { name: "Debug this case" })).toBeDisabled();
     expect(screen.queryByRole("tab", { name: "Debug" })).toBeNull();
   });
 
+  it("debugs JavaScript/TypeScript too (ADR 0023)", async () => {
+    const { user, fake } = await openTwoSum("typescript");
+    expect(screen.getByRole("tab", { name: "Debug" })).toBeInTheDocument();
+    const panel = await debugFirstPublic(user);
+    expect(fake.api.debugStart).toHaveBeenCalledWith(expect.objectContaining({ language: "typescript", problem: "two-sum" }));
+    await waitFor(() => expect(within(panel).getByTestId("debug-status")).toHaveTextContent("Public 1 · Finished: returned [2,4]"));
+  });
+
   it("speaks Spanish", async () => {
     const fake = setFakeApi({ lastLanguage: "python", settings: { ui_lang: "es" }, drafts: { "two-sum:python": REFERENCE } });
     const { user } = renderApp("/problems/two-sum");
-    await screen.findByRole("heading", { name: "Suma de dos" }, { timeout: 8000 });
+    await screen.findByRole("heading", { name: "Suma de dos" });
     await editor();
     const card = screen.getByText("Pública 1").closest("section")!;
     await user.click(within(card).getByRole("button", { name: "Depurar este caso" }));

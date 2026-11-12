@@ -199,3 +199,5 @@ state, so it is not planned.
 - **Bonus:** step back.
 - ADR 0002's list of socket debug adapters, and ADR 0003's "DAP types", are superseded
   by this ADR for now. The UI uses its own small types (`kb_core::debug`).
+
+**Follow-up:** JavaScript/TypeScript debugging, built on the inspector probe above, is ADR 0023.

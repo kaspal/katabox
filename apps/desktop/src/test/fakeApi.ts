@@ -770,7 +770,7 @@ export function createFakeApi(
     }),
 
     // Debugger (ADR 0022): a scripted two-sum trace and the same navigation as kb-app.
-    debugLanguages: vi.fn(async () => ["python"] as Language[]),
+    debugLanguages: vi.fn(async () => ["python", "typescript"] as Language[]),
     debugStart: vi.fn(async (start: DebugStart) => {
       dbg.session += 1;
       dbg.breakpoints = new Set(start.breakpoints);
