@@ -16,8 +16,10 @@ import type {
   ProblemSummary,
   ProblemView,
   Report,
+  PracticeOutcome,
   Snapshot,
   SubmissionSummary,
+  UiLang,
   Verdict,
 } from "@/bindings";
 import type { Api, CustomInput } from "@/lib/api";
@@ -178,6 +180,12 @@ export function createFakeApi(
     installed?: Language[];
     /** This machine's stored calibration (default: not measured). */
     calibration?: CalibrationInfo | null;
+    /** Practice (ADR 0019): problems due for review today, and the daily problem. */
+    reviewsDue?: string[];
+    daily?: { id: string; solved?: boolean } | null;
+    streak?: number;
+    /** Personal lists: name and problem ids (ids not in PROBLEMS are unavailable). */
+    lists?: { name: string; items: string[] }[];
   } = {},
 ) {
   const installed = new Set<Language>(opts.installed ?? ["python", "typescript", "php"]);
@@ -214,6 +222,29 @@ export function createFakeApi(
     /** What the next recalibrate measures (a factor), or the error it fails with. */
     nextFactor: 1.25,
     recalibrateError: null as AppError | null,
+    /** Practice state (ADR 0019). */
+    daily: (opts.daily === undefined ? { id: "valid-brackets", solved: false } : opts.daily) as {
+      id: string;
+      solved?: boolean;
+    } | null,
+    streak: opts.streak ?? 0,
+    reviews: new Map<string, { due_on: string; interval_days: number; passes: number; lapsed: boolean }>(
+      (opts.reviewsDue ?? []).map((id) => [id, { due_on: "2026-01-01", interval_days: 3, passes: 0, lapsed: false }]),
+    ),
+    lists: (opts.lists ?? []).map((l, i) => ({ id: i + 1, name: l.name, items: [...l.items] })),
+    /** Overrides what the next Submit reports for practice. */
+    nextPractice: null as PracticeOutcome | null,
+    /** The options of each Submit. */
+    submitOptions: [] as { today: string; review: boolean; lang: UiLang }[],
+  };
+  let nextListId = state.lists.length + 1;
+  const summary = (id: string, lang: UiLang): ProblemSummary | null => {
+    const p = PROBLEMS.find((x) => x.id === id);
+    return p ? { ...p, title: p.title[lang] } : null;
+  };
+  const nextAfter = (id: string, lang: UiLang): ProblemSummary | null => {
+    const p = PROBLEMS.find((x) => x.id !== id && x.status !== "solved");
+    return p ? summary(p.id, lang) : null;
   };
   /** Hold the next install mid-download; returns the function that lets it go on. */
   const holdInstall = () => {
@@ -304,6 +335,97 @@ export function createFakeApi(
       return null;
     }),
     calibration: vi.fn(async () => state.calibration),
+    patterns: vi.fn(async (lang: UiLang) => {
+      const order = ["arrays-hashing", "two-pointers", "sliding-window", "stack", "binary-search"];
+      const pats = [...new Set(PROBLEMS.map((p) => p.pattern))].sort(
+        (a, b) => (order.indexOf(a) + 99) % 100 - (order.indexOf(b) + 99) % 100 || a.localeCompare(b),
+      );
+      return pats.map((pattern) => {
+        const of = PROBLEMS.filter((p) => p.pattern === pattern);
+        const next = of.find((p) => p.status !== "solved");
+        return {
+          pattern,
+          solved: of.filter((p) => p.status === "solved").length,
+          total: of.length,
+          next: next ? summary(next.id, lang) : null,
+        };
+      });
+    }),
+    nextProblem: vi.fn(async (p: string, lang: UiLang) => nextAfter(p, lang)),
+    dailyProblem: vi.fn(async (today: string, lang: UiLang) => {
+      const d = state.daily;
+      const problem = d ? summary(d.id, lang) : null;
+      return d && problem ? { day: today, problem, solved: d.solved === true, streak: state.streak } : null;
+    }),
+    streak: vi.fn(async () => state.streak),
+    reviewsDue: vi.fn(async (today: string, lang: UiLang) =>
+      [...state.reviews.entries()]
+        .filter(([, r]) => r.due_on <= today)
+        .flatMap(([id, r]) => {
+          const problem = summary(id, lang);
+          return problem ? [{ problem, review: { ...r, due: true } }] : [];
+        }),
+    ),
+    reviewState: vi.fn(async (p: string, today: string) => {
+      const r = state.reviews.get(p);
+      return r ? { ...r, due: r.due_on <= today } : null;
+    }),
+    reviewSnooze: vi.fn(async (p: string) => {
+      const r = state.reviews.get(p);
+      if (r) r.due_on = "9999-12-31";
+      return null;
+    }),
+    reviewRemove: vi.fn(async (p: string) => {
+      state.reviews.delete(p);
+      return null;
+    }),
+    reviewAdd: vi.fn(async (p: string) => {
+      state.reviews.set(p, { due_on: "2026-11-17", interval_days: 3, passes: 0, lapsed: false });
+      return null;
+    }),
+    lists: vi.fn(async (lang: UiLang) =>
+      state.lists.map((l) => {
+        const entries = l.items.map((id) => ({ problem_id: id, problem: summary(id, lang) }));
+        const available = entries.flatMap((e) => (e.problem ? [e.problem] : []));
+        return {
+          id: l.id,
+          name: l.name,
+          solved: available.filter((p) => p.status === "solved").length,
+          total: available.length,
+          entries,
+        };
+      }),
+    ),
+    createList: vi.fn(async (name: string) => {
+      const id = nextListId++;
+      state.lists.push({ id, name, items: [] });
+      return id;
+    }),
+    renameList: vi.fn(async (id: number, name: string) => {
+      const l = state.lists.find((x) => x.id === id);
+      if (l) l.name = name;
+      return null;
+    }),
+    deleteList: vi.fn(async (id: number) => {
+      state.lists = state.lists.filter((x) => x.id !== id);
+      return null;
+    }),
+    addToList: vi.fn(async (id: number, p: string) => {
+      const l = state.lists.find((x) => x.id === id);
+      if (l && !l.items.includes(p)) l.items.push(p);
+      return null;
+    }),
+    removeFromList: vi.fn(async (id: number, p: string) => {
+      const l = state.lists.find((x) => x.id === id);
+      if (l) l.items = l.items.filter((x) => x !== p);
+      return null;
+    }),
+    reorderList: vi.fn(async (id: number, problems: string[]) => {
+      const l = state.lists.find((x) => x.id === id);
+      if (l) l.items = [...problems];
+      return null;
+    }),
+    listsWith: vi.fn(async (p: string) => state.lists.filter((l) => l.items.includes(p)).map((l) => l.id)),
     recalibrate: vi.fn(async (): Promise<CalibrationInfo> => {
       if (state.recalibrateError) throw state.recalibrateError;
       const factor = state.nextFactor;
@@ -352,7 +474,8 @@ export function createFakeApi(
       snap(p, lang, code, "run", r.verdict);
       return r;
     }),
-    submit: vi.fn(async (p: string, lang: Language, code: string, onEvent) => {
+    submit: vi.fn(async (p: string, lang: Language, code: string, submitOpts, onEvent) => {
+      state.submitOptions.push(submitOpts);
       const report = await judge(onEvent, 7);
       const id = nextId++;
       submissions.unshift({
@@ -367,7 +490,22 @@ export function createFakeApi(
         report,
       });
       snap(p, lang, code, "submit", report.verdict);
-      return { submission_id: id, report };
+      const accepted = report.verdict === "accepted";
+      const review = submitOpts.review && state.reviews.has(p);
+      const practice: PracticeOutcome = state.nextPractice ?? {
+        first_solve: accepted && PROBLEMS.find((x) => x.id === p)?.status !== "solved",
+        review: review
+          ? accepted
+            ? { outcome: "scheduled", due_on: "2026-11-21", interval_days: 7 }
+            : { outcome: "lapsed" }
+          : null,
+        daily_solved: accepted && state.daily?.id === p,
+        streak: state.streak,
+        next: accepted ? nextAfter(p, submitOpts.lang) : null,
+      };
+      state.nextPractice = null;
+      if (practice.review?.outcome === "scheduled") state.reviews.delete(p);
+      return { submission_id: id, report, practice };
     }),
     listSubmissions: vi.fn(async (p: string) =>
       submissions.filter((s) => s.problem_id === p).map(({ code: _c, report: _r, ...s }) => s),

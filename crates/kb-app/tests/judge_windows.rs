@@ -423,3 +423,54 @@ async fn the_first_run_calibrates_this_machine() {
         "{view:?}"
     );
 }
+
+/// A real Accepted submit (ADR 0019): the first solve schedules a review in 3 days and
+/// suggests a next problem; a review-mode submit three days later moves it to 7 days.
+#[tokio::test]
+async fn a_first_accepted_submit_schedules_a_review() {
+    let app = app("practice").await;
+    let r = app
+        .submit(
+            "two-sum",
+            Language::Python,
+            &reference(Language::Python),
+            &submit_opts(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert!(r.report.verdict.is_accepted(), "{:?}", r.report);
+    assert!(r.practice.first_solve);
+    let next = r.practice.next.expect("a next problem");
+    assert_ne!(next.id, "two-sum");
+    let state = app
+        .review_state("two-sum", "2026-11-14")
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(state.due_on, "2026-11-17");
+
+    let review = kb_app::SubmitOptions {
+        today: "2026-11-17".into(),
+        review: true,
+        lang: kb_store::UiLang::En,
+    };
+    let r = app
+        .submit(
+            "two-sum",
+            Language::Rust,
+            &reference(Language::Rust),
+            &review,
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        r.practice.review,
+        Some(kb_app::practice::ReviewOutcome::Scheduled {
+            due_on: "2026-11-24".into(),
+            interval_days: 7
+        })
+    );
+    assert!(!r.practice.first_solve);
+}

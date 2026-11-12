@@ -7,6 +7,12 @@ import {
   type AppError,
   type AppInfo,
   type CalibrationInfo,
+  type DailyProblem,
+  type ListView,
+  type PatternProgress,
+  type ReviewItem,
+  type ReviewState,
+  type SubmitOptions,
   type ContinueItem,
   type Draft,
   type EditorialState,
@@ -82,8 +88,9 @@ export const api = {
     problem: string,
     language: Language,
     code: string,
+    opts: SubmitOptions,
     onEvent: (e: JudgeEvent) => void,
-  ): Promise<SubmitResult> => call(commands.submit(problem, language, code, progress(onEvent))),
+  ): Promise<SubmitResult> => call(commands.submit(problem, language, code, opts, progress(onEvent))),
   listSubmissions: (problem: string): Promise<SubmissionSummary[]> =>
     call(commands.listSubmissions(problem)),
   getSubmission: (id: number): Promise<SubmissionView> => call(commands.getSubmission(id)),
@@ -94,6 +101,28 @@ export const api = {
   unlockHint: (problem: string, tier: number): Promise<number[]> =>
     call(commands.unlockHint(problem, tier)),
   unlockedHints: (problem: string): Promise<number[]> => call(commands.unlockedHints(problem)),
+
+  // Practice (ADR 0019): `today` is the local date, YYYY-MM-DD (see lib/today.ts)
+  patterns: (lang: UiLang): Promise<PatternProgress[]> => call(commands.patterns(lang)),
+  nextProblem: (problem: string, lang: UiLang): Promise<ProblemSummary | null> =>
+    call(commands.nextProblem(problem, lang)),
+  dailyProblem: (today: string, lang: UiLang): Promise<DailyProblem | null> =>
+    call(commands.dailyProblem(today, lang)),
+  streak: (today: string): Promise<number> => call(commands.streak(today)),
+  reviewsDue: (today: string, lang: UiLang): Promise<ReviewItem[]> => call(commands.reviewsDue(today, lang)),
+  reviewState: (problem: string, today: string): Promise<ReviewState | null> =>
+    call(commands.reviewState(problem, today)),
+  reviewSnooze: (problem: string, today: string): Promise<null> => call(commands.reviewSnooze(problem, today)),
+  reviewRemove: (problem: string): Promise<null> => call(commands.reviewRemove(problem)),
+  reviewAdd: (problem: string, today: string): Promise<null> => call(commands.reviewAdd(problem, today)),
+  lists: (lang: UiLang): Promise<ListView[]> => call(commands.lists(lang)),
+  createList: (name: string): Promise<number> => call(commands.createList(name)),
+  renameList: (id: number, name: string): Promise<null> => call(commands.renameList(id, name)),
+  deleteList: (id: number): Promise<null> => call(commands.deleteList(id)),
+  addToList: (id: number, problem: string): Promise<null> => call(commands.addToList(id, problem)),
+  removeFromList: (id: number, problem: string): Promise<null> => call(commands.removeFromList(id, problem)),
+  reorderList: (id: number, problems: string[]): Promise<null> => call(commands.reorderList(id, problems)),
+  listsWith: (problem: string): Promise<number[]> => call(commands.listsWith(problem)),
 
   // Language servers (ADR 0014)
   lspConnect: (

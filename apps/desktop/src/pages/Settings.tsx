@@ -14,6 +14,7 @@ import { UI_LANGS, type UiLangCode } from "@/i18n";
 import { THEMES, usePrefs, type ThemePref } from "@/lib/prefs";
 import { api } from "@/lib/api";
 import { queryKeys, useAppInfo, useCalibration } from "@/lib/queries";
+import { usePracticePrefs } from "@/lib/practice";
 import { FONT_SIZES, KEYMAPS, useEditorPrefs, type KeymapPref } from "@/lib/settings";
 
 const THEME_ICON: Record<ThemePref, typeof Sun> = { system: Monitor, light: Sun, dark: Moon };
@@ -33,6 +34,39 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="min-w-0 break-all">{children}</dd>
     </div>
+  );
+}
+
+/** Settings → Practice (ADR 0019): the Home cards for reviews and the daily problem. */
+function PracticeSection() {
+  const { t } = useTranslation();
+  const prefs = usePracticePrefs();
+  const toggle = (label: string, value: boolean, set: (v: boolean) => void) => (
+    <Row label={label}>
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        size="sm"
+        aria-label={label}
+        value={value ? "on" : "off"}
+        onValueChange={(v) => v && set(v === "on")}
+      >
+        <ToggleGroupItem value="on" className="px-3">
+          {t("practice.settings.on")}
+        </ToggleGroupItem>
+        <ToggleGroupItem value="off" className="px-3">
+          {t("practice.settings.off")}
+        </ToggleGroupItem>
+      </ToggleGroup>
+    </Row>
+  );
+  return (
+    <Section title={t("practice.settings.title")}>
+      <dl className="space-y-3">
+        {toggle(t("practice.settings.daily"), prefs.daily, prefs.setDaily)}
+        {toggle(t("practice.settings.review"), prefs.review, prefs.setReview)}
+      </dl>
+    </Section>
   );
 }
 
@@ -193,6 +227,8 @@ export function Settings() {
             </Row>
           </dl>
         </Section>
+
+        <PracticeSection />
 
         <Section title={t("settings.languages")}>
           <InstallPanel allowUninstall />

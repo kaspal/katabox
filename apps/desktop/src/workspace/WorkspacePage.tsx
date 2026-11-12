@@ -12,6 +12,7 @@ import {
   PanelBottom,
   PanelLeft,
   Play,
+  RotateCcw,
   Send,
 } from "lucide-react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
@@ -33,10 +34,13 @@ import { DifficultyLabel } from "@/components/Semantic";
 import { api } from "@/lib/api";
 import { isAppError } from "@/lib/errors";
 import { useFocusMode } from "@/lib/focus";
+import { useReviewActions, useReviewState } from "@/lib/practice";
 import { useAppInfo, useProblem } from "@/lib/queries";
+import { AddToListMenu, formatDay } from "@/practice/shared";
 import { JUDGE_LANGUAGES, parseLanguage, useEditorPrefs, useSetting } from "@/lib/settings";
 import { CodeEditor, type EditorStatus } from "@/workspace/editor/CodeEditor";
 import { EditorStatusBar } from "@/workspace/editor/lsp/EditorStatusBar";
+import { phpBasicCompletion } from "@/workspace/editor/phpCompletions";
 import { useLanguageServer } from "@/workspace/editor/lsp/useLanguageServer";
 import { useEditorSession, useJudge } from "@/workspace/hooks";
 import { ProblemPane } from "@/workspace/problem/ProblemPane";
@@ -55,8 +59,11 @@ export const CELEBRATE_MS = 1200;
 const KEYS = { run: "Ctrl+'", submit: "Ctrl+Enter", focus: "Ctrl+Shift+F" };
 
 export function WorkspacePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { problemId } = route.useParams();
+  const reviewMode = route.useSearch().review === true;
+  const reviewState = useReviewState(problemId);
+  const reviewActions = useReviewActions();
   const problem = useProblem(problemId);
   const info = useAppInfo();
   const { keymap, fontSize, ligatures } = useEditorPrefs();
@@ -67,7 +74,7 @@ export function WorkspacePage() {
   const [language, setLanguage] = useState<Language | null>(null);
   /** A language to offer installing (picked in the selector, or the current one). */
   const [installFor, setInstallFor] = useState<Language | null>(null);
-  const session = useEditorSession(problemId, language);
+  const session = useEditorSession(problemId, language, { review: reviewMode });
   const docLang = session.doc?.lang ?? null;
   const serverInfo = info.data?.language_servers.find((l) => l.language === docLang);
   const docText = useRef("");
@@ -79,8 +86,14 @@ export function WorkspacePage() {
     () => docText.current,
   );
   const [editorStatus, setEditorStatus] = useState<EditorStatus | null>(null);
+  // PHP has no language server on Windows: offer keywords and common functions instead.
+  const basicCompletion = docLang === "php" && server.status.state === "unavailable";
   const editorView = useRef<EditorView | null>(null);
   const judge = useJudge(problemId);
+  // Review mode stays on until a review-mode Submit passes; then the old code may be seen.
+  const reviewOutcome = judge.practice?.review?.outcome;
+  const reviewPassed = reviewOutcome === "scheduled" || reviewOutcome === "graduated";
+  const locked = reviewMode && !reviewPassed;
   const { focus, setFocus } = useFocusMode();
   const [tab, setTab] = useState<ResultsTab>("testcases");
   const [customs, setCustoms] = useState<CustomTestDraft[]>([]);
@@ -131,8 +144,8 @@ export function WorkspacePage() {
     if (!ready || !language || session.code === null) return;
     setTab("result");
     await session.flush();
-    await judge.submit(language, session.code);
-  }, [ready, language, session, judge]);
+    await judge.submit(language, session.code, { review: locked });
+  }, [ready, language, session, judge, locked]);
 
   // A brief celebration when a submission is Accepted.
   useEffect(() => {
@@ -233,6 +246,29 @@ export function WorkspacePage() {
         <h1 className="truncate text-base font-semibold">{p.title}</h1>
         <DifficultyLabel difficulty={p.difficulty} className="text-xs" />
         <div className="ml-auto flex items-center gap-2">
+          <AddToListMenu problem={p.id} size="sm" />
+          {reviewState.data ? (
+            <span
+              className="hidden items-center gap-1 text-xs text-muted-foreground lg:inline-flex"
+              data-testid="review-queued"
+            >
+              <RotateCcw aria-hidden className="size-3.5" />
+              {t("practice.review.inQueue", { date: formatDay(reviewState.data.due_on, i18n.language) })}
+            </span>
+          ) : (
+            reviewState.data === null && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => reviewActions.add.mutate(p.id)}
+                title={t("practice.review.add")}
+              >
+                <RotateCcw aria-hidden />
+                <span className="hidden xl:inline">{t("practice.review.add")}</span>
+              </Button>
+            )
+          )}
           <span className="text-xs text-muted-foreground" aria-live="polite" data-testid="save-state">
             {session.save === "saving"
               ? t("workspace.save.saving")
@@ -305,6 +341,25 @@ export function WorkspacePage() {
         </div>
       </div>
 
+      {reviewMode && (
+        <div
+          role="status"
+          data-testid="review-banner"
+          className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5 text-sm"
+        >
+          <RotateCcw aria-hidden className="size-4 shrink-0" />
+          {reviewPassed
+            ? reviewOutcome === "graduated"
+              ? t("practice.review.graduated")
+              : t("practice.review.passed", {
+                  date: formatDay(
+                    judge.practice?.review?.outcome === "scheduled" ? judge.practice.review.due_on : "",
+                    i18n.language,
+                  ),
+                })
+            : t("practice.review.banner")}
+        </div>
+      )}
       <ResizablePanelGroup
         orientation="horizontal"
         className="min-h-0 flex-1"
@@ -318,6 +373,7 @@ export function WorkspacePage() {
               problem={p}
               currentCode={session.code}
               currentLanguage={language}
+              locked={locked}
               onRestored={(l) => {
                 session.reload(l);
                 if (l !== language) setLanguage(l);
@@ -364,7 +420,7 @@ export function WorkspacePage() {
                       keymap={keymap}
                       fontSize={fontSize}
                       ligatures={ligatures}
-                      lspExtension={server.extension}
+                      lspExtension={basicCompletion ? phpBasicCompletion : server.extension}
                       ariaLabel={t("workspace.editorLabel", { language: t(`languages.${session.doc.lang}`) })}
                       onChange={(text) => {
                         session.onChange(text);
@@ -379,6 +435,7 @@ export function WorkspacePage() {
                   <EditorStatusBar
                     language={session.doc.lang}
                     server={server.status}
+                    basicCompletion={basicCompletion}
                     onInstall={() => setInstallFor(session.doc!.lang)}
                     status={editorStatus}
                     onFormat={() => {
@@ -405,6 +462,7 @@ export function WorkspacePage() {
                   report={judge.report}
                   error={judge.error}
                   celebrate={celebrate}
+                  practice={judge.lastKind === "submit" ? judge.practice : null}
                 />
               </section>
             </ResizablePanel>

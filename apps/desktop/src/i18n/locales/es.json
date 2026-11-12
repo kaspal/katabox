@@ -132,8 +132,7 @@
     "browse": "Ver problemas",
     "solved": "Resueltos",
     "solvedOf": "{{solved}} de {{total}}",
-    "daily": "Problema del día",
-    "dailySoon": "La selección diaria llega en una versión posterior."
+    "daily": "Problema del día"
   },
   "workspace": {
     "title": "Espacio de trabajo",
@@ -377,7 +376,8 @@
       "ready": "Servidor de lenguaje de {{language}}: listo",
       "restarting": "Servidor de lenguaje de {{language}}: reiniciando (intento {{attempt}})…",
       "stopped": "Servidor de lenguaje de {{language}}: en pausa por inactividad; se reanuda al escribir",
-      "unavailable": "Servidor de lenguaje de {{language}}: no disponible"
+      "unavailable": "Servidor de lenguaje de {{language}}: no disponible",
+      "basicCompletion": "autocompletado básico de palabras clave y funciones comunes"
     },
     "reason": "Motivo: {{reason}}",
     "errors_one": "{{count}} error",
@@ -446,5 +446,82 @@
     "licenses": "Se descargan de sus sitios oficiales: Python (licencia PSF), Node.js (MIT), PHP (licencia PHP), Rust y rust-analyzer (MIT o Apache-2.0), TypeScript y su servidor de lenguaje (Apache-2.0), basedpyright (MIT).",
     "unsupportedPlatform": "KataBox todavía no puede instalar lenguajes en este sistema.",
     "onDisk": "{{disk}} en disco"
+  },
+  "practice": {
+    "daily": {
+      "title": "Problema del día",
+      "open": "Resolver",
+      "solved": "Resuelto hoy",
+      "none": "No hay problemas disponibles.",
+      "hint": "Uno nuevo cada día, con preferencia por tu patrón más flojo."
+    },
+    "streak": {
+      "label": "Racha diaria: {{count}}",
+      "none": "Resuelve el problema del día para empezar una racha."
+    },
+    "review": {
+      "title": "Repaso",
+      "empty": "Nada que repasar hoy.",
+      "start": "Repasar",
+      "snooze": "Posponer 1 día",
+      "remove": "Quitar del repaso",
+      "interval": "Intervalo: {{days}} días",
+      "lapsed": "Inténtalo de nuevo",
+      "banner": "Repaso: tu código anterior está oculto hasta que lo superes.",
+      "passed": "Repaso superado. Próximo repaso el {{date}}.",
+      "graduated": "Repaso superado: dominas este problema y sale de tu cola de repaso.",
+      "lapsedBanner": "Esta vez no: el repaso vuelve a 3 días. Inténtalo otra vez cuando quieras.",
+      "locked": "Oculto hasta que superes este repaso.",
+      "add": "Repasar en 3 días",
+      "inQueue": "En tu cola de repaso (toca el {{date}})",
+      "scheduled": "Primer repaso el {{date}}."
+    },
+    "next": {
+      "title": "Siguiente",
+      "open": "Abrir",
+      "allSolved": "Has resuelto todos los problemas."
+    },
+    "patterns": {
+      "title": "Patrones",
+      "solved": "{{solved}} / {{total}} resueltos",
+      "browse": "Ver",
+      "next": "Siguiente: {{title}}",
+      "done": "Todo resuelto",
+      "empty": "Aún no hay problemas."
+    },
+    "lists": {
+      "tabProblems": "Problemas",
+      "tab": "Listas",
+      "new": "Nueva lista",
+      "newEllipsis": "Nueva lista…",
+      "name": "Nombre",
+      "create": "Crear",
+      "rename": "Renombrar",
+      "delete": "Eliminar",
+      "deleteTitle": "¿Eliminar esta lista?",
+      "deleteConfirm": "Se eliminará «{{name}}». Los problemas siguen en la biblioteca.",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "empty": "Aún no tienes listas. Crea una y añade problemas desde la biblioteca o el espacio de trabajo.",
+      "emptyList": "Esta lista está vacía. Añade problemas desde la biblioteca o el espacio de trabajo.",
+      "progress": "{{solved}} / {{total}} resueltos",
+      "unavailable": "No disponible (retirado del paquete de problemas)",
+      "remove": "Quitar de la lista",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "reorderHint": "Arrastra las filas, o selecciona una y pulsa Alt+↑ / Alt+↓.",
+      "addTo": "Añadir a una lista",
+      "back": "Todas las listas",
+      "open": "Abrir",
+      "actions": "Acciones de la lista",
+      "problemActions": "Acciones del problema"
+    },
+    "settings": {
+      "title": "Práctica",
+      "review": "Recordatorios de repaso en Inicio",
+      "daily": "Problema del día en Inicio",
+      "on": "Sí",
+      "off": "No"
+    }
   }
 }
