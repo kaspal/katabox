@@ -5,6 +5,8 @@ difficulty = "hard"
 tags = ["graph", "shortest-path", "heap", "matrix"]
 pattern = "graphs"
 rank = 10
+profile = true
+profile_sizes = [100, 400, 1600, 6400, 14400, 22500]
 
 [signature]
 name = "cheapestCrossing"

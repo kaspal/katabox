@@ -5,6 +5,8 @@ difficulty = "hard"
 tags = ["string", "dynamic-programming"]
 pattern = "dynamic-programming"
 rank = 9
+profile = true
+profile_sizes = [5, 8, 11, 14, 100, 300, 1000]
 
 [signature]
 name = "typoDistance"

@@ -5,6 +5,8 @@ difficulty = "medium"
 tags = ["array", "intervals", "sorting"]
 pattern = "intervals"
 rank = 7
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 60000]
 
 [signature]
 name = "paintedLength"

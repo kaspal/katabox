@@ -5,6 +5,8 @@ difficulty = "easy"
 tags = ["string", "stack"]
 pattern = "stack"
 rank = 2
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
 
 [signature]
 name = "isBalanced"

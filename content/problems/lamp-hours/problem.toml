@@ -5,6 +5,8 @@ difficulty = "easy"
 tags = ["intervals", "sorting"]
 pattern = "intervals"
 rank = 3
+profile = true
+profile_sizes = [100, 300, 1000, 3000, 10000, 30000]
 
 [signature]
 name = "litTime"

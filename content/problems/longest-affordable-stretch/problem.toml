@@ -5,6 +5,8 @@ difficulty = "medium"
 tags = ["array", "sliding-window"]
 pattern = "sliding-window"
 rank = 6
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 50000]
 
 [signature]
 name = "longestStretch"

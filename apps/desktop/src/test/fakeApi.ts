@@ -29,7 +29,7 @@ import type {
   Verdict,
 } from "@/bindings";
 import type { Api, CustomInput } from "@/lib/api";
-import type { DebugAction, DebugInspect, DebugStart, DebugView, EvalResult, StopInfo } from "@/bindings";
+import type { DebugAction, DebugInspect, DebugStart, DebugView, EvalResult, ProfileView, StopInfo } from "@/bindings";
 
 /** The lines two-sum's reference runs on public test 1 (line 7 is `seen[n] = i`). */
 export const DEBUG_LINES = [2, 3, 4, 5, 7, 3, 4, 5, 7, 3, 4, 5, 7, 3, 4, 5, 7, 3, 4, 5, 6];
@@ -141,6 +141,20 @@ export function stubFor(lang: Language): string {
 }
 
 /** A report with `verdict`; public tests 1..n. */
+/** A clean O(n) profile at six sizes, with the reference alongside (ADR 0024). */
+export function linearProfile(): ProfileView {
+  const sizes = [300, 1000, 3000, 10000, 30000, 100000];
+  const estimate = { class: "linear" as const, confidence: 0.8, close_alternative: null, noisy: false };
+  return {
+    points: sizes.map((n) => ({ n, median_us: n / 10 + 20, samples_us: [n / 10 + 20, n / 10 + 21, n / 10 + 19] })),
+    reference: sizes.map((n) => ({ n, us: n / 20 + 10 })),
+    estimate,
+    reference_estimate: estimate,
+    stopped: null,
+    time_scale: 1,
+  };
+}
+
 export function makeReport(verdict: Verdict, extra: Partial<Report> = {}): Report {
   const ok = verdict === "accepted";
   return {
@@ -221,6 +235,8 @@ export function createFakeApi(
     nextReport: null as Report | null,
     /** When set, run/submit wait for this before answering. */
     gate: null as Promise<void> | null,
+    /** What profileSolution answers (default: a linear profile, like the reference). */
+    nextProfile: null as ProfileView | null,
     /** The latest language-server event sink (to push statuses from tests). */
     lspEmit: null as ((e: LspEvent) => void) | null,
     /** Messages the editor sent to the fake language server. */
@@ -384,6 +400,7 @@ export function createFakeApi(
           { index: 2, input: { nums: [7, -3, 10, 5], target: 2 }, output: [1, 3] },
         ],
         has_validator: id === "two-sum",
+        profile: id === "two-sum",
       };
     }),
     continueItem: vi.fn(async () => opts.continueItem ?? null),
@@ -673,7 +690,7 @@ export function createFakeApi(
       state.lspEmit = onEvent;
       state.lspSession += 1;
       onEvent({ kind: "status", status: { state: "starting" } });
-      const ext = language === "typescript" ? "ts" : language === "python" ? "py" : language;
+      const ext = ({ typescript: "ts", javascript: "js", python: "py", rust: "rs" } as Record<string, string>)[language] ?? language;
       return {
         session: state.lspSession,
         root_uri: `file:///lsp/${problem}/${language}/`,
@@ -804,6 +821,10 @@ export function createFakeApi(
         : { expr, ok: true, value: { name: "", type: "int", value: `=${expr}`, children: 0 }, error: null, stdout: "" },
     ),
     debugEnd: vi.fn(async () => null),
+    profileSolution: vi.fn(async (): Promise<ProfileView> => {
+      if (state.gate) await state.gate;
+      return state.nextProfile ?? linearProfile();
+    }),
   };
 
   const dbg = {

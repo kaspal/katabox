@@ -45,8 +45,10 @@ import { CodeEditor, type EditorStatus } from "@/workspace/editor/CodeEditor";
 import { EditorStatusBar } from "@/workspace/editor/lsp/EditorStatusBar";
 import { phpBasicCompletion } from "@/workspace/editor/phpCompletions";
 import { useLanguageServer } from "@/workspace/editor/lsp/useLanguageServer";
-import { useEditorSession, useJudge } from "@/workspace/hooks";
+import { useComplexity, useEditorSession, useJudge } from "@/workspace/hooks";
 import { ProblemPane } from "@/workspace/problem/ProblemPane";
+import { ComplexityPanel } from "@/workspace/results/ComplexityPanel";
+import { ScriptModeToggle, useScriptMode } from "@/workspace/editor/ScriptMode";
 import { ResultsPane, type ResultsTab } from "@/workspace/results/ResultsPane";
 import { DebugPanel } from "@/workspace/debug/DebugPanel";
 import { DebugCaseContext, type DebugCase } from "@/workspace/debug/context";
@@ -91,12 +93,16 @@ export function WorkspacePage() {
   const [installFor, setInstallFor] = useState<Language | null>(null);
   const session = useEditorSession(problemId, language, { review: reviewMode });
   const docLang = session.doc?.lang ?? null;
+  // TypeScript can be edited as plain JavaScript (per problem): only the grammar and the
+  // language server change; the draft and the judge stay TypeScript (ADR 0024).
+  const [scriptMode, setScriptMode] = useScriptMode(problemId);
+  const editLang = docLang === "typescript" && scriptMode === "js" ? "javascript" : docLang;
   const serverInfo = info.data?.language_servers.find((l) => l.language === docLang);
   const docText = useRef("");
   docText.current = session.doc?.text ?? "";
   const server = useLanguageServer(
     problemId,
-    docLang,
+    editLang,
     serverInfo && !serverInfo.available ? (serverInfo.reason ?? "") : null,
     () => docText.current,
   );
@@ -145,7 +151,9 @@ export function WorkspacePage() {
   const signature = useMemo(() => (problem.data ? parseSignature(problem.data.signature) : null), [problem.data]);
   const customInputs = signature ? customs.map((c) => validateCustom(signature, c.values).input) : [];
   const customsValid = customInputs.every((i) => i !== null);
-  const busy = judge.busy !== null;
+  const complexity = useComplexity(problemId, judge.judged);
+  const profiling = complexity.state.status === "running";
+  const busy = judge.busy !== null || profiling;
   const ready = !busy && language !== null && session.code !== null;
 
   // The debugger (ADR 0022): replay runs of one test; the editor is read-only meanwhile.
@@ -411,6 +419,9 @@ export function WorkspacePage() {
               })}
             </SelectContent>
           </Select>
+          {language === "typescript" && (
+            <ScriptModeToggle mode={scriptMode} onChange={setScriptMode} disabled={busy} />
+          )}
           <ShortcutButton
             label={t("workspace.run")}
             keys={KEYS.run}
@@ -536,7 +547,7 @@ export function WorkspacePage() {
                     <CodeEditor
                       docKey={session.docKey}
                       value={session.doc.text}
-                      lang={session.doc.lang}
+                      lang={editLang ?? session.doc.lang}
                       keymap={keymap}
                       fontSize={fontSize}
                       ligatures={ligatures}
@@ -587,6 +598,11 @@ export function WorkspacePage() {
                   error={judge.error}
                   celebrate={celebrate}
                   practice={judge.lastKind === "submit" ? judge.practice : null}
+                  complexity={
+                    p.profile && judge.report?.verdict === "accepted" && judge.judged ? (
+                      <ComplexityPanel state={complexity.state} onMeasure={() => void complexity.measure()} disabled={busy} />
+                    ) : null
+                  }
                   debugPanel={canDebug || dbg.view ? <DebugPanel dbg={dbg} /> : null}
                 />
                 </DebugCaseContext.Provider>

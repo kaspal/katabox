@@ -5,6 +5,8 @@ difficulty = "easy"
 tags = ["math", "number-theory"]
 pattern = "math"
 rank = 2
+profile = true
+profile_sizes = [1000, 10000, 100000, 1000000, 10000000, 100000000]
 
 [signature]
 name = "largestTile"

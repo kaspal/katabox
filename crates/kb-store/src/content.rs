@@ -16,7 +16,7 @@ use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 3;
+pub const CONTENT_SCHEMA_VERSION: i64 = 4;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -64,7 +64,8 @@ pub struct PackProblem {
     pub tags: Vec<String>,
     pub pattern: String,
     pub rank: u8,
-    pub profile: bool,
+    /// The complexity profiler's data, for problems with `profile = true` (ADR 0024).
+    pub profile: Option<ProfileData>,
     /// `{"name": ..., "params": [{"name": ..., "type": ...}], "returns": ...}`.
     pub signature: Value,
     pub checker: String,
@@ -77,6 +78,16 @@ pub struct PackProblem {
     pub solutions: Vec<(Language, String)>,
     /// `validate.py`, when the problem has one (ADR 0016).
     pub validator: Option<String>,
+}
+
+/// The complexity profiler's data for one problem (ADR 0024).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProfileData {
+    /// One input per size, in increasing `n`.
+    pub inputs: Vec<(u32, Map<String, Value>)>,
+    /// The reference solution's median microseconds per call, one per input, on the
+    /// reference machine (factor 1.0), per language.
+    pub reference: Vec<(Language, Vec<u32>)>,
 }
 
 /// The texts of a problem in one UI language. A missing editorial or empty hint list
@@ -180,6 +191,8 @@ pub struct ProblemView {
     pub public_tests: Vec<PublicTest>,
     /// Custom test inputs are checked by the problem's `validate.py` (needs Python).
     pub has_validator: bool,
+    /// The complexity profiler can measure solutions of this problem (ADR 0024).
+    pub profile: bool,
     /// Each language's time limit at this machine's time scale. Filled by the app, which
     /// knows the languages and the calibration; empty as read from content.db.
     pub time_limits: Vec<LanguageLimit>,
@@ -365,6 +378,7 @@ impl ContentDb {
             memory_mb: p.try_get("memory_mb")?,
             public_tests,
             has_validator: p.try_get::<Option<String>, _>("validator")?.is_some(),
+            profile: p.try_get("profile")?,
             time_limits: Vec::new(),
             time_scale: 1.0,
         })
@@ -427,6 +441,54 @@ impl ContentDb {
         })
     }
 
+    /// The complexity profiler's inputs and reference times, or `None` when the problem
+    /// is not profiled (ADR 0024).
+    pub async fn profile_data(&self, id: &str) -> Result<Option<ProfileData>> {
+        let rows =
+            sqlx::query("SELECT n, input FROM profile_inputs WHERE problem_id = ? ORDER BY n")
+                .bind(id)
+                .fetch_all(&self.pool)
+                .await?;
+        if rows.is_empty() {
+            return Ok(None);
+        }
+        let inputs = rows
+            .iter()
+            .map(|r| {
+                let input = match blob::decompress_json(&r.try_get::<Vec<u8>, _>("input")?)? {
+                    Value::Object(m) => m,
+                    _ => return Err(StoreError::Corrupt(format!("{id}: profile input"))),
+                };
+                Ok((r.try_get::<u32, _>("n")?, input))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        let mut reference: Vec<(Language, Vec<u32>)> = Vec::new();
+        for r in sqlx::query(
+            "SELECT language, n, time_us FROM profile_reference WHERE problem_id = ?
+             ORDER BY language, n",
+        )
+        .bind(id)
+        .fetch_all(&self.pool)
+        .await?
+        {
+            let lang: String = r.try_get("language")?;
+            let Ok(lang) = Language::from_str(&lang) else {
+                continue; // a language this build does not know
+            };
+            let us: u32 = r.try_get("time_us")?;
+            match reference.last_mut() {
+                Some((l, times)) if *l == lang => times.push(us),
+                _ => reference.push((lang, vec![us])),
+            }
+        }
+        if reference.iter().any(|(_, t)| t.len() != inputs.len()) {
+            return Err(StoreError::Corrupt(format!(
+                "{id}: profile reference sizes"
+            )));
+        }
+        Ok(Some(ProfileData { inputs, reference }))
+    }
+
     pub async fn reference_solution(&self, id: &str, language: Language) -> Result<Option<String>> {
         Ok(sqlx::query_scalar(
             "SELECT code FROM reference_solutions WHERE problem_id = ? AND language = ?",
@@ -482,6 +544,20 @@ fn check_pack(problems: &[PackProblem]) -> Result<()> {
                 "{}: a language twice",
                 p.id
             )));
+        }
+        if let Some(profile) = &p.profile {
+            let ok = !profile.inputs.is_empty()
+                && profile.inputs.windows(2).all(|w| w[0].0 < w[1].0)
+                && profile
+                    .reference
+                    .iter()
+                    .all(|(_, t)| t.len() == profile.inputs.len());
+            if !ok {
+                return Err(StoreError::InvalidPack(format!(
+                    "{}: profile data needs increasing sizes and one time per size",
+                    p.id
+                )));
+            }
         }
         if p.tests
             .iter()
@@ -548,7 +624,7 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
     .bind(&p.checker)
     .bind(p.time_limit_ms)
     .bind(p.memory_mb)
-    .bind(p.profile)
+    .bind(p.profile.is_some())
     .bind(&p.validator)
     .execute(&mut *conn)
     .await?;
@@ -613,6 +689,33 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
         .bind(blob::compress_json(&t.expected)?)
         .execute(&mut *conn)
         .await?;
+    }
+
+    if let Some(profile) = &p.profile {
+        for (n, input) in &profile.inputs {
+            sqlx::query("INSERT INTO profile_inputs (problem_id, n, input) VALUES (?, ?, ?)")
+                .bind(&p.id)
+                .bind(n)
+                .bind(blob::compress_json(input)?)
+                .execute(&mut *conn)
+                .await?;
+        }
+        let mut reference: Vec<&(Language, Vec<u32>)> = profile.reference.iter().collect();
+        reference.sort_by_key(|(l, _)| l.id());
+        for (lang, times) in reference {
+            for ((n, _), us) in profile.inputs.iter().zip(times) {
+                sqlx::query(
+                    "INSERT INTO profile_reference (problem_id, language, n, time_us)
+                     VALUES (?, ?, ?, ?)",
+                )
+                .bind(&p.id)
+                .bind(lang.id())
+                .bind(n)
+                .bind(us)
+                .execute(&mut *conn)
+                .await?;
+            }
+        }
     }
 
     let mut solutions: Vec<&(Language, String)> = p.solutions.iter().collect();
@@ -727,7 +830,17 @@ pub(crate) mod tests {
             tags: vec!["sorting".into(), "array".into()],
             pattern: "sorting".into(),
             rank,
-            profile: false,
+            profile: (id == "gap-a").then(|| ProfileData {
+                inputs: vec![
+                    (10, json!({"nums": [1, 2]}).as_object().unwrap().clone()),
+                    (100, json!({"nums": [1, 2, 3]}).as_object().unwrap().clone()),
+                ],
+                // Packed in any order, read back by language id.
+                reference: vec![
+                    (Language::Rust, vec![5, 40]),
+                    (Language::Python, vec![50, 400]),
+                ],
+            }),
             validator: (id == "gap-a").then(|| {
                 "def validate(inp):
     return None
@@ -825,7 +938,14 @@ pub(crate) mod tests {
                 .await
                 .unwrap();
         assert_eq!(kinds, ["blob/blob"]);
-        assert_eq!(CONTENT_SCHEMA_VERSION, 3);
+        assert_eq!(CONTENT_SCHEMA_VERSION, 4);
+        // Profile data round-trips (ADR 0024); gap-b has none.
+        let mut want = packed.profile.clone().unwrap();
+        want.reference.sort_by_key(|(l, _)| l.id());
+        assert_eq!(db.profile_data("gap-a").await.unwrap(), Some(want));
+        assert!(db.get_problem("gap-a", UiLang::En).await.unwrap().profile);
+        assert_eq!(db.profile_data("gap-b").await.unwrap(), None);
+        assert!(!db.get_problem("gap-b", UiLang::En).await.unwrap().profile);
         // validate.py travels with the problem (ADR 0016); gap-b has none.
         assert_eq!(
             jd.validator.as_deref(),

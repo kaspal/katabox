@@ -16,6 +16,7 @@ pub mod debug;
 mod error;
 pub mod interview;
 pub mod practice;
+pub mod profile;
 mod root;
 pub mod transfer;
 pub mod uninstall;

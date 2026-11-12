@@ -4,6 +4,14 @@ import random
 
 def generate(seed, size):
     rng = random.Random(seed)
+    if isinstance(size, int):
+        # Profile (ADR 0024): n names sharing long beginnings.
+        names = set()
+        while len(names) < size:
+            names.add("".join(rng.choice("ab") for _ in range(8)) + "".join(rng.choice("abc") for _ in range(rng.randint(4, 12))))
+        names = sorted(names)
+        rng.shuffle(names)
+        return {"names": names}
     if size == "max":
         # 2·10⁴ names sharing long beginnings: comparing every pair of names reads
         # about 4·10⁸ pairs, several letters deep.
@@ -26,4 +34,10 @@ if __name__ == "__main__":
     import json
     import sys
 
-    print(json.dumps(generate(int(sys.argv[1]) if len(sys.argv) > 1 else 1, sys.argv[2] if len(sys.argv) > 2 else "small")))
+    args = sys.argv[1:]
+    if "--n" in args:
+        # Profile size (ADR 0024): python gen.py --n N [--seed S]
+        seed = int(args[args.index("--seed") + 1]) if "--seed" in args else 1
+        print(json.dumps(generate(seed, int(args[args.index("--n") + 1]))))
+    else:
+        print(json.dumps(generate(int(args[0]) if args else 1, args[1] if len(args) > 1 else "small")))

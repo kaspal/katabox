@@ -5,6 +5,8 @@ difficulty = "medium"
 tags = ["trie", "string"]
 pattern = "tries"
 rank = 6
+profile = true
+profile_sizes = [100, 300, 1000, 3000, 10000]
 
 [signature]
 name = "firstMatches"

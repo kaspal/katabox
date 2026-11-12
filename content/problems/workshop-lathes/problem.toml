@@ -5,6 +5,8 @@ difficulty = "medium"
 tags = ["array", "heap", "simulation"]
 pattern = "heap"
 rank = 7
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
 
 [signature]
 name = "finishTime"

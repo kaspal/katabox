@@ -12,6 +12,7 @@ use kb_app::practice::{
     DailyProblem, ListView, PatternProgress, ReviewItem, ReviewState, ReviewSummary,
     SolvedBreakdown,
 };
+use kb_app::profile::ProfileView;
 use kb_app::transfer::{ImportPreview, ImportResult, TransferCounts};
 use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
@@ -150,6 +151,21 @@ async fn submit(
     state
         .app()?
         .submit(&problem, language, &code, &opts, send)
+        .await
+}
+
+/// Measure the solution at growing sizes and estimate its complexity (ADR 0024).
+#[tauri::command]
+#[specta::specta]
+async fn profile_solution(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+    code: String,
+) -> Res<ProfileView> {
+    state
+        .app()?
+        .profile_solution(&problem, language, &code)
         .await
 }
 
@@ -690,6 +706,7 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         save_draft,
         run,
         submit,
+        profile_solution,
         list_submissions,
         get_submission,
         list_snapshots,

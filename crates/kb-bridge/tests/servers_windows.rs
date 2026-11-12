@@ -70,6 +70,7 @@ fn items(result: &Value) -> Vec<String> {
 
 /// Open `code` and ask for completion at (line, col) until the server answers with items
 /// (servers may need a few seconds to load their library), then wait for a diagnostic.
+/// Returns the error and warning messages of that diagnostics notification.
 async fn check(
     language: Language,
     code: &str,
@@ -79,11 +80,13 @@ async fn check(
     expect_diag: &str,
     // Lines (by a fragment) that may have diagnostics; any other line must have none.
     broken_lines: &[&str],
-) {
+) -> Vec<String> {
+    static RUN: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
     let data = root().join("..").join(format!(
-        "kb-bridge-real-{}-{}",
+        "kb-bridge-real-{}-{}-{}",
         language.id(),
-        std::process::id()
+        std::process::id(),
+        RUN.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
     ));
     let _ = std::fs::remove_dir_all(&data);
     let m = LspManager::new(root(), &data);
@@ -202,6 +205,7 @@ server said: {logs:#?}"
     }
     // Correct code gets no errors or warnings (hints such as "never read" are fine): only
     // the deliberately broken lines do.
+    let mut found = Vec::new();
     for d in diag.as_ref().unwrap()["params"]["diagnostics"]
         .as_array()
         .unwrap()
@@ -209,6 +213,7 @@ server said: {logs:#?}"
         if d["severity"].as_u64().unwrap_or(1) > 2 {
             continue;
         }
+        found.push(d["message"].as_str().unwrap_or_default().to_string());
         let line = d["range"]["start"]["line"].as_u64().unwrap() as usize;
         let text = code.lines().nth(line).unwrap_or_default();
         assert!(
@@ -227,6 +232,7 @@ server said: {logs:#?}"
     assert!(ev.statuses().contains(&LspStatus::Ready));
     m.shutdown().await;
     assert_eq!(ev.statuses().last(), Some(&LspStatus::Stopped));
+    found
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -257,6 +263,45 @@ async fn typescript_language_server_completes_and_diagnoses() {
         &["seen.se", "undefinedName"],
     )
     .await;
+}
+
+/// The editor's JS mode (ADR 0024): plain JavaScript is checked without implicit-any
+/// noise, while the same code as TypeScript gets it (strict). Real errors still show.
+#[tokio::test(flavor = "multi_thread")]
+async fn javascript_mode_is_checked_without_implicit_any() {
+    let code = "export function twoSum(nums, target) {
+  const seen = new Map();
+  seen.se
+  return undefinedName;
+}
+";
+    // JS: only the deliberately broken lines (check() fails on any other diagnostic).
+    check(
+        Language::JavaScript,
+        code,
+        2,
+        9,
+        "set",
+        "undefinedName",
+        &["seen.se", "undefinedName"],
+    )
+    .await;
+    let strict = check(
+        Language::TypeScript,
+        code,
+        2,
+        9,
+        "set",
+        "undefinedName",
+        &["seen.se", "undefinedName", "twoSum(nums, target)"],
+    )
+    .await;
+    assert!(
+        strict
+            .iter()
+            .any(|m| m.contains("implicitly has an 'any' type")),
+        "{strict:?}"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]

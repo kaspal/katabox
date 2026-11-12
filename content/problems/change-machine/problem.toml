@@ -5,6 +5,8 @@ difficulty = "medium"
 tags = ["array", "dynamic-programming"]
 pattern = "dynamic-programming"
 rank = 8
+profile = true
+profile_sizes = [11, 21, 31, 41, 1001, 5001, 19999]
 
 [signature]
 name = "fewestCoins"

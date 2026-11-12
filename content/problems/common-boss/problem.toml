@@ -5,6 +5,8 @@ difficulty = "hard"
 tags = ["tree", "binary-lifting", "bfs"]
 pattern = "trees"
 rank = 9
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 50000]
 
 [signature]
 name = "commonBoss"

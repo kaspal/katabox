@@ -52,6 +52,10 @@
   --heat-3: #5570d8;
   --heat-4: #3651c9;
 
+  /* Complexity chart (ADR 0024): your line and the reference line; dashes tell them apart too */
+  --chart-you: #3651c9;
+  --chart-ref: #9a4b00;
+
   /* Code syntax (editor and highlighted blocks; styles/syntax.css) */
   --syntax-keyword: #6f42c1;
   --syntax-string: #116329;
@@ -110,6 +114,9 @@
   --heat-2: #3f58a8;
   --heat-3: #6580e0;
   --heat-4: #a3b8ff;
+
+  --chart-you: #8aa4ff;
+  --chart-ref: #e3b341;
 
   --syntax-keyword: #c792ea;
   --syntax-string: #9ad18b;

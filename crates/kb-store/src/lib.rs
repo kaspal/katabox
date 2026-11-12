@@ -25,7 +25,8 @@ use std::path::Path;
 
 pub use content::{
     CONTENT_SCHEMA_VERSION, ContentDb, ContentMeta, JudgeData, PackMeta, PackProblem, PackText,
-    ProblemFilter, ProblemSummary, ProblemView, PublicTest, StatusFilter, UiLang, build,
+    ProblemFilter, ProblemSummary, ProblemView, ProfileData, PublicTest, StatusFilter, UiLang,
+    build,
 };
 pub use modes::{AcceptedSolution, SessionRow, SubmitFact};
 pub use practice::{ActivityRow, DailyPick, INSTALL_ID_SETTING, ListRow, ReviewRow};

@@ -5,6 +5,8 @@ difficulty = "hard"
 tags = ["graph", "union-find", "minimum-spanning-tree", "sorting"]
 pattern = "union-find"
 rank = 9
+profile = true
+profile_sizes = [100, 300, 1000, 3000, 10000, 20000]
 
 [signature]
 name = "cheapestNetwork"

@@ -90,11 +90,14 @@ pub fn prepare(
                 "reportMissingModuleSource": "none",
             }),
         )),
+        // Plain JavaScript (the editor's JS mode) is checked, but not strictly: no
+        // implicit-any noise on untyped parameters. TypeScript stays strict.
         Language::TypeScript | Language::JavaScript => Some((
             "tsconfig.json",
             json!({
                 "compilerOptions": {
-                    "strict": true,
+                    "strict": language == Language::TypeScript,
+                    "checkJs": language == Language::JavaScript,
                     "target": "es2024",
                     "lib": ["es2024"],
                     "module": "esnext",
@@ -208,6 +211,16 @@ mod tests {
         )
         .unwrap();
         assert_eq!(ts["compilerOptions"]["erasableSyntaxOnly"], true);
+        assert_eq!(ts["compilerOptions"]["strict"], true);
+        // JavaScript mode: checked, not strict (ADR 0024).
+        let p = prepare(&root, "two-sum", Language::JavaScript, "code", &tc).unwrap();
+        assert_eq!(p.file.file_name().unwrap(), "solution.js");
+        let js: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(p.dir.join("tsconfig.json")).unwrap())
+                .unwrap();
+        assert_eq!(js["compilerOptions"]["strict"], false);
+        assert_eq!(js["compilerOptions"]["checkJs"], true);
+        assert_eq!(js["files"][0], "solution.js");
         let rs: serde_json::Value = serde_json::from_str(
             &std::fs::read_to_string(root.join("two-sum/rust/rust-project.json")).unwrap(),
         )

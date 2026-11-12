@@ -5,6 +5,8 @@ difficulty = "easy"
 tags = ["trie", "string", "counting"]
 pattern = "tries"
 rank = 2
+profile = true
+profile_sizes = [100, 300, 1000, 3000, 10000]
 
 [signature]
 name = "prefixCounts"

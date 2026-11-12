@@ -226,6 +226,12 @@
         "submit": "Enviar",
         "restore": "Antes de restaurar"
       }
+    },
+    "script": {
+      "label": "Revisar el código como",
+      "hint": "JS revisa JavaScript sin tipos (no hacen falta anotaciones); TS revisa TypeScript estricto. Ejecutar y Enviar funcionan igual en ambos casos.",
+      "js": "Revisión de JavaScript",
+      "ts": "Revisión de TypeScript"
     }
   },
   "progress": {
@@ -353,7 +359,8 @@
     "not_enough_problems": "Hay menos de dos problemas sin resolver que nunca hayas abierto.",
     "import_invalid": "Este archivo no es una exportación válida de KataBox.",
     "debug_unsupported": "Este lenguaje todavía no se puede depurar. La depuración está disponible para Python.",
-    "debug_diverged": "Este programa se comporta distinto en cada ejecución (hora, azar o identidad de objetos), así que no se puede reproducir paso a paso."
+    "debug_diverged": "Este programa se comporta distinto en cada ejecución (hora, azar o identidad de objetos), así que no se puede reproducir paso a paso.",
+    "profile_unavailable": "Este problema no tiene perfil de complejidad."
   },
   "judge": {
     "verdict": {
@@ -713,5 +720,41 @@
     "console": "Consola de depuración",
     "evaluate": "Evaluar en el marco seleccionado",
     "consoleHelp": "Cada paso vuelve a reproducir la prueba, así que lo que evalúes aquí nunca cambia el programa."
+  },
+  "complexity": {
+    "button": "Complejidad",
+    "buttonHint": "Mide cómo crece el tiempo de tu solución con el tamaño de la entrada",
+    "measuring": "Midiendo con tamaños crecientes… (unos 15 segundos como mucho)",
+    "again": "Medir de nuevo",
+    "title": "Complejidad estimada",
+    "estimated": "Estimada: {{class}}",
+    "estimatedOr": "Estimada: {{class}} o {{other}}",
+    "reference": "Solución de referencia: aproximadamente {{class}}",
+    "confidence": {
+      "high": "La curva encaja con claridad.",
+      "medium": "La curva encaja razonablemente bien.",
+      "low": "Varias curvas encajan casi igual; tómala con cautela."
+    },
+    "noisy": "La mayoría de los tiempos están por debajo de un milisegundo, donde domina el ruido.",
+    "notEnough": "No se ejecutaron a tiempo suficientes tamaños para estimar una clase (hacen falta al menos 3).",
+    "explanation": "Tu solución se ejecutó con entradas de tamaño n creciente, 3 veces cada una (cuenta la mediana), y se ajustaron a los tiempos las curvas de crecimiento más comunes. Los tiempos varían entre ejecuciones y equipos, así que es una estimación, no una demostración.",
+    "stopped": {
+      "budget": "Se detuvo antes de n = {{n}}: no habría terminado dentro del tiempo disponible.",
+      "time_limit": "Se detuvo en n = {{n}}: se quedó sin tiempo.",
+      "failed": "Se detuvo en n = {{n}}: {{verdict}}. Corrígelo primero; de ese tamaño no se tomó ningún tiempo.",
+      "compile": "La solución no compiló."
+    },
+    "chartLabel": "Gráfica log-log del tiempo frente al tamaño de la entrada. {{summary}}",
+    "legendYou": "Tu solución",
+    "legendRef": "Referencia",
+    "axisN": "tamaño de la entrada n",
+    "axisTime": "tiempo por llamada",
+    "table": {
+      "caption": "Tiempos medidos (mediana de 3 ejecuciones, milisegundos)",
+      "n": "n",
+      "you": "Tuyos",
+      "ref": "Referencia",
+      "notRun": "no ejecutado"
+    }
   }
 }

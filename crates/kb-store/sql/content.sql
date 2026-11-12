@@ -16,6 +16,7 @@ CREATE TABLE problems (
     checker       TEXT NOT NULL,
     time_limit_ms INTEGER NOT NULL,
     memory_mb     INTEGER NOT NULL,
+    -- 1 when the complexity profiler has data for it (profile_inputs; ADR 0024)
     profile       INTEGER NOT NULL DEFAULT 0,
     -- validate.py (constraint checks for custom tests, run in the sandbox; ADR 0016)
     validator     TEXT
@@ -61,6 +62,24 @@ CREATE TABLE reference_solutions (
     language   TEXT NOT NULL,
     code       TEXT NOT NULL,
     PRIMARY KEY (problem_id, language)
+) WITHOUT ROWID;
+
+-- The complexity profiler's inputs, one per size n (ADR 0024); JSON compressed with zstd.
+CREATE TABLE profile_inputs (
+    problem_id TEXT NOT NULL REFERENCES problems (id),
+    n          INTEGER NOT NULL,
+    input      BLOB NOT NULL,
+    PRIMARY KEY (problem_id, n)
+) WITHOUT ROWID;
+
+-- The reference solution's median time per call at each size, in microseconds on the
+-- reference machine (machine factor 1.0; ADR 0017, 0024).
+CREATE TABLE profile_reference (
+    problem_id TEXT NOT NULL REFERENCES problems (id),
+    language   TEXT NOT NULL,
+    n          INTEGER NOT NULL,
+    time_us    INTEGER NOT NULL,
+    PRIMARY KEY (problem_id, language, n)
 ) WITHOUT ROWID;
 
 -- Full-text search over both languages; one row per problem per language.

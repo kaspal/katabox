@@ -39,6 +39,8 @@
   --color-heat-2: var(--heat-2);
   --color-heat-3: var(--heat-3);
   --color-heat-4: var(--heat-4);
+  --color-chart-you: var(--chart-you);
+  --color-chart-ref: var(--chart-ref);
   --color-verdict-wrong: var(--verdict-wrong);
   --color-verdict-error: var(--verdict-error);
   --color-verdict-limit: var(--verdict-limit);

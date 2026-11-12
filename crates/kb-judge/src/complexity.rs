@@ -2,8 +2,12 @@
 //!
 //! For each class `f` the model is `t = c + a·f(n)` with `a, c ≥ 0`: `c` absorbs a fixed
 //! per-call overhead, `a` the cost per unit of work. The fit is least squares on
-//! **relative** errors (weights 1/t²), so a 50 µs point counts as much as a 5 s one. The
-//! class with the smallest error wins; ties go to the simpler class. `f` is evaluated
+//! **relative** errors (weights 1/t²), so a 50 µs point counts as much as a 5 s one.
+//! Occam's razor picks the class: the **simplest** class whose error is within
+//! [`PARSIMONY`] times the best error wins, so a more complex class has to fit clearly
+//! better (caches and allocation make large inputs a little slower per element, which
+//! otherwise reads as an extra log factor); the best-fitting class is then shown as the
+//! alternative. `f` is evaluated
 //! relative to the largest size (`f(n) / f(n_max)`, in the log domain for 2ⁿ), so huge
 //! values never overflow and `a` keeps a sane scale.
 
@@ -13,6 +17,10 @@ use kb_core::profile::{ComplexityClass, Estimate};
 pub const MIN_POINTS: usize = 3;
 /// The runner-up is shown too when its error is within this factor of the best one.
 pub const CLOSE_RATIO: f64 = 1.5;
+/// A simpler class wins while its error is within this factor of the best one. Tuned on
+/// the calibration set (ADR 0024: 2.5-3.0 give the same hits; 1.0 confuses O(n) with
+/// O(n log n), 4.0 starts calling O(n²) O(n log n)).
+pub const PARSIMONY: f64 = 2.5;
 /// Points faster than this are dominated by noise.
 pub const NOISY_US: f64 = 1000.0;
 
@@ -83,25 +91,35 @@ pub fn estimate(points: &[(u32, u32)]) -> Option<Estimate> {
     if pts.len() < MIN_POINTS {
         return None;
     }
-    let mut ranked: Vec<(ComplexityClass, f64)> = ComplexityClass::ALL
+    let errors: Vec<(ComplexityClass, f64)> = ComplexityClass::ALL
         .iter()
         .map(|&c| (c, class_error(c, &pts)))
         .collect();
+    let mut ranked = errors.clone();
     // Stable sort: equal errors keep the simpler class first.
     ranked.sort_by(|a, b| a.1.total_cmp(&b.1));
     let (best, e1) = ranked[0];
     let (second, e2) = ranked[1];
+    // The simplest class that fits almost as well as the best (ALL is simplest first).
+    let chosen = errors
+        .iter()
+        .find(|(_, e)| *e <= e1 * PARSIMONY + 1e-12)
+        .map_or(best, |(c, _)| *c);
     let confidence = if e2 <= 0.0 || !e2.is_finite() {
         if e2.is_finite() { 0.0 } else { 1.0 }
     } else {
         (1.0 - e1 / e2).clamp(0.0, 1.0)
     };
-    let close = e2.is_finite() && e2 <= e1 * CLOSE_RATIO + 1e-12;
+    let close_alternative = if chosen != best {
+        Some(best)
+    } else {
+        (e2.is_finite() && e2 <= e1 * CLOSE_RATIO + 1e-12).then_some(second)
+    };
     let noisy = pts.iter().filter(|p| p.1 < NOISY_US).count() * 2 > pts.len();
     Some(Estimate {
-        class: best,
+        class: chosen,
         confidence,
-        close_alternative: close.then_some(second),
+        close_alternative,
         noisy,
     })
 }
@@ -167,6 +185,24 @@ mod tests {
         assert_eq!(e.class, Exponential, "{e:?}");
         let e = estimate(&timings(&sizes, |n| 3.0 * n * n, 20.0, 0.05)).unwrap();
         assert_ne!(e.class, Exponential, "{e:?}");
+    }
+
+    #[test]
+    fn prefers_the_simpler_class_unless_the_complex_one_fits_clearly_better() {
+        // Linear work that gets slower per element at large n (caches): a little
+        // super-linear. Still O(n), with O(n log n) shown as the alternative.
+        let e = estimate(&timings(
+            &SIZES,
+            |n| 0.05 * n * (1.0 + n / 400_000.0),
+            20.0,
+            0.0,
+        ))
+        .unwrap();
+        assert_eq!(e.class, Linear, "{e:?}");
+        assert_eq!(e.close_alternative, Some(Linearithmic), "{e:?}");
+        // A real n log n is not argued away.
+        let e = estimate(&timings(&SIZES, |n| 0.02 * n * n.ln(), 20.0, 0.03)).unwrap();
+        assert_eq!(e.class, Linearithmic, "{e:?}");
     }
 
     #[test]

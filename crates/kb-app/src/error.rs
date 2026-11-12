@@ -70,6 +70,8 @@ pub enum AppErrorCode {
     DebugUnsupported,
     /// The program behaves differently on each run, so it cannot be replayed (ADR 0022).
     DebugDiverged,
+    /// This problem has no complexity profile (ADR 0024).
+    ProfileUnavailable,
     /// Anything else, including the app failing to start.
     Internal,
 }

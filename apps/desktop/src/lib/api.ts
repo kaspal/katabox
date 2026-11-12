@@ -11,6 +11,7 @@ import {
   type DebugInspect,
   type DebugStart,
   type DebugView,
+  type ProfileView,
   type EvalResult,
   type ActivityRow,
   type ReviewSummary,
@@ -111,6 +112,9 @@ export const api = {
     opts: SubmitOptions,
     onEvent: (e: JudgeEvent) => void,
   ): Promise<SubmitResult> => call(commands.submit(problem, language, code, opts, progress(onEvent))),
+  /** Measure the solution at growing sizes and estimate its complexity (ADR 0024). */
+  profileSolution: (problem: string, language: Language, code: string): Promise<ProfileView> =>
+    call(commands.profileSolution(problem, language, code)),
   listSubmissions: (problem: string): Promise<SubmissionSummary[]> =>
     call(commands.listSubmissions(problem)),
   getSubmission: (id: number): Promise<SubmissionView> => call(commands.getSubmission(id)),

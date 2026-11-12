@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { EditorView } from "@codemirror/view";
+import { language as cmLanguage } from "@codemirror/language";
 import type { LspStatus } from "@/bindings";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { sanitizeHTML } from "@/workspace/editor/lsp/sanitize";
@@ -58,6 +59,40 @@ async function editor() {
 
 describe("Workspace with a language server", () => {
   useFakeApi();
+
+  it("edits TypeScript as plain JavaScript when asked, remembered per problem; the judge stays TypeScript", async () => {
+    const fake = setFakeApi({ lastLanguage: "typescript" });
+    const { user } = renderApp("/problems/two-sum");
+    const v = await editor();
+    await waitFor(() => expect(v.state.facet(cmLanguage)?.name).toBe("typescript"));
+    await waitFor(() => expect(fake.api.lspConnect).toHaveBeenLastCalledWith("two-sum", "typescript", expect.any(String), expect.any(Function)));
+    expect(screen.getByRole("radio", { name: "TypeScript checking" })).toHaveAttribute("data-state", "on");
+
+    await user.click(screen.getByRole("radio", { name: "JavaScript checking" }));
+    await waitFor(() => expect(v.state.facet(cmLanguage)?.name).toBe("javascript"));
+    await waitFor(() => expect(fake.api.lspConnect).toHaveBeenLastCalledWith("two-sum", "javascript", expect.any(String), expect.any(Function)));
+    expect(fake.api.setSetting).toHaveBeenCalledWith("editor.script.two-sum", "js");
+
+    await user.click(screen.getByRole("button", { name: "Run" }));
+    await waitFor(() => expect(fake.api.run).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(fake.api.run).mock.calls[0][1]).toBe("typescript");
+  });
+
+  it("opens in the remembered JavaScript mode, and offers the toggle only for TypeScript", async () => {
+    const fake = setFakeApi({ lastLanguage: "typescript", settings: { "editor.script.two-sum": "js" } });
+    renderApp("/problems/two-sum");
+    const v = await editor();
+    await waitFor(() => expect(v.state.facet(cmLanguage)?.name).toBe("javascript"));
+    expect(screen.getByRole("radio", { name: "JavaScript checking" })).toHaveAttribute("data-state", "on");
+    expect(fake.api.lspConnect).not.toHaveBeenCalledWith("two-sum", "typescript", expect.any(String), expect.any(Function));
+  });
+
+  it("has no JS / TS toggle for other languages", async () => {
+    setFakeApi({ lastLanguage: "python" });
+    renderApp("/problems/two-sum");
+    await editor();
+    expect(screen.queryByTestId("script-mode")).toBeNull();
+  });
 
   it("connects, initializes through the bridge and shows diagnostics", async () => {
     const fake = setFakeApi({ lastLanguage: "python" });
