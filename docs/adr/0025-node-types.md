@@ -1,6 +1,6 @@
 # 25. Linked-list and binary-tree types (ListNode, TreeNode)
 
-Date: 2026-11-12 · Status: proposed
+Date: 2026-11-12 · Status: accepted
 
 ## Context
 - **The plan's type vocabulary** includes `ListNode` and `TreeNode`. The judge supported
@@ -95,6 +95,14 @@ Date: 2026-11-12 · Status: proposed
 - **Its children,** in a fixed order: `val`, `next` (or `val`, `left`, `right`). Each
   expands lazily through the existing paths.
 - **No change** to the kb-core types or the UI panels.
+
+### Language servers
+- **Python:** basedpyright's standard mode reports attribute access on `ListNode | None`
+  (`head.next.next`) as an error, even in correct solutions. The Python project's
+  `pyrightconfig.json` therefore sets `"reportOptionalMemberAccess": "warning"`
+  (maintainer-approved; recorded in ADR 0014's notes). Real errors stay errors.
+- **TypeScript:** strict mode reports the same pattern. The editor's JS mode (ADR 0024)
+  is the lenient option there.
 
 ### UI
 - **Custom inputs** accept lists and canonical trees (`matchesType`).
