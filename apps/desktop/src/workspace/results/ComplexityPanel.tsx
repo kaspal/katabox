@@ -35,15 +35,15 @@ function confidenceText(t: TFunction, e: Estimate): string {
   return e.confidence >= 0.6 ? t("complexity.confidence.high") : t("complexity.confidence.medium");
 }
 
-function stopText(t: TFunction, stop: ProfileStop): string {
+function stopText(t: TFunction, stop: ProfileStop, lang: string): string {
   switch (stop.reason) {
     case "budget":
-      return t("complexity.stopped.budget", { n: stop.n.toLocaleString() });
+      return t("complexity.stopped.budget", { n: stop.n.toLocaleString(lang) });
     case "time_limit":
-      return t("complexity.stopped.time_limit", { n: stop.n.toLocaleString() });
+      return t("complexity.stopped.time_limit", { n: stop.n.toLocaleString(lang) });
     case "failed":
       return t("complexity.stopped.failed", {
-        n: stop.n.toLocaleString(),
+        n: stop.n.toLocaleString(lang),
         verdict: t(`judge.verdict.${stop.verdict}`),
       });
     case "compile":
@@ -198,7 +198,7 @@ function Legend() {
 
 /** The finished profile: label, chart, explanation and measurements. */
 export function ComplexityResult({ view }: { view: ProfileView }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const label = view.estimate ? estimateLabel(t, view.estimate) : t("complexity.notEnough");
   const refLabel = view.reference_estimate
     ? t("complexity.reference", { class: notation(view.reference_estimate.class) })
@@ -223,7 +223,7 @@ export function ComplexityResult({ view }: { view: ProfileView }) {
       )}
       {view.stopped && (
         <p className="text-sm text-muted-foreground" data-testid="complexity-stopped">
-          {stopText(t, view.stopped)}
+          {stopText(t, view.stopped, i18n.language)}
         </p>
       )}
       {view.stopped?.reason === "compile" && view.stopped.output && (
@@ -253,7 +253,7 @@ export function ComplexityResult({ view }: { view: ProfileView }) {
             const ref = refAt.get(n);
             return (
               <tr key={n} className="border-t">
-                <th scope="row" className="py-1 pr-3 text-left font-normal tabular-nums">{n.toLocaleString()}</th>
+                <th scope="row" className="py-1 pr-3 text-left font-normal tabular-nums">{n.toLocaleString(i18n.language)}</th>
                 <td className="py-1 pr-3 text-right tabular-nums">
                   {you === undefined ? <span className="text-muted-foreground">{t("complexity.table.notRun")}</span> : msText(you)}
                 </td>

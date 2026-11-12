@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import i18n from "i18next";
 import type { ProfileView } from "@/bindings";
 import { linearProfile, makeReport } from "@/test/fakeApi";
@@ -69,6 +69,9 @@ describe("ComplexityResult", () => {
       expect(screen.getByTestId("complexity-label")).toHaveTextContent("Estimada: O(n)");
       expect(screen.getByText(/donde domina el ruido/)).toBeInTheDocument();
       expect(screen.getByText("Tu solución")).toBeInTheDocument();
+      cleanup();
+      render(<ComplexityResult view={quadratic()} />);
+      expect(screen.getByTestId("complexity-stopped")).toHaveTextContent("Se detuvo antes de n = 10.000");
     } finally {
       await act(() => i18n.changeLanguage("en"));
     }
