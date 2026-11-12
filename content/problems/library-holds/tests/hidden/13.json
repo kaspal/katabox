@@ -1,0 +1,1 @@
+{"input":{"args":[[1,2],[1,2],[1,2],[1,2],[1,1],[1,1],[1,2],[1]],"ops":["cancel","hold","cancel","hold","hold","cancel","cancel","return"]},"output":[-1]}

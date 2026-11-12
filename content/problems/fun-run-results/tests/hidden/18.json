@@ -1,0 +1,1 @@
+{"input":{"names":["t","b","ab","bt","ta","aa","tt"],"times":[46,39,42,44,39,39,25]},"output":["tt","aa","b","ta","ab","bt","t"]}

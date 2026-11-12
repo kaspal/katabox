@@ -1,0 +1,17 @@
+id = "seed-rows"
+title = "Seed Rows"
+title_es = "Hileras de semillas"
+difficulty = "medium"
+tags = ["dynamic-programming", "counting"]
+pattern = "dynamic-programming"
+rank = 7
+
+[signature]
+name = "plantings"
+params = [{ name = "length", type = "int" }, { name = "widths", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

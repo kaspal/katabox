@@ -1,0 +1,17 @@
+id = "toll-grid"
+title = "Toll Grid"
+title_es = "Cuadrícula de peajes"
+difficulty = "hard"
+tags = ["graph", "shortest-path", "heap", "matrix"]
+pattern = "graphs"
+rank = 10
+
+[signature]
+name = "cheapestCrossing"
+params = [{ name = "tolls", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,17 @@
+id = "common-boss"
+title = "Common Boss"
+title_es = "Jefe en común"
+difficulty = "hard"
+tags = ["tree", "binary-lifting", "bfs"]
+pattern = "trees"
+rank = 9
+
+[signature]
+name = "commonBoss"
+params = [{ name = "boss", type = "int[]" }, { name = "pairs", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

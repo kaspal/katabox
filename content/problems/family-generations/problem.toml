@@ -1,0 +1,17 @@
+id = "family-generations"
+title = "Family Generations"
+title_es = "Generaciones de la familia"
+difficulty = "easy"
+tags = ["tree", "bfs"]
+pattern = "trees"
+rank = 3
+
+[signature]
+name = "generations"
+params = [{ name = "parent", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,1 @@
+{"input": {"titles": ["ab", "abc", "b"], "typed": ["abc", "ab", "a"]}, "output": [1, 2, 2]}

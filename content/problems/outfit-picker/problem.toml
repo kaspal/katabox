@@ -1,0 +1,17 @@
+id = "outfit-picker"
+title = "Outfit Picker"
+title_es = "Elige el conjunto"
+difficulty = "easy"
+tags = ["backtracking", "array"]
+pattern = "backtracking"
+rank = 4
+
+[signature]
+name = "outfits"
+params = [{ name = "prices", type = "int[][]" }, { name = "budget", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,1 @@
+{"input": {"names": ["zz", "z", "zzz"], "times": [7, 7, 7]}, "output": ["z", "zz", "zzz"]}

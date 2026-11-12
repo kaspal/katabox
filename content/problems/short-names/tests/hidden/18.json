@@ -1,0 +1,1 @@
+{"input":{"names":["baa","aab","aacab","ab","abaca","b"]},"output":["ba","aab","aac","ab","aba","b"]}

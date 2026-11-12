@@ -1,0 +1,1 @@
+{"input": {"titles": ["cat", "car", "cart", "carton", "dog"], "typed": ["ca", "car", "cart", "carto", "cartons", "d", "do", "dog", "dogs"]}, "output": [4, 3, 2, 1, 0, 1, 1, 1, 0]}
