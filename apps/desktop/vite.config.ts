@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { defineConfig } from "vite";
@@ -46,5 +47,11 @@ export default defineConfig(() => ({
     globals: false,
     setupFiles: ["./src/test/setup.ts"],
     css: false,
+    // Room for the slow lazy-route tests under load (async waits are capped at 10 s in
+    // setup.ts), and half the cores, so the suite does not starve itself on a busy
+    // machine.
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
+    maxWorkers: Math.max(1, Math.floor(os.availableParallelism() / 2)),
   },
 }));

@@ -10,10 +10,9 @@ import { EditorStatusBar } from "@/workspace/editor/lsp/EditorStatusBar";
 import { PHP_COMPLETION_LABELS } from "@/workspace/editor/phpCompletions";
 
 vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
-vi.setConfig({ testTimeout: 15_000 });
 
 async function editor() {
-  const host = await screen.findByTestId("code-editor", undefined, { timeout: 4000 });
+  const host = await screen.findByTestId("code-editor");
   await waitFor(() => expect(host.querySelector(".cm-editor")).not.toBeNull());
   return EditorView.findFromDOM(host.querySelector(".cm-editor") as HTMLElement)!;
 }
@@ -69,7 +68,7 @@ describe("Home: daily problem and reviews", () => {
   it("switches the Practice settings", async () => {
     const fake = setFakeApi();
     const { user } = renderApp("/settings");
-    const daily = await screen.findByLabelText("Daily problem on Home", undefined, { timeout: 4000 });
+    const daily = await screen.findByLabelText("Daily problem on Home");
     await user.click(within(daily).getByRole("radio", { name: "Off" }));
     expect(fake.api.setSetting).toHaveBeenCalledWith("practice.daily", false);
     const review = screen.getByLabelText("Review reminders on Home");
@@ -115,7 +114,7 @@ describe("Workspace: Next card and review mode", () => {
     const { user } = renderApp("/problems/valid-brackets");
     await editor();
     await user.click(screen.getByRole("button", { name: "Submit" }));
-    const next = await screen.findByTestId("next-card", undefined, { timeout: 4000 });
+    const next = await screen.findByTestId("next-card");
     expect(within(next).getByText("Longest Window")).toBeInTheDocument();
     expect(within(next).getByRole("link", { name: /Open/ })).toHaveAttribute("href", "/problems/longest-window");
     expect(screen.getByTestId("daily-solved")).toHaveTextContent("Solved today");
@@ -123,7 +122,7 @@ describe("Workspace: Next card and review mode", () => {
 
     // Opening the next problem starts with a clean results pane.
     await user.click(within(next).getByRole("link", { name: /Open/ }));
-    expect(await screen.findByRole("heading", { name: "Longest Window" }, { timeout: 4000 })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Longest Window" })).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByTestId("result-view")).toBeNull());
     expect(screen.queryByTestId("next-card")).toBeNull();
   });
@@ -134,7 +133,7 @@ describe("Workspace: Next card and review mode", () => {
     const { user } = renderApp("/problems/valid-brackets");
     await editor();
     await user.click(screen.getByRole("button", { name: "Submit" }));
-    expect(await screen.findByTestId("first-failure", undefined, { timeout: 4000 })).toBeInTheDocument();
+    expect(await screen.findByTestId("first-failure")).toBeInTheDocument();
     expect(screen.queryByTestId("next-card")).toBeNull();
   });
 
@@ -160,7 +159,7 @@ describe("Workspace: Next card and review mode", () => {
     expect(await screen.findByTestId("review-locked")).toHaveTextContent("Hidden until you pass this review.");
 
     await user.click(screen.getByRole("button", { name: "Submit" }));
-    expect(await screen.findByTestId("review-outcome", undefined, { timeout: 4000 })).toHaveTextContent(
+    expect(await screen.findByTestId("review-outcome")).toHaveTextContent(
       "Review passed. Next review on",
     );
     expect(fake.state.submitOptions[0].review).toBe(true);
@@ -174,7 +173,7 @@ describe("Workspace: Next card and review mode", () => {
     const { user } = renderApp("/problems/two-sum?review=true");
     await editor();
     await user.click(screen.getByRole("button", { name: "Submit" }));
-    expect(await screen.findByTestId("review-outcome", undefined, { timeout: 4000 })).toHaveTextContent(
+    expect(await screen.findByTestId("review-outcome")).toHaveTextContent(
       "the review restarts at 3 days",
     );
     await user.click(screen.getByRole("tab", { name: "Submissions" }));
@@ -270,7 +269,7 @@ describe("Polish", () => {
   it("the active problem tab keeps its name in narrow panes", async () => {
     setFakeApi({ lastLanguage: "python" });
     renderApp("/problems/two-sum");
-    const tabs = await screen.findByTestId("problem-tabs", undefined, { timeout: 4000 });
+    const tabs = await screen.findByTestId("problem-tabs");
     const active = within(tabs).getByRole("tab", { selected: true });
     const label = active.querySelector("[data-tab-label]")!;
     expect(label).toHaveTextContent("Description");

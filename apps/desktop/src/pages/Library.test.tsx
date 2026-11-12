@@ -70,7 +70,7 @@ describe("Library", () => {
     await user.keyboard("{End}");
     expect(grid).toHaveAttribute("aria-activedescendant", "problem-row-merge-meetings");
     await user.keyboard("{Home}{ArrowDown}{Enter}");
-    expect(await screen.findByRole("heading", { name: "Valid Brackets" }, { timeout: 4000 })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Valid Brackets" })).toBeInTheDocument();
     expect(await screen.findByTestId("workspace")).toBeInTheDocument();
   });
 

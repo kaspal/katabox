@@ -49,7 +49,7 @@ describe("Tag names", () => {
 
   it("shows names in the workspace", async () => {
     renderApp("/problems/two-sum");
-    await screen.findByRole("heading", { name: "Two Sum" }, { timeout: 8000 });
+    await screen.findByRole("heading", { name: "Two Sum" });
     await waitFor(() => expect(screen.getByText("Array, Hash map")).toBeInTheDocument());
   });
 

@@ -51,7 +51,7 @@ describe("EditorStatusBar", () => {
 });
 
 async function editor() {
-  const host = await screen.findByTestId("code-editor", undefined, { timeout: 4000 });
+  const host = await screen.findByTestId("code-editor");
   await waitFor(() => expect(host.querySelector(".cm-editor")).not.toBeNull());
   return EditorView.findFromDOM(host.querySelector(".cm-editor") as HTMLElement)!;
 }
@@ -63,12 +63,12 @@ describe("Workspace with a language server", () => {
     const fake = setFakeApi({ lastLanguage: "python" });
     renderApp("/problems/two-sum");
     await editor();
-    await waitFor(() => expect(screen.getByTestId("lsp-status")).toHaveAttribute("data-state", "ready"), { timeout: 4000 });
+    await waitFor(() => expect(screen.getByTestId("lsp-status")).toHaveAttribute("data-state", "ready"));
     expect(fake.api.lspConnect).toHaveBeenCalledWith("two-sum", "python", expect.any(String), expect.any(Function));
     const init = fake.state.lspSent.find((m) => m.method === "initialize");
     expect(init).toBeDefined();
     await waitFor(() => expect(fake.state.lspSent.some((m) => m.method === "textDocument/didOpen")).toBe(true));
-    await waitFor(() => expect(screen.getByTestId("problems-count")).toHaveTextContent("1 error"), { timeout: 4000 });
+    await waitFor(() => expect(screen.getByTestId("problems-count")).toHaveTextContent("1 error"));
     expect(screen.getByRole("button", { name: "Format" })).toBeEnabled();
   });
 
@@ -76,7 +76,7 @@ describe("Workspace with a language server", () => {
     const fake = setFakeApi({ lastLanguage: "python" });
     renderApp("/problems/two-sum");
     const v = await editor();
-    await waitFor(() => expect(screen.getByTestId("lsp-status")).toHaveAttribute("data-state", "ready"), { timeout: 4000 });
+    await waitFor(() => expect(screen.getByTestId("lsp-status")).toHaveAttribute("data-state", "ready"));
     expect(fake.api.lspConnect).toHaveBeenCalledTimes(1);
 
     // The bridge restarted the server after a crash: a new client initializes the new
@@ -101,7 +101,7 @@ describe("Workspace with a language server", () => {
     const fake = setFakeApi({ lastLanguage: "python" });
     const { unmount } = renderApp("/problems/two-sum");
     await editor();
-    await waitFor(() => expect(screen.getByTestId("lsp-status")).toHaveAttribute("data-state", "ready"), { timeout: 4000 });
+    await waitFor(() => expect(screen.getByTestId("lsp-status")).toHaveAttribute("data-state", "ready"));
     unmount();
     expect(fake.api.lspDisconnect).toHaveBeenCalledWith("python", 1);
   });
@@ -125,7 +125,7 @@ describe("Problem tabs and editor settings", () => {
 
   it("tabs have icons and accessible names; labels hide in narrow panes", async () => {
     renderApp("/problems/two-sum");
-    const tabs = await screen.findByTestId("problem-tabs", undefined, { timeout: 4000 });
+    const tabs = await screen.findByTestId("problem-tabs");
     for (const name of ["Description", "Hints", "Editorial", "Submissions", "Notes", "History"]) {
       const tab = within(tabs).getByRole("tab", { name });
       expect(tab.querySelector("svg")).not.toBeNull();

@@ -9,11 +9,10 @@ import { AUTOSAVE_MS } from "@/workspace/hooks";
 vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
 
 // The workspace route is the heaviest screen (CodeMirror, panes): give it room on a busy machine.
-vi.setConfig({ testTimeout: 15_000 });
 
 /** The CodeMirror view inside the main editor. */
 async function editor() {
-  const host = await screen.findByTestId("code-editor", undefined, { timeout: 4000 });
+  const host = await screen.findByTestId("code-editor");
   await waitFor(() => expect(host.querySelector(".cm-editor")).not.toBeNull());
   return EditorView.findFromDOM(host.querySelector(".cm-editor") as HTMLElement)!;
 }
@@ -28,7 +27,7 @@ function type(v: EditorView, insert: string) {
 
 async function openWorkspace(path = "/problems/two-sum") {
   const r = renderApp(path);
-  await screen.findByRole("heading", { name: "Two Sum" }, { timeout: 8000 });
+  await screen.findByRole("heading", { name: "Two Sum" });
   return r;
 }
 
@@ -76,16 +75,16 @@ describe("Workspace: editor and drafts", () => {
   it("offers to install a language that is not installed, then switches to it", async () => {
     const { user } = await openWorkspace();
     await user.click(screen.getByRole("combobox", { name: "Language" }));
-    const rust = await screen.findByRole("option", { name: /Rust/ }, { timeout: 4000 });
+    const rust = await screen.findByRole("option", { name: /Rust/ });
     expect(rust).not.toHaveAttribute("aria-disabled");
     expect(rust).toHaveTextContent("Not installed");
     await user.click(rust);
-    const dialog = await screen.findByRole("dialog", { name: "Install Rust" }, { timeout: 4000 });
+    const dialog = await screen.findByRole("dialog", { name: "Install Rust" });
     // Rust is preselected, with its sizes.
     expect(within(dialog).getByRole("checkbox", { name: "Rust" })).toBeChecked();
     expect(within(dialog).getByTestId("install-total")).toHaveTextContent("244 MB to download, 959 MB on disk");
     await user.click(within(dialog).getByRole("button", { name: "Install selected" }));
-    await user.click(await within(dialog).findByRole("button", { name: "Done" }, { timeout: 4000 }));
+    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await waitFor(() => expect(screen.getByRole("combobox", { name: "Language" })).toHaveTextContent("Rust"));
   });
