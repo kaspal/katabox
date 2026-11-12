@@ -58,6 +58,14 @@ pub enum AppErrorCode {
     UnsupportedPlatform,
     /// Measuring this machine's speed needs Python or JavaScript/TypeScript installed.
     CalibrationUnavailable,
+    /// Locked while a mock interview runs (hints, editorial, history, solutions).
+    LockedInInterview,
+    /// A mock interview is already running.
+    InterviewActive,
+    /// Fewer than two unsolved problems the user has never opened.
+    NotEnoughProblems,
+    /// The import file is not a valid KataBox export.
+    ImportInvalid,
     /// Anything else, including the app failing to start.
     Internal,
 }

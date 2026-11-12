@@ -16,7 +16,9 @@
 
 pub mod blob;
 pub mod content;
+pub mod modes;
 pub mod practice;
+pub mod transfer;
 pub mod user;
 
 use std::path::Path;
@@ -25,7 +27,9 @@ pub use content::{
     CONTENT_SCHEMA_VERSION, ContentDb, ContentMeta, JudgeData, PackMeta, PackProblem, PackText,
     ProblemFilter, ProblemSummary, ProblemView, PublicTest, StatusFilter, UiLang, build,
 };
+pub use modes::{AcceptedSolution, SessionRow, SubmitFact};
 pub use practice::{DailyPick, INSTALL_ID_SETTING, ListRow, ReviewRow};
+pub use transfer::ExportData;
 pub use user::{
     BACKUPS_KEPT, Draft, DraftRef, ProblemStatus, SNAPSHOT_CAP, Snapshot, SnapshotSource,
     StatusInfo, Submission, SubmissionSummary, UserDb,

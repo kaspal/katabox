@@ -16,6 +16,9 @@ import type {
   ProblemSummary,
   ProblemView,
   Report,
+  ImportPreview,
+  InterviewResult,
+  InterviewView,
   PracticeOutcome,
   Snapshot,
   SubmissionSummary,
@@ -186,6 +189,11 @@ export function createFakeApi(
     streak?: number;
     /** Personal lists: name and problem ids (ids not in PROBLEMS are unavailable). */
     lists?: { name: string; items: string[] }[];
+    /** Practice modes (ADR 0020). */
+    interview?: InterviewView | null;
+    interviews?: InterviewResult[];
+    /** Accepted solutions: `problem:language` → code. */
+    accepted?: Record<string, string>;
   } = {},
 ) {
   const installed = new Set<Language>(opts.installed ?? ["python", "typescript", "php"]);
@@ -236,6 +244,14 @@ export function createFakeApi(
     nextPractice: null as PracticeOutcome | null,
     /** The options of each Submit. */
     submitOptions: [] as { today: string; review: boolean; lang: UiLang }[],
+    interview: (opts.interview ?? null) as InterviewView | null,
+    interviews: [...(opts.interviews ?? [])] as InterviewResult[],
+    accepted: { ...(opts.accepted ?? {}) } as Record<string, string>,
+    /** What the next Export/Import dialogs return (null: cancelled). */
+    exportResult: null as Awaited<ReturnType<Api["exportProgress"]>>,
+    importPreview: null as ImportPreview | null,
+    importError: null as AppError | null,
+    opened: [] as string[],
   };
   let nextListId = state.lists.length + 1;
   const summary = (id: string, lang: UiLang): ProblemSummary | null => {
@@ -426,6 +442,78 @@ export function createFakeApi(
       return null;
     }),
     listsWith: vi.fn(async (p: string) => state.lists.filter((l) => l.items.includes(p)).map((l) => l.id)),
+    markOpened: vi.fn(async (p: string) => {
+      state.opened.push(p);
+      return null;
+    }),
+    startInterview: vi.fn(async (setup, lang: UiLang) => {
+      const now = Date.now();
+      state.interview = {
+        id: state.interviews.length + 1,
+        started_at: now,
+        ends_at: now + setup.duration_min * 60_000,
+        duration_s: setup.duration_min * 60,
+        remaining_s: setup.duration_min * 60,
+        mix: setup.mix,
+        languages: setup.languages,
+        problems: ["valid-brackets", "merge-meetings"].map((id) => summary(id, lang)!),
+      };
+      return state.interview;
+    }),
+    interviewActive: vi.fn(async () => state.interview),
+    endInterview: vi.fn(async () => {
+      const s = state.interview;
+      if (!s) throw { code: "not_found", message: "no mock interview is running" };
+      const r: InterviewResult = {
+        id: s.id,
+        started_at: s.started_at,
+        ended_at: s.started_at + 754_000,
+        duration_s: s.duration_s,
+        used_s: 754,
+        mix: s.mix,
+        languages: s.languages,
+        problems: [
+          { problem_id: s.problems[0].id, solved: true, time_to_solve_s: 412, submits: 1, first_try: true },
+          { problem_id: s.problems[1].id, solved: false, time_to_solve_s: null, submits: 3, first_try: false },
+        ],
+        solved: 1,
+        first_try: 1,
+        titles: s.problems.map((p) => [p.id, p.title] as [string, string]),
+      };
+      state.interview = null;
+      state.interviews.unshift(r);
+      return r;
+    }),
+    interviews: vi.fn(async () => state.interviews),
+    acceptedSolution: vi.fn(async (p: string, language: Language) => {
+      const code = state.accepted[`${p}:${language}`];
+      if (state.interview?.problems.some((x) => x.id === p)) {
+        throw { code: "locked_in_interview", message: "locked" };
+      }
+      return code === undefined ? null : { language, code, submitted_at: 1_767_225_600_000 };
+    }),
+    solvedLanguages: vi.fn(async (p: string) =>
+      (["python", "typescript", "php", "rust"] as Language[]).filter((l) => state.accepted[`${p}:${l}`] !== undefined),
+    ),
+    solvedByLanguage: vi.fn(async () =>
+      (["python", "typescript", "php", "rust"] as Language[]).map((language) => ({
+        language,
+        solved: Object.keys(state.accepted).filter((k) => k.endsWith(`:${language}`)).length,
+      })),
+    ),
+    exportProgress: vi.fn(async () => state.exportResult),
+    importPreview: vi.fn(async () => {
+      if (state.importError) throw state.importError;
+      return state.importPreview;
+    }),
+    importApply: vi.fn(async () => {
+      state.importPreview = null;
+      return { added: 12, updated: 2, unchanged: 5 };
+    }),
+    importCancel: vi.fn(async () => {
+      state.importPreview = null;
+      return null;
+    }),
     recalibrate: vi.fn(async (): Promise<CalibrationInfo> => {
       if (state.recalibrateError) throw state.recalibrateError;
       const factor = state.nextFactor;

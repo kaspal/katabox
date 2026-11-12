@@ -374,7 +374,7 @@ pub(crate) fn parse_day(today: &str) -> Result<Day> {
 
 impl App {
     /// Every problem with its status, titles in `lang`.
-    async fn all_problems(&self, lang: UiLang) -> Result<Vec<ProblemSummary>> {
+    pub(crate) async fn all_problems(&self, lang: UiLang) -> Result<Vec<ProblemSummary>> {
         Ok(self
             .store
             .list_problems(&ProblemFilter {

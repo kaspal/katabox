@@ -49,12 +49,18 @@ function TimeLimit({ problem, language }: { problem: ProblemView; language: Lang
   );
 }
 
-function LockedNote() {
+/** Tabs hidden in review mode (ADR 0019) or during a mock interview (ADR 0020). */
+export type PaneLocks = { tabs: ProblemTab[]; reason: "review" | "interview" };
+
+function LockedNote({ reason }: { reason: PaneLocks["reason"] }) {
   const { t } = useTranslation();
   return (
-    <p className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="review-locked">
+    <p
+      className="flex items-center gap-2 text-sm text-muted-foreground"
+      data-testid={reason === "review" ? "review-locked" : "interview-locked"}
+    >
       <Lock aria-hidden className="size-4" />
-      {t("practice.review.locked")}
+      {reason === "review" ? t("practice.review.locked") : t("practice.interview.locked")}
     </p>
   );
 }
@@ -64,16 +70,18 @@ export function ProblemPane({
   currentCode,
   currentLanguage,
   onRestored,
-  locked = false,
+  locks = null,
 }: {
   problem: ProblemView;
   currentCode: string | null;
   currentLanguage: Language | null;
   onRestored: (language: Language) => void;
-  /** Review mode (ADR 0019): earlier submissions and history stay hidden until it passes. */
-  locked?: boolean;
+  /** Tabs that show a "locked" note instead of their content. */
+  locks?: PaneLocks | null;
 }) {
   const { t } = useTranslation();
+  const locked = (tab: ProblemTab) => locks?.tabs.includes(tab) === true;
+  const note = locks ? <LockedNote reason={locks.reason} /> : null;
   const patternLabel = usePatternLabel();
   const tagLabel = useTagLabel();
   return (
@@ -116,20 +124,20 @@ export function ProblemPane({
           </dl>
         </TabsContent>
         <TabsContent value="hints">
-          <HintsTab problem={problem} />
+          {locked("hints") ? note : <HintsTab problem={problem} />}
         </TabsContent>
         <TabsContent value="editorial">
-          <EditorialTab problemId={problem.id} />
+          {locked("editorial") ? note : <EditorialTab problemId={problem.id} />}
         </TabsContent>
         <TabsContent value="submissions">
-          {locked ? <LockedNote /> : <SubmissionsTab problemId={problem.id} />}
+          {locked("submissions") ? note : <SubmissionsTab problemId={problem.id} />}
         </TabsContent>
         <TabsContent value="notes" className="h-full">
           <NotesTab problemId={problem.id} />
         </TabsContent>
         <TabsContent value="history">
-          {locked ? (
-            <LockedNote />
+          {locked("history") ? (
+            note
           ) : (
           <HistoryTab
             problemId={problem.id}

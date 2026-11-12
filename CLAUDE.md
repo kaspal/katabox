@@ -11,7 +11,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 | Path | What it is |
 | --- | --- |
 | `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI (ADR 0012: `app/` shell, router, palette; `pages/`; `workspace/` editor, problem and results panes (ADR 0013); `components/ui/` shadcn; `lib/api.ts` is the only door to the generated `bindings.ts`; `i18n/locales/`; `styles/tokens.css`; `smoke/` is a temporary dev-only screen), `src-tauri/` = thin Rust shell (commands and wiring only; ADR 0011) |
-| `crates/kb-app` | App service behind the Tauri commands: state, sandbox root, Run/Submit, typed `AppError` (ADR 0011); `practice.rs`: reviews, daily problem, streak, pattern map, next problem, lists (ADR 0019) |
+| `crates/kb-app` | App service behind the Tauri commands: state, sandbox root, Run/Submit, typed `AppError` (ADR 0011); `practice.rs`: reviews, daily problem, streak, pattern map, next problem, lists (ADR 0019); `interview.rs`, `transfer.rs` (ADR 0020) |
 | `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult, the judge Report). No I/O |
 | `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009); per-language time limits and the machine calibration benchmark (ADR 0017) |
 | `crates/kb-runner` | Sandboxed execution. **Security-critical** |
@@ -64,6 +64,7 @@ cargo run -p katabox-desktop --bin export-bindings  # regenerate apps/desktop/sr
 - Test data (ADR 0018): each problem's tests must stay within 512 KB compressed (`kb-pack validate` enforces it); keep max tests lean (small values, one max test when it suffices). Tests stay committed as JSON; the build never generates them.
 - Every tag in a problem.toml needs a display name in `tag.names` of both `en.json` and `es.json` (a kb-pack test checks it).
 - Practice features (ADR 0019): "today" is always the user's local date sent by the UI (`lib/today.ts`, `YYYY-MM-DD`); kb-app never guesses the time zone. Day values are stored as calendar dates (`kb_core::Day`). The rules live in `kb-app/src/practice.rs` (pure, unit tested), the queries in `kb-store/src/practice.rs`; review mode never reads or writes drafts.
+- Practice modes (ADR 0020): mock-interview locks are enforced in kb-app (`ensure_unlocked` on every locked command), never only in the UI; the interview timer is wall-clock (`started_at` + `duration_s`). The export format is versioned (`katabox-export/v1`); import validates strictly (size cap, exact format, `deny_unknown_fields`, value checks, settings allow-list), merges in one transaction keeping the newer record, and never executes anything. File dialogs are opened from Rust commands (`tauri-plugin-dialog`), so the webview has no dialog permission.
 - Problems must be original. Never copy statements or tests from LeetCode, HackerRank or similar sites.
 - Solutions use each language's standard library only.
 - Record significant decisions as a new ADR in `docs/adr/`.

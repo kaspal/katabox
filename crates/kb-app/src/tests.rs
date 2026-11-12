@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 3); // migrations 0001-0003
+    assert_eq!(info.user_schema_version, 4); // migrations 0001-0004
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -678,4 +678,553 @@ async fn lists_with_unavailable_problems_and_the_pattern_map() {
             .len()
     );
     app.close().await;
+}
+
+// --- Practice modes (ADR 0020) -------------------------------------------------------
+
+fn real_now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as i64
+}
+
+/// A mock interview: fresh problems, wall-clock timer (survives reopening), every locked
+/// command refused here for the session's problems, a scorecard at the end.
+#[tokio::test]
+async fn mock_interview_locks_resumes_and_scores() {
+    use crate::interview::InterviewSetup;
+    let p = paths("interview");
+    let app = App::open(&p).await.unwrap();
+    // Only two easy problems stay fresh (never opened).
+    let all = app.list_problems(&ProblemFilter::default()).await.unwrap();
+    for pr in &all {
+        if pr.id != "lonely-sock" && pr.id != "same-letters" {
+            app.mark_opened(&pr.id).await.unwrap();
+        }
+    }
+    // Submissions are stamped with the real time, so the session starts now.
+    let t0 = real_now_ms() - 1_000;
+    app.set_clock(Some(t0));
+    let setup = InterviewSetup {
+        duration_min: 30,
+        mix: "easy+easy".into(),
+        languages: vec![Language::Python, Language::Rust],
+    };
+    for bad in [
+        InterviewSetup {
+            duration_min: 25,
+            ..setup.clone()
+        },
+        InterviewSetup {
+            mix: "easy+impossible".into(),
+            ..setup.clone()
+        },
+        InterviewSetup {
+            languages: vec![],
+            ..setup.clone()
+        },
+    ] {
+        assert_eq!(
+            app.start_interview(&bad, UiLang::En)
+                .await
+                .unwrap_err()
+                .code,
+            AppErrorCode::InvalidInput
+        );
+    }
+    let v = app.start_interview(&setup, UiLang::En).await.unwrap();
+    let mut ids: Vec<String> = v.problems.iter().map(|p| p.id.clone()).collect();
+    ids.sort();
+    assert_eq!(ids, ["lonely-sock", "same-letters"]);
+    assert_eq!((v.remaining_s, v.ends_at), (1800, t0 + 1_800_000));
+    assert_eq!(
+        app.start_interview(&setup, UiLang::En)
+            .await
+            .unwrap_err()
+            .code,
+        AppErrorCode::InterviewActive
+    );
+
+    // Every locked command is refused for the session's problems.
+    let pid = "lonely-sock";
+    let locked = |e: AppError| assert_eq!(e.code, AppErrorCode::LockedInInterview, "{e}");
+    locked(app.editorial(pid, UiLang::En).await.unwrap_err());
+    locked(app.unlock_hint(pid, 1).await.unwrap_err());
+    locked(app.unlocked_hints(pid).await.unwrap_err());
+    locked(app.list_submissions(pid).await.unwrap_err());
+    locked(app.list_snapshots(pid).await.unwrap_err());
+    locked(
+        app.accepted_solution(pid, Language::Python)
+            .await
+            .unwrap_err(),
+    );
+    assert!(
+        app.get_problem(pid, UiLang::En)
+            .await
+            .unwrap()
+            .hints
+            .is_empty()
+    );
+    // By id too: a submission or snapshot of a session problem.
+    let wa = app
+        .store
+        .user
+        .record_submission(
+            pid,
+            Language::Python,
+            "x",
+            &report_with(Verdict::WrongAnswer),
+        )
+        .await
+        .unwrap();
+    locked(app.get_submission(wa).await.unwrap_err());
+    let snap = app.store.user.list_snapshots(pid).await.unwrap()[0].id;
+    locked(app.restore_snapshot(snap).await.unwrap_err());
+    app.store
+        .user
+        .record_submission(pid, Language::Python, "y", &report_with(Verdict::Accepted))
+        .await
+        .unwrap();
+    // Other problems and notes stay available.
+    app.editorial("two-sum", UiLang::En).await.unwrap();
+    app.set_note(pid, "scratch").await.unwrap();
+    assert!(
+        !app.get_problem("two-sum", UiLang::En)
+            .await
+            .unwrap()
+            .hints
+            .is_empty()
+    );
+
+    // Closing the app mid-session: the timer resumes from the wall clock.
+    app.close().await;
+    let app = App::open(&p).await.unwrap();
+    app.set_clock(Some(t0 + 600_000));
+    let v = app.interview_active(UiLang::En).await.unwrap().unwrap();
+    assert_eq!(v.remaining_s, 1200);
+    locked(app.editorial(pid, UiLang::En).await.unwrap_err());
+
+    // Time runs out: the next query ends it, and everything unlocks.
+    app.set_clock(Some(t0 + 1_800_000 + 1));
+    assert_eq!(app.interview_active(UiLang::En).await.unwrap(), None);
+    app.editorial(pid, UiLang::En).await.unwrap();
+    assert_eq!(app.list_submissions(pid).await.unwrap().len(), 2);
+    let history = app.interviews(UiLang::En).await.unwrap();
+    assert_eq!(history.len(), 1);
+    let r = &history[0];
+    assert_eq!(
+        (r.ended_at, r.used_s, r.solved, r.first_try),
+        (t0 + 1_800_000, 1800, 1, 0)
+    );
+    let lonely = r.problems.iter().find(|p| p.problem_id == pid).unwrap();
+    assert_eq!(
+        (lonely.solved, lonely.submits, lonely.first_try),
+        (true, 2, false)
+    );
+    assert_eq!(r.titles.len(), 2);
+
+    // lonely-sock now has submissions: only one fresh problem is left.
+    assert_eq!(
+        app.start_interview(&setup, UiLang::En)
+            .await
+            .unwrap_err()
+            .code,
+        AppErrorCode::NotEnoughProblems
+    );
+    app.close().await;
+}
+
+#[tokio::test]
+async fn ending_an_interview_early_scores_it_now() {
+    use crate::interview::InterviewSetup;
+    let app = app("interview-end").await;
+    let t0 = real_now_ms() - 1_000;
+    app.set_clock(Some(t0));
+    let setup = InterviewSetup {
+        duration_min: 45,
+        mix: "medium+hard".into(),
+        languages: vec![Language::TypeScript],
+    };
+    let v = app.start_interview(&setup, UiLang::Es).await.unwrap();
+    assert_eq!(v.problems.len(), 2);
+    // Only the session's languages may be judged on its problems.
+    let other = v.problems[0].id.clone();
+    let err = app
+        .run(&other, Language::Python, "x", vec![], |_| {})
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::InvalidInput);
+    app.set_clock(Some(t0 + 300_000));
+    let r = app.end_interview(UiLang::Es).await.unwrap();
+    assert_eq!((r.used_s, r.solved), (300, 0));
+    assert_eq!(app.interview_active(UiLang::Es).await.unwrap(), None);
+    assert_eq!(
+        app.end_interview(UiLang::Es).await.unwrap_err().code,
+        AppErrorCode::NotFound
+    );
+    app.close().await;
+}
+
+/// Cross-language practice: accepted solution per language, solved counts, and a new
+/// language never touches another language's draft, for all 12 ordered pairs.
+#[tokio::test]
+async fn cross_language_solutions_and_drafts() {
+    let app = app("cross").await;
+    let langs = kb_judge::languages::SUPPORTED;
+    for from in langs {
+        for to in langs {
+            if from == to {
+                continue;
+            }
+            let pid = "two-sum";
+            app.store
+                .user
+                .record_submission(
+                    pid,
+                    from,
+                    &format!("solution in {from}"),
+                    &report_with(Verdict::Accepted),
+                )
+                .await
+                .unwrap();
+            let draft = format!("my {to} draft");
+            app.save_draft(pid, to, &draft).await.unwrap();
+            let sol = app.accepted_solution(pid, from).await.unwrap().unwrap();
+            assert_eq!(sol.code, format!("solution in {from}"));
+            assert_eq!(sol.language, from);
+            // Opening the split view reads only: the target draft is untouched.
+            assert_eq!(app.load_draft(pid, to).await.unwrap().unwrap().code, draft);
+        }
+    }
+    let by = app.solved_by_language().await.unwrap();
+    assert_eq!(by.len(), 4);
+    assert!(by.iter().all(|c| c.solved == 1), "{by:?}");
+    assert_eq!(app.solved_languages("two-sum").await.unwrap().len(), 4);
+    assert_eq!(
+        app.accepted_solution("nested-brackets", Language::Rust)
+            .await
+            .unwrap(),
+        None
+    );
+    app.close().await;
+}
+
+/// Export → fresh data folder → import reproduces Progress and Home exactly.
+#[tokio::test]
+async fn export_import_round_trip_reproduces_progress_and_home() {
+    let today = "2026-11-14";
+    let a = app("export-a").await;
+    // Progress through the API and the store, as the app does.
+    for (pid, lang, v) in [
+        ("two-sum", Language::Python, Verdict::WrongAnswer),
+        ("two-sum", Language::Python, Verdict::Accepted),
+        ("two-sum", Language::Rust, Verdict::Accepted),
+        ("nested-brackets", Language::Php, Verdict::TimeLimitExceeded),
+        ("budget-pair", Language::TypeScript, Verdict::Accepted),
+    ] {
+        a.store
+            .user
+            .record_submission(pid, lang, &format!("{pid} {lang}"), &report_with(v))
+            .await
+            .unwrap();
+        a.after_submit(pid, v, false, today.parse().unwrap(), false, UiLang::En)
+            .await
+            .unwrap();
+    }
+    a.save_draft("nested-brackets", Language::Php, "<?php // wip")
+        .await
+        .unwrap();
+    a.set_note("two-sum", "use a map").await.unwrap();
+    a.unlock_hint("nested-brackets", 1).await.unwrap();
+    a.mark_opened("rising-towers").await.unwrap();
+    let daily = a.daily_problem(today, UiLang::En).await.unwrap().unwrap();
+    a.review_add("nested-brackets", today).await.unwrap();
+    let list = a.create_list("Warm-up").await.unwrap();
+    a.add_to_list(list, "two-sum").await.unwrap();
+    a.add_to_list(list, "retired-one").await.unwrap();
+    a.set_setting("ui_lang", &json!("es")).await.unwrap();
+    a.set_setting("editor.keymap", &json!("vim")).await.unwrap();
+    a.set_setting("app.install_id", &json!("machine-a"))
+        .await
+        .unwrap();
+    {
+        use crate::interview::InterviewSetup;
+        a.set_clock(Some(real_now_ms() - 1_000));
+        a.start_interview(
+            &InterviewSetup {
+                duration_min: 30,
+                mix: "easy+medium".into(),
+                languages: vec![Language::Python],
+            },
+            UiLang::En,
+        )
+        .await
+        .unwrap();
+        a.end_interview(UiLang::En).await.unwrap();
+        a.set_clock(None);
+    }
+
+    let dir = crate::testutil::temp_dir("export-file");
+    let file = dir.join("progress.kbx.json");
+    let counts = a.export_to(&file).await.unwrap();
+    assert_eq!(counts.submissions, 5);
+    assert_eq!(counts.interviews, 1);
+    let text = std::fs::read_to_string(&file).unwrap();
+    assert!(text.contains("\"format\": \"katabox-export/v1\""));
+    assert!(
+        !text.contains("machine-a"),
+        "machine-specific settings stay home"
+    );
+
+    let b = app("export-b").await;
+    let preview = b.import_preview_from(&file).await.unwrap();
+    assert_eq!(preview.counts, counts);
+    assert_eq!(preview.conflicts, 0);
+    let r = b.import_apply(preview.id).await.unwrap();
+    assert!(r.added > 0);
+    assert_eq!(
+        b.import_apply(preview.id).await.unwrap_err().code,
+        AppErrorCode::NotFound,
+        "a preview applies once"
+    );
+
+    // Progress and Home, compared through the same queries the screens use.
+    for lang in [UiLang::En, UiLang::Es] {
+        let f = ProblemFilter {
+            lang: Some(lang),
+            ..Default::default()
+        };
+        assert_eq!(
+            a.list_problems(&f).await.unwrap(),
+            b.list_problems(&f).await.unwrap()
+        );
+        assert_eq!(
+            a.patterns(lang).await.unwrap(),
+            b.patterns(lang).await.unwrap()
+        );
+        assert_eq!(a.lists(lang).await.unwrap(), b.lists(lang).await.unwrap());
+        assert_eq!(
+            a.continue_item(lang).await.unwrap(),
+            b.continue_item(lang).await.unwrap()
+        );
+        assert_eq!(
+            a.reviews_due("2026-11-20", lang).await.unwrap(),
+            b.reviews_due("2026-11-20", lang).await.unwrap()
+        );
+        assert_eq!(
+            a.daily_problem(today, lang).await.unwrap(),
+            b.daily_problem(today, lang).await.unwrap()
+        );
+        let (ia, ib) = (
+            a.interviews(lang).await.unwrap(),
+            b.interviews(lang).await.unwrap(),
+        );
+        assert_eq!(ia.len(), ib.len());
+        assert_eq!(
+            ia.iter()
+                .map(|r| {
+                    let mut r = r.clone();
+                    r.id = 0;
+                    r
+                })
+                .collect::<Vec<_>>(),
+            ib.iter()
+                .map(|r| {
+                    let mut r = r.clone();
+                    r.id = 0;
+                    r
+                })
+                .collect::<Vec<_>>()
+        );
+    }
+    assert_eq!(
+        a.streak(today).await.unwrap(),
+        b.streak(today).await.unwrap()
+    );
+    assert_eq!(
+        a.solved_by_language().await.unwrap(),
+        b.solved_by_language().await.unwrap()
+    );
+    assert_eq!(b.get_setting("ui_lang").await.unwrap(), Some(json!("es")));
+    assert!(
+        !b.get_setting("app.install_id")
+            .await
+            .unwrap()
+            .is_some_and(|v| v == json!("machine-a"))
+    );
+    assert_eq!(
+        b.daily_problem(today, UiLang::En)
+            .await
+            .unwrap()
+            .unwrap()
+            .problem
+            .id,
+        daily.problem.id
+    );
+    assert_eq!(b.unlocked_hints("nested-brackets").await.unwrap(), [1]);
+    assert_eq!(
+        b.get_note("two-sum").await.unwrap().as_deref(),
+        Some("use a map")
+    );
+
+    // Importing again changes nothing (idempotent).
+    let again = b.import_preview_from(&file).await.unwrap();
+    assert!(again.conflicts > 0);
+    let r2 = b.import_apply(again.id).await.unwrap();
+    assert_eq!((r2.added, r2.updated), (0, 0), "{r2:?}");
+    a.close().await;
+    b.close().await;
+}
+
+#[tokio::test]
+async fn import_keeps_the_newer_record_and_never_downgrades() {
+    let a = app("merge-a").await;
+    a.store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Python,
+            "old",
+            &report_with(Verdict::WrongAnswer),
+        )
+        .await
+        .unwrap();
+    a.set_note("two-sum", "old note").await.unwrap();
+    let dir = crate::testutil::temp_dir("merge-file");
+    let file = dir.join("a.kbx.json");
+    a.export_to(&file).await.unwrap();
+
+    // B solved two-sum and wrote a newer note.
+    let b = app("merge-b").await;
+    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    b.store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Rust,
+            "new",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+    b.set_note("two-sum", "newer note").await.unwrap();
+    let preview = b.import_preview_from(&file).await.unwrap();
+    assert_eq!(preview.conflicts, 2); // status and note
+    b.import_apply(preview.id).await.unwrap();
+    let st = b
+        .store
+        .user
+        .problem_status("two-sum")
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        st.status,
+        kb_store::ProblemStatus::Solved,
+        "solved never downgrades"
+    );
+    assert_eq!(
+        b.get_note("two-sum").await.unwrap().as_deref(),
+        Some("newer note")
+    );
+    assert_eq!(b.list_submissions("two-sum").await.unwrap().len(), 2);
+    a.close().await;
+    b.close().await;
+}
+
+#[tokio::test]
+async fn import_rejects_bad_files_and_imports_nothing() {
+    let a = app("reject-a").await;
+    a.store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Python,
+            "code",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+    a.review_add("two-sum", "2026-11-14").await.unwrap();
+    a.set_setting("theme", &json!("dark")).await.unwrap();
+    let dir = crate::testutil::temp_dir("reject");
+    let good = dir.join("good.kbx.json");
+    a.export_to(&good).await.unwrap();
+    let base: Value = serde_json::from_str(&std::fs::read_to_string(&good).unwrap()).unwrap();
+
+    let b = app("reject-b").await;
+    type Mutation = Box<dyn Fn(&mut Value)>;
+    let cases: Vec<(&str, Mutation)> = vec![
+        (
+            "format",
+            Box::new(|v| v["format"] = json!("katabox-export/v2")),
+        ),
+        (
+            "unknown field",
+            Box::new(|v| v["data"]["extra"] = json!([])),
+        ),
+        (
+            "unknown row field",
+            Box::new(|v| v["data"]["submissions"][0]["shell"] = json!("rm -rf")),
+        ),
+        (
+            "wrong type",
+            Box::new(|v| v["data"]["submissions"][0]["time_us"] = json!("fast")),
+        ),
+        (
+            "bad id",
+            Box::new(|v| v["data"]["submissions"][0]["problem_id"] = json!("../../etc")),
+        ),
+        (
+            "bad language",
+            Box::new(|v| v["data"]["submissions"][0]["language"] = json!("cobol")),
+        ),
+        (
+            "bad verdict",
+            Box::new(|v| v["data"]["submissions"][0]["verdict"] = json!("passed")),
+        ),
+        (
+            "bad date",
+            Box::new(|v| v["data"]["reviews"][0]["due_on"] = json!("2026-02-30")),
+        ),
+        (
+            "setting key",
+            Box::new(
+                |v| v["data"]["settings"] = json!([{"key": "sandbox_root", "value": "C:/", "updated_at": 1_800_000_000_000_i64}]),
+            ),
+        ),
+        (
+            "long code",
+            Box::new(|v| v["data"]["submissions"][0]["code"] = json!("x".repeat(1024 * 1024 + 1))),
+        ),
+        (
+            "time range",
+            Box::new(|v| v["data"]["submissions"][0]["created_at"] = json!(5)),
+        ),
+    ];
+    for (name, mutate) in cases {
+        let mut v = base.clone();
+        mutate(&mut v);
+        let f = dir.join(format!("{}.kbx.json", name.replace(' ', "-")));
+        std::fs::write(&f, serde_json::to_vec(&v).unwrap()).unwrap();
+        let err = b.import_preview_from(&f).await.unwrap_err();
+        assert_eq!(err.code, AppErrorCode::ImportInvalid, "{name}: {err}");
+    }
+    // Not JSON at all, and over the size cap.
+    let junk = dir.join("junk.kbx.json");
+    std::fs::write(&junk, b"#!/bin/sh\necho hi").unwrap();
+    assert_eq!(
+        b.import_preview_from(&junk).await.unwrap_err().code,
+        AppErrorCode::ImportInvalid
+    );
+    let big = dir.join("big.kbx.json");
+    let f = std::fs::File::create(&big).unwrap();
+    f.set_len(crate::transfer::IMPORT_MAX_BYTES + 1).unwrap();
+    let err = b.import_preview_from(&big).await.unwrap_err();
+    assert!(err.message.contains("larger than"), "{err}");
+    // Nothing was imported.
+    assert!(b.list_submissions("two-sum").await.unwrap().is_empty());
+    a.close().await;
+    b.close().await;
 }

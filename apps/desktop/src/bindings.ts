@@ -370,6 +370,122 @@ async listsWith(problem: string) : Promise<Result<number[], AppError>> {
 }
 },
 /**
+ * The workspace opened `problem` (mock interviews pick never-opened problems).
+ */
+async markOpened(problem: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("mark_opened", { problem }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async startInterview(setup: InterviewSetup, lang: UiLang) : Promise<Result<InterviewView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("start_interview", { setup, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The running mock interview, if any (ended first when its time is up).
+ */
+async interviewActive(lang: UiLang) : Promise<Result<InterviewView | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("interview_active", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async endInterview(lang: UiLang) : Promise<Result<InterviewResult, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("end_interview", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Past mock interviews, newest first.
+ */
+async interviews(lang: UiLang) : Promise<Result<InterviewResult[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("interviews", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async acceptedSolution(problem: string, language: Language) : Promise<Result<AcceptedSolution | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("accepted_solution", { problem, language }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async solvedLanguages(problem: string) : Promise<Result<Language[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("solved_languages", { problem }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async solvedByLanguage() : Promise<Result<LanguageCount[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("solved_by_language") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Settings → Data → Export: a Save dialog, then every record to one `.kbx.json`
+ * file. `None` when cancelled.
+ */
+async exportProgress() : Promise<Result<TransferCounts | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("export_progress") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Settings → Data → Import: an Open dialog, then the file is read and checked and kept
+ * pending. `None` when cancelled.
+ */
+async importPreview() : Promise<Result<ImportPreview | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_preview") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Merge the pending import (newer records win).
+ */
+async importApply(id: number) : Promise<Result<ImportResult, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_apply", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async importCancel(id: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_cancel", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Start a language server for `language` on `problem`, replacing the language's previous
  * session (ADR 0014). Server messages and status changes stream over `on_event`.
  */
@@ -454,6 +570,10 @@ async uninstallLanguage(language: Language) : Promise<Result<null, AppError>> {
 
 /** user-defined types **/
 
+/**
+ * The code of an Accepted submission.
+ */
+export type AcceptedSolution = { language: Language; code: string; submitted_at: number }
 export type AppError = { code: AppErrorCode; 
 /**
  * English text: for logs, the developer console and as a fallback.
@@ -557,6 +677,22 @@ export type AppErrorCode =
  * Measuring this machine's speed needs Python or JavaScript/TypeScript installed.
  */
 "calibration_unavailable" | 
+/**
+ * Locked while a mock interview runs (hints, editorial, history, solutions).
+ */
+"locked_in_interview" | 
+/**
+ * A mock interview is already running.
+ */
+"interview_active" | 
+/**
+ * Fewer than two unsolved problems the user has never opened.
+ */
+"not_enough_problems" | 
+/**
+ * The import file is not a valid KataBox export.
+ */
+"import_invalid" | 
 /**
  * Anything else, including the app failing to start.
  */
@@ -680,9 +816,54 @@ text: string | null }
  */
 export type Failure = { kind: TestKind; index: number; verdict: Verdict; input: Partial<{ [key in string]: JsonValue }>; expected: JsonValue; actual: JsonValue | null; message: Message | null; stdout: string }
 /**
+ * What Import found in a file, before merging.
+ */
+export type ImportPreview = { 
+/**
+ * Pass back to `import_apply` / `import_cancel`.
+ */
+id: number; counts: TransferCounts; 
+/**
+ * Records that already exist here (the newer one will be kept).
+ */
+conflicts: number; exported_at: number; app_version: string }
+/**
+ * What Import changed.
+ */
+export type ImportResult = { added: number; updated: number; unchanged: number }
+/**
  * Progress of an install, in order: one `Plan`, then `Progress` per component.
  */
 export type InstallEvent = { kind: "plan"; items: PlanItem[] } | { kind: "progress"; component: string; phase: ComponentPhase; done: number; total: number }
+/**
+ * A finished session's scorecard.
+ */
+export type InterviewResult = { id: number; started_at: number; ended_at: number; duration_s: number; 
+/**
+ * Seconds actually used (ended early or at the deadline).
+ */
+used_s: number; mix: string; languages: Language[]; problems: ProblemScore[]; solved: number; first_try: number; 
+/**
+ * Problem titles in the requested UI language (`problem_id` → title; missing when the
+ * problem left the pack).
+ */
+titles: ([string, string])[] }
+/**
+ * What the setup dialog sends.
+ */
+export type InterviewSetup = { duration_min: number; mix: string; 
+/**
+ * The languages allowed during the session (at least one).
+ */
+languages: Language[] }
+/**
+ * The running session.
+ */
+export type InterviewView = { id: number; 
+/**
+ * UTC milliseconds.
+ */
+started_at: number; ends_at: number; duration_s: number; remaining_s: number; mix: string; languages: Language[]; problems: ProblemSummary[] }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
 /**
  * Progress of one judge run, sent to the UI as it happens. The sandbox returns output
@@ -710,6 +891,10 @@ export type JudgeEvent =
  * (language.toml + harness template) and a variant here.
  */
 export type Language = "python" | "javascript" | "typescript" | "php" | "rust"
+/**
+ * Solved problems per judge language (cross-language practice, ADR 0020).
+ */
+export type LanguageCount = { language: Language; solved: number }
 /**
  * A language's time limit on one problem (ADR 0017): the problem's base limit × the
  * language's factor, at this machine's time scale. CPU time for the whole batch of tests.
@@ -947,6 +1132,18 @@ query: string | null;
  * Language of the returned titles (English fallback).
  */
 lang: UiLang | null }
+/**
+ * One problem of a scorecard.
+ */
+export type ProblemScore = { problem_id: string; solved: boolean; 
+/**
+ * Seconds from the start to the first Accepted submit.
+ */
+time_to_solve_s: number | null; submits: number; 
+/**
+ * The first submit was Accepted.
+ */
+first_try: boolean }
 export type ProblemStatus = 
 /**
  * Submitted at least once, never Accepted.
@@ -1145,6 +1342,10 @@ program: string | null;
  * Why it is missing, when not present.
  */
 problem: string | null }
+/**
+ * How many records of each kind a file holds.
+ */
+export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number }
 /**
  * A UI language. English is always present in a pack; others fall back to it.
  */

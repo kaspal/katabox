@@ -10,6 +10,7 @@ import { DEV_NAV, NAV } from "@/app/nav";
 import { useFocusMode } from "@/lib/focus";
 import { useAppInfo, useLanguages } from "@/lib/queries";
 import { FirstRun } from "@/languages/FirstRun";
+import { InterviewTimer } from "@/practice/interview";
 
 /**
  * The first-run screen (ADR 0015): decided once, when the language list first loads, and
@@ -83,6 +84,7 @@ export function Shell() {
       <header hidden={focus} className="flex items-center justify-between gap-3 border-b px-4">
         <span className="font-semibold">{t("app.name")}</span>
         <div className="flex items-center gap-3">
+          <InterviewTimer />
           {info.data?.dev_data && (
             <Tooltip>
               <TooltipTrigger asChild>
