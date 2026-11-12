@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { afterEach, vi } from "vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { initI18n } from "@/i18n";
 
 // jsdom lacks a few browser APIs that Radix, cmdk and the virtualizer use.
@@ -38,6 +38,12 @@ window.matchMedia = vi.fn((query: string) => ({
 })) as unknown as typeof window.matchMedia;
 
 initI18n("en");
+
+// One generous default for every findBy*/waitFor (Testing Library's own is 1 s). The
+// lazy routes (workspace, CodeMirror, the language client) can take several seconds
+// when the suite runs right after a heavy cargo build; a per-call timeout here and
+// there is what made those tests flaky.
+configure({ asyncUtilTimeout: 10_000 });
 
 vi.mock("@/components/ui/resizable", () => import("@/test/resizableStub"));
 

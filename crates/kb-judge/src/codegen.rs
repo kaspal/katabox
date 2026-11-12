@@ -52,13 +52,22 @@ pub(crate) fn debug_files(
         .debug
         .as_ref()
         .ok_or(JudgeError::Unsupported(def.language))?;
-    Ok(vec![
+    let mut files = vec![
         (
             def.main_file(),
             render(template, template_context(def, sig))?,
         ),
         (def.solution_file(), source.to_string()),
-    ])
+    ];
+    if def.language == Language::TypeScript {
+        files.push((
+            "package.json".into(),
+            "{\"type\": \"module\"}
+"
+            .into(),
+        ));
+    }
+    Ok(files)
 }
 
 fn template_context(def: &LanguageDef, sig: &Signature) -> Value {
@@ -113,6 +122,19 @@ mod tests {
         Problem::load(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/two-sum"))
             .unwrap()
             .signature
+    }
+
+    #[test]
+    fn typescript_debug_files() {
+        let def = crate::languages::definition(Language::TypeScript).unwrap();
+        let files = debug_files(&def, &two_sum(), "export function twoSum() {}").unwrap();
+        let names: Vec<&str> = files.iter().map(|(n, _)| n.as_str()).collect();
+        assert_eq!(names, ["main.ts", "solution.ts", "package.json"]);
+        let harness = &files[0].1;
+        assert!(harness.contains("const FUNCTION: string = \"twoSum\";"));
+        assert!(harness.contains("const SOLUTION: string = \"solution.ts\";"));
+        assert!(harness.contains("connectToMainThread"));
+        assert!(!harness.contains("{{") && !harness.contains("{%"));
     }
 
     #[test]

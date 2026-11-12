@@ -661,7 +661,7 @@
   "debug": {
     "tab": "Depurar",
     "debugCase": "Depurar este caso",
-    "unsupported": "Por ahora la depuración está disponible para Python.",
+    "unsupported": "Por ahora la depuración está disponible para Python y JavaScript/TypeScript.",
     "busy": "Espera a que termine la ejecución actual.",
     "empty": "Elige \"Depurar este caso\" en una prueba, o pulsa F5 para depurar la primera prueba pública. Haz clic justo a la derecha de un número de línea, o pulsa F9 en la línea del cursor, para poner un punto de interrupción.",
     "gutter": "Puntos de interrupción (haz clic en una línea, o pulsa F9 en la línea del cursor)",

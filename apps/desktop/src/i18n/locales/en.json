@@ -661,7 +661,7 @@
   "debug": {
     "tab": "Debug",
     "debugCase": "Debug this case",
-    "unsupported": "Debugging is available for Python for now.",
+    "unsupported": "Debugging is available for Python and JavaScript/TypeScript for now.",
     "busy": "Wait for the current run to finish.",
     "empty": "Choose \"Debug this case\" on a test, or press F5 to debug the first public test. Click just right of a line number, or press F9 on the cursor's line, to set a breakpoint.",
     "gutter": "Breakpoints (click a line, or press F9 on the cursor's line)",

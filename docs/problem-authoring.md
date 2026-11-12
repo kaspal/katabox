@@ -110,9 +110,13 @@ app run them in the same sandbox as user code.
   cannot tell what the editorial promises.
 - **`solutions/naive.rs`** is the same algorithm in Rust, required whenever `naive.py`
   exists (kb-pack checks the pair). Compiled code is 10-100× faster, so it shows whether
-  the max tests also stop the slow approach in the fastest language. If it passes, raise
-  the constraint (larger n in the statements, `validate.py` and `gen.py`'s `max`) and
-  regenerate the max tests.
+  the max tests also stop the slow approach in the fastest language. It must need **at
+  least 1.5× Rust's CPU cap** (the weak-test margin, so a faster machine cannot let it
+  through): `validate --run` measures it once under 3× the cap and reports the ratio
+  (`naive.rs needs 1.76× its CPU cap (703 of 400 ms)`, or `≥ 3.0×` when it still runs
+  out of time). Below 1.5×, raise the constraint (larger n in the statements,
+  `validate.py` and `gen.py`'s `max`), add a max test, or make the existing one harder,
+  and regenerate the max tests.
 
 `gen.py` and `brute.py` come as a pair.
 
@@ -132,7 +136,8 @@ from the reference one), then checks, per problem:
 | validator | `validate.py` accepts every public and hidden test |
 | python, typescript, php, rust | each reference is Accepted on every test using at most **50% of its language's CPU cap** for the run (startup included) |
 | stress | `gen.py` makes 500 small inputs (seeds 1-500); each passes `validate.py`; `brute.py`'s answers are the expected outputs; every reference agrees with them (the problem's checker). The first disagreement is printed with its seed and input |
-| naive.py, naive.rs | each is Accepted on every test it reaches and gets **Time Limit Exceeded** under its own language's limit |
+| naive.py | Accepted on every test it reaches, and **Time Limit Exceeded** under Python's limit |
+| naive.rs | correct, and needs **at least 1.5× Rust's CPU cap** (measured under 3× the cap; the ratio is printed) |
 
 ## Generating tests
 

@@ -25,7 +25,7 @@ pub struct LanguageDef {
     pub stub_template: &'static str,
     pub harness_template: &'static str,
     /// The debugger's replay run (ADR 0022): its command line and harness template, for
-    /// languages that can be debugged (Python today).
+    /// languages that can be debugged (Python, TypeScript).
     pub debug: Option<(String, &'static str)>,
 }
 
@@ -99,6 +99,7 @@ pub const SUPPORTED: [Language; 4] = [
 pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
     let debug_template = match lang {
         Language::Python => Some(lang_file!("python", "debug.py.j2")),
+        Language::TypeScript => Some(lang_file!("typescript", "debug.ts.j2")),
         _ => None,
     };
     let (toml_src, stub_template, harness_template) = match lang {

@@ -9,14 +9,11 @@ import { formatClock } from "@/lib/modes";
 import { sourceFor } from "@/practice/crossLanguage";
 
 vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
-vi.setConfig({ testTimeout: 15_000 });
 
 const editors = async () => {
-  // The workspace loads CodeMirror lazily; under load that can take more than the
-  // default 1 s.
-  await waitFor(
-    () => expect(document.querySelectorAll("[data-testid=code-editor] .cm-editor").length).toBeGreaterThan(0),
-    { timeout: 5000 },
+  // The workspace loads CodeMirror lazily (the shared async timeout covers it).
+  await waitFor(() =>
+    expect(document.querySelectorAll("[data-testid=code-editor] .cm-editor").length).toBeGreaterThan(0),
   );
   return [...document.querySelectorAll("[data-testid=code-editor] .cm-editor")].map(
     (e) => EditorView.findFromDOM(e as HTMLElement)!,
@@ -196,7 +193,7 @@ describe("Settings → Data", () => {
       reviews: 1, daily_picks: 2, lists: 1, interviews: 1, settings: 3,
     };
     const { user } = renderApp("/settings");
-    await user.click(await screen.findByRole("button", { name: "Export…" }, { timeout: 4000 }));
+    await user.click(await screen.findByRole("button", { name: "Export…" }));
     expect(await screen.findByTestId("data-notice")).toHaveTextContent("Exported 33 records.");
 
     fake.state.importPreview = {
@@ -230,7 +227,7 @@ describe("Settings → Data", () => {
       app_version: "0.1.0",
     };
     const { user } = renderApp("/settings");
-    await user.click(await screen.findByRole("button", { name: "Importar…" }, { timeout: 4000 }));
+    await user.click(await screen.findByRole("button", { name: "Importar…" }));
     const dialog = await screen.findByTestId("import-preview");
     expect(dialog).toHaveTextContent("1 registro ya existe aquí; se conservará el más reciente.");
     await user.click(within(dialog).getByRole("button", { name: "Cancelar" }));

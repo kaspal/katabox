@@ -9,7 +9,7 @@ describe("Settings: judge speed (ADR 0017)", () => {
   useFakeApi();
 
   async function section() {
-    const heading = await screen.findByRole("heading", { name: "Judge speed" }, { timeout: 4000 });
+    const heading = await screen.findByRole("heading", { name: "Judge speed" });
     return heading.closest("section") as HTMLElement;
   }
 

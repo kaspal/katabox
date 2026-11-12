@@ -9,8 +9,9 @@
 //!    language factor, plus its startup allowance);
 //! 3. with `gen.py` + `solutions/brute.py`: 500 seeded small inputs, each accepted by
 //!    `validate.py`, on which every reference agrees with brute (the problem's checker);
-//! 4. with `solutions/naive.py` and `solutions/naive.rs`: each is correct but gets Time
-//!    Limit Exceeded under its own language's limit.
+//! 4. with `solutions/naive.py` and `solutions/naive.rs`: each is correct but too slow.
+//!    naive.py gets Time Limit Exceeded under Python's limit; naive.rs is measured under
+//!    3× the Rust cap and must need at least 1.5× it (the weak-test margin).
 //!
 //! Limits are judged at the env's time scale; `kb-pack validate` uses 1.0, the reference
 //! machine, and prints this machine's factor so a slower machine can be spotted.
@@ -34,6 +35,53 @@ const RELAXED_BASE_MS: u32 = 6_000;
 
 /// The weak-test guard runs in these languages, with `solutions/naive.<ext>` (ADR 0017).
 pub const NAIVE_LANGUAGES: [Language; 2] = [Language::Python, Language::Rust];
+
+/// naive.rs must need at least this many times its CPU cap (the weak-test margin), so a
+/// faster machine or a lucky run cannot let it pass.
+pub const NAIVE_MARGIN: f64 = 1.5;
+/// naive.rs is measured once under a cap this many times the normal one.
+pub const NAIVE_PROBE: u32 = 3;
+
+/// The base limit whose CPU cap is `times` × the cap of `base_ms` (or just above it).
+pub fn relaxed_base_ms(base_ms: u32, def: &languages::LanguageDef, scale: f64, times: u32) -> u32 {
+    let target = limits::cpu_cap_ms(base_ms, def, scale).saturating_mul(times);
+    let mut base = base_ms.saturating_mul(times);
+    while base > 0 && limits::cpu_cap_ms(base - 1, def, scale) >= target {
+        base -= 1;
+    }
+    while limits::cpu_cap_ms(base, def, scale) < target {
+        base += 1;
+    }
+    base
+}
+
+/// The margin report for naive.rs: `cpu_ms` used out of `cap_ms` when it finished under
+/// the probe cap, or `None` when it ran out of time there too.
+fn naive_margin(name: &str, cpu_ms: Option<u64>, cap_ms: u32) -> (bool, String) {
+    match cpu_ms {
+        None => (
+            true,
+            format!(
+                "{name} needs ≥ {NAIVE_PROBE}.0× its CPU cap of {cap_ms} ms (TLE at {} ms)",
+                cap_ms * NAIVE_PROBE
+            ),
+        ),
+        Some(cpu) => {
+            let ratio = cpu as f64 / f64::from(cap_ms);
+            let text = format!("{name} needs {ratio:.2}× its CPU cap ({cpu} of {cap_ms} ms)");
+            if ratio >= NAIVE_MARGIN {
+                (true, text)
+            } else {
+                (
+                    false,
+                    format!(
+                        "{text}: below the {NAIVE_MARGIN}× margin; make the max-size tests force the intended complexity"
+                    ),
+                )
+            }
+        }
+    }
+}
 
 /// What a check is about.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -223,6 +271,36 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
         let Ok(naive) = fs::read_to_string(dir.join("solutions").join(&name)) else {
             continue;
         };
+        if lang == Language::Rust {
+            // Measured: one run under a cap NAIVE_PROBE times the normal one.
+            let (ok, detail) = match languages::definition(lang) {
+                Err(e) => (false, e.to_string()),
+                Ok(def) => {
+                    let cap = limits::cpu_cap_ms(problem.time_limit_ms, &def, env.time_scale);
+                    let mut relaxed = problem.clone();
+                    relaxed.time_limit_ms =
+                        relaxed_base_ms(problem.time_limit_ms, &def, env.time_scale, NAIVE_PROBE);
+                    match kb_judge::judge(&relaxed, &relaxed.tests, lang, &naive, env) {
+                        Ok(r) if r.verdict == Verdict::TimeLimitExceeded => {
+                            naive_margin(&name, None, cap)
+                        }
+                        Ok(r) if r.verdict.is_accepted() => {
+                            naive_margin(&name, Some(ms(r.cpu_us)), cap)
+                        }
+                        Ok(r) => (
+                            false,
+                            format!(
+                                "{name} must be correct but slow; it got {}",
+                                describe_failure(&r)
+                            ),
+                        ),
+                        Err(e) => (false, e.to_string()),
+                    }
+                }
+            };
+            add(Check::Naive(lang), ok, detail);
+            continue;
+        }
         let (ok, detail) = match kb_judge::judge(&problem, &problem.tests, lang, &naive, env) {
             Ok(r) if r.verdict == Verdict::TimeLimitExceeded => {
                 let at = r
@@ -476,4 +554,25 @@ pub fn print_findings(findings: &[Finding]) -> usize {
         println!("{tag}  {} {:<10} {}", f.problem, f.check.label(), f.detail);
     }
     failed
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn naive_margin_probe_and_messages() {
+        let rust = languages::definition(Language::Rust).unwrap();
+        // Rust: a 300 ms base gives a 400 ms cap; 3× that is 1200 ms, from a 1100 ms base.
+        assert_eq!(limits::cpu_cap_ms(300, &rust, 1.0), 400);
+        assert_eq!(relaxed_base_ms(300, &rust, 1.0, 3), 1100);
+        assert_eq!(limits::cpu_cap_ms(1100, &rust, 1.0), 1200);
+        let (ok, text) = naive_margin("naive.rs", Some(703), 400);
+        assert!(ok, "{text}");
+        assert_eq!(text, "naive.rs needs 1.76× its CPU cap (703 of 400 ms)");
+        let (ok, text) = naive_margin("naive.rs", Some(500), 400);
+        assert!(!ok && text.contains("below the 1.5× margin"), "{text}");
+        let (ok, text) = naive_margin("naive.rs", None, 400);
+        assert!(ok && text.contains("≥ 3.0×"), "{text}");
+    }
 }

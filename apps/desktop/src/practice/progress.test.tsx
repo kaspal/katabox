@@ -7,7 +7,6 @@ import { addDays, bucketByDay, dayStartMs, heatLevel, heatmapDays, weekStart } f
 import { localToday } from "@/lib/today";
 
 vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
-vi.setConfig({ testTimeout: 15_000 });
 
 /** A Submit at local `day` `hour`:00. */
 const at = (day: string, hour: number, problem_id: string, accepted: boolean): ActivityRow => {
@@ -134,7 +133,7 @@ describe("Settings → About → Third-party notices", () => {
   it("shows the bundled notices", async () => {
     setFakeApi({ notices: "KataBox third-party notices\n--- serde 1.0 (MIT OR Apache-2.0)" });
     const { user } = renderApp("/settings");
-    await user.click(await screen.findByRole("button", { name: "View…" }, { timeout: 4000 }));
+    await user.click(await screen.findByRole("button", { name: "View…" }));
     const dialog = await screen.findByTestId("notices");
     expect(within(dialog).getByRole("heading", { name: "Third-party notices" })).toBeInTheDocument();
     expect(await within(dialog).findByTestId("notices-text")).toHaveTextContent("serde 1.0 (MIT OR Apache-2.0)");
@@ -143,7 +142,7 @@ describe("Settings → About → Third-party notices", () => {
   it("explains that development builds have none (Spanish)", async () => {
     setFakeApi({ notices: null, settings: { ui_lang: "es" } });
     const { user } = renderApp("/settings");
-    await user.click(await screen.findByRole("button", { name: "Ver…" }, { timeout: 4000 }));
+    await user.click(await screen.findByRole("button", { name: "Ver…" }));
     expect(await screen.findByTestId("notices-dev")).toHaveTextContent(
       "Los avisos se incluyen en las versiones publicadas",
     );
