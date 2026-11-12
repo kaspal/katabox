@@ -1,4 +1,24 @@
 <?php
+{% if uses_list %}
+// Provided by KataBox: the judge builds the input lists with this class.
+class ListNode
+{
+    public function __construct(public int $val = 0, public ?ListNode $next = null)
+    {
+    }
+}
+
+{% endif %}
+{% if uses_tree %}
+// Provided by KataBox: the judge builds the input trees with this class.
+class TreeNode
+{
+    public function __construct(public int $val = 0, public ?TreeNode $left = null, public ?TreeNode $right = null)
+    {
+    }
+}
+
+{% endif %}
 function {{ function }}({% for p in params %}{{ p.type }} ${{ p.name }}{% if not loop.last %}, {% endif %}{% endfor %}): {{ returns }} {
 
 }

@@ -486,3 +486,88 @@ fn assert_debuggable(problems: &[(&str, &str, Option<Helper>)]) {
         );
     }
 }
+
+/// The node-type problems (ADR 0025): debuggable like the others.
+#[test]
+fn node_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 4] = [
+        ("playlist-rotation", "rotate_playlist", None),
+        ("checkout-merge", "merge_lines", None),
+        ("fullest-level", "fullest_level", None),
+        ("hedge-trim", "trim_hedge", Some(("<locals>.trim", 2))),
+    ];
+    assert_debuggable(&problems);
+}
+
+/// Nodes read as a short line (never the whole chain, never an address), with their
+/// fields as children in a fixed order, and expand lazily (ADR 0025).
+#[test]
+fn list_and_tree_nodes_are_shown_readably() {
+    let load = |id: &str| {
+        let dir = repo().join("content/problems").join(id);
+        let p = Problem::load(&dir).unwrap();
+        let src = std::fs::read_to_string(dir.join("solutions/ref.py")).unwrap();
+        (p, src)
+    };
+    let (p, src) = load("playlist-rotation");
+    let inp = p.tests[0].input.clone();
+    let t = trace(&p, &src, &inp);
+    assert_eq!(t.outcome.as_ref().unwrap().value, json!([16, 23, 4, 8, 15]));
+    let s = stop(
+        &p,
+        &src,
+        &inp,
+        &t,
+        StopRequest {
+            step: 0,
+            expand: vec![
+                vec![json!("locals"), json!("playlist")],
+                vec![json!("locals"), json!("playlist"), json!(1)],
+            ],
+            ..Default::default()
+        },
+    );
+    let head = s.locals.iter().find(|v| v.name == "playlist").unwrap();
+    assert_eq!(head.value, "ListNode [4 → 8 → 15 → 16 → 23]");
+    assert_eq!((head.type_name.as_str(), head.children), ("ListNode", 2));
+    let names: Vec<(&str, &str)> = s.expanded[0]
+        .children
+        .iter()
+        .map(|c| (c.name.as_str(), c.value.as_str()))
+        .collect();
+    assert_eq!(
+        names,
+        [("val", "4"), ("next", "ListNode [8 → 15 → 16 → 23]")]
+    );
+    assert_eq!(s.expanded[1].children[0].value, "8");
+
+    let (p, src) = load("hedge-trim");
+    let inp = p.tests[0].input.clone();
+    let t = trace(&p, &src, &inp);
+    assert_eq!(t.outcome.as_ref().unwrap().value, json!([3, null, 2]));
+    let s = stop(
+        &p,
+        &src,
+        &inp,
+        &t,
+        StopRequest {
+            step: 0,
+            expand: vec![vec![json!("locals"), json!("root")]],
+            ..Default::default()
+        },
+    );
+    assert_eq!(local(&s, "root"), "TreeNode(3, left=-5, right=2)");
+    let names: Vec<(&str, &str)> = s.expanded[0]
+        .children
+        .iter()
+        .map(|c| (c.name.as_str(), c.value.as_str()))
+        .collect();
+    assert_eq!(
+        names,
+        [
+            ("val", "3"),
+            ("left", "TreeNode(-5, left=1, right=-4)"),
+            ("right", "TreeNode(2, left=None, right=None)")
+        ]
+    );
+}

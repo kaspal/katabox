@@ -166,6 +166,14 @@ phpactor requires the PHP `posix` extension, which Windows builds of PHP do not 
 - rust-src (std's sources) was merged into the bundled Rust toolchain folder; ADR 0015
   moves it to `tools/rust-src`, which `rust-project.json`'s `sysroot_src` points to.
 
+## Notes
+- **2026-11-12, ADR 0025 (maintainer-approved):** the Python project's `pyrightconfig.json`
+  (`kb-bridge/src/project.rs`) adds `"reportOptionalMemberAccess": "warning"`. On
+  `ListNode | None`, natural linked-list code such as `head.next.next` is a warning,
+  not an error.
+  - Nothing else in the server settings or the message policy changed.
+  - `basedpyright_warns_on_optional_node_access` (real server, Windows) checks it.
+
 ## Follow-ups
 - Run servers inside a **long-lived sandbox profile** (read-only toolchains and tools,
   read-write project and state, no network), so that "what each server can read" is

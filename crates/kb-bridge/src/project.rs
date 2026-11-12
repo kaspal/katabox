@@ -88,6 +88,9 @@ pub fn prepare(
                 "pythonVersion": "3.14",
                 "typeCheckingMode": "standard",
                 "reportMissingModuleSource": "none",
+                // `node.next.next` on `ListNode | None` is natural list code: a warning,
+                // not an error (ADR 0025, maintainer-approved).
+                "reportOptionalMemberAccess": "warning",
             }),
         )),
         // Plain JavaScript (the editor's JS mode) is checked, but not strictly: no
@@ -212,6 +215,13 @@ mod tests {
         .unwrap();
         assert_eq!(ts["compilerOptions"]["erasableSyntaxOnly"], true);
         assert_eq!(ts["compilerOptions"]["strict"], true);
+        // Optional member access on nodes is a warning (ADR 0025); the rest is standard.
+        let py: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(root.join("two-sum/python/pyrightconfig.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(py["reportOptionalMemberAccess"], "warning");
+        assert_eq!(py["typeCheckingMode"], "standard");
         // JavaScript mode: checked, not strict (ADR 0024).
         let p = prepare(&root, "two-sum", Language::JavaScript, "code", &tc).unwrap();
         assert_eq!(p.file.file_name().unwrap(), "solution.js");

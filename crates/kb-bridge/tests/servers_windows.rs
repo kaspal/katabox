@@ -70,7 +70,7 @@ fn items(result: &Value) -> Vec<String> {
 
 /// Open `code` and ask for completion at (line, col) until the server answers with items
 /// (servers may need a few seconds to load their library), then wait for a diagnostic.
-/// Returns the error and warning messages of that diagnostics notification.
+/// Returns the (severity, message) of that notification's errors (1) and warnings (2).
 async fn check(
     language: Language,
     code: &str,
@@ -80,7 +80,7 @@ async fn check(
     expect_diag: &str,
     // Lines (by a fragment) that may have diagnostics; any other line must have none.
     broken_lines: &[&str],
-) -> Vec<String> {
+) -> Vec<(u64, String)> {
     static RUN: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
     let data = root().join("..").join(format!(
         "kb-bridge-real-{}-{}-{}",
@@ -213,7 +213,10 @@ server said: {logs:#?}"
         if d["severity"].as_u64().unwrap_or(1) > 2 {
             continue;
         }
-        found.push(d["message"].as_str().unwrap_or_default().to_string());
+        found.push((
+            d["severity"].as_u64().unwrap_or(1),
+            d["message"].as_str().unwrap_or_default().to_string(),
+        ));
         let line = d["range"]["start"]["line"].as_u64().unwrap() as usize;
         let text = code.lines().nth(line).unwrap_or_default();
         assert!(
@@ -299,8 +302,49 @@ async fn javascript_mode_is_checked_without_implicit_any() {
     assert!(
         strict
             .iter()
-            .any(|m| m.contains("implicitly has an 'any' type")),
+            .any(|(_, m)| m.contains("implicitly has an 'any' type")),
         "{strict:?}"
+    );
+}
+
+/// Linked-list code (ADR 0025): `head.next.next` on `ListNode | None` is a warning
+/// (reportOptionalMemberAccess, ADR 0014's settings), not an error; real errors stay
+/// errors.
+#[tokio::test(flavor = "multi_thread")]
+async fn basedpyright_warns_on_optional_node_access() {
+    let code = "class ListNode:
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+
+def third(head: ListNode | None) -> int:
+    seen: list[int] = []
+    seen.app
+    value = head.next.next.val
+    return value + undefined_name
+";
+    let found = check(
+        Language::Python,
+        code,
+        8,
+        12,
+        "append",
+        "undefined_name",
+        &["seen.app", "head.next.next", "undefined_name"],
+    )
+    .await;
+    let optional: Vec<&(u64, String)> = found
+        .iter()
+        .filter(|(_, m)| m.contains("\"next\"") || m.contains("\"val\""))
+        .collect();
+    assert!(!optional.is_empty(), "{found:?}");
+    assert!(optional.iter().all(|(sev, _)| *sev == 2), "{found:?}");
+    assert!(
+        found
+            .iter()
+            .any(|(sev, m)| *sev == 1 && m.contains("undefined_name")),
+        "{found:?}"
     );
 }
 

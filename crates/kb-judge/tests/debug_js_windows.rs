@@ -431,7 +431,73 @@ fn batch_5_problems_are_debuggable_in_typescript() {
         ("pocket-calculator", "evaluate"),
         ("thermostat-swings", "windowSwings"),
     ];
-    for (id, entry) in problems {
+    assert_debuggable(&problems);
+}
+
+/// The node-type problems (ADR 0025): debuggable like the others.
+#[test]
+fn node_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("playlist-rotation", "rotatePlaylist"),
+        ("checkout-merge", "mergeLines"),
+        ("fullest-level", "fullestLevel"),
+        ("hedge-trim", "trimHedge"),
+    ]);
+}
+
+/// Nodes read as a short line with their fields as children in a fixed order (ADR 0025).
+#[test]
+fn typescript_nodes_are_shown_readably() {
+    let p = problem("playlist-rotation");
+    let src = reference("playlist-rotation");
+    let inp = p.tests[0].input.clone();
+    let t = trace(&p, &src, &inp);
+    assert_eq!(
+        t.outcome.as_ref().unwrap().value,
+        serde_json::json!([16, 23, 4, 8, 15])
+    );
+    let s = stop(
+        &p,
+        &src,
+        &inp,
+        &t,
+        StopRequest {
+            step: 0,
+            expand: vec![vec![
+                serde_json::json!("locals"),
+                serde_json::json!("playlist"),
+            ]],
+            ..Default::default()
+        },
+    );
+    assert_eq!(local(&s, "playlist"), "ListNode [4 → 8 → 15 → 16 → 23]");
+    let names: Vec<(&str, &str)> = s.expanded[0]
+        .children
+        .iter()
+        .map(|c| (c.name.as_str(), c.value.as_str()))
+        .collect();
+    assert_eq!(
+        names,
+        [("val", "4"), ("next", "ListNode [8 → 15 → 16 → 23]")]
+    );
+
+    let p = problem("hedge-trim");
+    let src = reference("hedge-trim");
+    let inp = p.tests[0].input.clone();
+    let t = trace(&p, &src, &inp);
+    assert_eq!(
+        t.outcome.as_ref().unwrap().value,
+        serde_json::json!([3, null, 2])
+    );
+    let s = stop(&p, &src, &inp, &t, at(0));
+    assert_eq!(local(&s, "root"), "TreeNode(3, left=-5, right=2)");
+}
+
+/// Each problem's ref.ts on its first public test, within the JS step cap: the result
+/// passes the checker, and stops halfway and at the last step show the entry function
+/// outermost.
+fn assert_debuggable(problems: &[(&str, &str)]) {
+    for &(id, entry) in problems {
         let p = problem(id);
         let src = reference(id);
         let public = &p.tests[0];

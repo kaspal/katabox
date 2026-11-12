@@ -22,7 +22,7 @@ pub mod signature;
 pub mod tools;
 
 pub use checker::{CheckOutcome, Checker};
-pub use codegen::{harness, starter_code};
+pub use codegen::{harness, signature_line, starter_code};
 pub use judge::{BINARY_CACHE_SIZE, JudgeEnv, judge, judge_with_progress};
 /// The judge's data types live in kb-core (so kb-store can store them without the judge);
 /// re-exported here so this crate's API is unchanged.

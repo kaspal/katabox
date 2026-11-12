@@ -346,14 +346,26 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
         }
     }
 
-    let params: Vec<&str> = meta
+    // Each param with its type, when it parses (a bad type is reported above).
+    let params: Vec<(&str, Option<kb_judge::Type>)> = meta
         .signature
         .params
         .iter()
-        .map(|p| p.name.as_str())
+        .map(|p| (p.name.as_str(), p.ty.parse().ok()))
         .collect();
-    let public = check_tests(&dir.join("tests/public"), &params, &mut errs);
-    let hidden = check_tests(&dir.join("tests/hidden"), &params, &mut errs);
+    let returns: Option<kb_judge::Type> = meta.signature.returns.parse().ok();
+    let public = check_tests(
+        &dir.join("tests/public"),
+        &params,
+        returns.as_ref(),
+        &mut errs,
+    );
+    let hidden = check_tests(
+        &dir.join("tests/hidden"),
+        &params,
+        returns.as_ref(),
+        &mut errs,
+    );
     if public == 0 {
         errs.push("needs at least one public test".into());
     }
@@ -389,15 +401,13 @@ fn check_reference_signatures(dir: &Path, errs: &mut Vec<String>) {
         }
     };
     for lang in kb_judge::languages::SUPPORTED {
-        let stub = match kb_judge::starter_code(lang, &problem.signature) {
-            Ok(s) => s,
+        // The function's declaration line; node definitions above it may differ.
+        let line = match kb_judge::signature_line(lang, &problem.signature) {
+            Ok(l) => normalize(&l),
             Err(e) => {
                 errs.push(format!("{lang} stub: {e}"));
                 continue;
             }
-        };
-        let Some(line) = signature_line(&stub) else {
-            continue;
         };
         let mut files = vec![
             dir.join("solutions")
@@ -427,19 +437,18 @@ fn check_reference_signatures(dir: &Path, errs: &mut Vec<String>) {
     }
 }
 
-/// The stub's declaration line (skipping `<?php` and blank lines), whitespace-normalized.
-fn signature_line(stub: &str) -> Option<String> {
-    stub.lines()
-        .map(normalize)
-        .find(|l| !l.is_empty() && l != "<?php")
-}
-
 fn normalize(line: &str) -> String {
     line.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
-/// Each test is `{"input": {<param>: ...}, "output": ...}`. Returns the count.
-fn check_tests(dir: &Path, params: &[&str], errs: &mut Vec<String>) -> usize {
+/// Each test is `{"input": {<param>: ...}, "output": ...}`, every value of its declared
+/// type (ADR 0025: lists and trees in their canonical JSON). Returns the count.
+fn check_tests(
+    dir: &Path,
+    params: &[(&str, Option<kb_judge::Type>)],
+    returns: Option<&kb_judge::Type>,
+    errs: &mut Vec<String>,
+) -> usize {
     let Ok(entries) = fs::read_dir(dir) else {
         return 0;
     };
@@ -464,12 +473,23 @@ fn check_tests(dir: &Path, params: &[&str], errs: &mut Vec<String>) -> usize {
             errs.push(format!("{}: missing object \"input\"", p.display()));
             continue;
         };
-        if v.get("output").is_none() {
-            errs.push(format!("{}: missing \"output\"", p.display()));
+        match (v.get("output"), returns) {
+            (None, _) => errs.push(format!("{}: missing \"output\"", p.display())),
+            (Some(out), Some(ty)) => {
+                if let Err(e) = ty.check_value(out) {
+                    errs.push(format!("{}: output: {e}", p.display()));
+                }
+            }
+            (Some(_), None) => {}
         }
-        for name in params {
-            if !input.contains_key(*name) {
-                errs.push(format!("{}: input lacks param {name:?}", p.display()));
+        for (name, ty) in params {
+            match input.get(*name) {
+                None => errs.push(format!("{}: input lacks param {name:?}", p.display())),
+                Some(value) => {
+                    if let Some(Err(e)) = ty.as_ref().map(|t| t.check_value(value)) {
+                        errs.push(format!("{}: input {name}: {e}", p.display()));
+                    }
+                }
             }
         }
     }
@@ -481,18 +501,51 @@ pub(crate) mod tests {
     use super::*;
 
     #[test]
-    fn signature_line_skips_php_open_tag() {
-        assert_eq!(
-            signature_line("<?php\nfunction f(int $a): int {\n\n}\n").as_deref(),
-            Some("function f(int $a): int {")
-        );
-        assert_eq!(
-            signature_line("pub fn f(a: i64) -> i64 {\n    todo!()\n}\n").as_deref(),
-            Some("pub fn f(a: i64) -> i64 {")
-        );
+    fn normalize_collapses_whitespace() {
         assert_eq!(
             normalize("  def  f(a:  int) -> int:  "),
             "def f(a: int) -> int:"
+        );
+    }
+
+    #[test]
+    fn test_values_are_typed() {
+        let dir = std::env::temp_dir().join(format!("kbp-typed-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let write = |name: &str, text: &str| fs::write(dir.join(name), text).unwrap();
+        write(
+            "1.json",
+            r#"{"input": {"root": [1, null, 2], "k": 3}, "output": [4]}"#,
+        );
+        write(
+            "2.json",
+            r#"{"input": {"root": [1, 2, null], "k": 3}, "output": [4]}"#,
+        );
+        write(
+            "3.json",
+            r#"{"input": {"root": [1], "k": "x"}, "output": [null]}"#,
+        );
+        let params = [
+            ("root", Some("TreeNode".parse().unwrap())),
+            ("k", Some(kb_judge::Type::Int)),
+        ];
+        let returns: kb_judge::Type = "ListNode".parse().unwrap();
+        let mut errs = Vec::new();
+        assert_eq!(check_tests(&dir, &params, Some(&returns), &mut errs), 3);
+        fs::remove_dir_all(&dir).unwrap();
+        assert_eq!(errs.len(), 3, "{errs:?}");
+        assert!(
+            errs.iter()
+                .any(|e| e.contains("2.json: input root") && e.contains("trailing"))
+        );
+        assert!(
+            errs.iter()
+                .any(|e| e.contains("3.json: input k: expected an int"))
+        );
+        assert!(
+            errs.iter()
+                .any(|e| e.contains("3.json: output: expected a ListNode"))
         );
     }
 

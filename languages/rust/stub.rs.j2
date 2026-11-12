@@ -1,3 +1,41 @@
+{% if uses_tree %}
+use std::cell::RefCell;
+use std::rc::Rc;
+
+{% endif %}
+{% if uses_list %}
+// Provided by KataBox: the judge builds the input lists with this struct.
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct ListNode {
+    pub val: i64,
+    pub next: Option<Box<ListNode>>,
+}
+
+impl ListNode {
+    #[inline]
+    pub fn new(val: i64) -> Self {
+        ListNode { next: None, val }
+    }
+}
+
+{% endif %}
+{% if uses_tree %}
+// Provided by KataBox: the judge builds the input trees with this struct.
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i64,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+
+impl TreeNode {
+    #[inline]
+    pub fn new(val: i64) -> Self {
+        TreeNode { val, left: None, right: None }
+    }
+}
+
+{% endif %}
 pub fn {{ function }}({% for p in params %}{{ p.name }}: {{ p.type }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {{ returns }} {
     // Do not write `fn main`: KataBox provides it and calls this function.
     todo!()

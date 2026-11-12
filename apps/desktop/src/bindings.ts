@@ -1330,6 +1330,11 @@ export type MessageCode =
  */
 "too_much_output" | 
 /**
+ * A returned ListNode or TreeNode reaches the same node twice: a cycle, or a tree
+ * node shared by two parents (ADR 0025).
+ */
+"node_cycle" | 
+/**
  * The batch hit its CPU or wall-clock limit during this test.
  */
 "time_limit" | 

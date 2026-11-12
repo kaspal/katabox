@@ -206,6 +206,9 @@ pub enum MessageCode {
     OutOfMemory,
     /// The test printed more than the per-test output cap.
     TooMuchOutput,
+    /// A returned ListNode or TreeNode reaches the same node twice: a cycle, or a tree
+    /// node shared by two parents (ADR 0025).
+    NodeCycle,
     // Runtime, decided by the judge from the sandbox outcome.
     /// The batch hit its CPU or wall-clock limit during this test.
     TimeLimit,

@@ -8,6 +8,12 @@ import { readFileSync, writeSync } from "node:fs";
 const SOLUTION: string = {{ solution_file | tojson }};
 const FUNCTION: string = {{ function | tojson }};
 const PARAMS: string[] = {{ param_keys | tojson }};
+{% if uses_nodes %}
+const PARAM_SHAPES: [string, number][] = {{ param_shapes | tojson }};
+const RETURN_SHAPE: [string, number] = {{ return_shape | tojson }};
+
+{{ nodes_code }}
+{% endif %}
 
 type Rec = Record<string, unknown>;
 
@@ -106,10 +112,17 @@ async function main(): Promise<void> {
     return;
   }
 
+{% if uses_nodes %}
+  const classes = nodeClasses(mod);
+{% endif %}
   emit({ kind: "ready" });
   const tests: Rec[] = request.tests;
   for (let i = 0; i < tests.length; i++) {
+{% if uses_nodes %}
+    const args = PARAMS.map((p, k) => fromJson(PARAM_SHAPES[k][0], PARAM_SHAPES[k][1], tests[i][p], classes));
+{% else %}
     const args = PARAMS.map((p) => tests[i][p]);
+{% endif %}
     const rec: Rec = { kind: "result", test: i };
     capture = new Capture(cap);
     const start = process.hrtime.bigint();
@@ -123,6 +136,23 @@ async function main(): Promise<void> {
       rec.error = describe(e);
     }
     rec.time_us = Number((process.hrtime.bigint() - start) / 1000n);
+{% if uses_nodes %}
+    if (rec.status === "ok") {
+      try {
+        rec.value = toJson(RETURN_SHAPE[0], RETURN_SHAPE[1], rec.value);
+      } catch (e) {
+        delete rec.value;
+        rec.status = "error";
+        if (e instanceof NodeError) {
+          rec.error_code = e.code;
+          rec.error = e.message;
+        } else {
+          rec.error_code = "return_not_serializable";
+          rec.error = "return value is not a " + {{ returns_raw | tojson }} + ": " + describe(e);
+        }
+      }
+    }
+{% endif %}
     rec.stdout = capture.text;
     rec.stdout_truncated = capture.truncated;
     capture = null;

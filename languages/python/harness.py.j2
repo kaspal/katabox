@@ -15,6 +15,13 @@ SOLUTION = {{ solution_file | tojson }}
 FUNCTION = {{ function | tojson }}
 ALIASES = {{ aliases | tojson }}
 PARAMS = {{ param_keys | tojson }}
+{% if uses_nodes %}
+PARAM_SHAPES = {{ param_shapes | tojson }}
+RETURN_SHAPE = {{ return_shape | tojson }}
+
+
+{{ nodes_code }}
+{% endif %}
 
 
 class Capture(io.TextIOBase):
@@ -96,9 +103,16 @@ def main():
         })
         return
 
+{% if uses_nodes %}
+    classes = node_classes(module)
+{% endif %}
     emit({"kind": "ready"})
     for i, test in enumerate(request["tests"]):
+{% if uses_nodes %}
+        args = [from_json(*PARAM_SHAPES[k], test[p], classes) for k, p in enumerate(PARAMS)]
+{% else %}
         args = [test[p] for p in PARAMS]
+{% endif %}
         capture = Capture(cap)
         record = {"kind": "result", "test": i}
         sys.stdout = sys.stderr = capture
@@ -116,6 +130,21 @@ def main():
             elapsed = time.perf_counter_ns() - start
             sys.stdout, sys.stderr = out, err
         record["time_us"] = elapsed // 1000
+{% if uses_nodes %}
+        if record["status"] == "ok":
+            try:
+                record["value"] = to_json(*RETURN_SHAPE, record["value"])
+            except NodeError as e:
+                record.pop("value")
+                record.update(status="error", error_code=e.code, error=str(e))
+            except Exception as e:
+                record.pop("value")
+                record.update(
+                    status="error",
+                    error_code="return_not_serializable",
+                    error="return value is not a " + {{ returns_raw | tojson }} + ": " + repr(e),
+                )
+{% endif %}
         record["stdout"] = capture.text()
         record["stdout_truncated"] = capture.truncated
         try:

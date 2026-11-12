@@ -82,6 +82,7 @@
       "bin-packing": "Empaquetado",
       "binary-lifting": "Salto binario",
       "binary-search": "Búsqueda binaria",
+      "binary-tree": "Árbol binario",
       "bit-manipulation": "Manipulación de bits",
       "bitmask": "Máscara de bits",
       "counting": "Conteo",
@@ -98,6 +99,7 @@
       "hash-map": "Mapa hash",
       "heap": "Montículo",
       "intervals": "Intervalos",
+      "linked-list": "Lista enlazada",
       "math": "Matemáticas",
       "matrix": "Matriz",
       "minimum-spanning-tree": "Árbol de expansión mínima",
@@ -386,6 +388,7 @@
       "return_not_serializable": "El valor devuelto no se puede convertir a JSON.",
       "out_of_memory": "El programa se quedó sin memoria.",
       "too_much_output": "La prueba imprimió demasiada salida.",
+      "node_cycle": "La lista o el árbol devuelto vuelve a un nodo que ya contiene (un ciclo, o un nodo compartido por dos padres).",
       "time_limit": "Se alcanzó el tiempo límite durante esta prueba.",
       "output_limit": "Se alcanzó el límite de salida durante esta prueba.",
       "memory_limit": "Se alcanzó el límite de memoria durante esta prueba.",
@@ -436,7 +439,9 @@
       "errors": {
         "empty": "Escribe un valor.",
         "json": "Esto no es JSON válido.",
-        "type": "Se esperaba un valor de tipo {{type}}."
+        "type": "Se esperaba un valor de tipo {{type}}.",
+        "list": "Se esperaba {{type}}: una lista como arreglo JSON de enteros, p. ej. [1, 2, 3] ([] es vacía).",
+        "tree": "Se esperaba {{type}}: un árbol por niveles con null para un hijo que falta, p. ej. [1, null, 2, 3] ([] es vacío)."
       },
       "invalid": "La entrada personalizada {{index}} no es válida: {{message}}",
       "needsPython": "Las entradas personalizadas se comprueban contra las restricciones del problema solo si Python está instalado.",
