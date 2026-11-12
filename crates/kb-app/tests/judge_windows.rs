@@ -474,3 +474,95 @@ async fn a_first_accepted_submit_schedules_a_review() {
     );
     assert!(!r.practice.first_solve);
 }
+
+/// A debug session through the App (ADR 0022): breakpoint, step, watch, console, result.
+#[tokio::test]
+async fn a_debug_session_on_two_sum() {
+    use kb_app::debug::{DebugAction, DebugInspect, DebugStart, DebugState};
+    let app = app("debug").await;
+    let input = json!({"nums": [5, 8, 12, 1, 3], "target": 15});
+    let start = DebugStart {
+        problem: "two-sum".into(),
+        language: Language::Python,
+        code: reference(Language::Python),
+        input: input.as_object().unwrap().clone(),
+        breakpoints: vec![7],
+        watches: vec!["target - n".into()],
+    };
+    let v = app.debug_start(start.clone()).await.unwrap();
+    let paused = |v: &kb_app::debug::DebugView| match &v.state {
+        DebugState::Paused { line, stop } => (*line, stop.clone()),
+        other => panic!("not paused: {other:?}"),
+    };
+    let (line, stop) = paused(&v);
+    assert_eq!(line, 7);
+    assert_eq!(stop.evals[0].value.as_ref().unwrap().value, "10");
+    let id = v.session;
+
+    // Step over: back to the loop header; continue: the breakpoint again with seen = {5: 0}.
+    let v = app.debug_action(id, DebugAction::StepOver).await.unwrap();
+    assert_eq!(paused(&v).0, 3);
+    let v = app.debug_action(id, DebugAction::Continue).await.unwrap();
+    let (line, stop) = paused(&v);
+    assert_eq!(line, 7);
+    assert!(
+        stop.locals
+            .iter()
+            .any(|l| l.name == "seen" && l.value == "{5: 0}")
+    );
+    // Step back is free with replay.
+    let v = app.debug_action(id, DebugAction::StepBack).await.unwrap();
+    assert_eq!(paused(&v).0, 5);
+
+    // Expand `seen` and add a watch; then the console.
+    let v = app
+        .debug_inspect(
+            id,
+            DebugInspect {
+                frame: 0,
+                expand: vec![vec![json!("locals"), json!("seen")]],
+                watches: vec!["len(seen)".into()],
+            },
+        )
+        .await
+        .unwrap();
+    let (_, stop) = paused(&v);
+    assert_eq!(stop.expanded[0].children[0].value, "0");
+    assert_eq!(stop.evals[0].value.as_ref().unwrap().value, "1");
+    let e = app
+        .debug_evaluate(id, 0, "sorted(seen)".into())
+        .await
+        .unwrap();
+    assert_eq!(e.value.unwrap().value, "[5]");
+
+    // Without breakpoints, continue runs to the end and shows the result.
+    app.debug_set_breakpoints(id, vec![]).unwrap();
+    let v = app.debug_action(id, DebugAction::Continue).await.unwrap();
+    let DebugState::Finished { outcome, truncated } = &v.state else {
+        panic!("{v:?}")
+    };
+    assert!(truncated.is_none());
+    assert_eq!(outcome.as_ref().unwrap().value, json!([2, 4]));
+
+    // Restart goes back to the first breakpoint (none now: straight to the end).
+    app.debug_end(id);
+    let err = app
+        .debug_action(id, DebugAction::Restart)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::NotFound);
+
+    // Other languages and bad inputs are refused.
+    let mut rust = start.clone();
+    rust.language = Language::Rust;
+    assert_eq!(
+        app.debug_start(rust).await.unwrap_err().code,
+        AppErrorCode::DebugUnsupported
+    );
+    let mut bad = start;
+    bad.input = json!({"nums": [1]}).as_object().unwrap().clone();
+    assert_eq!(
+        app.debug_start(bad).await.unwrap_err().code,
+        AppErrorCode::InvalidInput
+    );
+}

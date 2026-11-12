@@ -530,6 +530,69 @@ async importCancel(id: number) : Promise<Result<null, AppError>> {
 }
 },
 /**
+ * Languages the debugger supports.
+ */
+async debugLanguages() : Promise<Language[]> {
+    return await TAURI_INVOKE("debug_languages");
+},
+/**
+ * Record one test and stop at its first breakpoint (or show the result).
+ */
+async debugStart(start: DebugStart) : Promise<Result<DebugView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("debug_start", { start }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async debugAction(session: number, action: DebugAction) : Promise<Result<DebugView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("debug_action", { session, action }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async debugSetBreakpoints(session: number, lines: number[]) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("debug_set_breakpoints", { session, lines }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Show the current step again with another frame, expansions or watches.
+ */
+async debugInspect(session: number, inspect: DebugInspect) : Promise<Result<DebugView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("debug_inspect", { session, inspect }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Evaluate a console expression in a frame at the current step (never changes the run).
+ */
+async debugEvaluate(session: number, frame: number, expr: string) : Promise<Result<EvalResult, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("debug_evaluate", { session, frame, expr }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async debugEnd(session: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("debug_end", { session }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Start a language server for `language` on `problem`, replacing the language's previous
  * session (ADR 0014). Server messages and status changes stream over `on_event`.
  */
@@ -746,6 +809,14 @@ export type AppErrorCode =
  */
 "import_invalid" | 
 /**
+ * This language has no debugger yet (ADR 0022).
+ */
+"debug_unsupported" | 
+/**
+ * The program behaves differently on each run, so it cannot be replayed (ADR 0022).
+ */
+"debug_diverged" | 
+/**
  * Anything else, including the app failing to start.
  */
 "internal"
@@ -828,6 +899,77 @@ export type DailyProblem = {
  * `YYYY-MM-DD`, the local date it is for.
  */
 day: string; problem: ProblemSummary; solved: boolean; streak: number }
+/**
+ * A debugger command.
+ */
+export type DebugAction = "continue" | "step_over" | "step_into" | "step_out" | "step_back" | "restart"
+/**
+ * The UI's view state, replayed at every stop.
+ */
+export type DebugInspect = { 
+/**
+ * The selected stack frame (0 = innermost).
+ */
+frame: number; 
+/**
+ * Expanded variables: `[scope, name, i, j, …]`.
+ */
+expand: JsonValue[][]; watches: string[] }
+/**
+ * The traced call's result.
+ */
+export type DebugOutcome = { status: OutcomeStatus; 
+/**
+ * The returned value (`ok`).
+ */
+value?: JsonValue; 
+/**
+ * The exception and its traceback (`error`).
+ */
+error?: string | null; 
+/**
+ * The line of the user's file that raised (`error`).
+ */
+line?: number | null; 
+/**
+ * The last step that ran.
+ */
+step: number }
+/**
+ * What a new debug session is about.
+ */
+export type DebugStart = { problem: string; language: Language; code: string; 
+/**
+ * The test's arguments, keyed by parameter name (public, custom or the first
+ * failing test the user already sees).
+ */
+input: Partial<{ [key in string]: JsonValue }>; breakpoints: number[]; watches: string[] }
+/**
+ * What the debugger shows.
+ */
+export type DebugState = 
+/**
+ * Stopped at a step: the line about to run and everything around it.
+ */
+{ state: "paused"; line: number; stop: StopInfo } | 
+/**
+ * The program ran to its end (or to the end of a truncated trace).
+ */
+{ state: "finished"; outcome: DebugOutcome | null; truncated: Truncation | null } | 
+/**
+ * The session could not continue: `load_error`, `time_limit`, `memory_limit`,
+ * `output_limit` or `diverged`.
+ */
+{ state: "failed"; reason: string; message: string | null }
+export type DebugView = { session: number; state: DebugState; 
+/**
+ * Steps recorded in the trace.
+ */
+steps: number; 
+/**
+ * The program's prints up to the current step.
+ */
+prints: PrintChunk[]; prints_truncated: boolean }
 export type Difficulty = "easy" | "medium" | "hard"
 /**
  * Solved and total problems of one difficulty or tag.
@@ -866,6 +1008,27 @@ available: boolean;
  * The editorial (Markdown), only when unlocked.
  */
 text: string | null }
+/**
+ * A watch or console expression evaluated at the stop.
+ */
+export type EvalResult = { expr: string; ok: boolean; 
+/**
+ * The value (`None` for a statement).
+ */
+value?: VarInfo | null; error?: string | null; 
+/**
+ * What it printed.
+ */
+stdout?: string }
+/**
+ * The children of the value at `path` = `[scope, name, i, j, …]`, where `scope` is
+ * `"locals"` or `"globals"` and each `i` is a position among the parent's children.
+ */
+export type Expansion = { path: JsonValue[]; children: VarInfo[]; 
+/**
+ * Children not listed (beyond the first 100).
+ */
+more: number }
 /**
  * Details of the first test that did not pass. For hidden tests this is the only one
  * revealed, and only after submitting.
@@ -1136,6 +1299,10 @@ export type MessageCode =
  */
 "incomplete_results"
 /**
+ * How the traced call ended.
+ */
+export type OutcomeStatus = "ok" | "error" | "memory"
+/**
  * One card of the pattern map.
  */
 export type PatternProgress = { pattern: string; solved: number; total: number; 
@@ -1171,6 +1338,10 @@ daily_solved: boolean; streak: number;
  * What to solve next (after Accepted only).
  */
 next: ProblemSummary | null }
+/**
+ * Prints made while the step `step` ran (or before the first step).
+ */
+export type PrintChunk = { step: number; text: string }
 /**
  * Which problems to list. Every field is optional; `None` means "any".
  */
@@ -1361,11 +1532,23 @@ by_difficulty: DifficultyCount[];
  * Every tag in the pack: most problems first, then by id.
  */
 by_tag: TagCount[] }
+/**
+ * One frame of the user's call stack, innermost first.
+ */
+export type StackFrame = { function: string; line: number }
 export type StatusFilter = 
 /**
  * Never submitted.
  */
 "todo" | "attempted" | "solved"
+/**
+ * What the debugger shows at one step.
+ */
+export type StopInfo = { step: number; stack: StackFrame[]; 
+/**
+ * The selected frame (index into `stack`).
+ */
+frame: number; locals: VarInfo[]; globals: VarInfo[]; expanded: Expansion[]; evals: EvalResult[] }
 export type SubmissionSummary = { id: number; problem_id: string; language: Language; verdict: Verdict; time_us: number; memory_kb: number; created_at: number }
 /**
  * A submission as the UI sees it: hidden tests redacted.
@@ -1436,9 +1619,37 @@ problem: string | null }
  */
 export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number }
 /**
+ * Why a trace stopped before the program ended.
+ */
+export type Truncation = 
+/**
+ * The step cap.
+ */
+"steps" | 
+/**
+ * The trace's byte budget.
+ */
+"bytes" | 
+/**
+ * Too many distinct (line, depth) pairs (very deep recursion).
+ */
+"codes"
+/**
  * A UI language. English is always present in a pack; others fall back to it.
  */
 export type UiLang = "en" | "es"
+/**
+ * A variable or a child of one, as the debugger lists it.
+ */
+export type VarInfo = { name: string; type: string; 
+/**
+ * `repr`, truncated.
+ */
+value: string; 
+/**
+ * How many children it has (0 = not expandable).
+ */
+children: number }
 /**
  * Final outcome of a run or submission. Names follow common judge conventions
  * (DMOJ / Judge0) so users recognize them.

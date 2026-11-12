@@ -335,7 +335,9 @@
     "locked_in_interview": "This is locked during the mock interview.",
     "interview_active": "A mock interview is already running.",
     "not_enough_problems": "There are fewer than two unsolved problems you have never opened.",
-    "import_invalid": "This file is not a valid KataBox export."
+    "import_invalid": "This file is not a valid KataBox export.",
+    "debug_unsupported": "This language cannot be debugged yet. Debugging is available for Python.",
+    "debug_diverged": "This program behaves differently on each run (time, randomness or object identity), so it cannot be replayed step by step."
   },
   "judge": {
     "verdict": {

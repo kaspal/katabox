@@ -66,6 +66,10 @@ pub enum AppErrorCode {
     NotEnoughProblems,
     /// The import file is not a valid KataBox export.
     ImportInvalid,
+    /// This language has no debugger yet (ADR 0022).
+    DebugUnsupported,
+    /// The program behaves differently on each run, so it cannot be replayed (ADR 0022).
+    DebugDiverged,
     /// Anything else, including the app failing to start.
     Internal,
 }

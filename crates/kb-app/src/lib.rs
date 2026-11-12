@@ -12,6 +12,7 @@
 //!   Report.
 
 mod calibration;
+pub mod debug;
 mod error;
 pub mod interview;
 pub mod practice;
@@ -228,6 +229,8 @@ pub struct App {
     clock: std::sync::Mutex<Option<i64>>,
     /// An import read by `import_preview`, waiting for `import_apply` (ADR 0020).
     pending_import: std::sync::Mutex<Option<transfer::PendingImport>>,
+    /// The debug session (ADR 0022): a recorded trace and the debugger's position in it.
+    debug: std::sync::Mutex<Option<debug::Session>>,
 }
 
 /// Solved problems per judge language (cross-language practice, ADR 0020).
@@ -284,6 +287,7 @@ impl App {
             calibration: RwLock::new(calibration),
             clock: std::sync::Mutex::new(None),
             pending_import: std::sync::Mutex::new(None),
+            debug: std::sync::Mutex::new(None),
         })
     }
 

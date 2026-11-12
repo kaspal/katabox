@@ -335,7 +335,9 @@
     "locked_in_interview": "Esto está bloqueado durante la entrevista simulada.",
     "interview_active": "Ya hay una entrevista simulada en curso.",
     "not_enough_problems": "Hay menos de dos problemas sin resolver que nunca hayas abierto.",
-    "import_invalid": "Este archivo no es una exportación válida de KataBox."
+    "import_invalid": "Este archivo no es una exportación válida de KataBox.",
+    "debug_unsupported": "Este lenguaje todavía no se puede depurar. La depuración está disponible para Python.",
+    "debug_diverged": "Este programa se comporta distinto en cada ejecución (hora, azar o identidad de objetos), así que no se puede reproducir paso a paso."
   },
   "judge": {
     "verdict": {
