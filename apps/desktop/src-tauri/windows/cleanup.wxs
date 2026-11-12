@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- KataBox MSI uninstall cleanup (ADR 0021). On a full uninstall (not an upgrade),
-     run `KataBox.exe --uninstall-cleanup` before the files are removed: it revokes the
+     run the app with its uninstall-cleanup switch (see ExeCommand below; XML comments
+     cannot contain two hyphens) before the files are removed: it revokes the
      sandbox's folder grants and deletes the AppContainer profile through kb-runner's
      cleanup. It runs as the user (Impersonate) because the sandbox lives in the user's
      profile, and a failure never blocks the uninstall (Return="ignore"). The MSI never

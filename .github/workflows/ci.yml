@@ -159,5 +159,5 @@ jobs:
       - run: cargo clippy -p katabox-desktop --features updater -- -D warnings
       - name: TypeScript bindings are up to date
         run: |
-          cargo run -p katabox-desktop --bin export-bindings
+          cargo run -p katabox-desktop --features bindings --bin export-bindings
           git diff --exit-code apps/desktop/src/bindings.ts

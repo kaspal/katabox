@@ -1,4 +1,4 @@
-//! Uninstall cleanup (ADR 0021): the installers run `KataBox.exe --uninstall-cleanup`
+//! Uninstall cleanup (ADR 0021): the installers run `katabox-desktop.exe --uninstall-cleanup`
 //! before removing the app. It revokes the sandbox's persistent folder grants and
 //! deletes the AppContainer profile through kb-runner's existing [`kb_runner::cleanup`].
 //! It never deletes files: removing the user's data is the installer's choice.
