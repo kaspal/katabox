@@ -137,8 +137,17 @@ pub enum TestKind {
     Hidden,
 }
 
-/// Resource limits for one test batch. Problems may override; the runner scales
-/// time by a per-machine calibration factor.
+/// A language's time limit on one problem (ADR 0017): the problem's base limit × the
+/// language's factor, at this machine's time scale. CPU time for the whole batch of tests.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct LanguageLimit {
+    pub language: Language,
+    pub time_limit_ms: u32,
+}
+
+/// Resource limits for one test batch. The judge sets the CPU time from the problem's
+/// base limit, the language and the machine's time scale (ADR 0017).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Limits {
     pub cpu_time_ms: u32,

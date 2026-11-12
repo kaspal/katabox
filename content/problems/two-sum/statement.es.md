@@ -18,6 +18,6 @@ Salida: [1, 3]
 
 ### Restricciones
 
-- 2 ≤ nums.length ≤ 10⁴
+- 2 ≤ nums.length ≤ 10⁵
 - −10⁹ ≤ nums[i], target ≤ 10⁹
 - Existe exactamente una respuesta válida.

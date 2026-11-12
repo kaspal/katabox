@@ -279,6 +279,59 @@ describe("Workspace: problem pane", () => {
   });
 });
 
+describe("Workspace: time limits (ADR 0017)", () => {
+  useFakeApi();
+
+  const measured = (factor: number) => ({
+    factor,
+    applied: factor,
+    runtime: "python" as const,
+    measured_us: Math.round(216_000 * factor),
+    reference_us: 216_000,
+    measured_at: 1_767_225_600,
+  });
+
+  it("shows the limit for the editor's language", async () => {
+    setFakeApi({ lastLanguage: "python" });
+    const { user } = await openWorkspace();
+    await editor();
+    const limit = screen.getByTestId("time-limit");
+    expect(screen.getByText("Time limit (Python)")).toBeInTheDocument();
+    expect(limit).toHaveTextContent("3000 ms");
+    expect(limit).not.toHaveTextContent("adjusted");
+    await chooseLanguage(user, "TypeScript");
+    expect(await screen.findByText("Time limit (TypeScript)")).toBeInTheDocument();
+    expect(screen.getByTestId("time-limit")).toHaveTextContent("600 ms");
+  });
+
+  it("says when limits are adjusted for this computer, linking to Settings", async () => {
+    setFakeApi({ lastLanguage: "python", calibration: measured(1.5) });
+    const { user, history } = await openWorkspace();
+    await editor();
+    const limit = screen.getByTestId("time-limit");
+    expect(limit).toHaveTextContent("4500 ms");
+    const note = within(limit).getByRole("link", { name: "adjusted ×1.50 for this computer" });
+    await user.click(note);
+    await waitFor(() => expect(history.location.pathname).toBe("/settings"));
+  });
+
+  it("refreshes the limits after the first Run measures this computer", async () => {
+    const fake = setFakeApi({ lastLanguage: "python" });
+    const { user } = await openWorkspace();
+    await editor();
+    expect(screen.getByTestId("time-limit")).toHaveTextContent("3000 ms");
+    // The backend measures before judging the first Run.
+    fake.api.run = vi.fn(async (_p, _l, _c, _custom, onEvent) => {
+      fake.state.calibration = measured(2);
+      onEvent({ event: "finished", verdict: "accepted" });
+      return makeReport("accepted");
+    });
+    await user.click(screen.getByRole("button", { name: "Run" }));
+    await waitFor(() => expect(screen.getByTestId("time-limit")).toHaveTextContent("6000 ms"));
+    expect(screen.getByTestId("time-limit")).toHaveTextContent("adjusted ×2.00");
+  });
+});
+
 describe("Workspace: focus mode", () => {
   useFakeApi();
 

@@ -106,6 +106,25 @@ pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
         }
     };
     println!();
+    // Limits are judged at 1.0, the reference machine (env_for). This machine's factor
+    // says how far its timings are from that (ADR 0017).
+    match kb_judge::calibration::calibrate(&env) {
+        Ok(c) => {
+            println!(
+                "machine factor {:.2} ({} benchmark {} ms; reference {} ms); limits judged at 1.0",
+                c.factor,
+                c.runtime.id(),
+                c.measured_us / 1000,
+                c.reference_us / 1000
+            );
+            if !(0.8..=1.25).contains(&c.factor) {
+                println!(
+                    "warning: this machine is not close to the reference machine; speed results may differ there"
+                );
+            }
+        }
+        Err(e) => println!("machine factor unknown: {e}"),
+    }
     let mut checks = 0;
     let mut failed = 0;
     for p in &dirs {
@@ -220,6 +239,10 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
     if dir.join("gen.py").exists() != dir.join("solutions/brute.py").exists() {
         errs.push("gen.py and solutions/brute.py come as a pair".into());
     }
+    // The weak-test guard runs in Python and Rust (ADR 0017).
+    if dir.join("solutions/naive.py").exists() != dir.join("solutions/naive.rs").exists() {
+        errs.push("solutions/naive.py and solutions/naive.rs come as a pair".into());
+    }
     for (file, def) in [
         ("gen.py", "def generate("),
         ("validate.py", "def validate("),
@@ -299,15 +322,18 @@ fn check_reference_signatures(dir: &Path, errs: &mut Vec<String>) {
             dir.join("solutions")
                 .join(format!("ref.{}", lang.extension())),
         ];
-        // brute.py and naive.py are Python solutions of the same function.
-        if lang == kb_core::Language::Python {
-            files.extend(
-                ["brute.py", "naive.py"]
-                    .iter()
-                    .map(|f| dir.join("solutions").join(f))
-                    .filter(|f| f.exists()),
-            );
-        }
+        // brute.py, naive.py and naive.rs are solutions of the same function.
+        let extra: &[&str] = match lang {
+            kb_core::Language::Python => &["brute.py", "naive.py"],
+            kb_core::Language::Rust => &["naive.rs"],
+            _ => &[],
+        };
+        files.extend(
+            extra
+                .iter()
+                .map(|f| dir.join("solutions").join(f))
+                .filter(|f| f.exists()),
+        );
         for file in files {
             let src = fs::read_to_string(&file).unwrap_or_default();
             if !src.lines().any(|l| normalize(l) == line) {
@@ -416,6 +442,41 @@ pub(crate) mod tests {
             errs[0].contains("ref.rs") && errs[0].contains("-> Vec<i64>"),
             "{errs:?}"
         );
+    }
+
+    #[test]
+    fn naive_py_needs_naive_rs() {
+        let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/two-sum");
+        let base = std::env::temp_dir().join(format!("kbp-naive-pair-{}", std::process::id()));
+        let dir = base.join("two-sum");
+        let _ = fs::remove_dir_all(&base);
+        copy_dir(&src, &dir);
+        let (_, ok) = validate_problem_meta(&dir);
+        fs::remove_file(dir.join("solutions/naive.rs")).unwrap();
+        let (_, errs) = validate_problem_meta(&dir);
+        fs::remove_dir_all(&base).unwrap();
+        assert!(ok.is_empty(), "{ok:?}");
+        assert!(
+            errs.iter().any(|e| e.contains("naive.rs come as a pair")),
+            "{errs:?}"
+        );
+    }
+
+    #[test]
+    fn a_mismatched_naive_rs_is_reported() {
+        let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/two-sum");
+        let dir = std::env::temp_dir().join(format!("kbp-naive-sig-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        copy_dir(&src, &dir);
+        fs::write(
+            dir.join("solutions/naive.rs"),
+            "pub fn two_sum(nums: &[i64], target: i64) -> Vec<i64> { vec![] }\n",
+        )
+        .unwrap();
+        let mut errs = Vec::new();
+        check_reference_signatures(&dir, &mut errs);
+        fs::remove_dir_all(&dir).unwrap();
+        assert!(errs.len() == 1 && errs[0].contains("naive.rs"), "{errs:?}");
     }
 
     pub(crate) fn copy_dir(from: &Path, to: &Path) {

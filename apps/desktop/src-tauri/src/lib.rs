@@ -202,6 +202,20 @@ async fn set_setting(state: State<'_, AppState>, key: String, value: Value) -> R
     state.app()?.set_setting(&key, &value).await
 }
 
+/// This machine's calibration (ADR 0017), if it was measured.
+#[tauri::command]
+#[specta::specta]
+async fn calibration(state: State<'_, AppState>) -> Res<Option<kb_app::CalibrationInfo>> {
+    Ok(state.app()?.calibration())
+}
+
+/// Measure this machine again; the judge's limits follow the new factor.
+#[tauri::command]
+#[specta::specta]
+async fn recalibrate(state: State<'_, AppState>) -> Res<kb_app::CalibrationInfo> {
+    state.app()?.recalibrate().await
+}
+
 /// Start a language server for `language` on `problem`, replacing the language's previous
 /// session (ADR 0014). Server messages and status changes stream over `on_event`.
 #[tauri::command]
@@ -301,6 +315,8 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         unlocked_hints,
         get_setting,
         set_setting,
+        calibration,
+        recalibrate,
         lsp_connect,
         lsp_send,
         lsp_disconnect,

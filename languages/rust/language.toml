@@ -17,3 +17,10 @@ cpu_time_ms = 30000
 wall_time_ms = 60000
 memory_mb = 1024
 max_processes = 16
+
+# Time limit for this language (ADR 0017): the problem's base limit (`time_limit_ms`,
+# set for Rust) times `factor`, plus `startup_ms` of CPU for starting the runtime and
+# loading the harness, which the user does not control.
+[time]
+factor = 1
+startup_ms = 100

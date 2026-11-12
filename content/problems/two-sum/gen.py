@@ -14,7 +14,7 @@ def _pairs(nums, target):
 def generate(seed, size):
     rng = random.Random(seed)
     if size == "max":
-        n, lo, hi = 10_000, -10**9, 10**9
+        n, lo, hi = 100_000, -10**9, 10**9
     else:
         n, lo, hi = rng.randint(2, 8), -20, 20
     while True:

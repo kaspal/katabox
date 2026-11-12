@@ -19,7 +19,8 @@ pub struct Problem {
     pub dir: PathBuf,
     pub signature: Signature,
     pub checker: Checker,
-    /// CPU time for the user's code across the whole batch of tests.
+    /// Base CPU time for the user's code across the whole batch of tests, set for Rust;
+    /// each language scales it and adds its startup allowance ([`crate::limits`], ADR 0017).
     pub time_limit_ms: u32,
     pub memory_mb: u32,
     /// Public tests first, then hidden, each in file-name order (numeric when possible).
@@ -199,7 +200,7 @@ mod tests {
         assert_eq!(p.id, "two-sum");
         assert_eq!(p.signature.name, "twoSum");
         assert_eq!(p.checker, Checker::Unordered);
-        assert_eq!(p.time_limit_ms, 2000);
+        assert_eq!(p.time_limit_ms, 300);
         assert_eq!(p.public_tests().count(), 3);
         // Public first, then hidden: 3 public, and at least 15 hidden (edge, random, max).
         assert!(p.tests.len() >= 18, "{}", p.tests.len());

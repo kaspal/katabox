@@ -154,6 +154,7 @@ async fn stored_submissions_come_back_redacted() {
         first_failure: None,
         compile_output: Some(Message::new(MessageCode::CompileError, "none")),
         time_us: 6,
+        cpu_us: 0,
         memory_kb: 4,
         compile: None,
     };
@@ -334,6 +335,7 @@ fn report_with(verdict: Verdict) -> Report {
         first_failure: None,
         compile_output: None,
         time_us: 1,
+        cpu_us: 0,
         memory_kb: 1,
         compile: None,
     }
@@ -431,4 +433,52 @@ async fn without_python_the_validator_is_skipped_and_the_reference_decides() {
             .unwrap()
             .has_validator
     );
+}
+
+#[tokio::test]
+async fn problem_limits_follow_the_stored_calibration() {
+    let p = paths("calibration");
+    let app = App::open(&p).await.unwrap();
+    // Not measured yet: the reference machine's limits, base × language factor.
+    assert_eq!(app.calibration(), None);
+    let view = app.get_problem("two-sum", UiLang::En).await.unwrap();
+    assert_eq!(view.time_scale, 1.0);
+    let limit = |v: &ProblemView, l: Language| {
+        v.time_limits
+            .iter()
+            .find(|x| x.language == l)
+            .unwrap()
+            .time_limit_ms
+    };
+    assert_eq!(limit(&view, Language::Rust), view.time_limit_ms);
+    assert_eq!(limit(&view, Language::Python), view.time_limit_ms * 10);
+    assert_eq!(view.time_limits.len(), kb_judge::languages::SUPPORTED.len());
+
+    // A slower machine, measured earlier: every limit doubles.
+    let stored = json!({
+        "factor": 2.0, "applied": 2.0, "runtime": "python",
+        "measured_us": 432000, "reference_us": 216000, "measured_at": 1_700_000_000
+    });
+    app.set_setting(CALIBRATION_SETTING, &stored).await.unwrap();
+    app.close().await;
+    let app = App::open(&p).await.unwrap();
+    let c = app.calibration().unwrap();
+    assert_eq!((c.applied, c.runtime), (2.0, Language::Python));
+    let view = app.get_problem("two-sum", UiLang::En).await.unwrap();
+    assert_eq!(view.time_scale, 2.0);
+    assert_eq!(limit(&view, Language::Rust), view.time_limit_ms * 2);
+    assert_eq!(limit(&view, Language::Php), view.time_limit_ms * 10);
+    assert_eq!(app.env().time_scale, 2.0);
+    app.close().await;
+}
+
+#[tokio::test]
+async fn recalibrating_needs_python_or_node() {
+    let app = app("no-benchmark").await;
+    let err = app.recalibrate().await.unwrap_err();
+    assert_eq!(err.code, AppErrorCode::CalibrationUnavailable);
+    // A Run without runtimes does not measure (nor fail because of it).
+    app.ensure_calibrated().await;
+    assert_eq!(app.calibration(), None);
+    app.close().await;
 }

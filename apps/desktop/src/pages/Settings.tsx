@@ -1,16 +1,19 @@
 import { useTranslation } from "react-i18next";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Gauge, Loader2, Monitor, Moon, Sun } from "lucide-react";
 import { Page } from "@/components/Page";
 import { InstallPanel } from "@/languages/InstallPanel";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { MiddleEllipsis } from "@/components/MiddleEllipsis";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { UI_LANGS, type UiLangCode } from "@/i18n";
 import { THEMES, usePrefs, type ThemePref } from "@/lib/prefs";
-import { useAppInfo } from "@/lib/queries";
+import { api } from "@/lib/api";
+import { queryKeys, useAppInfo, useCalibration } from "@/lib/queries";
 import { FONT_SIZES, KEYMAPS, useEditorPrefs, type KeymapPref } from "@/lib/settings";
 
 const THEME_ICON: Record<ThemePref, typeof Sun> = { system: Monitor, light: Sun, dark: Moon };
@@ -30,6 +33,62 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="min-w-0 break-all">{children}</dd>
     </div>
+  );
+}
+
+/** The judge's speed factor for this machine (ADR 0017), with Recalibrate. */
+function CalibrationSection() {
+  const { t, i18n } = useTranslation();
+  const queryClient = useQueryClient();
+  const calibration = useCalibration();
+  const recalibrate = useMutation({
+    mutationFn: api.recalibrate,
+    onSuccess: (c) => {
+      queryClient.setQueryData(queryKeys.calibration, c);
+      // Every problem's limits follow the new factor.
+      void queryClient.invalidateQueries({ queryKey: ["problem"] });
+    },
+  });
+  const c = calibration.data;
+  const factor = (x: number) => t("settings.calibration.factorValue", { factor: x.toFixed(2) });
+  return (
+    <Section title={t("settings.calibration.title")}>
+      <p className="text-sm text-muted-foreground">{t("settings.calibration.description")}</p>
+      {calibration.isPending ? (
+        <Skeleton className="h-16 w-full" />
+      ) : calibration.error ? (
+        <ErrorNotice error={calibration.error} onRetry={() => void calibration.refetch()} />
+      ) : c ? (
+        <dl className="space-y-2" data-testid="calibration">
+          <Row label={t("settings.calibration.factor")}>
+            <span className="font-mono">{factor(c.applied)}</span>
+            {Math.abs(c.factor - c.applied) >= 0.005 && (
+              <span className="ml-2 text-muted-foreground">
+                {t("settings.calibration.clamped", { measured: factor(c.factor) })}
+              </span>
+            )}
+          </Row>
+          <Row label={t("settings.calibration.runtime")}>{t(`languages.${c.runtime}`)}</Row>
+          <Row label={t("settings.calibration.measuredAt")}>
+            {new Intl.DateTimeFormat(i18n.language, { dateStyle: "medium", timeStyle: "short" }).format(
+              new Date(c.measured_at * 1000),
+            )}
+          </Row>
+        </dl>
+      ) : (
+        <p className="text-sm">{t("settings.calibration.notMeasured")}</p>
+      )}
+      {recalibrate.error && <ErrorNotice error={recalibrate.error} />}
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={recalibrate.isPending}
+        onClick={() => recalibrate.mutate()}
+      >
+        {recalibrate.isPending ? <Loader2 className="animate-spin" aria-hidden /> : <Gauge aria-hidden />}
+        {recalibrate.isPending ? t("settings.calibration.measuring") : t("settings.calibration.recalibrate")}
+      </Button>
+    </Section>
   );
 }
 
@@ -138,6 +197,8 @@ export function Settings() {
         <Section title={t("settings.languages")}>
           <InstallPanel allowUninstall />
         </Section>
+
+        <CalibrationSection />
 
         <Section title={t("settings.about")}>
           {info.isPending ? (

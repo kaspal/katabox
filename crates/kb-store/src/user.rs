@@ -1194,6 +1194,7 @@ pub(crate) mod tests {
             }),
             compile_output: None,
             time_us: 240,
+            cpu_us: 0,
             memory_kb: 9000,
             compile: None,
         }

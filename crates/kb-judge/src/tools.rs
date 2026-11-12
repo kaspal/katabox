@@ -41,6 +41,8 @@ pub struct ScriptOutput {
     pub stderr: String,
     pub exit_code: u32,
     pub termination: Termination,
+    /// CPU time of the run (user + kernel), in microseconds.
+    pub cpu_us: u64,
 }
 
 impl ScriptOutput {
@@ -58,11 +60,33 @@ pub fn run_python(
     stdin: &[u8],
     limits: ScriptLimits,
 ) -> Result<ScriptOutput, JudgeError> {
-    let def = definition(Language::Python)?;
-    let toolchain = env.toolchain(Language::Python)?;
+    run_script(env, Language::Python, main, files, stdin, limits)
+}
+
+/// [`run_python`] for any interpreted language the judge runs: Python, or TypeScript
+/// (Node, which also runs plain JavaScript written as TypeScript). Only that language's
+/// toolchain is readable.
+pub fn run_script(
+    env: &JudgeEnv,
+    language: Language,
+    main: &str,
+    files: &[(&str, &str)],
+    stdin: &[u8],
+    limits: ScriptLimits,
+) -> Result<ScriptOutput, JudgeError> {
+    let def = definition(language)?;
+    if def.compile_limits.is_some() {
+        return Err(JudgeError::Unsupported(language));
+    }
+    let toolchain = env.toolchain(language)?;
     let (program, args) = def.command(toolchain, limits.memory_mb, None)?;
     let work = WorkDir::create(&env.runs_dir)?;
     std::fs::write(work.path.join(def.main_file()), main)?;
+    if language == Language::TypeScript {
+        // As for judged code (codegen): `.ts` files are ES modules, and Node finds this
+        // package.json instead of looking in the folders above.
+        std::fs::write(work.path.join("package.json"), "{\"type\": \"module\"}\n")?;
+    }
     for (name, contents) in files {
         if name.contains(['/', '\\']) || *name == def.main_file() {
             return Err(JudgeError::Internal(format!(
@@ -71,7 +95,7 @@ pub fn run_python(
         }
         std::fs::write(work.path.join(name), contents)?;
     }
-    let mut run_limits = Limits::default_for(Language::Python);
+    let mut run_limits = Limits::default_for(language);
     run_limits.cpu_time_ms = limits.cpu_time_ms;
     run_limits.memory_mb = limits.memory_mb;
     let mut spec = SandboxSpec::new(&env.sandbox_root, program, &work.path, &run_limits);
@@ -86,6 +110,8 @@ pub fn run_python(
         stderr: String::from_utf8_lossy(&outcome.stderr).into_owned(),
         exit_code: outcome.exit_code,
         termination: outcome.termination,
+        cpu_us: u64::try_from((outcome.user_time + outcome.kernel_time).as_micros())
+            .unwrap_or(u64::MAX),
     })
 }
 

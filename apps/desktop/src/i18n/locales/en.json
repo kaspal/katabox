@@ -139,7 +139,9 @@
     },
     "limits": {
       "time": "Time limit",
-      "memory": "Memory limit"
+      "memory": "Memory limit",
+      "timeFor": "Time limit ({{language}})",
+      "scaled": "adjusted ×{{factor}} for this computer"
     },
     "hints": {
       "none": "This problem has no hints.",
@@ -212,7 +214,19 @@
     "ligatures": "Font ligatures",
     "ligaturesOff": "Off",
     "ligaturesOn": "On",
-    "languages": "Languages"
+    "languages": "Languages",
+    "calibration": {
+      "title": "Judge speed",
+      "description": "Time limits are set on a reference computer. KataBox measures this computer once with a short benchmark and scales every limit by the result, between ×0.5 and ×3.",
+      "factor": "Speed factor",
+      "factorValue": "×{{factor}}",
+      "clamped": "(measured {{measured}})",
+      "runtime": "Measured with",
+      "measuredAt": "Measured",
+      "notMeasured": "Not measured yet: it happens on your first Run or Submit, or now.",
+      "recalibrate": "Recalibrate",
+      "measuring": "Measuring…"
+    }
   },
   "languages": {
     "python": "Python",
@@ -248,7 +262,8 @@
     "file_locked": "A file is in use (an antivirus scan or a running program). Wait a moment and retry.",
     "install_cancelled": "The install was cancelled.",
     "install_busy": "Another install or uninstall is running.",
-    "unsupported_platform": "KataBox cannot install languages on this system yet."
+    "unsupported_platform": "KataBox cannot install languages on this system yet.",
+    "calibration_unavailable": "Measuring this computer needs Python or JavaScript/TypeScript installed."
   },
   "judge": {
     "verdict": {

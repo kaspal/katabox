@@ -352,7 +352,7 @@ async fn custom_inputs_breaking_a_constraint_get_the_validators_message() {
             .await
             .unwrap_err();
         assert_eq!(err.code, AppErrorCode::InvalidCustomInput, "{err}");
-        assert_eq!(err.message, "custom input 2: 2 ≤ nums.length ≤ 10⁴");
+        assert_eq!(err.message, "custom input 2: 2 ≤ nums.length ≤ 10⁵");
     }
     // Valid custom inputs still run.
     let r = app
@@ -366,4 +366,50 @@ async fn custom_inputs_breaking_a_constraint_get_the_validators_message() {
         .await
         .unwrap();
     assert!(r.verdict.is_accepted(), "{r:?}");
+}
+
+/// The first Run measures this machine once (ADR 0017); the limits follow it.
+#[tokio::test]
+async fn the_first_run_calibrates_this_machine() {
+    let app = app("calibrate").await;
+    assert_eq!(app.calibration(), None);
+    let ok = app
+        .run(
+            "two-sum",
+            Language::Rust,
+            &reference(Language::Rust),
+            vec![],
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert!(ok.verdict.is_accepted(), "{ok:?}");
+    let c = app.calibration().expect("measured on the first run");
+    assert_eq!(c.runtime, Language::Python);
+    assert!(c.factor > 0.0 && (0.5..=3.0).contains(&c.applied), "{c:?}");
+    let stored = app
+        .get_setting(kb_app::CALIBRATION_SETTING)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(stored["runtime"], json!("python"));
+
+    // Recalibrate measures again and the problem page shows limits at the new scale.
+    let again = app.recalibrate().await.unwrap();
+    assert!(again.measured_at >= c.measured_at);
+    let view = app
+        .get_problem("two-sum", kb_store::UiLang::En)
+        .await
+        .unwrap();
+    assert_eq!(view.time_scale, again.applied);
+    let rust = view
+        .time_limits
+        .iter()
+        .find(|l| l.language == Language::Rust)
+        .unwrap();
+    assert_eq!(
+        rust.time_limit_ms,
+        (300.0 * again.applied).ceil() as u32,
+        "{view:?}"
+    );
 }

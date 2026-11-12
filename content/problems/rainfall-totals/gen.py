@@ -5,14 +5,12 @@ import random
 def generate(seed, size):
     rng = random.Random(seed)
     if size == "max":
-        n = 50_000
-        q = 50_000 if seed % 2 else 25_000
-        rain = [rng.randint(0, 10**4) for _ in range(n)]
-        queries = []
-        for _ in range(q):
-            first = rng.randint(0, n // 10)
-            last = rng.randint(n - n // 10, n - 1)
-            queries.append([first, last])
+        # The largest n and q; nearly full ranges, so re-summing each range costs about
+        # n·q = 10¹⁰ additions. Small values and first ≤ 9 keep the test file compact.
+        n = q = 100_000
+        rain = [rng.randint(0, 99) for _ in range(n)]
+        rain[rng.randrange(n)] = 10**4
+        queries = [[rng.randint(0, 9), rng.randint(n - 10, n - 1)] for _ in range(q)]
     else:
         n = rng.randint(1, 8)
         rain = [rng.randint(0, 9) for _ in range(n)]
