@@ -5,12 +5,16 @@
 
 use std::path::{Path, PathBuf};
 
+use kb_app::LanguageCount;
+use kb_app::interview::{InterviewResult, InterviewSetup, InterviewView};
 use kb_app::practice::{DailyProblem, ListView, PatternProgress, ReviewItem, ReviewState};
+use kb_app::transfer::{ImportPreview, ImportResult, TransferCounts};
 use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
     LanguagesInfo, SubmissionView, SubmitOptions, SubmitResult,
 };
 use kb_core::{JudgeEvent, Language, Report};
+use kb_store::AcceptedSolution;
 use kb_store::{
     Draft, ProblemFilter, ProblemSummary, ProblemView, Snapshot, SubmissionSummary, UiLang,
 };
@@ -334,6 +338,146 @@ async fn lists_with(state: State<'_, AppState>, problem: String) -> Res<Vec<i64>
     state.app()?.lists_with(&problem).await
 }
 
+// --- Practice modes (ADR 0020) --------------------------------------------------------
+
+/// The workspace opened `problem` (mock interviews pick never-opened problems).
+#[tauri::command]
+#[specta::specta]
+async fn mark_opened(state: State<'_, AppState>, problem: String) -> Res<()> {
+    state.app()?.mark_opened(&problem).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn start_interview(
+    state: State<'_, AppState>,
+    setup: InterviewSetup,
+    lang: UiLang,
+) -> Res<InterviewView> {
+    state.app()?.start_interview(&setup, lang).await
+}
+
+/// The running mock interview, if any (ended first when its time is up).
+#[tauri::command]
+#[specta::specta]
+async fn interview_active(state: State<'_, AppState>, lang: UiLang) -> Res<Option<InterviewView>> {
+    state.app()?.interview_active(lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn end_interview(state: State<'_, AppState>, lang: UiLang) -> Res<InterviewResult> {
+    state.app()?.end_interview(lang).await
+}
+
+/// Past mock interviews, newest first.
+#[tauri::command]
+#[specta::specta]
+async fn interviews(state: State<'_, AppState>, lang: UiLang) -> Res<Vec<InterviewResult>> {
+    state.app()?.interviews(lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn accepted_solution(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+) -> Res<Option<AcceptedSolution>> {
+    state.app()?.accepted_solution(&problem, language).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn solved_languages(state: State<'_, AppState>, problem: String) -> Res<Vec<Language>> {
+    state.app()?.solved_languages(&problem).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn solved_by_language(state: State<'_, AppState>) -> Res<Vec<LanguageCount>> {
+    state.app()?.solved_by_language().await
+}
+
+/// A file path from a native dialog, opened on a blocking thread (`None`: cancelled).
+async fn pick_path(app: tauri::AppHandle, save: bool) -> Res<Option<PathBuf>> {
+    use tauri_plugin_dialog::DialogExt;
+    let picked = tauri::async_runtime::spawn_blocking(move || {
+        let dialog = app
+            .dialog()
+            .file()
+            .add_filter("KataBox progress", &["json"]);
+        if save {
+            let day = chrono_free_today();
+            dialog
+                .set_file_name(format!("katabox-progress-{day}.kbx.json"))
+                .blocking_save_file()
+        } else {
+            dialog.blocking_pick_file()
+        }
+    })
+    .await
+    .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))?;
+    picked
+        .map(|p| {
+            p.into_path()
+                .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))
+        })
+        .transpose()
+}
+
+/// Today's UTC date for the default file name (the name is only a suggestion).
+fn chrono_free_today() -> String {
+    let days = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs() / 86_400);
+    kb_core::Day::from_days(i64::try_from(days).unwrap_or(0)).to_string()
+}
+
+/// Settings → Data → Export: a Save dialog, then every record to one `.kbx.json`
+/// file. `None` when cancelled.
+#[tauri::command]
+#[specta::specta]
+async fn export_progress(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Res<Option<TransferCounts>> {
+    let kb = state.app()?;
+    let Some(path) = pick_path(app, true).await? else {
+        return Ok(None);
+    };
+    kb.export_to(&path).await.map(Some)
+}
+
+/// Settings → Data → Import: an Open dialog, then the file is read and checked and kept
+/// pending. `None` when cancelled.
+#[tauri::command]
+#[specta::specta]
+async fn import_preview(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Res<Option<ImportPreview>> {
+    let kb = state.app()?;
+    let Some(path) = pick_path(app, false).await? else {
+        return Ok(None);
+    };
+    kb.import_preview_from(&path).await.map(Some)
+}
+
+/// Merge the pending import (newer records win).
+#[tauri::command]
+#[specta::specta]
+async fn import_apply(state: State<'_, AppState>, id: u32) -> Res<ImportResult> {
+    state.app()?.import_apply(id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn import_cancel(state: State<'_, AppState>, id: u32) -> Res<()> {
+    state.app()?.import_cancel(id);
+    Ok(())
+}
+
 /// This machine's calibration (ADR 0017), if it was measured.
 #[tauri::command]
 #[specta::specta]
@@ -466,6 +610,18 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         remove_from_list,
         reorder_list,
         lists_with,
+        mark_opened,
+        start_interview,
+        interview_active,
+        end_interview,
+        interviews,
+        accepted_solution,
+        solved_languages,
+        solved_by_language,
+        export_progress,
+        import_preview,
+        import_apply,
+        import_cancel,
         lsp_connect,
         lsp_send,
         lsp_disconnect,
@@ -552,6 +708,9 @@ pub fn run_app() {
     export_bindings_from(&builder);
 
     tauri::Builder::default()
+        // File pickers for Export/Import, used only from Rust commands (ADR 0020): no
+        // dialog permission is granted to the webview.
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
         .setup(|app| {
             let state = open_app(app.handle());

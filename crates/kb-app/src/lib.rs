@@ -13,8 +13,10 @@
 
 mod calibration;
 mod error;
+pub mod interview;
 pub mod practice;
 mod root;
+pub mod transfer;
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
@@ -196,6 +198,18 @@ pub struct App {
     lsp: kb_bridge::LspManager,
     /// This machine's calibration (ADR 0017), from user.db; `None` until measured.
     calibration: RwLock<Option<CalibrationInfo>>,
+    /// Tests only: a fixed "now" (UTC ms) for interview timing.
+    clock: std::sync::Mutex<Option<i64>>,
+    /// An import read by `import_preview`, waiting for `import_apply` (ADR 0020).
+    pending_import: std::sync::Mutex<Option<transfer::PendingImport>>,
+}
+
+/// Solved problems per judge language (cross-language practice, ADR 0020).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct LanguageCount {
+    pub language: Language,
+    pub solved: u32,
 }
 
 impl App {
@@ -242,7 +256,25 @@ impl App {
                 .unwrap_or_default(),
             judging: tokio::sync::Mutex::new(()),
             calibration: RwLock::new(calibration),
+            clock: std::sync::Mutex::new(None),
+            pending_import: std::sync::Mutex::new(None),
         })
+    }
+
+    /// "Now" in UTC milliseconds (wall clock; tests may fix it).
+    pub(crate) fn now_ms(&self) -> i64 {
+        if let Some(t) = *self.clock.lock().unwrap_or_else(|e| e.into_inner()) {
+            return t;
+        }
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| i64::try_from(d.as_millis()).unwrap_or(i64::MAX))
+    }
+
+    /// Tests only: fix the clock (`None`: the wall clock again).
+    #[doc(hidden)]
+    pub fn set_clock(&self, ms: Option<i64>) {
+        *self.clock.lock().unwrap_or_else(|e| e.into_inner()) = ms;
     }
 
     pub fn sandbox_root(&self) -> &Path {
@@ -387,6 +419,10 @@ impl App {
     pub async fn get_problem(&self, id: &str, lang: UiLang) -> Result<ProblemView> {
         let mut view = self.store.content.get_problem(id, lang).await?;
         view.editorial = None;
+        // Mock interview (ADR 0020): hint texts never reach the UI.
+        if self.in_interview(id).await? {
+            view.hints.clear();
+        }
         view.time_scale = calibration::scale_of(self.calibration().as_ref());
         view.time_limits = calibration::time_limits(view.time_limit_ms, view.time_scale);
         Ok(view)
@@ -395,6 +431,7 @@ impl App {
     /// The editorial and whether it is unlocked: once the problem is solved, or after
     /// [`EDITORIAL_FAILURES`] non-Accepted submissions (ADR 0013).
     pub async fn editorial(&self, id: &str, lang: UiLang) -> Result<EditorialState> {
+        self.ensure_unlocked(id).await?;
         let view = self.store.content.get_problem(id, lang).await?;
         let subs = self.store.user.list_submissions(id).await?;
         let solved = subs.iter().any(|s| s.verdict.is_accepted());
@@ -491,6 +528,7 @@ impl App {
         F: FnMut(JudgeEvent) + Send + 'static,
     {
         let _one = self.judge_slot()?;
+        self.ensure_interview_language(problem, language).await?;
         self.ensure_calibrated().await;
         let p = self.problem(problem).await?;
         let mut tests: Vec<TestCase> = p.public_tests().cloned().collect();
@@ -520,6 +558,7 @@ impl App {
     {
         let today = practice::parse_day(&opts.today)?;
         let _one = self.judge_slot()?;
+        self.ensure_interview_language(problem, language).await?;
         self.ensure_calibrated().await;
         let p = self.problem(problem).await?;
         let tests = p.tests.clone();
@@ -727,11 +766,13 @@ impl App {
     // --- Submissions, history, notes, hints, settings ------------------------------
 
     pub async fn list_submissions(&self, problem: &str) -> Result<Vec<SubmissionSummary>> {
+        self.ensure_unlocked(problem).await?;
         Ok(self.store.user.list_submissions(problem).await?)
     }
 
     pub async fn get_submission(&self, id: i64) -> Result<SubmissionView> {
         let s = self.store.user.get_submission(id).await?;
+        self.ensure_unlocked(&s.summary.problem_id).await?;
         let mut report: Report = serde_json::from_value(s.report).map_err(|e| {
             AppError::new(
                 AppErrorCode::Store,
@@ -747,11 +788,63 @@ impl App {
     }
 
     pub async fn list_snapshots(&self, problem: &str) -> Result<Vec<Snapshot>> {
+        self.ensure_unlocked(problem).await?;
         Ok(self.store.user.list_snapshots(problem).await?)
     }
 
     pub async fn restore_snapshot(&self, id: i64) -> Result<Snapshot> {
+        if let Some(problem) = self.store.user.snapshot_problem(id).await? {
+            self.ensure_unlocked(&problem).await?;
+        }
         Ok(self.store.user.restore_snapshot(id).await?)
+    }
+
+    // --- Cross-language practice (ADR 0020) ----------------------------------------
+
+    /// The latest Accepted submission of `problem` in `language` (locked in interviews).
+    pub async fn accepted_solution(
+        &self,
+        problem: &str,
+        language: Language,
+    ) -> Result<Option<kb_store::AcceptedSolution>> {
+        self.ensure_unlocked(problem).await?;
+        Ok(self.store.user.accepted_solution(problem, language).await?)
+    }
+
+    /// Languages `problem` was solved in.
+    pub async fn solved_languages(&self, problem: &str) -> Result<Vec<Language>> {
+        Ok(self.store.user.solved_languages(problem).await?)
+    }
+
+    /// Distinct problems solved per judge language (zeros included).
+    pub async fn solved_by_language(&self) -> Result<Vec<LanguageCount>> {
+        let by = self.store.user.solved_by_language().await?;
+        Ok(kb_judge::languages::SUPPORTED
+            .into_iter()
+            .map(|language| LanguageCount {
+                language,
+                solved: by
+                    .iter()
+                    .find(|(l, _)| *l == language)
+                    .map_or(0, |(_, ps)| u32::try_from(ps.len()).unwrap_or(u32::MAX)),
+            })
+            .collect())
+    }
+
+    /// In a mock interview, only the session's languages may be judged on its problems.
+    async fn ensure_interview_language(&self, problem: &str, language: Language) -> Result<()> {
+        match self.running_session().await? {
+            Some(s)
+                if s.problem_ids.iter().any(|p| p == problem)
+                    && !s.languages.contains(&language) =>
+            {
+                Err(AppError::new(
+                    AppErrorCode::InvalidInput,
+                    format!("{language} is not one of this mock interview's languages"),
+                ))
+            }
+            _ => Ok(()),
+        }
     }
 
     pub async fn get_note(&self, problem: &str) -> Result<Option<String>> {
@@ -764,6 +857,7 @@ impl App {
 
     /// Reveal hint `tier` (1-based); returns every unlocked tier.
     pub async fn unlock_hint(&self, problem: &str, tier: u32) -> Result<Vec<u32>> {
+        self.ensure_unlocked(problem).await?;
         if tier == 0 {
             return Err(AppError::new(
                 AppErrorCode::InvalidInput,
@@ -775,6 +869,7 @@ impl App {
     }
 
     pub async fn unlocked_hints(&self, problem: &str) -> Result<Vec<u32>> {
+        self.ensure_unlocked(problem).await?;
         Ok(self.store.user.unlocked_hints(problem).await?)
     }
 

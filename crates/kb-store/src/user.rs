@@ -44,6 +44,10 @@ pub(crate) const MIGRATIONS: &[Migration] = &[
         version: 3,
         sql: include_str!("../migrations/0003_practice.sql"),
     },
+    Migration {
+        version: 4,
+        sql: include_str!("../migrations/0004_practice_modes.sql"),
+    },
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -91,7 +95,7 @@ pub enum SnapshotSource {
 }
 
 impl SnapshotSource {
-    fn code(self) -> &'static str {
+    pub(crate) fn code(self) -> &'static str {
         match self {
             SnapshotSource::Run => "run",
             SnapshotSource::Submit => "submit",
@@ -99,7 +103,7 @@ impl SnapshotSource {
         }
     }
 
-    fn parse(s: &str) -> Result<Self> {
+    pub(crate) fn parse(s: &str) -> Result<Self> {
         match s {
             "run" => Ok(SnapshotSource::Run),
             "submit" => Ok(SnapshotSource::Submit),
@@ -726,7 +730,7 @@ async fn insert_snapshot(
     Ok(id)
 }
 
-fn code_hash(code: &str) -> String {
+pub(crate) fn code_hash(code: &str) -> String {
     Sha256::digest(code.as_bytes())
         .iter()
         .map(|b| format!("{b:02x}"))
@@ -762,25 +766,25 @@ fn submission_summary(r: &SqliteRow) -> Result<SubmissionSummary> {
     })
 }
 
-fn parse_language(s: &str) -> Result<Language> {
+pub(crate) fn parse_language(s: &str) -> Result<Language> {
     s.parse()
         .map_err(|_| StoreError::Corrupt(format!("language {s:?}")))
 }
 
 /// The verdict's serde name (`accepted`, `wrong_answer`, ...), as in the Report JSON.
-fn verdict_code(v: Verdict) -> Result<String> {
+pub(crate) fn verdict_code(v: Verdict) -> Result<String> {
     match serde_json::to_value(v)? {
         Value::String(s) => Ok(s),
         other => Err(StoreError::Corrupt(format!("verdict {other}"))),
     }
 }
 
-fn parse_verdict(s: &str) -> Result<Verdict> {
+pub(crate) fn parse_verdict(s: &str) -> Result<Verdict> {
     serde_json::from_value(Value::String(s.into()))
         .map_err(|_| StoreError::Corrupt(format!("verdict {s:?}")))
 }
 
-fn parse_status(s: &str) -> Result<ProblemStatus> {
+pub(crate) fn parse_status(s: &str) -> Result<ProblemStatus> {
     match s {
         "attempted" => Ok(ProblemStatus::Attempted),
         "solved" => Ok(ProblemStatus::Solved),
@@ -796,7 +800,7 @@ pub(crate) mod tests {
     use kb_core::{Message, MessageCode, TestKind, TestResult};
     use serde_json::json;
 
-    const TABLES: [&str; 11] = [
+    const TABLES: [&str; 13] = [
         "settings",
         "drafts",
         "submissions",
@@ -808,6 +812,8 @@ pub(crate) mod tests {
         "daily_picks",
         "lists",
         "list_items",
+        "problem_opens",
+        "interview_sessions",
     ];
 
     async fn fresh(name: &str) -> (PathBuf, UserDb) {
