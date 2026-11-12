@@ -1,6 +1,9 @@
 // An in-memory backend standing in for `@/lib/api` in component tests.
 import { vi } from "vitest";
 import type {
+  ActivityRow,
+  ReviewSummary,
+  SolvedBreakdown,
   AppError,
   AppInfo,
   CalibrationInfo,
@@ -194,6 +197,11 @@ export function createFakeApi(
     interviews?: InterviewResult[];
     /** Accepted solutions: `problem:language` → code. */
     accepted?: Record<string, string>;
+    /** Progress (ADR 0021): Submits for the heatmap, the review queue summary, and the
+     * bundled third-party notices (null: a development build). */
+    activity?: ActivityRow[];
+    reviewSummary?: ReviewSummary;
+    notices?: string | null;
   } = {},
 ) {
   const installed = new Set<Language>(opts.installed ?? ["python", "typescript", "php"]);
@@ -299,8 +307,38 @@ export function createFakeApi(
     return r;
   };
 
+  const breakdown = (): SolvedBreakdown => {
+    const count = (of: Row[]) => ({
+      solved: of.filter((p) => p.status === "solved").length,
+      total: of.length,
+    });
+    const tags = [...new Set(PROBLEMS.flatMap((p) => p.tags))].sort();
+    return {
+      by_difficulty: (["easy", "medium", "hard"] as const).map((d) => ({
+        difficulty: d,
+        ...count(PROBLEMS.filter((p) => p.difficulty === d)),
+      })),
+      by_tag: tags
+        .map((tag) => ({ tag, ...count(PROBLEMS.filter((p) => p.tags.includes(tag))) }))
+        .sort((a, b) => b.total - a.total || a.tag.localeCompare(b.tag)),
+    };
+  };
+
   const api: Api = {
     appInfo: vi.fn(async () => appInfoFor(installed)),
+    thirdPartyNotices: vi.fn(async () => opts.notices ?? null),
+    activity: vi.fn(async (sinceMs: number) => (opts.activity ?? []).filter((r) => r.at >= sinceMs)),
+    solvedBreakdown: vi.fn(async () => breakdown()),
+    reviewSummary: vi.fn(
+      async () =>
+        opts.reviewSummary ?? {
+          overdue: 0,
+          due_today: (opts.reviewsDue ?? []).length,
+          next_7_days: 0,
+          later: 0,
+          next_due: null,
+        },
+    ),
     listProblems: vi.fn(async (f: ProblemFilter) => {
       const lang = f.lang ?? "en";
       return PROBLEMS.filter(

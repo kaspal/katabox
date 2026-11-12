@@ -7,8 +7,8 @@
 
 use std::collections::{HashMap, HashSet};
 
-use kb_core::{Day, Verdict};
-use kb_store::{ProblemFilter, ProblemStatus, ProblemSummary, ReviewRow, UiLang};
+use kb_core::{Day, Difficulty, Verdict};
+use kb_store::{ActivityRow, ProblemFilter, ProblemStatus, ProblemSummary, ReviewRow, UiLang};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
@@ -63,6 +63,118 @@ fn pattern_order(a: &str, b: &str) -> std::cmp::Ordering {
 
 fn solved(p: &ProblemSummary) -> bool {
     p.status == Some(ProblemStatus::Solved)
+}
+
+// --- Progress page ------------------------------------------------------------------
+
+/// Solved and total problems of one difficulty or tag.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct DifficultyCount {
+    pub difficulty: Difficulty,
+    pub solved: u32,
+    pub total: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct TagCount {
+    pub tag: String,
+    pub solved: u32,
+    pub total: u32,
+}
+
+/// Progress → solved by difficulty and by topic (tag).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct SolvedBreakdown {
+    /// Easy, Medium, Hard, always all three.
+    pub by_difficulty: Vec<DifficultyCount>,
+    /// Every tag in the pack: most problems first, then by id.
+    pub by_tag: Vec<TagCount>,
+}
+
+pub fn solved_breakdown(all: &[ProblemSummary]) -> SolvedBreakdown {
+    let count = |of: &mut dyn Iterator<Item = &ProblemSummary>| {
+        of.fold((0u32, 0u32), |(s, t), p| (s + u32::from(solved(p)), t + 1))
+    };
+    let by_difficulty = [Difficulty::Easy, Difficulty::Medium, Difficulty::Hard]
+        .into_iter()
+        .map(|d| {
+            let (solved, total) = count(&mut all.iter().filter(|p| p.difficulty == d));
+            DifficultyCount {
+                difficulty: d,
+                solved,
+                total,
+            }
+        })
+        .collect();
+    let mut tags: Vec<&str> = all
+        .iter()
+        .flat_map(|p| p.tags.iter().map(String::as_str))
+        .collect();
+    tags.sort_unstable();
+    tags.dedup();
+    let mut by_tag: Vec<TagCount> = tags
+        .into_iter()
+        .map(|tag| {
+            let (solved, total) =
+                count(&mut all.iter().filter(|p| p.tags.iter().any(|t| t == tag)));
+            TagCount {
+                tag: tag.to_string(),
+                solved,
+                total,
+            }
+        })
+        .collect();
+    by_tag.sort_by(|a, b| b.total.cmp(&a.total).then_with(|| a.tag.cmp(&b.tag)));
+    SolvedBreakdown {
+        by_difficulty,
+        by_tag,
+    }
+}
+
+/// Progress → the review queue at a glance.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct ReviewSummary {
+    /// Due before today.
+    pub overdue: u32,
+    pub due_today: u32,
+    /// Due tomorrow through 7 days from today.
+    pub next_7_days: u32,
+    /// Due after that.
+    pub later: u32,
+    /// The earliest due date after today (`YYYY-MM-DD`).
+    pub next_due: Option<String>,
+}
+
+pub fn review_summary(rows: &[ReviewRow], today: Day) -> Result<ReviewSummary> {
+    let mut s = ReviewSummary {
+        overdue: 0,
+        due_today: 0,
+        next_7_days: 0,
+        later: 0,
+        next_due: None,
+    };
+    let mut next: Option<Day> = None;
+    for r in rows {
+        let due = r.due()?;
+        match due.days() - today.days() {
+            d if d < 0 => s.overdue += 1,
+            0 => s.due_today += 1,
+            d => {
+                if d <= 7 {
+                    s.next_7_days += 1;
+                } else {
+                    s.later += 1;
+                }
+                next = Some(next.map_or(due, |n| n.min(due)));
+            }
+        }
+    }
+    s.next_due = next.map(|d| d.to_string());
+    Ok(s)
 }
 
 // --- Pattern map and next problem ---------------------------------------------------
@@ -382,6 +494,21 @@ impl App {
                 ..Default::default()
             })
             .await?)
+    }
+
+    /// Submits since `since_ms` (UTC ms), for the heatmap. The UI buckets them into the
+    /// user's local days: kb-app never guesses the time zone.
+    pub async fn activity(&self, since_ms: i64) -> Result<Vec<ActivityRow>> {
+        Ok(self.store.user.activity_since(since_ms).await?)
+    }
+
+    pub async fn solved_breakdown(&self, lang: UiLang) -> Result<SolvedBreakdown> {
+        Ok(solved_breakdown(&self.all_problems(lang).await?))
+    }
+
+    pub async fn review_summary(&self, today: &str) -> Result<ReviewSummary> {
+        let day = parse_day(today)?;
+        review_summary(&self.store.user.review_rows().await?, day)
     }
 
     pub async fn patterns(&self, lang: UiLang) -> Result<Vec<PatternProgress>> {
@@ -808,5 +935,72 @@ mod tests {
         assert!(list_name("   ").is_err());
         assert!(list_name(&"x".repeat(81)).is_err());
         assert!(list_name(&"ñ".repeat(80)).is_ok());
+    }
+
+    #[test]
+    fn solved_breakdown_counts_difficulties_and_tags() {
+        let mut all = pack();
+        all[1].difficulty = Difficulty::Medium; // a3, unsolved
+        all[6].difficulty = Difficulty::Hard; // g9, unsolved
+        all[0].tags = vec!["array".into(), "hash-map".into()]; // a1, solved
+        all[1].tags = vec!["array".into()];
+        all[5].tags = vec!["two-pointers".into()]; // t1, solved
+        let b = solved_breakdown(&all);
+        let d: Vec<(Difficulty, u32, u32)> = b
+            .by_difficulty
+            .iter()
+            .map(|c| (c.difficulty, c.solved, c.total))
+            .collect();
+        assert_eq!(
+            d,
+            [
+                (Difficulty::Easy, 2, 6),
+                (Difficulty::Medium, 0, 1),
+                (Difficulty::Hard, 0, 1)
+            ]
+        );
+        let t: Vec<(&str, u32, u32)> = b
+            .by_tag
+            .iter()
+            .map(|c| (c.tag.as_str(), c.solved, c.total))
+            .collect();
+        assert_eq!(
+            t,
+            [("array", 1, 2), ("hash-map", 1, 1), ("two-pointers", 1, 1)]
+        );
+        let empty = solved_breakdown(&[]);
+        assert_eq!(empty.by_difficulty.len(), 3);
+        assert!(empty.by_tag.is_empty());
+    }
+
+    #[test]
+    fn review_summary_buckets_by_due_date() {
+        let r = |id: &str, due: &str| ReviewRow {
+            problem_id: id.into(),
+            due_on: due.into(),
+            interval_days: 3,
+            passes: 0,
+            lapsed: false,
+        };
+        let today = day("2026-03-10");
+        let rows = [
+            r("old", "2026-03-01"),
+            r("today", "2026-03-10"),
+            r("tomorrow", "2026-03-11"),
+            r("week", "2026-03-17"),
+            r("later", "2026-03-18"),
+        ];
+        let s = review_summary(&rows, today).unwrap();
+        assert_eq!(
+            (s.overdue, s.due_today, s.next_7_days, s.later),
+            (1, 1, 2, 1)
+        );
+        assert_eq!(s.next_due.as_deref(), Some("2026-03-11"));
+        let none = review_summary(&[], today).unwrap();
+        assert_eq!(
+            (none.overdue + none.due_today + none.later, none.next_due),
+            (0, None)
+        );
+        assert!(review_summary(&[r("bad", "2026-13-01")], today).is_err());
     }
 }

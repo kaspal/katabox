@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KataBox MSI uninstall cleanup (ADR 0021). On a full uninstall (not an upgrade),
+     run `KataBox.exe --uninstall-cleanup` before the files are removed: it revokes the
+     sandbox's folder grants and deletes the AppContainer profile through kb-runner's
+     cleanup. It runs as the user (Impersonate) because the sandbox lives in the user's
+     profile, and a failure never blocks the uninstall (Return="ignore"). The MSI never
+     deletes user data. The empty ComponentGroup is referenced from tauri.conf.json
+     (`componentGroupRefs`) so that WiX links this fragment. -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <ComponentGroup Id="KbUninstallCleanup" />
+    <CustomAction Id="KbUninstallCleanupRun" FileKey="Path" ExeCommand="--uninstall-cleanup"
+                  Execute="deferred" Impersonate="yes" Return="ignore" />
+    <InstallExecuteSequence>
+      <Custom Action="KbUninstallCleanupRun" Before="RemoveFiles">REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
+    </InstallExecuteSequence>
+  </Fragment>
+</Wix>

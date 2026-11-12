@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Gauge, Loader2, Monitor, Moon, Sun, Upload } from "lucide-react";
 import type { ImportPreview, TransferCounts } from "@/bindings";
 import {
@@ -35,6 +35,56 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2 className="text-sm font-semibold text-muted-foreground">{title}</h2>
       {children}
     </section>
+  );
+}
+
+/** Settings → About → Third-party notices: the bundled THIRD_PARTY_NOTICES.txt, read by
+ * Rust (ADR 0021). Development builds have none. */
+function NoticesButton() {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const notices = useQuery({
+    queryKey: ["third-party-notices"],
+    queryFn: () => api.thirdPartyNotices(),
+    enabled: open,
+    staleTime: Infinity,
+  });
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        {t("settings.noticesView")}
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-3xl" data-testid="notices">
+          <DialogHeader>
+            <DialogTitle>{t("settings.notices")}</DialogTitle>
+            <DialogDescription>{t("settings.noticesIntro")}</DialogDescription>
+          </DialogHeader>
+          {notices.isPending ? (
+            <Skeleton className="h-64 w-full" />
+          ) : notices.error ? (
+            <ErrorNotice error={notices.error} onRetry={() => void notices.refetch()} />
+          ) : notices.data === null ? (
+            <p className="text-sm text-muted-foreground" data-testid="notices-dev">
+              {t("settings.noticesDev")}
+            </p>
+          ) : (
+            <pre
+              className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-md border bg-muted p-3 font-mono text-xs"
+              tabIndex={0}
+              data-testid="notices-text"
+            >
+              {notices.data}
+            </pre>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              {t("settings.close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -411,6 +461,9 @@ export function Settings() {
               </Row>
               <Row label={t("settings.sandboxSource")}>
                 {t(`settings.rootSource.${info.data.sandbox_root_source}`)}
+              </Row>
+              <Row label={t("settings.notices")}>
+                <NoticesButton />
               </Row>
             </dl>
           )}

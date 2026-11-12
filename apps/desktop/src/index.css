@@ -34,6 +34,11 @@
   --color-rail: var(--rail);
 
   --color-verdict-accepted: var(--verdict-accepted);
+  --color-heat-0: var(--heat-0);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
   --color-verdict-wrong: var(--verdict-wrong);
   --color-verdict-error: var(--verdict-error);
   --color-verdict-limit: var(--verdict-limit);

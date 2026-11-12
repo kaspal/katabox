@@ -8,6 +8,9 @@
     "build": "pnpm --filter @katabox/desktop build",
     "typecheck": "pnpm --filter @katabox/desktop exec tsc --noEmit",
     "test": "pnpm --filter @katabox/desktop test",
-    "licenses:check": "node scripts/check-npm-licenses.mjs"
+    "licenses:check": "node scripts/check-npm-licenses.mjs",
+    "notices": "node scripts/gen-notices.mjs",
+    "tauri": "pnpm --filter @katabox/desktop tauri",
+    "release:build": "pnpm notices && pnpm --filter @katabox/desktop tauri build"
   }
 }

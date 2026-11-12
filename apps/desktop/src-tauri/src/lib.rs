@@ -7,14 +7,17 @@ use std::path::{Path, PathBuf};
 
 use kb_app::LanguageCount;
 use kb_app::interview::{InterviewResult, InterviewSetup, InterviewView};
-use kb_app::practice::{DailyProblem, ListView, PatternProgress, ReviewItem, ReviewState};
+use kb_app::practice::{
+    DailyProblem, ListView, PatternProgress, ReviewItem, ReviewState, ReviewSummary,
+    SolvedBreakdown,
+};
 use kb_app::transfer::{ImportPreview, ImportResult, TransferCounts};
 use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
     LanguagesInfo, SubmissionView, SubmitOptions, SubmitResult,
 };
 use kb_core::{JudgeEvent, Language, Report};
-use kb_store::AcceptedSolution;
+use kb_store::{AcceptedSolution, ActivityRow};
 use kb_store::{
     Draft, ProblemFilter, ProblemSummary, ProblemView, Snapshot, SubmissionSummary, UiLang,
 };
@@ -240,6 +243,40 @@ async fn daily_problem(
     lang: UiLang,
 ) -> Res<Option<DailyProblem>> {
     state.app()?.daily_problem(&today, lang).await
+}
+
+/// Progress → heatmap: Submits since `since_ms` (UTC ms); the UI buckets local days.
+#[tauri::command]
+#[specta::specta]
+async fn activity(state: State<'_, AppState>, since_ms: i64) -> Res<Vec<ActivityRow>> {
+    state.app()?.activity(since_ms).await
+}
+
+/// Progress → solved by difficulty and by topic.
+#[tauri::command]
+#[specta::specta]
+async fn solved_breakdown(state: State<'_, AppState>, lang: UiLang) -> Res<SolvedBreakdown> {
+    state.app()?.solved_breakdown(lang).await
+}
+
+/// Progress → the review queue at a glance.
+#[tauri::command]
+#[specta::specta]
+async fn review_summary(state: State<'_, AppState>, today: String) -> Res<ReviewSummary> {
+    state.app()?.review_summary(&today).await
+}
+
+/// Settings → About → Third-party notices (the bundled text; `None` in dev builds).
+#[tauri::command]
+#[specta::specta]
+async fn third_party_notices(app: tauri::AppHandle) -> Res<Option<String>> {
+    let path = app
+        .path()
+        .resolve("THIRD_PARTY_NOTICES.txt", BaseDirectory::Resource)
+        .map_err(|e| AppError::new(AppErrorCode::Internal, format!("notices resource: {e}")))?;
+    tauri::async_runtime::spawn_blocking(move || kb_app::third_party_notices(&path))
+        .await
+        .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))?
 }
 
 /// Consecutive days with the daily problem solved.
@@ -571,6 +608,10 @@ async fn uninstall_language(state: State<'_, AppState>, language: Language) -> R
 fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::<tauri::Wry>::new().commands(tauri_specta::collect_commands![
         app_info,
+        third_party_notices,
+        activity,
+        solved_breakdown,
+        review_summary,
         continue_item,
         list_problems,
         get_problem,
@@ -656,22 +697,43 @@ fn export_bindings_from(builder: &tauri_specta::Builder<tauri::Wry>) {
 }
 
 /// Open the stores and pick the sandbox root, from Tauri's standard folders.
+/// Debug builds keep their data in `<identifier>-dev` folders, so development and
+/// testing never touch the user's real user.db (ADR 0012).
+fn data_folder(dir: PathBuf) -> PathBuf {
+    if cfg!(debug_assertions) {
+        let mut name = dir.file_name().unwrap_or_default().to_os_string();
+        name.push("-dev");
+        dir.with_file_name(name)
+    } else {
+        dir
+    }
+}
+
+/// `KataBox.exe --uninstall-cleanup`, run by the NSIS and MSI uninstallers (ADR 0021):
+/// revoke the sandbox's folder grants and delete the AppContainer profile through
+/// kb-runner's cleanup. Never deletes files; exits 0 when there is nothing to clean.
+pub fn uninstall_cleanup() -> std::process::ExitCode {
+    // Tauri's app_data_dir and app_local_data_dir: `<data dir>/<identifier>`.
+    let id = env!("KATABOX_IDENTIFIER");
+    let (Some(roaming), Some(local)) = (dirs::data_dir(), dirs::data_local_dir()) else {
+        return std::process::ExitCode::SUCCESS;
+    };
+    let user_db = data_folder(roaming.join(id)).join("user.db");
+    let local = data_folder(local.join(id));
+    match tauri::async_runtime::block_on(kb_app::uninstall::cleanup_sandbox(&local, &user_db)) {
+        Ok(_) => std::process::ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("KataBox cleanup: {e}");
+            std::process::ExitCode::FAILURE
+        }
+    }
+}
+
 fn open_app(handle: &tauri::AppHandle) -> Res<App> {
     let internal =
         |what: &str, e: tauri::Error| AppError::new(AppErrorCode::Internal, format!("{what}: {e}"));
     let path = handle.path();
-    // Debug builds keep their data in `<identifier>-dev` folders, so development and
-    // testing never touch the user's real user.db (ADR 0012).
     let dev_data = cfg!(debug_assertions);
-    let data_folder = |dir: PathBuf| {
-        if dev_data {
-            let mut name = dir.file_name().unwrap_or_default().to_os_string();
-            name.push("-dev");
-            dir.with_file_name(name)
-        } else {
-            dir
-        }
-    };
     let paths = AppPaths {
         content_db: path
             .resolve("content.db", BaseDirectory::Resource)
@@ -707,11 +769,15 @@ pub fn run_app() {
     #[cfg(debug_assertions)]
     export_bindings_from(&builder);
 
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         // File pickers for Export/Import, used only from Rust commands (ADR 0020): no
         // dialog permission is granted to the webview.
-        .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(builder.invoke_handler())
+        .plugin(tauri_plugin_dialog::init());
+    // Auto-update is prepared but off (ADR 0021): only a build with `--features updater`
+    // (and tauri.updater.conf.json's key and endpoint) registers the plugin.
+    #[cfg(feature = "updater")]
+    let app = app.plugin(tauri_plugin_updater::Builder::new().build());
+    app.invoke_handler(builder.invoke_handler())
         .setup(|app| {
             let state = open_app(app.handle());
             if let Err(e) = &state {

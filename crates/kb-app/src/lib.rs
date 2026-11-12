@@ -17,6 +17,32 @@ pub mod interview;
 pub mod practice;
 mod root;
 pub mod transfer;
+pub mod uninstall;
+
+/// The first line of the placeholder THIRD_PARTY_NOTICES.txt that development builds get
+/// (`apps/desktop/src-tauri/build.rs`); release builds always carry the real file.
+pub const NOTICES_PLACEHOLDER: &str = "KATABOX_NOTICES_PLACEHOLDER";
+/// A sanity cap on the notices file (the real one is about 3 MB).
+const NOTICES_MAX_BYTES: u64 = 32 * 1024 * 1024;
+
+/// Settings → About → Third-party notices: the bundled text, or `None` in development
+/// builds (no file, or the placeholder).
+pub fn third_party_notices(path: &std::path::Path) -> Result<Option<String>> {
+    let io = |e: std::io::Error| AppError::new(AppErrorCode::Internal, format!("notices: {e}"));
+    match std::fs::metadata(path) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(e) => return Err(io(e)),
+        Ok(m) if m.len() > NOTICES_MAX_BYTES => {
+            return Err(AppError::new(
+                AppErrorCode::Internal,
+                "notices file too large",
+            ));
+        }
+        Ok(_) => {}
+    }
+    let text = std::fs::read_to_string(path).map_err(io)?;
+    Ok((!text.starts_with(NOTICES_PLACEHOLDER)).then_some(text))
+}
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};

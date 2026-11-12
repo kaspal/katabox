@@ -203,6 +203,28 @@ impl UserDb {
 
     // --- Settings -------------------------------------------------------------------
 
+    /// Read one setting from the user.db at `path` without migrating or writing it (for
+    /// the uninstaller's cleanup). `None` when the file or the key is missing.
+    pub async fn peek_setting(path: &Path, key: &str) -> Result<Option<Value>> {
+        if !path.is_file() {
+            return Ok(None);
+        }
+        let opts = SqliteConnectOptions::new()
+            .filename(path)
+            .read_only(true)
+            .busy_timeout(Duration::from_secs(5));
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect_with(opts)
+            .await?;
+        let v: Option<String> = sqlx::query_scalar("SELECT value FROM settings WHERE key = ?")
+            .bind(key)
+            .fetch_optional(&pool)
+            .await?;
+        pool.close().await;
+        Ok(v.map(|s| serde_json::from_str(&s)).transpose()?)
+    }
+
     pub async fn get_setting(&self, key: &str) -> Result<Option<Value>> {
         let v: Option<String> = sqlx::query_scalar("SELECT value FROM settings WHERE key = ?")
             .bind(key)

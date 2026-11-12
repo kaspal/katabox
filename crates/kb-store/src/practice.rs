@@ -44,6 +44,16 @@ pub struct DailyPick {
     pub solved: bool,
 }
 
+/// One Submit, for the Progress heatmap: the UI buckets `at` (UTC ms) into local days.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct ActivityRow {
+    /// UTC milliseconds.
+    pub at: i64,
+    pub problem_id: String,
+    pub accepted: bool,
+}
+
 /// A personal list without its items.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
@@ -127,6 +137,40 @@ impl UserDb {
         .execute(&self.pool)
         .await?;
         Ok(())
+    }
+
+    /// Every scheduled review (graduated problems have no row), earliest first.
+    pub async fn review_rows(&self) -> Result<Vec<ReviewRow>> {
+        sqlx::query("SELECT * FROM reviews ORDER BY due_on, problem_id")
+            .fetch_all(&self.pool)
+            .await?
+            .iter()
+            .map(review_row)
+            .collect()
+    }
+
+    // --- Activity -------------------------------------------------------------------
+
+    /// Submits made at or after `from_ms` (UTC ms), oldest first.
+    pub async fn activity_since(&self, from_ms: i64) -> Result<Vec<ActivityRow>> {
+        let accepted = crate::user::verdict_code(kb_core::Verdict::Accepted)?;
+        sqlx::query(
+            "SELECT created_at, problem_id, verdict = ? AS accepted FROM submissions
+             WHERE created_at >= ? ORDER BY created_at, id",
+        )
+        .bind(accepted)
+        .bind(from_ms)
+        .fetch_all(&self.pool)
+        .await?
+        .iter()
+        .map(|r| {
+            Ok(ActivityRow {
+                at: r.try_get("created_at")?,
+                problem_id: r.try_get("problem_id")?,
+                accepted: r.try_get::<i64, _>("accepted")? != 0,
+            })
+        })
+        .collect()
     }
 
     /// Remove a problem from the review queue. Returns whether it was there.
@@ -488,5 +532,52 @@ mod tests {
             db.add_to_list(a.id, "x").await,
             Err(StoreError::NotFound(_))
         ));
+    }
+
+    #[tokio::test]
+    async fn activity_and_the_whole_review_queue() {
+        use crate::user::tests::report;
+        use kb_core::{Language, Verdict};
+        let (_d, db) = fresh("activity").await;
+        let before = now_ms();
+        db.record_submission("a", Language::Python, "x", &report(Verdict::WrongAnswer))
+            .await
+            .unwrap();
+        db.record_submission("a", Language::Rust, "y", &report(Verdict::Accepted))
+            .await
+            .unwrap();
+        let rows = db.activity_since(before).await.unwrap();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(
+            (rows[0].problem_id.as_str(), rows[0].accepted),
+            ("a", false)
+        );
+        assert!(rows[1].accepted && rows[1].at >= before);
+        assert!(
+            db.activity_since(now_ms() + 60_000)
+                .await
+                .unwrap()
+                .is_empty()
+        );
+
+        for (id, due) in [("late", "2026-01-09"), ("early", "2026-01-02")] {
+            db.put_review(&ReviewRow {
+                problem_id: id.into(),
+                due_on: due.into(),
+                interval_days: 3,
+                passes: 0,
+                lapsed: false,
+            })
+            .await
+            .unwrap();
+        }
+        let all = db.review_rows().await.unwrap();
+        assert_eq!(
+            all.iter()
+                .map(|r| r.problem_id.as_str())
+                .collect::<Vec<_>>(),
+            ["early", "late"]
+        );
+        assert_eq!(db.reviews_due(day("2026-01-05")).await.unwrap().len(), 1);
     }
 }

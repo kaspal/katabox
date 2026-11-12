@@ -135,6 +135,14 @@ describe.each([
     expect(contrast(t["dev-badge-foreground"], t["dev-badge"])).toBeGreaterThanOrEqual(4.5);
   });
 
+  it("heatmap levels grow in contrast and the busiest stands out (≥ 3:1, WCAG 1.4.11)", () => {
+    const levels = [0, 1, 2, 3, 4].map((i) => contrast(t[`heat-${i}`], t.card));
+    for (let i = 1; i < levels.length; i++) {
+      expect(levels[i], `heat-${i} vs heat-${i - 1}`).toBeGreaterThan(levels[i - 1]);
+    }
+    expect(levels[4]).toBeGreaterThanOrEqual(3);
+  });
+
   it("the focus ring and inputs stand out (≥ 3:1)", () => {
     for (const bg of ["background", "card"]) {
       expect(contrast(t.ring, t[bg]), `ring on ${bg}`).toBeGreaterThanOrEqual(3);

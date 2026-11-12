@@ -13,6 +13,11 @@ fn main() -> std::process::ExitCode {
             }
         }
     }
+    // The installers' uninstall step (ADR 0021): revoke the sandbox grants and delete the
+    // AppContainer profile, then exit without opening a window.
+    if std::env::args().nth(1).as_deref() == Some("--uninstall-cleanup") {
+        return katabox_lib::uninstall_cleanup();
+    }
     katabox_lib::run_app();
     std::process::ExitCode::SUCCESS
 }

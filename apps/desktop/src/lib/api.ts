@@ -7,6 +7,9 @@ import {
   type AppError,
   type AppInfo,
   type AcceptedSolution,
+  type ActivityRow,
+  type ReviewSummary,
+  type SolvedBreakdown,
   type CalibrationInfo,
   type ImportPreview,
   type ImportResult,
@@ -61,6 +64,10 @@ function progress(onEvent: (e: JudgeEvent) => void): Channel<JudgeEvent> {
 
 export const api = {
   appInfo: (): Promise<AppInfo> => call(commands.appInfo()),
+  thirdPartyNotices: (): Promise<string | null> => call(commands.thirdPartyNotices()),
+  activity: (sinceMs: number): Promise<ActivityRow[]> => call(commands.activity(sinceMs)),
+  solvedBreakdown: (lang: UiLang): Promise<SolvedBreakdown> => call(commands.solvedBreakdown(lang)),
+  reviewSummary: (today: string): Promise<ReviewSummary> => call(commands.reviewSummary(today)),
   listProblems: (filter: ProblemFilter): Promise<ProblemSummary[]> =>
     call(commands.listProblems(filter)),
   getProblem: (id: string, lang: UiLang): Promise<ProblemView> =>

@@ -28,7 +28,7 @@ pub use content::{
     ProblemFilter, ProblemSummary, ProblemView, PublicTest, StatusFilter, UiLang, build,
 };
 pub use modes::{AcceptedSolution, SessionRow, SubmitFact};
-pub use practice::{DailyPick, INSTALL_ID_SETTING, ListRow, ReviewRow};
+pub use practice::{ActivityRow, DailyPick, INSTALL_ID_SETTING, ListRow, ReviewRow};
 pub use transfer::ExportData;
 pub use user::{
     BACKUPS_KEPT, Draft, DraftRef, ProblemStatus, SNAPSHOT_CAP, Snapshot, SnapshotSource,
