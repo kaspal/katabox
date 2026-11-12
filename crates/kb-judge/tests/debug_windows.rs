@@ -338,10 +338,13 @@ fn exceptions_load_errors_and_other_languages() {
 /// step shows the user's frames only (the entry function outermost), and the deepest
 /// step shows the problem's helper: a class method, a recursive function or a
 /// generator.
+/// A frame name to find at the deepest step, and how many frames must match it.
+type Helper = (&'static str, usize);
+
 #[test]
 fn new_problems_are_debuggable() {
     // (id, entry function, helper frame at the deepest step, frames of it there)
-    let problems: [(&str, &str, Option<(&str, usize)>); 15] = [
+    let problems: [(&str, &str, Option<Helper>); 15] = [
         ("catalog-prefixes", "prefix_counts", Some(("Trie.", 1))),
         ("fun-run-results", "finish_order", None),
         ("family-generations", "generations", None),
