@@ -120,6 +120,12 @@ describe("Workspace: Next card and review mode", () => {
     expect(within(next).getByRole("link", { name: /Open/ })).toHaveAttribute("href", "/problems/longest-window");
     expect(screen.getByTestId("daily-solved")).toHaveTextContent("Solved today");
     expect(fake.state.submitOptions[0]).toEqual({ today: localToday(), review: false, lang: "en" });
+
+    // Opening the next problem starts with a clean results pane.
+    await user.click(within(next).getByRole("link", { name: /Open/ }));
+    expect(await screen.findByRole("heading", { name: "Longest Window" }, { timeout: 4000 })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId("result-view")).toBeNull());
+    expect(screen.queryByTestId("next-card")).toBeNull();
   });
 
   it("shows no Next card when the submit is not Accepted", async () => {
@@ -268,7 +274,7 @@ describe("Polish", () => {
     const active = within(tabs).getByRole("tab", { selected: true });
     const label = active.querySelector("[data-tab-label]")!;
     expect(label).toHaveTextContent("Description");
-    expect(label.className).toContain("group-data-[state=active]:inline");
+    expect(label.className).toContain("group-aria-selected:inline");
   });
 
   it("PHP gets basic completion when no language server runs", () => {

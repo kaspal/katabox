@@ -151,6 +151,15 @@ export function useJudge(problem: string) {
   const [lastKind, setLastKind] = useState<"run" | "submit" | null>(null);
   const running = useRef(false);
 
+  // Another problem (e.g. opened from the Next card): forget the last result.
+  useEffect(() => {
+    setReport(null);
+    setError(null);
+    setPractice(null);
+    setLastKind(null);
+    setPhase({ kind: "idle" });
+  }, [problem]);
+
   const start = useCallback(
     async (kind: "run" | "submit", job: (onEvent: (e: JudgeEvent) => void) => Promise<Report>) => {
       if (running.current) return;

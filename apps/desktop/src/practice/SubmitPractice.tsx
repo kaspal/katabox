@@ -13,7 +13,7 @@ export function SubmitPractice({ practice, accepted }: { practice: PracticeOutco
   const patternLabel = usePatternLabel();
   const review = practice.review;
   return (
-    <div className="mt-3 space-y-3" data-testid="submit-practice">
+    <div className="space-y-3" data-testid="submit-practice">
       {review && (
         <p
           role="status"

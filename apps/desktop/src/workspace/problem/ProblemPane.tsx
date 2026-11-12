@@ -88,9 +88,9 @@ export function ProblemPane({
               <TooltipTrigger asChild>
                 <TabsTrigger value={tab} aria-label={label} className="group min-w-0 gap-1 px-2 text-xs">
                   <Icon aria-hidden className="size-3.5 shrink-0" />
-                  {/* Narrow panes show icons only, except the active tab's name. */}
+                  {/* Narrow panes show icons only, except the active tab's name (aria-selected: the tooltip owns data-state). */}
                   <span
-                    className="hidden truncate group-data-[state=active]:inline @[34rem]:inline"
+                    className="hidden truncate group-aria-selected:inline @[34rem]:inline"
                     data-tab-label
                   >
                     {label}

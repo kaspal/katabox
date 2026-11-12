@@ -81,7 +81,16 @@ export function FailureView({ failure }: { failure: Failure }) {
 }
 
 /** A judge report: verdict header, compiler output, per-test table, first failure. */
-export function ResultView({ report, celebrate = false }: { report: Report; celebrate?: boolean }) {
+export function ResultView({
+  report,
+  celebrate = false,
+  afterSummary,
+}: {
+  report: Report;
+  celebrate?: boolean;
+  /** Shown right under the verdict summary, above the details (the practice outcome). */
+  afterSummary?: React.ReactNode;
+}) {
   const { t, i18n } = useTranslation();
   const accepted = report.verdict === "accepted";
   const passed = report.tests.filter((r) => r.verdict === "accepted").length;
@@ -102,6 +111,7 @@ export function ResultView({ report, celebrate = false }: { report: Report; cele
           {t("results.time", { ms: ms(report.time_us) })} · {t("results.memory", { mb: mb(report.memory_kb) })}
         </span>
       </header>
+      {afterSummary}
 
       {report.compile_output && (
         <section>

@@ -183,10 +183,13 @@ export function ResultsPane({
           {error && !customError ? (
             <ErrorNotice error={error} />
           ) : report ? (
-            <>
-              <ResultView report={report} celebrate={celebrate} />
-              {practice && <SubmitPractice practice={practice} accepted={report.verdict === "accepted"} />}
-            </>
+            <ResultView
+              report={report}
+              celebrate={celebrate}
+              afterSummary={
+                practice && <SubmitPractice practice={practice} accepted={report.verdict === "accepted"} />
+              }
+            />
           ) : busy ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 aria-hidden className="size-4 animate-spin" />
