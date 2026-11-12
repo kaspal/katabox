@@ -109,10 +109,15 @@ fn naive_passing_means_the_tests_are_too_weak() {
     // Without the max-size test, the O(n²) solutions are fast enough in both languages.
     std::fs::remove_file(dir.join("tests/hidden/15.json")).unwrap();
     let f = check_problem(&dir, &env());
-    for lang in [Language::Python, Language::Rust] {
-        let n = finding(&f, Check::Naive(lang));
-        assert!(!n.ok && n.detail.contains("do not force"), "{}", n.detail);
-    }
+    let n = finding(&f, Check::Naive(Language::Python));
+    assert!(!n.ok && n.detail.contains("do not force"), "{}", n.detail);
+    // naive.rs is measured: well under the 1.5× margin.
+    let n = finding(&f, Check::Naive(Language::Rust));
+    assert!(
+        !n.ok && n.detail.contains("below the 1.5× margin"),
+        "{}",
+        n.detail
+    );
 }
 
 #[test]
@@ -123,7 +128,9 @@ fn a_naive_rs_that_is_too_fast_is_rejected() {
     let f = check_problem(&dir, &env());
     let n = finding(&f, Check::Naive(Language::Rust));
     assert!(
-        !n.ok && n.detail.contains("naive.rs passed") && n.detail.ends_with("in rust"),
+        !n.ok
+            && n.detail.starts_with("naive.rs needs 0.")
+            && n.detail.contains("below the 1.5× margin"),
         "{}",
         n.detail
     );
