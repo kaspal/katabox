@@ -274,4 +274,58 @@ mod tests {
         assert!(sizes_error(&[0, 3, 10, 30]).is_some());
         assert!(sizes_error(&[1, 2, 3, 4, 5, 6, 7, 8, 9]).is_some());
     }
+
+    fn two_sum_copy(name: &str) -> (PathBuf, Vec<u32>) {
+        let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/two-sum");
+        let dir = std::env::temp_dir().join(format!("kbp-profile-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        crate::validate::tests::copy_dir(&src, &dir);
+        let sizes = read_reference(&dir).unwrap().sizes;
+        (dir, sizes)
+    }
+
+    #[test]
+    fn committed_profile_files_are_checked() {
+        let (dir, sizes) = two_sum_copy("files");
+        assert_eq!(files_error(&dir, &sizes), None);
+        assert_eq!(read_inputs(&dir, &sizes).unwrap().len(), sizes.len());
+
+        // Sizes that do not match the files.
+        let mut more = sizes.clone();
+        more.push(sizes.last().unwrap() * 2);
+        assert!(files_error(&dir, &more).unwrap().contains("missing"));
+        assert!(
+            files_error(&dir, &sizes[1..])
+                .unwrap()
+                .contains("not in profile_sizes")
+        );
+
+        // A reference without one language's times.
+        let mut r = read_reference(&dir).unwrap();
+        r.times_us.remove("php");
+        fs::write(reference_path(&dir), serde_json::to_string(&r).unwrap()).unwrap();
+        assert!(
+            files_error(&dir, &sizes)
+                .unwrap()
+                .contains("no times for php")
+        );
+
+        // Inputs over the budget (incompressible numbers).
+        let mut x: u64 = 1;
+        let big: Vec<u64> = (0..250_000)
+            .map(|_| {
+                x = x
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                x >> 11
+            })
+            .collect();
+        fs::write(
+            input_path(&dir, sizes[0]),
+            serde_json::json!({ "nums": big, "target": 1 }).to_string(),
+        )
+        .unwrap();
+        assert!(files_error(&dir, &sizes).unwrap().contains("budget"));
+        fs::remove_dir_all(&dir).unwrap();
+    }
 }

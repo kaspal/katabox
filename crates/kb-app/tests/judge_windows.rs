@@ -641,3 +641,50 @@ async fn a_typescript_debug_session_on_two_sum() {
     assert_eq!(outcome.as_ref().unwrap().value, json!([2, 4]));
     app.debug_end(id);
 }
+
+/// The complexity profiler (ADR 0024) through the app: the Python reference of
+/// balanced-streaks is estimated O(n) with the reference line at every size; the
+/// nested-loop solution is slower than linear and stops early. Problems without a
+/// profile say so.
+#[tokio::test]
+async fn profiles_a_solution_and_estimates_the_class() {
+    use kb_core::profile::ComplexityClass;
+    let app = app("profile").await;
+    let started = std::time::Instant::now();
+    let dir = repo().join("content/problems/balanced-streaks/solutions");
+    let read = |f: &str| std::fs::read_to_string(dir.join(f)).unwrap();
+    let fast = app
+        .profile_solution("balanced-streaks", Language::Python, &read("ref.py"))
+        .await
+        .unwrap();
+    assert!(started.elapsed() < std::time::Duration::from_secs(15));
+    let sizes: Vec<u32> = fast.reference.iter().map(|r| r.n).collect();
+    assert_eq!(sizes, [300, 1000, 3000, 10000, 30000, 100000]);
+    assert_eq!(fast.points.len(), sizes.len(), "{fast:?}");
+    assert_eq!(fast.stopped, None);
+    let estimate = fast.estimate.as_ref().unwrap();
+    assert_eq!(estimate.class, ComplexityClass::Linear, "{fast:?}");
+    assert!(fast.reference.iter().all(|r| r.us > 0));
+
+    let slow = app
+        .profile_solution("balanced-streaks", Language::Python, &read("naive.py"))
+        .await
+        .unwrap();
+    assert!(slow.stopped.is_some(), "{slow:?}");
+    let class = slow.estimate.as_ref().map(|e| e.class);
+    assert!(
+        matches!(
+            class,
+            Some(ComplexityClass::Quadratic | ComplexityClass::Exponential)
+        ),
+        "{slow:?}"
+    );
+
+    let none = app
+        .profile_solution("corner-shop", Language::Python, "")
+        .await;
+    assert_eq!(
+        none.err().map(|e| e.code),
+        Some(AppErrorCode::ProfileUnavailable)
+    );
+}

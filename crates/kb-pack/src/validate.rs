@@ -497,6 +497,52 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn profile_keys_go_together() {
+        let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/two-sum");
+        let root = std::env::temp_dir().join(format!("kbp-profile-meta-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        let dir = root.join("two-sum");
+        copy_dir(&src, &dir);
+        let toml = fs::read_to_string(dir.join("problem.toml")).unwrap();
+        let errs = |text: &str| {
+            fs::write(dir.join("problem.toml"), text).unwrap();
+            validate_problem_meta(&dir).1
+        };
+        assert_eq!(errs(&toml), Vec::<String>::new());
+        let sizes_line = toml
+            .lines()
+            .find(|l| l.starts_with("profile_sizes"))
+            .unwrap();
+        let no_sizes = toml.replace(
+            &format!(
+                "{sizes_line}
+"
+            ),
+            "",
+        );
+        assert!(errs(&no_sizes).contains(&"profile = true requires profile_sizes".to_string()));
+        let off = no_sizes.replace(
+            "profile = true
+",
+            "",
+        );
+        assert!(errs(&off).contains(&"profile/ needs profile = true".to_string()));
+        let sizes_only = toml.replace(
+            "profile = true
+",
+            "",
+        );
+        assert!(errs(&sizes_only).contains(&"profile_sizes needs profile = true".to_string()));
+        let bad_sizes = toml.replace(sizes_line, "profile_sizes = [300, 100, 1000, 3000]");
+        assert!(
+            errs(&bad_sizes)
+                .iter()
+                .any(|e| e.contains("strictly increasing"))
+        );
+        fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
     fn two_sum_references_match_their_stubs() {
         let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/two-sum");
         let mut errs = Vec::new();
