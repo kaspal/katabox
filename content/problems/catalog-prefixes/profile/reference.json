@@ -6,6 +6,14 @@
     3000,
     10000
   ],
+  "seed": 1,
+  "sha256": [
+    "84a978ac032f043b87d3f705d6ed17aa8fc8fe9f1b69af0887d8a7ae1d638954",
+    "85e38b3cbbe8eb665cd12fdf740d4ccd228cc69df74d3c9b4b2c48d8df45f210",
+    "e57e1832b5c2032784882bd7b06e156ea88e8f811df2609ea40d42b29ad79691",
+    "cdecf4afe78d56487b606ca38f50634db8a67238cfe23180e8ab32ed3e771f7b",
+    "f48fc148de8f4576d6545a530237b69cdfceb6a22c7142cc0841e655b76df0d7"
+  ],
   "machine_factor": 1.1491064814814815,
   "times_us": {
     "php": [

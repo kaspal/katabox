@@ -331,12 +331,13 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
         };
         add(Check::Naive(lang), ok, detail);
     }
-    // 5. The complexity profiler's inputs (ADR 0024): gen.py still makes them.
+    // 5. The complexity profiler's inputs (ADR 0024): gen.py still makes them, they
+    // match their committed hashes, and the cache for the build is refreshed.
     if let Some(sizes) = crate::validate::read_problem_toml(dir)
         .ok()
         .and_then(|m| m.profile_sizes)
     {
-        let (ok, detail) = match crate::profile::check_regenerates(dir, env, &sizes) {
+        let (ok, detail) = match crate::profile::fill_cache(dir, env, &sizes) {
             Ok(d) => (true, d),
             Err(e) => (false, e),
         };

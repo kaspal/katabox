@@ -1,6 +1,6 @@
 # 24. Complexity profiler and the JavaScript editor mode
 
-Date: 2026-11-12 · Status: proposed
+Date: 2026-11-12 · Status: accepted
 
 ## Context
 Enhancement 9 of the build plan: after an Accepted result, measure the solution at
@@ -26,8 +26,9 @@ parameter of plain JavaScript.
 
 ## Decision
 
-### Inputs: precomputed and committed
-The maintainer chose precomputed inputs: the app never needs Python to profile.
+### Inputs: precomputed, generated and hash-verified
+The maintainer chose precomputed inputs: the app never needs Python to profile. The
+inputs are packed into content.db, but **not committed**: only their hashes are.
 - **`problem.toml`:** `profile = true` plus `profile_sizes = [n₁, …]`: 4-8 positive,
   strictly increasing sizes. kb-pack requires them together, and refuses a `profile/`
   folder without them.
@@ -37,21 +38,45 @@ The maintainer chose precomputed inputs: the app never needs Python to profile.
   [--seed S]` prints it.
 - **`kb-pack profile <dir>`** (in the sandbox):
   1. generates every size with seed 1;
-  2. checks each input with validate.py;
-  3. writes `profile/inputs/<n>.json`;
+  2. checks each input with validate.py and the profile budget;
+  3. writes the inputs into the **cache**, `profile/inputs/<n>.json` (gitignored);
   4. profiles `ref.*` in all four languages;
-  5. writes `profile/reference.json`: `{sizes, machine_factor, times_us: {language:
-     [µs…]}}`, divided by the machine factor (ADR 0017), so the times are for the
-     reference machine.
-- **`kb-pack validate`** checks the files:
-  - one input per size, no extra file;
-  - a reference with times for every language at every size;
-  - a **profile budget of 512 KB compressed** per problem (separate from the tests'
-    budget).
-- **`validate --run`** regenerates every input in the sandbox. Each must:
-  - equal the committed file (gen honours `--n`, deterministically);
+  5. writes `profile/reference.json` (**committed**): `{sizes, seed, sha256,
+     machine_factor, times_us: {language: [µs…]}}`. `sha256` is one hash per size, of the
+     input as compact JSON. The times are divided by the machine factor (ADR 0017), so
+     they are for the reference machine.
+- **`kb-pack profile --inputs [DIR]`** regenerates the caches of one problem or of every
+  profiled problem, and verifies each input against its committed hash.
+- **`kb-pack validate`** (no toolchain) checks:
+  - the reference: sizes, seed, one hash per size, and times for every language at
+    every size;
+  - any cached input against its hash;
+  - no stray files in the cache.
+- **`validate --run`** regenerates every input in the sandbox (and so refreshes the
+  cache). Each must:
+  - match its committed hash (gen honours `--n`, deterministically);
   - pass validate.py;
   - be no smaller than the previous size, the last larger than the first.
+
+  Together they must fit the **profile budget of 512 KB compressed** per problem
+  (separate from the tests' budget).
+- **`kb-pack build`** packs a problem's profile only from a complete cache that matches
+  every hash:
+  - a mismatching cache fails the build;
+  - without a cache, the problem is packed without profile data (its Complexity action
+    is hidden), with a warning.
+
+  So builds (the desktop crate's build.rs, `pnpm dev`, CI) never need the toolchains. The
+  **Windows release job** fetches the runtimes and runs `kb-pack profile --inputs` before
+  the build, so its installers carry every profile.
+- **How this differs from tests (ADR 0018):**
+  - **Tests** stay committed as JSON: people review them, and the build never generates
+    them.
+  - **Profile inputs** are machine-made and never reviewed by hand. Committing them
+    added 37 MB of JSON, so git keeps only the hashes (with the seed and the sizes), and
+    gen.py reproduces the inputs.
+  - **The cost:** a build carries profiles only where the sandbox and Python have run
+    (`validate --run`, `kb-pack profile --inputs`, the Windows release).
 - **content.db schema v4:**
   - `profile_inputs(problem_id, n, input)` (zstd JSON);
   - `profile_reference(problem_id, language, n, time_us)`;
@@ -169,8 +194,11 @@ The maintainer chose precomputed inputs: the app never needs Python to profile.
   balanced-streaks.
 
 ## Consequences
-- **Size:** content.db grows by about 7 MB (321 inputs, 7.2 MB compressed), and the
-  repository by 37 MB of JSON.
+- **Size:** content.db grows by about 7 MB with every profile (321 inputs, 7.2 MB
+  compressed). The repository grows only by the 53 reference files (hashes and times),
+  not by the inputs.
+- **Linux installers** ship without profiles until sandboxed problem scripts run on
+  Linux; dev builds without a cache likewise.
 - **A pin change:** a runtime pin change or a calibration benchmark change (ADR 0017)
   means re-running `kb-pack profile` for the reference times, alongside
   `validate --run`.

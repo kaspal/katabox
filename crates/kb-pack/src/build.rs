@@ -90,7 +90,7 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         pattern: meta.pattern,
         rank: meta.rank,
         profile: if meta.profile {
-            Some(read_profile(dir, meta.profile_sizes.as_deref().unwrap_or_default()).map_err(at)?)
+            read_profile(dir).map_err(at)?
         } else {
             None
         },
@@ -106,10 +106,18 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
     })
 }
 
-/// The committed profile inputs and reference times (ADR 0024).
-fn read_profile(dir: &Path, sizes: &[u32]) -> Result<ProfileData, String> {
+/// The cached profile inputs, verified against their hashes, and the reference times
+/// (ADR 0024). Without a complete cache the problem is packed without a profile.
+fn read_profile(dir: &Path) -> Result<Option<ProfileData>, String> {
     let reference = crate::profile::read_reference(dir)?;
-    let inputs = crate::profile::read_inputs(dir, sizes)?;
+    let Some(inputs) = crate::profile::cached_inputs(dir, &reference)? else {
+        eprintln!(
+            "warning: {}: no profile inputs cached, packed without a complexity profile \
+             (run kb-pack profile --inputs)",
+            dir.display()
+        );
+        return Ok(None);
+    };
     let mut times = Vec::new();
     for lang in crate::profile::languages() {
         let t = reference
@@ -118,10 +126,10 @@ fn read_profile(dir: &Path, sizes: &[u32]) -> Result<ProfileData, String> {
             .ok_or_else(|| format!("profile/reference.json: no {} times", lang.id()))?;
         times.push((lang, t.clone()));
     }
-    Ok(ProfileData {
+    Ok(Some(ProfileData {
         inputs,
         reference: times,
-    })
+    }))
 }
 
 /// Hint tiers are separated by lines containing only `---`.

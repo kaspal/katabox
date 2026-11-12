@@ -150,19 +150,25 @@ the reference solution's line.
   - `__main__` accepts `--n N [--seed S]` as well as the positional form.
 - **`kb-pack profile content/problems/<id>`** (sandbox, all four toolchains):
   1. generates each size with seed 1;
-  2. checks it with `validate.py`;
-  3. writes `profile/inputs/<n>.json`;
-  4. times `ref.*` in every language (3 runs per size, the median, normalized to the
+  2. checks it with `validate.py` and the **profile budget: 512 KB compressed** per
+     problem (separate from the tests' budget);
+  3. times `ref.*` in every language (3 runs per size, the median, normalized to the
      reference machine);
-  5. writes `profile/reference.json`.
+  4. writes `profile/reference.json`: the sizes, the seed, a SHA-256 per input, and the
+     times.
 
-  Commit both. Re-run it after changing `gen.py`'s int branch, the sizes, a reference
+  **Commit only `reference.json`.** The inputs go to `profile/inputs/`, a gitignored
+  cache. Re-run it after changing `gen.py`'s int branch, the sizes, a reference
   solution, or a runtime pin.
-- **`kb-pack validate`** checks the files and the **profile budget: 512 KB compressed**
-  per problem, separate from the tests' budget.
-- **`validate --run`** regenerates every input and checks:
-  - it matches the committed file;
+- **`kb-pack profile --inputs [content/problems]`** regenerates the caches and verifies
+  them against the hashes. `kb-pack build` packs a profile only from a matching cache;
+  without one, it leaves the problem unprofiled with a warning.
+- **`kb-pack validate`** checks `reference.json` and any cached inputs against the
+  hashes.
+- **`validate --run`** regenerates every input (refreshing the cache) and checks:
+  - it matches its hash;
   - it passes `validate.py`;
+  - it is within the budget;
   - the inputs never get smaller with n.
 
 ## Checking
@@ -183,7 +189,7 @@ from the reference one), then checks, per problem:
 | stress | `gen.py` makes 500 small inputs (seeds 1-500); each passes `validate.py`; `brute.py`'s answers are the expected outputs; every reference agrees with them (the problem's checker). The first disagreement is printed with its seed and input |
 | naive.py | Accepted on every test it reaches, and **Time Limit Exceeded** under Python's limit |
 | naive.rs | correct, and needs **at least 1.5× Rust's CPU cap** (measured under 3× the cap; the ratio is printed) |
-| profile | with `profile = true`: `gen.py` regenerates every committed profile input exactly, each passes `validate.py`, and they grow with n |
+| profile | with `profile = true`: `gen.py` regenerates every profile input matching its hash in `reference.json`, each passes `validate.py`, they grow with n and fit the budget (and the cache is refreshed) |
 
 ## Generating tests
 

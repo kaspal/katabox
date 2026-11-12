@@ -14,9 +14,15 @@
 //! run in the sandbox. Generated tests are committed: the build never runs scripts.
 //!
 //! `kb-pack profile PROBLEM_DIR [--root ROOT]` — for a problem with `profile = true`,
-//! writes the complexity profiler's inputs (`profile/inputs/<n>.json`, from gen.py at
-//! each of `profile_sizes`) and the reference times (`profile/reference.json`), all run
-//! in the sandbox (ADR 0024). Committed like the generated tests.
+//! writes the complexity profiler's reference (`profile/reference.json`: the hashes of
+//! the inputs gen.py makes at each of `profile_sizes`, and the reference solutions'
+//! times; committed) and the input cache (`profile/inputs/`, gitignored), all run in the
+//! sandbox (ADR 0024).
+//!
+//! `kb-pack profile --inputs [DIR] [--root ROOT]` — regenerates the input cache of one
+//! problem, or of every profiled problem under DIR (default `content/problems`), and
+//! verifies it against the committed hashes. `kb-pack build` packs a profile only when
+//! its cache is complete.
 //!
 //! `kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]` — validates as
 //! above (without `--run`), then compiles every problem into content.db (default
@@ -29,7 +35,8 @@ use std::process::ExitCode;
 
 const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run] [--root ROOT]\n  \
                      kb-pack generate PROBLEM_DIR [--size max|small] --seeds 1,2 [--from N] [--root ROOT]\n  \
-                     kb-pack profile PROBLEM_DIR [--root ROOT]
+                     kb-pack profile PROBLEM_DIR [--root ROOT]\n  \
+                     kb-pack profile --inputs [DIR] [--root ROOT]
                        kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]";
 
 fn main() -> ExitCode {
@@ -151,8 +158,10 @@ fn generate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
 fn profile_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
     let mut dir: Option<PathBuf> = None;
     let mut root = PathBuf::from("target/katabox");
+    let mut inputs_only = false;
     while let Some(a) = args.next() {
         match a.as_str() {
+            "--inputs" => inputs_only = true,
             "--root" => match args.next() {
                 Some(v) => root = v.into(),
                 None => return usage("--root needs a value"),
@@ -160,6 +169,25 @@ fn profile_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
             s if s.starts_with("--") => return usage(&format!("unknown option {s}")),
             _ => dir = Some(a.into()),
         }
+    }
+    if inputs_only {
+        let dir = dir.unwrap_or_else(|| "content/problems".into());
+        let env = match kb_pack::env_for(&root) {
+            Ok(e) => e,
+            Err(e) => return usage(&e),
+        };
+        return match kb_pack::profile::fill_caches(&dir, &env) {
+            Ok(lines) => {
+                for l in lines {
+                    println!("{l}");
+                }
+                ExitCode::SUCCESS
+            }
+            Err(e) => {
+                eprintln!("kb-pack profile --inputs: {e}");
+                ExitCode::FAILURE
+            }
+        };
     }
     let Some(dir) = dir else {
         return usage("profile needs a problem folder");

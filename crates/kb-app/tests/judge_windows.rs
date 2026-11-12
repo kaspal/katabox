@@ -57,6 +57,11 @@ fn content_db() -> PathBuf {
         let out = dir.join("content.db");
         let o = out.clone();
         std::thread::spawn(move || {
+            // Profile inputs are not committed (ADR 0024): generate the one the profile
+            // test uses, so the pack carries it.
+            let env = kb_pack::env_for(&dev_root()).unwrap();
+            kb_pack::profile::fill_caches(&repo().join("content/problems/balanced-streaks"), &env)
+                .unwrap();
             kb_pack::build_pack(&repo().join("content/problems"), &o, "test", "1").unwrap()
         })
         .join()
@@ -652,14 +657,24 @@ async fn profiles_a_solution_and_estimates_the_class() {
     let app = app("profile").await;
     // A fresh app measures the machine once first (ADR 0017); that is not the profile.
     app.recalibrate().await.unwrap();
-    let started = std::time::Instant::now();
     let dir = repo().join("content/problems/balanced-streaks/solutions");
     let read = |f: &str| std::fs::read_to_string(dir.join(f)).unwrap();
-    let fast = app
-        .profile_solution("balanced-streaks", Language::Python, &read("ref.py"))
-        .await
-        .unwrap();
-    assert!(started.elapsed() < std::time::Duration::from_secs(15));
+    // The rest of the suite runs sandboxes alongside, and under that load the 12 s
+    // budget can stop a profile after a size or two (as designed). Try again then.
+    let mut attempt = 0;
+    let fast = loop {
+        attempt += 1;
+        let started = std::time::Instant::now();
+        let view = app
+            .profile_solution("balanced-streaks", Language::Python, &read("ref.py"))
+            .await
+            .unwrap();
+        assert!(started.elapsed() < std::time::Duration::from_secs(15));
+        if view.points.len() >= 4 || attempt == 3 {
+            break view;
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    };
     let sizes: Vec<u32> = fast.reference.iter().map(|r| r.n).collect();
     assert_eq!(sizes, [300, 1000, 3000, 10000, 30000, 100000]);
     // This file's other tests share the machine, so the 12 s budget may stop the largest
