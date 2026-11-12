@@ -220,13 +220,14 @@ describe("Settings → Data", () => {
       id: 3,
       counts: { statuses: 1, submissions: 0, snapshots: 0, notes: 0, drafts: 0, hint_unlocks: 0, opens: 0,
         reviews: 0, daily_picks: 0, lists: 0, interviews: 0, settings: 0 },
-      conflicts: 0,
+      conflicts: 1,
       exported_at: 1_767_225_600_000,
       app_version: "0.1.0",
     };
     const { user } = renderApp("/settings");
     await user.click(await screen.findByRole("button", { name: "Importar…" }, { timeout: 4000 }));
     const dialog = await screen.findByTestId("import-preview");
+    expect(dialog).toHaveTextContent("1 registro ya existe aquí; se conservará el más reciente.");
     await user.click(within(dialog).getByRole("button", { name: "Cancelar" }));
     expect(fake.api.importCancel).toHaveBeenCalledWith(3);
     expect(fake.api.importApply).not.toHaveBeenCalled();
