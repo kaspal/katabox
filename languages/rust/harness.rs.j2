@@ -18,6 +18,14 @@ mod kb_harness {
     use std::panic::{self, AssertUnwindSafe};
     use std::sync::Mutex;
     use std::time::Instant;
+{% if uses_list %}
+    use crate::ListNode;
+{% endif %}
+{% if uses_tree %}
+    use crate::TreeNode;
+    use std::cell::RefCell;
+    use std::rc::Rc;
+{% endif %}
 
     type Args = ({% for p in params %}{{ p.type }},{% endfor %});
 
@@ -332,6 +340,126 @@ mod kb_harness {
         }
     }
 
+{% if uses_nodes %}
+{{ nodes_code }}
+{% endif %}
+{% if uses_list %}
+    impl FromJson for Option<Box<ListNode>> {
+        fn from_json(v: &Json) -> Result<Self, String> {
+            let Json::Arr(items) = v else {
+                return Err(format!("expected a ListNode (an array of integers), got {v:?}"));
+            };
+            let mut head: Option<Box<ListNode>> = None;
+            for item in items.iter().rev() {
+                let mut node = Box::new(ListNode::new(i64::from_json(item)?));
+                node.next = head;
+                head = Some(node);
+            }
+            Ok(head)
+        }
+    }
+
+    impl ToJson for Option<Box<ListNode>> {
+        fn write_json(&self, out: &mut String) -> Result<(), String> {
+            out.push('[');
+            let mut cur = self.as_deref();
+            let mut n = 0usize;
+            while let Some(node) = cur {
+                if n >= NODE_LIMIT {
+                    return Err(format!(
+                        "node_limit: the returned list has more than {NODE_LIMIT} nodes"
+                    ));
+                }
+                if n > 0 {
+                    out.push(',');
+                }
+                node.val.write_json(out)?;
+                n += 1;
+                cur = node.next.as_deref();
+            }
+            out.push(']');
+            Ok(())
+        }
+    }
+
+{% endif %}
+{% if uses_tree %}
+    impl FromJson for Option<Rc<RefCell<TreeNode>>> {
+        fn from_json(v: &Json) -> Result<Self, String> {
+            let Json::Arr(items) = v else {
+                return Err(format!("expected a TreeNode (a level-order array), got {v:?}"));
+            };
+            let nodes = items
+                .iter()
+                .map(|item| match item {
+                    Json::Null => Ok(None),
+                    _ => Ok(Some(Rc::new(RefCell::new(TreeNode::new(i64::from_json(item)?))))),
+                })
+                .collect::<Result<Vec<Option<Rc<RefCell<TreeNode>>>>, String>>()?;
+            let mut i = 1;
+            for parent in &nodes {
+                if i >= nodes.len() {
+                    break;
+                }
+                let Some(p) = parent else { continue };
+                p.borrow_mut().left = nodes[i].clone();
+                i += 1;
+                if i < nodes.len() {
+                    p.borrow_mut().right = nodes[i].clone();
+                    i += 1;
+                }
+            }
+            Ok(nodes.into_iter().next().flatten())
+        }
+    }
+
+    impl ToJson for Option<Rc<RefCell<TreeNode>>> {
+        fn write_json(&self, out: &mut String) -> Result<(), String> {
+            let mut items: Vec<Option<i64>> = Vec::new();
+            let mut seen = std::collections::HashSet::new();
+            let mut queue = std::collections::VecDeque::new();
+            if self.is_some() {
+                queue.push_back(self.clone());
+            }
+            while let Some(slot) = queue.pop_front() {
+                let Some(node) = slot else {
+                    items.push(None);
+                    continue;
+                };
+                if !seen.insert(Rc::as_ptr(&node)) {
+                    return Err("node_cycle: the returned tree reaches the same node twice (a cycle or a shared node)".into());
+                }
+                if seen.len() > NODE_LIMIT {
+                    return Err(format!(
+                        "node_limit: the returned tree has more than {NODE_LIMIT} nodes"
+                    ));
+                }
+                let n = node
+                    .try_borrow()
+                    .map_err(|_| "a tree node is still borrowed".to_string())?;
+                items.push(Some(n.val));
+                queue.push_back(n.left.clone());
+                queue.push_back(n.right.clone());
+            }
+            while items.last() == Some(&None) {
+                items.pop();
+            }
+            out.push('[');
+            for (i, item) in items.iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                match item {
+                    Some(v) => v.write_json(out)?,
+                    None => out.push_str("null"),
+                }
+            }
+            out.push(']');
+            Ok(())
+        }
+    }
+
+{% endif %}
     // ---- Per-test output capture ----------------------------------------------------
 
     #[cfg(windows)]
@@ -532,6 +660,16 @@ mod kb_harness {
                     let mut json = String::new();
                     match value.write_json(&mut json) {
                         Ok(()) => body.push_str(&format!(",\"status\":\"ok\",\"value\":{json}")),
+{% if uses_nodes %}
+                        Err(e) => {
+                            let (code, text) = node_error(e);
+                            let mut err = String::new();
+                            write_str(&mut err, &text);
+                            body.push_str(&format!(
+                                ",\"status\":\"error\",\"error_code\":\"{code}\",\"error\":{err}"
+                            ));
+                        }
+{% else %}
                         Err(e) => {
                             let mut err = String::new();
                             write_str(&mut err, &format!("return value cannot be converted to JSON: {e}"));
@@ -539,6 +677,7 @@ mod kb_harness {
                                 ",\"status\":\"error\",\"error_code\":\"return_not_serializable\",\"error\":{err}"
                             ));
                         }
+{% endif %}
                     }
                 }
                 Err(_) => {

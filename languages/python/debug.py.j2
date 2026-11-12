@@ -21,6 +21,13 @@ SOLUTION = {{ solution_file | tojson }}
 FUNCTION = {{ function | tojson }}
 ALIASES = {{ aliases | tojson }}
 PARAMS = {{ param_keys | tojson }}
+{% if uses_nodes %}
+PARAM_SHAPES = {{ param_shapes | tojson }}
+RETURN_SHAPE = {{ return_shape | tojson }}
+
+
+{{ nodes_code }}
+{% endif %}
 
 M = sys.monitoring
 TOOL = M.DEBUGGER_ID
@@ -95,7 +102,54 @@ def is_user(state, code):
     return known
 
 
+NODE_PREVIEW = 10
+
+
+def node_kind(value):
+    """"list" or "tree" for a ListNode / TreeNode instance (ADR 0025), else None."""
+    name = type(value).__name__
+    try:
+        if name == "ListNode" and hasattr(value, "val") and hasattr(value, "next"):
+            return "list"
+        if name == "TreeNode" and all(hasattr(value, a) for a in ("val", "left", "right")):
+            return "tree"
+    except BaseException:
+        pass
+    return None
+
+
+def node_repr(value, kind):
+    """A short, cycle-safe line for a node: never the whole chain, never an address."""
+    def val(node):
+        if node is None:
+            return "None"
+        v = getattr(node, "val", None)
+        text = repr(v) if isinstance(v, (int, float, str, bool)) or v is None else "…"
+        return text if len(text) <= 20 else text[:19] + "…"
+
+    if kind == "tree":
+        return "TreeNode(%s, left=%s, right=%s)" % (val(value), val(value.left), val(value.right))
+    parts, seen, node = [], set(), value
+    while node is not None and len(parts) < NODE_PREVIEW:
+        if id(node) in seen:
+            parts.append("↺")
+            break
+        seen.add(id(node))
+        parts.append(val(node))
+        node = getattr(node, "next", None)
+    else:
+        if node is not None:
+            parts.append("…")
+    return "ListNode [" + " → ".join(parts) + "]"
+
+
 def short_repr(value):
+    kind = node_kind(value)
+    if kind is not None:
+        try:
+            return node_repr(value, kind)
+        except BaseException:
+            pass
     try:
         text = repr(value)
     except BaseException as e:  # a user __repr__ may raise
@@ -117,6 +171,11 @@ def children(value):
         return [("", v) for v in value]
     if isinstance(value, type) or type(value).__name__ in ("module", "function", "method"):
         return []
+    kind = node_kind(value)
+    if kind == "list":
+        return [("val", value.val), ("next", value.next)]
+    if kind == "tree":
+        return [("val", value.val), ("left", value.left), ("right", value.right)]
     attrs = getattr(value, "__dict__", None)
     if isinstance(attrs, dict):
         return [(k, attrs[k]) for k in sorted(attrs) if not k.startswith("__")]
@@ -350,7 +409,12 @@ def main():
     M.register_callback(TOOL, E.PY_UNWIND, on_unwind)
     M.register_callback(TOOL, E.PY_THROW, on_throw)
 
+{% if uses_nodes %}
+    classes = node_classes(module)
+    args = [from_json(*PARAM_SHAPES[k], request["input"][p], classes) for k, p in enumerate(PARAMS)]
+{% else %}
     args = [request["input"][p] for p in PARAMS]
+{% endif %}
     capture = StepCapture(request["max_output_bytes"], state)
     if state.mode == "stop":
         capture.cap = 0
@@ -380,6 +444,15 @@ def main():
         M.set_events(TOOL, 0)
         sys.stdout, sys.stderr = out, sys.__stderr__
     outcome["step"] = max(state.steps - 1, 0)
+{% if uses_nodes %}
+    if outcome.get("status") == "ok":
+        try:
+            outcome["value"] = to_json(*RETURN_SHAPE, outcome["value"])
+        except Exception as e:
+            outcome.pop("value")
+            outcome["status"] = "error"
+            outcome["error"] = str(e) if isinstance(e, NodeError) else "return value is not a " + {{ returns_raw | tojson }} + ": " + repr(e)
+{% endif %}
 
     if state.mode == "stop":
         # The program ended before the requested step: this run went another way.

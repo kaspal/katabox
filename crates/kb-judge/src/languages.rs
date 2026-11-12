@@ -24,6 +24,9 @@ pub struct LanguageDef {
     pub time: TimeDef,
     pub stub_template: &'static str,
     pub harness_template: &'static str,
+    /// The node types' JSON conversion code (ADR 0025), inserted into the harnesses of
+    /// signatures that use `ListNode` or `TreeNode`.
+    pub nodes_code: &'static str,
     /// The debugger's replay run (ADR 0022): its command line and harness template, for
     /// languages that can be debugged (Python, TypeScript).
     pub debug: Option<(String, &'static str)>,
@@ -102,26 +105,30 @@ pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
         Language::TypeScript => Some(lang_file!("typescript", "debug.ts.j2")),
         _ => None,
     };
-    let (toml_src, stub_template, harness_template) = match lang {
+    let (toml_src, stub_template, harness_template, nodes_code) = match lang {
         Language::Python => (
             lang_file!("python", "language.toml"),
             lang_file!("python", "stub.py.j2"),
             lang_file!("python", "harness.py.j2"),
+            lang_file!("python", "nodes.py"),
         ),
         Language::TypeScript => (
             lang_file!("typescript", "language.toml"),
             lang_file!("typescript", "stub.ts.j2"),
             lang_file!("typescript", "harness.ts.j2"),
+            lang_file!("typescript", "nodes.ts"),
         ),
         Language::Php => (
             lang_file!("php", "language.toml"),
             lang_file!("php", "stub.php.j2"),
             lang_file!("php", "harness.php.j2"),
+            lang_file!("php", "nodes.php"),
         ),
         Language::Rust => (
             lang_file!("rust", "language.toml"),
             lang_file!("rust", "stub.rs.j2"),
             lang_file!("rust", "harness.rs.j2"),
+            lang_file!("rust", "nodes.rs"),
         ),
         Language::JavaScript => return Err(JudgeError::Unsupported(lang)),
     };
@@ -153,6 +160,7 @@ pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
         time: t.time,
         stub_template,
         harness_template,
+        nodes_code,
         debug,
     })
 }

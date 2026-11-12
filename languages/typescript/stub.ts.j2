@@ -1,3 +1,29 @@
+{% if uses_list %}
+// Provided by KataBox: the judge builds the input lists with this class.
+export class ListNode {
+  val: number;
+  next: ListNode | null;
+  constructor(val = 0, next: ListNode | null = null) {
+    this.val = val;
+    this.next = next;
+  }
+}
+
+{% endif %}
+{% if uses_tree %}
+// Provided by KataBox: the judge builds the input trees with this class.
+export class TreeNode {
+  val: number;
+  left: TreeNode | null;
+  right: TreeNode | null;
+  constructor(val = 0, left: TreeNode | null = null, right: TreeNode | null = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+
+{% endif %}
 export function {{ function }}({% for p in params %}{{ p.name }}: {{ p.type }}{% if not loop.last %}, {% endif %}{% endfor %}): {{ returns }} {
 
 }

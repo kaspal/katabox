@@ -386,6 +386,7 @@
       "return_not_serializable": "El valor devuelto no se puede convertir a JSON.",
       "out_of_memory": "El programa se quedó sin memoria.",
       "too_much_output": "La prueba imprimió demasiada salida.",
+      "node_cycle": "La lista o el árbol devuelto vuelve a un nodo que ya contiene (un ciclo, o un nodo compartido por dos padres).",
       "time_limit": "Se alcanzó el tiempo límite durante esta prueba.",
       "output_limit": "Se alcanzó el límite de salida durante esta prueba.",
       "memory_limit": "Se alcanzó el límite de memoria durante esta prueba.",

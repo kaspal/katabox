@@ -19,6 +19,12 @@ import { inspect } from "node:util";
 const SOLUTION: string = {{ solution_file | tojson }};
 const FUNCTION: string = {{ function | tojson }};
 const PARAMS: string[] = {{ param_keys | tojson }};
+{% if uses_nodes %}
+const PARAM_SHAPES: [string, number][] = {{ param_shapes | tojson }};
+const RETURN_SHAPE: [string, number] = {{ return_shape | tojson }};
+
+{{ nodes_code }}
+{% endif %}
 
 // Trace tokens: each distinct (line, depth) pair gets a code; a step is one character for
 // the first 91 codes, or "~" plus two characters after that. Printable ASCII without
@@ -72,9 +78,50 @@ function typeName(v: unknown): string {
   return typeof name === "string" && name !== "" ? name : "Object";
 }
 
+const NODE_PREVIEW = 10;
+
+/** "list" or "tree" for a ListNode / TreeNode instance (ADR 0025), else null. */
+function nodeKind(v: unknown): "list" | "tree" | null {
+  if (v === null || typeof v !== "object") return null;
+  const name = typeName(v);
+  if (name === "ListNode" && "val" in v && "next" in v) return "list";
+  if (name === "TreeNode" && "val" in v && "left" in v && "right" in v) return "tree";
+  return null;
+}
+
+/** A short, cycle-safe line for a node: never the whole chain. */
+function nodeText(v: Record<string, unknown>, kind: "list" | "tree"): string {
+  const val = (n: unknown): string => {
+    if (n === null || n === undefined) return "null";
+    const x = (n as Record<string, unknown>).val;
+    const t = typeof x === "number" || typeof x === "string" || typeof x === "boolean" ? String(x) : "…";
+    return t.length <= 20 ? t : t.slice(0, 19) + "…";
+  };
+  if (kind === "tree") return `TreeNode(${val(v)}, left=${val(v.left)}, right=${val(v.right)})`;
+  const parts: string[] = [];
+  const seen = new Set<unknown>();
+  let node: unknown = v;
+  while (node !== null && node !== undefined && parts.length < NODE_PREVIEW) {
+    if (seen.has(node)) {
+      parts.push("↺");
+      node = null;
+      break;
+    }
+    seen.add(node);
+    parts.push(val(node));
+    node = (node as Record<string, unknown>).next;
+  }
+  if (node !== null && node !== undefined) parts.push("…");
+  return "ListNode [" + parts.join(" → ") + "]";
+}
+
 /** (name, child) pairs of a container or plain object, in a stable order. */
 function childrenOf(v: unknown): [string, unknown][] {
   if (v === null || typeof v !== "object") return [];
+  const kind = nodeKind(v);
+  const node = v as Record<string, unknown>;
+  if (kind === "list") return [["val", node.val], ["next", node.next]];
+  if (kind === "tree") return [["val", node.val], ["left", node.left], ["right", node.right]];
   if (Array.isArray(v)) return v.map((x, i) => ["[" + i + "]", x]);
   if (ArrayBuffer.isView(v) && !(v instanceof DataView)) {
     return Array.from(v as unknown as ArrayLike<unknown>, (x, i) => ["[" + i + "]", x]);
@@ -96,8 +143,9 @@ function countChildren(v: unknown): number {
 
 function describeValue(name: string, v: unknown): VarInfo {
   let text: string;
+  const kind = nodeKind(v);
   try {
-    text = inspect(v, { depth: 2, breakLength: Infinity, maxArrayLength: 50, maxStringLength: REPR_MAX });
+    text = kind !== null ? nodeText(v as Record<string, unknown>, kind) : inspect(v, { depth: 2, breakLength: Infinity, maxArrayLength: 50, maxStringLength: REPR_MAX });
   } catch (e) {
     text = "<inspect failed: " + typeName(e) + ">";
   }
@@ -198,7 +246,12 @@ async function mainThread(): Promise<void> {
   });
   await new Promise((ok) => recorder.once("message", ok));
 
+{% if uses_nodes %}
+  const classes = nodeClasses(mod);
+  const args = PARAMS.map((p, k) => fromJson(PARAM_SHAPES[k][0], PARAM_SHAPES[k][1], request.input[p], classes));
+{% else %}
   const args = PARAMS.map((p) => request.input[p]);
+{% endif %}
   const outcome: Rec = { kind: "outcome" };
   // The recorder starts stepping at this statement (this file is not blackboxed yet).
   debugger;
@@ -212,6 +265,17 @@ async function mainThread(): Promise<void> {
     const at = e instanceof Error ? (e.stack ?? "").match(new RegExp(SOLUTION.replace(/\./g, "\\.") + ":(\\d+):\\d+")) : null;
     outcome.line = at ? Number(at[1]) : null;
   }
+{% if uses_nodes %}
+  if (outcome.status === "ok") {
+    try {
+      outcome.value = toJson(RETURN_SHAPE[0], RETURN_SHAPE[1], outcome.value);
+    } catch (e) {
+      delete outcome.value;
+      outcome.status = "error";
+      outcome.error = e instanceof NodeError ? e.message : "return value is not a " + {{ returns_raw | tojson }} + ": " + describeError(e);
+    }
+  }
+{% endif %}
   let outcomeText: string;
   try {
     outcomeText = JSON.stringify(outcome);

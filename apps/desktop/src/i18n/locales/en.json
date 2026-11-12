@@ -386,6 +386,7 @@
       "return_not_serializable": "The return value cannot be converted to JSON.",
       "out_of_memory": "The program ran out of memory.",
       "too_much_output": "The test printed too much output.",
+      "node_cycle": "The returned list or tree links back to a node it already contains (a cycle, or a node shared by two parents).",
       "time_limit": "The time limit was reached during this test.",
       "output_limit": "The output limit was reached during this test.",
       "memory_limit": "The memory limit was reached during this test.",

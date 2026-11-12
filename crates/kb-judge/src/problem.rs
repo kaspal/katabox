@@ -170,11 +170,13 @@ fn load_tests(dir: &Path, kind: TestKind, sig: &Signature) -> Result<Vec<TestCas
     Ok(tests)
 }
 
-/// A test input must hold exactly the signature's params, by name.
+/// A test input must hold exactly the signature's params, by name, each a value of its
+/// type (lists and trees in their canonical JSON; ADR 0025).
 pub fn check_input(input: &Map<String, Value>, sig: &Signature) -> Result<(), String> {
     for p in &sig.params {
-        if !input.contains_key(&p.name) {
-            return Err(format!("input lacks param {:?}", p.name));
+        match input.get(&p.name) {
+            None => return Err(format!("input lacks param {:?}", p.name)),
+            Some(v) => p.ty.check_value(v).map_err(|e| format!("{}: {e}", p.name))?,
         }
     }
     if let Some(extra) = input

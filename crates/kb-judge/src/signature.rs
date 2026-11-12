@@ -2,7 +2,13 @@
 //! language spells its names and types.
 //!
 //! Type grammar (deliberately small; grows with the problem set):
-//! `int | float | string | bool | <type>[]`, e.g. `int[]`, `string[][]`.
+//! `int | float | string | bool | ListNode | TreeNode | <type>[]`, e.g. `int[]`,
+//! `string[][]`, `ListNode[]`.
+//!
+//! Node types (ADR 0025) travel as JSON arrays: a `ListNode` is its values in order, a
+//! `TreeNode` its level order with `null` for a missing child (children of a missing node
+//! are not listed, trailing nulls are trimmed); `[]` is the empty list or tree. Values
+//! are `int`.
 
 use std::fmt;
 use std::str::FromStr;
@@ -16,6 +22,10 @@ pub enum Type {
     Float,
     String,
     Bool,
+    /// A singly linked list of `int` (ADR 0025).
+    ListNode,
+    /// A binary tree of `int` (ADR 0025).
+    TreeNode,
     Array(Box<Type>),
 }
 
@@ -31,8 +41,10 @@ impl FromStr for Type {
             "float" => Ok(Type::Float),
             "string" => Ok(Type::String),
             "bool" => Ok(Type::Bool),
+            "ListNode" => Ok(Type::ListNode),
+            "TreeNode" => Ok(Type::TreeNode),
             _ => Err(format!(
-                "unknown type {s:?} (expected int | float | string | bool, optionally followed by [])"
+                "unknown type {s:?} (expected int | float | string | bool | ListNode | TreeNode, optionally followed by [])"
             )),
         }
     }
@@ -45,6 +57,8 @@ impl fmt::Display for Type {
             Type::Float => f.write_str("float"),
             Type::String => f.write_str("string"),
             Type::Bool => f.write_str("bool"),
+            Type::ListNode => f.write_str("ListNode"),
+            Type::TreeNode => f.write_str("TreeNode"),
             Type::Array(t) => write!(f, "{t}[]"),
         }
     }
@@ -59,6 +73,8 @@ impl Type {
                 Type::Float => "float".into(),
                 Type::String => "str".into(),
                 Type::Bool => "bool".into(),
+                Type::ListNode => "ListNode | None".into(),
+                Type::TreeNode => "TreeNode | None".into(),
                 Type::Array(t) => format!("list[{}]", t.spelled_in(lang)),
             },
             // JavaScript has no annotations; the TypeScript spelling is used in JSDoc later.
@@ -66,6 +82,10 @@ impl Type {
                 Type::Int | Type::Float => "number".into(),
                 Type::String => "string".into(),
                 Type::Bool => "boolean".into(),
+                Type::ListNode => "ListNode | null".into(),
+                Type::TreeNode => "TreeNode | null".into(),
+                // A union element needs parentheses: `(ListNode | null)[]`.
+                Type::Array(t) if t.is_node() => format!("({})[]", t.spelled_in(lang)),
                 Type::Array(t) => format!("{}[]", t.spelled_in(lang)),
             },
             // PHP has one array type; nesting is not expressible in a type declaration.
@@ -74,6 +94,8 @@ impl Type {
                 Type::Float => "float".into(),
                 Type::String => "string".into(),
                 Type::Bool => "bool".into(),
+                Type::ListNode => "?ListNode".into(),
+                Type::TreeNode => "?TreeNode".into(),
                 Type::Array(_) => "array".into(),
             },
             Language::Rust => match self {
@@ -81,6 +103,8 @@ impl Type {
                 Type::Float => "f64".into(),
                 Type::String => "String".into(),
                 Type::Bool => "bool".into(),
+                Type::ListNode => "Option<Box<ListNode>>".into(),
+                Type::TreeNode => "Option<Rc<RefCell<TreeNode>>>".into(),
                 Type::Array(t) => format!("Vec<{}>", t.spelled_in(lang)),
             },
         }
@@ -93,6 +117,110 @@ impl Type {
             _ => 0,
         }
     }
+
+    /// The element type under every array level (`ListNode[][]` -> `ListNode`).
+    pub fn element(&self) -> &Type {
+        match self {
+            Type::Array(t) => t.element(),
+            t => t,
+        }
+    }
+
+    pub fn is_node(&self) -> bool {
+        matches!(self, Type::ListNode | Type::TreeNode)
+    }
+
+    /// The harness shape of a value (ADR 0025): `"list"`, `"tree"` or `"plain"` for the
+    /// element type; harnesses convert node elements under [`Type::array_depth`] arrays.
+    pub fn shape(&self) -> &'static str {
+        match self.element() {
+            Type::ListNode => "list",
+            Type::TreeNode => "tree",
+            _ => "plain",
+        }
+    }
+
+    /// Whether `value` is a well-formed value of this type (the JSON encoding; ADR 0025).
+    /// The error says what was expected, for authors and custom inputs.
+    pub fn check_value(&self, value: &serde_json::Value) -> Result<(), String> {
+        use serde_json::Value;
+        let int = |v: &Value| {
+            v.as_i64().is_some() || v.as_u64().is_some_and(|u| i64::try_from(u).is_ok())
+        };
+        match self {
+            Type::Int if int(value) => Ok(()),
+            Type::Int => Err(format!("expected an int, got {value}")),
+            Type::Float if value.is_number() => Ok(()),
+            Type::Float => Err(format!("expected a float, got {value}")),
+            Type::String if value.is_string() => Ok(()),
+            Type::String => Err(format!("expected a string, got {value}")),
+            Type::Bool if value.is_boolean() => Ok(()),
+            Type::Bool => Err(format!("expected a bool, got {value}")),
+            Type::ListNode => match value.as_array() {
+                Some(items) if items.iter().all(int) => Ok(()),
+                _ => Err(format!(
+                    "expected a ListNode: a JSON array of ints, got {}",
+                    short(value)
+                )),
+            },
+            Type::TreeNode => match value.as_array() {
+                Some(items) => check_level_order(items),
+                None => Err(format!(
+                    "expected a TreeNode: a level-order JSON array, got {}",
+                    short(value)
+                )),
+            },
+            Type::Array(t) => match value.as_array() {
+                Some(items) => items
+                    .iter()
+                    .enumerate()
+                    .try_for_each(|(i, v)| t.check_value(v).map_err(|e| format!("[{i}]: {e}"))),
+                None => Err(format!("expected an array ({self}), got {}", short(value))),
+            },
+        }
+    }
+}
+
+/// A value for an error message, cut to a readable length.
+fn short(value: &serde_json::Value) -> String {
+    let s = value.to_string();
+    if s.chars().count() > 60 {
+        format!("{}…", s.chars().take(60).collect::<String>())
+    } else {
+        s
+    }
+}
+
+/// A canonical level-order tree: ints and nulls, the root not null, every slot owned by
+/// a node listed before it (each node owns two), and no trailing null.
+fn check_level_order(items: &[serde_json::Value]) -> Result<(), String> {
+    let int = |v: &serde_json::Value| v.as_i64().is_some();
+    if let Some((i, v)) = items
+        .iter()
+        .enumerate()
+        .find(|(_, v)| !v.is_null() && !int(v))
+    {
+        return Err(format!("TreeNode: [{i}] is {v}, expected an int or null"));
+    }
+    if items.first().is_some_and(|v| v.is_null()) {
+        return Err("TreeNode: the root is null (write [] for an empty tree)".into());
+    }
+    if items.last().is_some_and(|v| v.is_null()) {
+        return Err("TreeNode: trailing nulls are trimmed in level order".into());
+    }
+    // Slots available after reading index i: 1 (the root) + 2 per node so far.
+    let mut slots = 1usize;
+    for (i, v) in items.iter().enumerate() {
+        if i >= slots {
+            return Err(format!(
+                "TreeNode: [{i}] has no parent (children of a missing node are not listed)"
+            ));
+        }
+        if !v.is_null() {
+            slots += 2;
+        }
+    }
+    Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -401,6 +529,79 @@ mod tests {
         assert_eq!(t.spelled_in(Language::TypeScript), "number[][]");
         assert_eq!(Type::Bool.spelled_in(Language::TypeScript), "boolean");
         assert_eq!(Type::String.spelled_in(Language::Python), "str");
+    }
+
+    #[test]
+    fn node_types_parse_and_spell() {
+        let list: Type = "ListNode".parse().unwrap();
+        let trees: Type = "TreeNode[]".parse().unwrap();
+        assert_eq!(list, Type::ListNode);
+        assert_eq!(trees.to_string(), "TreeNode[]");
+        assert!("listnode".parse::<Type>().is_err());
+        let spell = |t: &Type| ALL_LANGS.map(|l| t.spelled_in(l));
+        assert_eq!(
+            spell(&list),
+            [
+                "ListNode | None",
+                "ListNode | null",
+                "?ListNode",
+                "Option<Box<ListNode>>"
+            ]
+        );
+        assert_eq!(
+            spell(&trees),
+            [
+                "list[TreeNode | None]",
+                "(TreeNode | null)[]",
+                "array",
+                "Vec<Option<Rc<RefCell<TreeNode>>>>"
+            ]
+        );
+        assert_eq!((trees.shape(), trees.array_depth()), ("tree", 1));
+        assert_eq!(Type::Int.shape(), "plain");
+    }
+
+    const ALL_LANGS: [Language; 4] = [
+        Language::Python,
+        Language::TypeScript,
+        Language::Php,
+        Language::Rust,
+    ];
+
+    #[test]
+    fn values_are_checked_against_their_types() {
+        use serde_json::json;
+        let ok = |t: &str, v: serde_json::Value| t.parse::<Type>().unwrap().check_value(&v);
+        assert!(ok("int", json!(3)).is_ok());
+        assert!(ok("int", json!(3.5)).is_err());
+        assert!(ok("float", json!(3)).is_ok());
+        assert!(ok("string[]", json!(["a", 1])).unwrap_err().contains("[1]"));
+        assert!(ok("int[][]", json!([[1], [2, 3]])).is_ok());
+        // Lists: arrays of ints, [] is the empty list.
+        assert!(ok("ListNode", json!([])).is_ok());
+        assert!(ok("ListNode", json!([1, 2])).is_ok());
+        assert!(ok("ListNode", json!([1, null])).is_err());
+        assert!(ok("ListNode[]", json!([[], [4]])).is_ok());
+        // Trees: canonical level order.
+        for good in [
+            json!([]),
+            json!([1]),
+            json!([1, null, 2, 3]),
+            json!([5, 3, 8, 1, null, 7, 9]),
+        ] {
+            assert!(ok("TreeNode", good.clone()).is_ok(), "{good}");
+        }
+        let bad = [
+            (json!([null]), "root is null"),
+            (json!([1, 2, null]), "trailing"),
+            (json!([1, null, null, 3]), "no parent"),
+            (json!([1, "x"]), "int or null"),
+            (json!({"val": 1}), "level-order"),
+        ];
+        for (v, why) in bad {
+            let e = ok("TreeNode", v.clone()).unwrap_err();
+            assert!(e.contains(why), "{v}: {e}");
+        }
     }
 
     #[test]

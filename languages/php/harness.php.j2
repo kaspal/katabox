@@ -12,6 +12,14 @@ const KB_PARAMS = {{ param_keys | tojson }};
 // Array levels of the return type: lists are re-indexed so that, for example, the
 // result of array_filter() still encodes as a JSON array.
 const KB_RETURN_DEPTH = {{ return_depth }};
+{% if uses_nodes %}
+const KB_PARAM_SHAPES = {{ param_shapes | tojson }};
+const KB_RETURN_SHAPE = {{ return_shape | tojson }};
+const KB_RETURN_TYPE = {{ returns_raw | tojson }};
+
+{{ nodes_code }}
+
+{% endif %}
 const KB_JSON = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION
     | JSON_THROW_ON_ERROR;
 
@@ -136,10 +144,21 @@ if (!function_exists(KB_FUNCTION)) {
     exit(0);
 }
 
+{% if uses_nodes %}
+kb_declare_nodes();
+{% endif %}
 KbState::$ready = true;
 kb_emit(['kind' => 'ready']);
 foreach ($kb_request['tests'] as $kb_i => $kb_test) {
+{% if uses_nodes %}
+    $kb_args = array_map(
+        fn (string $p, array $shape) => kb_from_json($shape[0], $shape[1], $kb_test[$p]),
+        KB_PARAMS,
+        KB_PARAM_SHAPES
+    );
+{% else %}
     $kb_args = array_map(fn (string $p) => $kb_test[$p], KB_PARAMS);
+{% endif %}
     $kb_capture = new KbCapture($kb_cap);
     $kb_record = ['kind' => 'result', 'test' => $kb_i];
     ob_start([$kb_capture, 'add'], 4096);
@@ -163,6 +182,21 @@ foreach ($kb_request['tests'] as $kb_i => $kb_test) {
     }
     $kb_record['stdout'] = $kb_capture->text;
     $kb_record['stdout_truncated'] = $kb_capture->truncated;
+{% if uses_nodes %}
+    if ($kb_record['status'] === 'ok') {
+        try {
+            $kb_value = kb_to_json(KB_RETURN_SHAPE[0], KB_RETURN_SHAPE[1], $kb_value);
+        } catch (KbNodeError $e) {
+            $kb_record['status'] = 'error';
+            $kb_record['error_code'] = $e->kbCode;
+            $kb_record['error'] = $e->getMessage();
+        } catch (Throwable $e) {
+            $kb_record['status'] = 'error';
+            $kb_record['error_code'] = 'return_not_serializable';
+            $kb_record['error'] = 'return value is not a ' . KB_RETURN_TYPE . ': ' . $e->getMessage();
+        }
+    }
+{% endif %}
     if ($kb_record['status'] === 'ok') {
         try {
             json_encode($kb_value, KB_JSON);
