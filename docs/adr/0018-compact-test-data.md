@@ -1,6 +1,6 @@
 # 18. Compact test data
 
-Date: 2026-11-11 · Status: proposed
+Date: 2026-11-11 · Status: accepted
 
 ## Context
 - **Storage today:** problem tests are stored in content.db as raw JSON. The first 10
