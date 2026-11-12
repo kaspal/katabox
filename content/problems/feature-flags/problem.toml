@@ -1,0 +1,17 @@
+id = "feature-flags"
+title = "Feature Flags"
+title_es = "Banderas de función"
+difficulty = "medium"
+tags = ["bit-manipulation", "bitmask", "dynamic-programming"]
+pattern = "bit-manipulation"
+rank = 8
+
+[signature]
+name = "usersWithAll"
+params = [{ name = "users", type = "int[]" }, { name = "queries", type = "int[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,1 @@
+{"input": {"expression": "-(-(-(1)))"}, "output": -1}

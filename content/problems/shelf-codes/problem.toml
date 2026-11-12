@@ -1,0 +1,17 @@
+id = "shelf-codes"
+title = "Shelf Codes"
+title_es = "Códigos de estantería"
+difficulty = "easy"
+tags = ["binary-search", "array"]
+pattern = "binary-search"
+rank = 2
+
+[signature]
+name = "countBelow"
+params = [{ name = "codes", type = "int[]" }, { name = "queries", type = "int[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

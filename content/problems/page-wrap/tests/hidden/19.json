@@ -1,0 +1,1 @@
+{"input":{"width":12,"words":["zz","xzzxxy","xzzzx","yy","zxzy","yxzx","xyxyyyz","xyyzz"]},"output":["zz xzzxxy","xzzzx yy","zxzy yxzx","xyxyyyz","xyyzz"]}

@@ -1,0 +1,17 @@
+id = "undo-notebook"
+title = "Undo Notebook"
+title_es = "Libreta con deshacer"
+difficulty = "medium"
+tags = ["design", "stack", "hash-map", "undo-redo"]
+pattern = "design"
+rank = 7
+
+[signature]
+name = "notebook"
+params = [{ name = "ops", type = "string[]" }, { name = "args", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

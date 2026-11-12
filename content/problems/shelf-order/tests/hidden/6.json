@@ -1,0 +1,1 @@
+{"input": {"labels": ["abc", "ab", "abcd", "a"]}, "output": ["a", "ab", "abc", "abcd"]}

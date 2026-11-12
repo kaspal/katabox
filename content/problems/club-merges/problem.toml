@@ -1,0 +1,17 @@
+id = "club-merges"
+title = "Club Merges"
+title_es = "Fusión de clubes"
+difficulty = "easy"
+tags = ["union-find", "graph"]
+pattern = "union-find"
+rank = 3
+
+[signature]
+name = "clubsLeft"
+params = [{ name = "n", type = "int" }, { name = "merges", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

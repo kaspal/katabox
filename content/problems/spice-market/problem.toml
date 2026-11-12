@@ -1,0 +1,17 @@
+id = "spice-market"
+title = "Spice Market"
+title_es = "Mercado de especias"
+difficulty = "medium"
+tags = ["greedy", "sorting", "fractional-knapsack", "floating-point"]
+pattern = "greedy"
+rank = 6
+
+[signature]
+name = "bestHaul"
+params = [{ name = "weights", type = "int[]" }, { name = "prices", type = "int[]" }, { name = "capacity", type = "int" }]
+returns = "float"
+
+[judge]
+checker = "float:1e-6"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

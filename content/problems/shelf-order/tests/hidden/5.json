@@ -1,0 +1,1 @@
+{"input": {"labels": ["x1y2", "x1y10", "x01y3", "x1"]}, "output": ["x1", "x1y2", "x01y3", "x1y10"]}

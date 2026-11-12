@@ -1,0 +1,17 @@
+id = "shelf-packing"
+title = "Shelf Packing"
+title_es = "Llenar las baldas"
+difficulty = "hard"
+tags = ["backtracking", "bin-packing", "sorting"]
+pattern = "backtracking"
+rank = 9
+
+[signature]
+name = "fewestShelves"
+params = [{ name = "widths", type = "int[]" }, { name = "width", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

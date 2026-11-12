@@ -1,0 +1,17 @@
+id = "fewest-hops"
+title = "Fewest Hops"
+title_es = "Menos saltos"
+difficulty = "easy"
+tags = ["graph", "bfs", "shortest-path"]
+pattern = "graphs"
+rank = 4
+
+[signature]
+name = "fewestHops"
+params = [{ name = "n", type = "int" }, { name = "links", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

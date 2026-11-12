@@ -1,0 +1,17 @@
+id = "shelf-order"
+title = "Shelf Order"
+title_es = "Orden de la estantería"
+difficulty = "medium"
+tags = ["sorting", "string", "natural-sort"]
+pattern = "sorting"
+rank = 7
+
+[signature]
+name = "naturalOrder"
+params = [{ name = "labels", type = "string[]" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

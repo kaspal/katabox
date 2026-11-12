@@ -1,0 +1,17 @@
+id = "lamp-hours"
+title = "Lamp Hours"
+title_es = "Horas de lámpara"
+difficulty = "easy"
+tags = ["intervals", "sorting"]
+pattern = "intervals"
+rank = 3
+
+[signature]
+name = "litTime"
+params = [{ name = "lamps", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

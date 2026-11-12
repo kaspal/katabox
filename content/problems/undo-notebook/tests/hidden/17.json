@@ -1,0 +1,1 @@
+{"input":{"args":[[],[1],[1,2],[2,7],[3,3],[],[],[1,7],[],[3],[],[2],[1],[1]],"ops":["undo","read","write","write","write","redo","redo","write","redo","read","undo","read","read","read"]},"output":[-1,3,7,2,2]}

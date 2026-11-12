@@ -1,0 +1,1 @@
+{"input": {"words": ["pear", "peach", "plum", "apple"], "prefixes": ["pe", "p", "a", "b", "peac"]}, "output": ["peach", "peach", "apple", "", "peach"]}

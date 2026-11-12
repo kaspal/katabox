@@ -1,0 +1,1 @@
+{"input": {"words": ["cab", "cabin", "cabbage", "cable"], "prefixes": ["cab", "cabi", "cabb", "cabl", "c"]}, "output": ["cab", "cabin", "cabbage", "cable", "cab"]}

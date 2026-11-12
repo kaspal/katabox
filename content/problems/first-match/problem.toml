@@ -1,0 +1,17 @@
+id = "first-match"
+title = "First Match"
+title_es = "Primera coincidencia"
+difficulty = "medium"
+tags = ["trie", "string"]
+pattern = "tries"
+rank = 6
+
+[signature]
+name = "firstMatches"
+params = [{ name = "words", type = "string[]" }, { name = "prefixes", type = "string[]" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256
