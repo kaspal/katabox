@@ -1,0 +1,17 @@
+id = "ferry-trips"
+title = "Ferry Trips"
+title_es = "Viajes en barca"
+difficulty = "medium"
+tags = ["array", "greedy", "two-pointers", "sorting"]
+pattern = "greedy"
+rank = 6
+
+[signature]
+name = "minTrips"
+params = [{ name = "weights", type = "int[]" }, { name = "limit", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

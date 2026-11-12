@@ -1,0 +1,1 @@
+{"input": {"n": 3, "roads": [[0, 1, 4]], "start": 0, "goal": 2}, "output": -1}

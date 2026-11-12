@@ -15,7 +15,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 | `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult, the judge Report). No I/O |
 | `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009); per-language time limits and the machine calibration benchmark (ADR 0017) |
 | `crates/kb-runner` | Sandboxed execution. **Security-critical** |
-| `crates/kb-store` | SQLite via sqlx (runtime queries only): `content.db` (read-only, FTS5) + `user.db` (WAL, migrations in `migrations/`; ADR 0010) |
+| `crates/kb-store` | SQLite via sqlx (runtime queries only): `content.db` (read-only, FTS5, tests zstd-compressed per ADR 0018) + `user.db` (WAL, migrations in `migrations/`; ADR 0010) |
 | `crates/kb-toolchain` | Installs languages (runtimes + language servers) into the sandbox root: compiled-in `manifest.toml` (the only place pins live), safe downloader and extractor, receipts; `kb-toolchain` CLI (ADR 0015). **Download verification lives here** |
 | `crates/kb-bridge` | Language servers over stdio, outside the sandbox: sessions, message policy, virtual project per problem (ADR 0014). DAP later |
 | `crates/kb-pack` | `kb-pack validate [--run]`, `generate` and `build` (content.db) CLI for problem packages; `--run` runs every problem script in the sandbox (ADR 0016) and judges speed per language (ADR 0017) |
@@ -33,7 +33,7 @@ cargo deny check licenses        # license check (hakoniwa is an approved LGPL e
 kb-sandbox probe                 # Linux: what this kernel supports (cargo run -p kb-runner --bin kb-sandbox -- probe)
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo run -p kb-pack -- validate # validate every problem (--run: machine factor, then sandbox checks: validator, reference speed per language, 500-seed stress vs brute.py, naive.py and naive.rs TLE; Windows)
+cargo run -p kb-pack -- validate # validate every problem, with each problem's compressed test size (budget 512 KB; --run: machine factor, then sandbox checks: validator, reference speed per language, 500-seed stress vs brute.py, naive.py and naive.rs TLE; Windows)
 cargo run -p kb-pack -- generate content/problems/<id> --size max --seeds 1,2  # write hidden tests from gen.py (sandbox; committed)
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
@@ -61,6 +61,8 @@ cargo run -p katabox-desktop --bin export-bindings  # regenerate apps/desktop/sr
 - Workspace state (drafts, notes, snapshots with verdicts, layout and editor settings `workspace.layout`, `editor.keymap`, `editor.font_size`, `editor.language`) and its save rules are in ADR 0013; keep CodeMirror and other heavy code inside the lazy workspace route.
 - New data in `user.db` only via a numbered migration: a new `crates/kb-store/migrations/NNNN_*.sql` added to `MIGRATIONS`. Never edit a released migration (ADR 0010).
 - Time limits (ADR 0017): `time_limit_ms` in problem.toml is the base (Rust) limit; languages scale it by their `[time]` table in `language.toml`, and the app by the machine's calibration (0.5-3.0). kb-pack judges at 1.0. Changing a factor, startup allowance or the benchmark means re-running `validate --run` on every problem (and re-measuring the benchmark's reference times).
+- Test data (ADR 0018): each problem's tests must stay within 512 KB compressed (`kb-pack validate` enforces it); keep max tests lean (small values, one max test when it suffices). Tests stay committed as JSON; the build never generates them.
+- Every tag in a problem.toml needs a display name in `tag.names` of both `en.json` and `es.json` (a kb-pack test checks it).
 - Problems must be original. Never copy statements or tests from LeetCode, HackerRank or similar sites.
 - Solutions use each language's standard library only.
 - Record significant decisions as a new ADR in `docs/adr/`.

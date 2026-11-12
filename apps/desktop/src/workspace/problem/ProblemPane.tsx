@@ -4,7 +4,7 @@ import type { ProblemView } from "@/bindings";
 import { BookOpen, FileText, History, Lightbulb, ListChecks, NotebookPen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { usePatternLabel } from "@/components/Semantic";
+import { usePatternLabel, useTagLabel } from "@/components/Semantic";
 import { Markdown } from "@/workspace/problem/Markdown";
 import { HintsTab } from "@/workspace/problem/HintsTab";
 import { EditorialTab } from "@/workspace/problem/EditorialTab";
@@ -62,6 +62,7 @@ export function ProblemPane({
 }) {
   const { t } = useTranslation();
   const patternLabel = usePatternLabel();
+  const tagLabel = useTagLabel();
   return (
     <Tabs defaultValue="description" className="@container flex h-full min-h-0 flex-col gap-0">
       {/* Narrow panes show icons only (with a tooltip and an accessible name); never overflow. */}
@@ -94,7 +95,7 @@ export function ProblemPane({
             <dt>{t("pattern.label")}</dt>
             <dd>{patternLabel(problem.pattern)}</dd>
             <dt>{t("library.columns.tags")}</dt>
-            <dd className="font-mono">{problem.tags.join(", ")}</dd>
+            <dd>{problem.tags.map(tagLabel).join(", ")}</dd>
           </dl>
         </TabsContent>
         <TabsContent value="hints">

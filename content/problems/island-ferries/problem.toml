@@ -1,0 +1,17 @@
+id = "island-ferries"
+title = "Island Ferries"
+title_es = "Islas conectadas"
+difficulty = "medium"
+tags = ["graph", "union-find"]
+pattern = "union-find"
+rank = 7
+
+[signature]
+name = "groups"
+params = [{ name = "n", type = "int" }, { name = "links", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

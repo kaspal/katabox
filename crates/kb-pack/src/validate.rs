@@ -2,6 +2,7 @@
 //! matches its generated stub; `--run` also judges every reference solution.
 
 use kb_core::{Difficulty, Language};
+use kb_store::blob::TestBytes;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -154,13 +155,31 @@ pub fn validate_all(dir: &Path) -> ExitCode {
     };
 
     let mut failed = 0;
+    let mut total = TestBytes::default();
     for p in &dirs {
-        let (difficulty, errors) = validate_problem_meta(p);
+        let (difficulty, mut errors) = validate_problem_meta(p);
+        let size = if errors.is_empty() {
+            match test_size(p) {
+                Ok(b) => {
+                    errors.extend(budget_error(b));
+                    total.json += b.json;
+                    total.stored += b.stored;
+                    Some(b)
+                }
+                Err(e) => {
+                    errors.push(e);
+                    None
+                }
+            }
+        } else {
+            None
+        };
         if errors.is_empty() {
             println!(
-                "ok    {} ({:?})",
+                "ok    {} ({:?})  tests {}",
                 p.display(),
-                difficulty.unwrap_or(Difficulty::Easy)
+                difficulty.unwrap_or(Difficulty::Easy),
+                size.map(size_text).unwrap_or_default()
             );
         } else {
             failed += 1;
@@ -168,14 +187,58 @@ pub fn validate_all(dir: &Path) -> ExitCode {
             for e in errors {
                 println!("        - {e}");
             }
+            if let Some(b) = size {
+                println!("        tests {}", size_text(b));
+            }
         }
     }
-    println!("\n{} problem(s), {} failed", dirs.len(), failed);
+    println!(
+        "\n{} problem(s), {} failed; tests {} KB as JSON, {} KB compressed",
+        dirs.len(),
+        failed,
+        kb(total.json),
+        kb(total.stored)
+    );
     if failed == 0 {
         ExitCode::SUCCESS
     } else {
         ExitCode::FAILURE
     }
+}
+
+/// Most a problem's tests may take in content.db, compressed (ADR 0018).
+pub const TEST_BUDGET_BYTES: u64 = 512 * 1024;
+
+/// A problem's test bytes, as JSON and as stored in content.db (zstd per test, the same
+/// function the build uses).
+pub fn test_size(dir: &Path) -> Result<TestBytes, String> {
+    let problem = kb_judge::Problem::load(dir).map_err(|e| e.to_string())?;
+    kb_store::blob::test_bytes(&problem.tests).map_err(|e| e.to_string())
+}
+
+/// Why `b` is over the budget, if it is.
+pub fn budget_error(b: TestBytes) -> Option<String> {
+    (b.stored > TEST_BUDGET_BYTES).then(|| {
+        format!(
+            "tests take {} KB compressed, over the {} KB budget (ADR 0018): use smaller values or fewer max-size tests",
+            kb(b.stored),
+            kb(TEST_BUDGET_BYTES)
+        )
+    })
+}
+
+fn kb(bytes: u64) -> u64 {
+    bytes.div_ceil(1024)
+}
+
+fn size_text(b: TestBytes) -> String {
+    format!(
+        "{} KB → {} KB compressed ({}% of {} KB)",
+        kb(b.json),
+        kb(b.stored),
+        b.stored * 100 / TEST_BUDGET_BYTES,
+        kb(TEST_BUDGET_BYTES)
+    )
 }
 
 /// Returns the parsed difficulty (when readable) and the list of errors.
@@ -479,6 +542,42 @@ pub(crate) mod tests {
         assert!(errs.len() == 1 && errs[0].contains("naive.rs"), "{errs:?}");
     }
 
+    #[test]
+    fn tests_over_the_budget_are_reported() {
+        let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/two-sum");
+        let base = std::env::temp_dir().join(format!("kbp-budget-{}", std::process::id()));
+        let dir = base.join("two-sum");
+        let _ = fs::remove_dir_all(&base);
+        copy_dir(&src, &dir);
+        let today = test_size(&dir).unwrap();
+        assert!(today.stored < TEST_BUDGET_BYTES && today.stored * 2 < today.json);
+        assert_eq!(budget_error(today), None);
+        // Another max-size test of random numbers: they barely compress.
+        let mut x: u64 = 0x2545_f491_4f6c_dd1d;
+        let nums: Vec<i64> = (0..100_000)
+            .map(|_| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                (x % 2_000_000_001) as i64 - 1_000_000_000
+            })
+            .collect();
+        let big = serde_json::json!({"input": {"nums": nums, "target": 0}, "output": [0, 1]});
+        fs::write(dir.join("tests/hidden/99.json"), big.to_string()).unwrap();
+        let more = test_size(&dir).unwrap();
+        fs::remove_dir_all(&base).unwrap();
+        assert!(more.stored > TEST_BUDGET_BYTES, "{more:?}");
+        let e = budget_error(more).unwrap();
+        assert!(e.contains("over the 512 KB budget"), "{e}");
+        assert_eq!(
+            size_text(TestBytes {
+                json: 2048,
+                stored: 256 * 1024
+            }),
+            "2 KB → 256 KB compressed (50% of 512 KB)"
+        );
+    }
+
     pub(crate) fn copy_dir(from: &Path, to: &Path) {
         fs::create_dir_all(to).unwrap();
         for e in fs::read_dir(from).unwrap().flatten() {
@@ -489,5 +588,41 @@ pub(crate) mod tests {
                 fs::copy(e.path(), target).unwrap();
             }
         }
+    }
+}
+
+/// Every tag used in `content/problems` has a display name in both UI languages
+/// (`tag.names` in apps/desktop/src/i18n/locales), so the UI never shows a raw id.
+#[cfg(test)]
+mod tag_names {
+    use std::path::Path;
+
+    #[test]
+    fn every_content_tag_has_a_name_in_both_locales() {
+        let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let names = |lang: &str| -> serde_json::Map<String, serde_json::Value> {
+            let path = repo.join(format!("apps/desktop/src/i18n/locales/{lang}.json"));
+            let v: serde_json::Value =
+                serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+            v["tag"]["names"].as_object().cloned().unwrap_or_default()
+        };
+        let (en, es) = (names("en"), names("es"));
+        let mut missing = Vec::new();
+        for dir in super::problem_dirs(&repo.join("content/problems")).unwrap() {
+            let p = kb_judge::Problem::load(&dir).unwrap();
+            let toml: toml::Value =
+                toml::from_str(&std::fs::read_to_string(dir.join("problem.toml")).unwrap())
+                    .unwrap();
+            for tag in toml["tags"].as_array().unwrap() {
+                let tag = tag.as_str().unwrap();
+                if !en.contains_key(tag) || !es.contains_key(tag) {
+                    missing.push(format!("{} uses {tag}", p.id));
+                }
+            }
+        }
+        assert!(
+            missing.is_empty(),
+            "add these tags to tag.names in en.json and es.json: {missing:?}"
+        );
     }
 }

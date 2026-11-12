@@ -73,6 +73,13 @@ export function StatusIcon({ status }: { status: ProblemStatus | null }) {
   );
 }
 
+/** A tag id ("hash-map") in the UI language; unknown ids show as written. */
+export function useTagLabel() {
+  const { t, i18n } = useTranslation();
+  return (id: string) =>
+    i18n.exists(`tag.names.${id}`) ? t(`tag.names.${id}` as "tag.label") : id;
+}
+
 /** A pattern id ("two-pointers") in the UI language; unknown ids show as written. */
 export function usePatternLabel() {
   const { t, i18n } = useTranslation();

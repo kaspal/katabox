@@ -1,0 +1,17 @@
+id = "best-week"
+title = "Best Week"
+title_es = "La mejor semana"
+difficulty = "easy"
+tags = ["array", "sliding-window"]
+pattern = "sliding-window"
+rank = 4
+
+[signature]
+name = "bestWeek"
+params = [{ name = "sales", type = "int[]" }, { name = "k", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

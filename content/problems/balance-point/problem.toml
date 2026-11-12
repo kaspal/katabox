@@ -1,0 +1,17 @@
+id = "balance-point"
+title = "Balance Point"
+title_es = "Punto de equilibrio"
+difficulty = "easy"
+tags = ["array", "prefix-sum"]
+pattern = "arrays-hashing"
+rank = 3
+
+[signature]
+name = "balancePoint"
+params = [{ name = "weights", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

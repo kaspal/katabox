@@ -28,12 +28,19 @@ sha2 = "0.10"
 specta = { version = "=2.0.0-rc.22", features = ["derive", "serde_json"] }
 sqlx = { version = "0.8", default-features = false, features = ["sqlite", "runtime-tokio"] }
 tokio = { version = "1", features = ["rt"] }
+# Test data in content.db (ADR 0018).
+zstd = { version = "0.13", default-features = false }
 
 [workspace.lints.rust]
 unsafe_code = "deny"
 
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
+
+# zstd level 19 builds content.db (ADR 0018); unoptimized C would make every debug
+# `kb-pack validate`/`build` and the app's build script several times slower.
+[profile.dev.package.zstd-sys]
+opt-level = 3
 
 [profile.release]
 codegen-units = 1

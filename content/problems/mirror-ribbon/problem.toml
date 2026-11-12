@@ -1,0 +1,17 @@
+id = "mirror-ribbon"
+title = "Mirror Ribbon"
+title_es = "Cinta espejo"
+difficulty = "easy"
+tags = ["string", "two-pointers"]
+pattern = "two-pointers"
+rank = 2
+
+[signature]
+name = "isMirror"
+params = [{ name = "text", type = "string" }]
+returns = "bool"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

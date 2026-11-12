@@ -1,0 +1,17 @@
+id = "warmer-ahead"
+title = "Warmer Ahead"
+title_es = "Hasta un día más cálido"
+difficulty = "medium"
+tags = ["array", "stack", "monotonic-stack"]
+pattern = "stack"
+rank = 6
+
+[signature]
+name = "daysUntilWarmer"
+params = [{ name = "temps", type = "int[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

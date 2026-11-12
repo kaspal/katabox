@@ -140,7 +140,8 @@ async fn every_reference_is_accepted_with_progress() {
     }
     assert_eq!(app.list_submissions("two-sum").await.unwrap().len(), 4);
     let status = app.list_problems(&Default::default()).await.unwrap();
-    assert_eq!(status[0].status, Some(ProblemStatus::Solved));
+    let two_sum = status.iter().find(|p| p.id == "two-sum").unwrap();
+    assert_eq!(two_sum.status, Some(ProblemStatus::Solved));
 }
 
 #[tokio::test]
