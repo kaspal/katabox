@@ -82,6 +82,7 @@
       "bin-packing": "Bin packing",
       "binary-lifting": "Binary lifting",
       "binary-search": "Binary search",
+      "binary-tree": "Binary tree",
       "bit-manipulation": "Bit manipulation",
       "bitmask": "Bitmask",
       "counting": "Counting",
@@ -98,6 +99,7 @@
       "hash-map": "Hash map",
       "heap": "Heap",
       "intervals": "Intervals",
+      "linked-list": "Linked list",
       "math": "Math",
       "matrix": "Matrix",
       "minimum-spanning-tree": "Minimum spanning tree",
@@ -437,7 +439,9 @@
       "errors": {
         "empty": "Enter a value.",
         "json": "This is not valid JSON.",
-        "type": "Expected a value of type {{type}}."
+        "type": "Expected a value of type {{type}}.",
+        "list": "Expected {{type}}: a list as a JSON array of integers, e.g. [1, 2, 3] ([] is empty).",
+        "tree": "Expected {{type}}: a tree in level order with null for a missing child, e.g. [1, null, 2, 3] ([] is empty)."
       },
       "invalid": "Custom input {{index}} is not valid: {{message}}",
       "needsPython": "Custom inputs are checked against the problem's constraints only when Python is installed.",

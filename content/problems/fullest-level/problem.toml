@@ -1,0 +1,17 @@
+id = "fullest-level"
+title = "Fullest Level"
+title_es = "El nivel más cargado"
+difficulty = "easy"
+tags = ["binary-tree", "tree", "bfs"]
+pattern = "trees"
+rank = 2
+
+[signature]
+name = "fullestLevel"
+params = [{ name = "root", type = "TreeNode" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

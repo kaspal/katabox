@@ -22,7 +22,30 @@ export function parseSignature(v: JsonValue): Signature | null {
   return { name: v.name, params: out, returns: v.returns };
 }
 
-/** Does `value` match the signature type (`int`, `float`, `string`, `bool`, `T[]`)? */
+/** A canonical level-order tree (ADR 0025): safe ints and nulls, the root not null, every
+ * slot owned by a node listed before it, and no trailing null. */
+export function isLevelOrder(value: unknown): boolean {
+  if (!Array.isArray(value)) return false;
+  if (!value.every((v) => v === null || (typeof v === "number" && Number.isSafeInteger(v)))) return false;
+  if (value.length === 0) return true;
+  if (value[0] === null || value[value.length - 1] === null) return false;
+  let slots = 1;
+  for (let i = 0; i < value.length; i++) {
+    if (i >= slots) return false;
+    if (value[i] !== null) slots += 2;
+  }
+  return true;
+}
+
+/** The element type under every `[]` (`TreeNode[]` -> `TreeNode`). */
+export function elementType(type: string): string {
+  let t = type.trim();
+  while (t.endsWith("[]")) t = t.slice(0, -2).trim();
+  return t;
+}
+
+/** Does `value` match the signature type (`int`, `float`, `string`, `bool`, `ListNode`,
+ * `TreeNode`, `T[]`)? Lists and trees are JSON arrays (ADR 0025). */
 export function matchesType(type: string, value: unknown): boolean {
   const t = type.trim();
   if (t.endsWith("[]")) {
@@ -37,6 +60,10 @@ export function matchesType(type: string, value: unknown): boolean {
       return typeof value === "string";
     case "bool":
       return typeof value === "boolean";
+    case "ListNode":
+      return Array.isArray(value) && value.every((v) => typeof v === "number" && Number.isSafeInteger(v));
+    case "TreeNode":
+      return isLevelOrder(value);
     default:
       return false;
   }

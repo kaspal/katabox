@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { VERDICTS, VerdictBadge } from "@/components/Verdict";
@@ -79,6 +80,39 @@ describe("custom test validation", () => {
     expect(matchesType("int[][]", [[1], ["x"]])).toBe(false);
     expect(matchesType("string[]", ["a"])).toBe(true);
     expect(matchesType("bool", "true")).toBe(false);
+  });
+
+  it("checks lists and level-order trees (ADR 0025)", () => {
+    expect(matchesType("ListNode", [])).toBe(true);
+    expect(matchesType("ListNode", [1, 2, 3])).toBe(true);
+    expect(matchesType("ListNode", [1, null])).toBe(false);
+    expect(matchesType("ListNode[]", [[], [4, 5]])).toBe(true);
+    for (const good of [[], [1], [1, null, 2, 3], [5, 3, 8, 1, null, 7, 9]]) {
+      expect(matchesType("TreeNode", good), JSON.stringify(good)).toBe(true);
+    }
+    // A null root, a trailing null, a child of a missing node, a non-integer.
+    for (const bad of [[null], [1, 2, null], [1, null, null, 3], [1, "x"], { val: 1 }]) {
+      expect(matchesType("TreeNode", bad), JSON.stringify(bad)).toBe(false);
+    }
+    expect(matchesType("TreeNode[]", [[], [2, null, 3]])).toBe(true);
+  });
+
+  it("hints at the JSON form of a list or a tree, in English and Spanish", async () => {
+    const nodeSig = parseSignature({
+      name: "f",
+      params: [
+        { name: "head", type: "ListNode" },
+        { name: "roots", type: "TreeNode[]" },
+      ],
+      returns: "int",
+    })!;
+    const { errors } = validateCustom(nodeSig, { head: "[1, null]", roots: "[[1, null, null, 2]]" });
+    expect(errors.head).toEqual({ kind: "type", expected: "ListNode" });
+    expect(errors.roots).toEqual({ kind: "type", expected: "TreeNode[]" });
+    const t = i18n.getFixedT("en");
+    expect(t("results.custom.errors.list", { type: "ListNode" })).toContain("[1, 2, 3]");
+    expect(t("results.custom.errors.tree", { type: "TreeNode[]" })).toContain("level order");
+    expect(i18n.getFixedT("es")("results.custom.errors.tree", { type: "TreeNode" })).toContain("por niveles");
   });
 
   it("reports each field and builds the input only when all are valid", () => {

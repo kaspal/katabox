@@ -1,0 +1,17 @@
+id = "hedge-trim"
+title = "Hedge Trim"
+title_es = "Poda del seto"
+difficulty = "medium"
+tags = ["binary-tree", "tree", "dfs"]
+pattern = "trees"
+rank = 5
+
+[signature]
+name = "trimHedge"
+params = [{ name = "root", type = "TreeNode" }]
+returns = "TreeNode"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

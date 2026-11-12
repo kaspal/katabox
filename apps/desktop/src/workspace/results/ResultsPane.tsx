@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import type { Phase } from "@/workspace/hooks";
 import { ResultView } from "@/workspace/results/ResultView";
 import {
+  elementType,
   validateCustom,
   valuesFrom,
   type CustomTestDraft,
@@ -231,8 +232,13 @@ function fieldErrorText(t: ReturnType<typeof useTranslation>["t"], e: FieldError
       return t("results.custom.errors.empty");
     case "json":
       return t("results.custom.errors.json");
-    case "type":
+    case "type": {
+      // Lists and trees get a hint at their JSON form (ADR 0025).
+      const element = elementType(e.expected);
+      if (element === "ListNode") return t("results.custom.errors.list", { type: e.expected });
+      if (element === "TreeNode") return t("results.custom.errors.tree", { type: e.expected });
       return t("results.custom.errors.type", { type: e.expected });
+    }
   }
 }
 
