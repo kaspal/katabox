@@ -8,7 +8,10 @@ extension = "ts"
 compile = ""
 run = "node --preserve-symlinks --preserve-symlinks-main --max-old-space-size={memory_mb} {main}"
 language_server = "typescript-language-server"
-debug_adapter = "vscode-js-debug"
+# The debugger's replay run (ADR 0022, 0023): the same Node, with debug.ts.j2 stepping the
+# solution through the in-process inspector (no port).
+debug = "node --preserve-symlinks --preserve-symlinks-main --max-old-space-size={memory_mb} {main}"
+debug_adapter = "replay (debug.ts.j2, ADR 0023)"
 
 # Time limit for this language (ADR 0017): the problem's base limit (`time_limit_ms`,
 # set for Rust) times `factor`, plus `startup_ms` of CPU for starting the runtime and

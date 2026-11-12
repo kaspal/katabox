@@ -29,16 +29,25 @@ use crate::languages::definition;
 use crate::limits;
 use crate::problem::Problem;
 
-/// The most steps one trace records; longer runs are truncated (still navigable).
+/// The most steps one Python trace records; longer runs are truncated (still navigable).
 pub const MAX_STEPS: u32 = 200_000;
+/// JavaScript/TypeScript (ADR 0023): every pause goes through the inspector (about 0.1 ms
+/// each), so a trace records fewer steps …
+pub const JS_MAX_STEPS: u32 = 15_000;
+/// … and at most this many pauses (several pauses on one line make one step), which
+/// keeps a trace, and a stop near its end, around 3 s (measured: 30 000 pauses took 4.1 s).
+pub const JS_MAX_PAUSES: u32 = 20_000;
 /// The most bytes of encoded steps one trace sends (one byte per step for the first 91
 /// distinct (line, depth) pairs, three after that).
 pub const TRACE_BUDGET_BYTES: usize = 1 << 20;
 /// Room on stdout for everything else: the code table, the result, the prints, a
 /// stop's variables, expansions and evaluations.
 const RECORD_ALLOWANCE: usize = 512 * 1024;
-/// Tracing slows the program down: the debug CPU cap is the language's Run cap times this.
+/// Tracing slows the program down: the debug CPU cap is the language's Run cap times this
+/// (Python; JavaScript/TypeScript uses [`JS_CPU_FACTOR`]).
 pub const CPU_FACTOR: u32 = 5;
+/// Stepping through Node's inspector costs CPU in both threads.
+pub const JS_CPU_FACTOR: u32 = 8;
 /// … but never more than this.
 pub const CPU_MAX_MS: u32 = 60_000;
 
@@ -82,6 +91,23 @@ pub enum DebugLimit {
     Output,
 }
 
+/// The most steps one trace of `lang` records.
+pub fn max_steps(lang: Language) -> u32 {
+    if lang == Language::Python {
+        MAX_STEPS
+    } else {
+        JS_MAX_STEPS
+    }
+}
+
+fn cpu_factor(lang: Language) -> u32 {
+    if lang == Language::Python {
+        CPU_FACTOR
+    } else {
+        JS_CPU_FACTOR
+    }
+}
+
 /// Whether `lang` can be debugged.
 pub fn supported(lang: Language) -> bool {
     definition(lang).is_ok_and(|d| d.debug.is_some())
@@ -98,7 +124,8 @@ pub fn trace(
     let request = serde_json::json!({
         "mode": "trace",
         "input": input,
-        "max_steps": MAX_STEPS,
+        "max_steps": max_steps(language),
+        "max_pauses": JS_MAX_PAUSES,
         "trace_budget": TRACE_BUDGET_BYTES,
     });
     let (records, facts) = run(problem, language, source, request, env)?;
@@ -129,7 +156,7 @@ pub fn stop(
         "frame": req.frame,
         "expand": req.expand,
         "evals": req.evals,
-        "max_steps": MAX_STEPS,
+        "max_steps": max_steps(language),
     });
     let (records, facts) = run(problem, language, source, request, env)?;
     interpret(records, &facts, Some((trace, req.step)))
@@ -161,7 +188,7 @@ fn run(
     let mut limits = Limits::default_for(language);
     limits.memory_mb = problem.memory_mb;
     limits.cpu_time_ms = limits::cpu_cap_ms(problem.time_limit_ms, &def, env.time_scale)
-        .saturating_mul(CPU_FACTOR)
+        .saturating_mul(cpu_factor(language))
         .min(CPU_MAX_MS);
     let print_cap = limits.max_output_kb as usize * 1024;
 
@@ -495,5 +522,47 @@ N {\"kind\":\"outcome\",\"status\":\"error\",\"error\":\"File C:\\\\work\\\\solu
             DebugRun::LoadError("solution.py: boom".into())
         );
         assert!(interpret(parse(b"N {\"kind\":\"bogus\"}\n", "N"), &facts(), None).is_err());
+    }
+
+    #[test]
+    fn javascript_records_decode_the_same_way() {
+        // The JS harness appends "step" to the outcome and "hash" (a u64, written as raw
+        // JSON digits) to the stop, and sends diverged with its step count.
+        let out = b"N {\"kind\":\"trace\",\"table\":[[2,1],[3,1]],\"tokens\":\"!#!\",\"steps\":3,\"truncated\":null,\"prints\":[[0,\"start\\n\"]],\"prints_truncated\":false}\n\
+N {\"kind\":\"outcome\",\"status\":\"ok\",\"value\":[2,4],\"step\":2}\n";
+        let DebugRun::Trace(t) = interpret(parse(out, "N"), &facts(), None).unwrap() else {
+            panic!()
+        };
+        assert_eq!(t.steps.len(), 3);
+        assert_eq!(t.outcome.as_ref().unwrap().value, serde_json::json!([2, 4]));
+        let hash = t.prefix_hash(2);
+        assert!(
+            hash > 1 << 53,
+            "the test needs a hash beyond f64's exact integers"
+        );
+        let stop = format!(
+            "N {{\"kind\":\"stop\",\"step\":2,\"stack\":[{{\"function\":\"twoSum\",\"line\":2}}],\"frame\":0,\"locals\":[{{\"name\":\"seen\",\"type\":\"Map\",\"value\":\"Map(0) {{}}\",\"children\":0}}],\"globals\":[],\"expanded\":[],\"evals\":[],\"hash\":{hash}}}\n"
+        );
+        let r = interpret(parse(stop.as_bytes(), "N"), &facts(), Some((&t, 2))).unwrap();
+        let DebugRun::Stop(s) = r else {
+            panic!("{r:?}")
+        };
+        assert_eq!(s.locals[0].type_name, "Map");
+        let diverged = b"N {\"kind\":\"diverged\",\"steps\":1}\n";
+        assert_eq!(
+            interpret(parse(diverged, "N"), &facts(), Some((&t, 2))).unwrap(),
+            DebugRun::Diverged
+        );
+    }
+
+    #[test]
+    fn step_caps_and_cpu_factors_per_language() {
+        assert_eq!(max_steps(Language::Python), MAX_STEPS);
+        assert_eq!(max_steps(Language::TypeScript), JS_MAX_STEPS);
+        const { assert!(JS_MAX_STEPS < JS_MAX_PAUSES && JS_MAX_STEPS < MAX_STEPS) };
+        assert_eq!(cpu_factor(Language::Python), CPU_FACTOR);
+        assert_eq!(cpu_factor(Language::TypeScript), JS_CPU_FACTOR);
+        assert!(supported(Language::Python) && supported(Language::TypeScript));
+        assert!(!supported(Language::Php) && !supported(Language::Rust));
     }
 }

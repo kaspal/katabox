@@ -566,3 +566,78 @@ async fn a_debug_session_on_two_sum() {
         AppErrorCode::InvalidInput
     );
 }
+
+/// The same session commands for TypeScript (ADR 0023): two-sum's reference, with a
+/// breakpoint on `seen.set(...)`, every step action and the result.
+#[tokio::test]
+async fn a_typescript_debug_session_on_two_sum() {
+    use kb_app::debug::{DebugAction, DebugInspect, DebugStart, DebugState};
+    let app = app("debug-ts").await;
+    let start = DebugStart {
+        problem: "two-sum".into(),
+        language: Language::TypeScript,
+        code: reference(Language::TypeScript),
+        input: json!({"nums": [5, 8, 12, 1, 3], "target": 15})
+            .as_object()
+            .unwrap()
+            .clone(),
+        breakpoints: vec![6],
+        watches: vec!["target - nums[i]".into()],
+    };
+    assert!(kb_app::debug::languages().contains(&Language::TypeScript));
+    let v = app.debug_start(start).await.unwrap();
+    let paused = |v: &kb_app::debug::DebugView| match &v.state {
+        DebugState::Paused { line, stop } => (*line, stop.clone()),
+        other => panic!("not paused: {other:?}"),
+    };
+    let (line, stop) = paused(&v);
+    assert_eq!(line, 6);
+    assert_eq!(stop.evals[0].value.as_ref().unwrap().value, "10");
+    let id = v.session;
+
+    // Over: back to the loop header; into: the next line; back: the header again.
+    let v = app.debug_action(id, DebugAction::StepOver).await.unwrap();
+    assert_eq!(paused(&v).0, 3);
+    let v = app.debug_action(id, DebugAction::StepInto).await.unwrap();
+    assert_eq!(paused(&v).0, 4);
+    let v = app.debug_action(id, DebugAction::StepBack).await.unwrap();
+    assert_eq!(paused(&v).0, 3);
+    // Continue: the breakpoint again, with 5 → 0 in seen.
+    let v = app.debug_action(id, DebugAction::Continue).await.unwrap();
+    let (line, stop) = paused(&v);
+    assert_eq!(line, 6);
+    assert!(
+        stop.locals
+            .iter()
+            .any(|l| l.name == "seen" && l.value == "Map(1) { 5 => 0 }"),
+        "{:?}",
+        stop.locals
+    );
+    let v = app
+        .debug_inspect(
+            id,
+            DebugInspect {
+                frame: 0,
+                expand: vec![vec![json!("locals"), json!("nums")]],
+                watches: vec!["seen.size".into()],
+            },
+        )
+        .await
+        .unwrap();
+    let (_, stop) = paused(&v);
+    assert_eq!(stop.expanded[0].children.len(), 5);
+    assert_eq!(stop.evals[0].value.as_ref().unwrap().value, "1");
+    let e = app
+        .debug_evaluate(id, 0, "[...seen.keys()]".into())
+        .await
+        .unwrap();
+    assert_eq!(e.value.unwrap().value, "[ 5 ]");
+
+    // Out of twoSum: the program ends with the result.
+    let v = app.debug_action(id, DebugAction::StepOut).await.unwrap();
+    let DebugState::Finished { outcome, .. } = &v.state else {
+        panic!("{v:?}")
+    };
+    assert_eq!(outcome.as_ref().unwrap().value, json!([2, 4]));
+    app.debug_end(id);
+}
