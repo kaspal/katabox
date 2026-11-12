@@ -647,5 +647,55 @@
       "close": "Cerrar",
       "none": "No hay una solución aceptada en {{language}}."
     }
+  },
+  "debug": {
+    "tab": "Depurar",
+    "debugCase": "Depurar este caso",
+    "unsupported": "Por ahora la depuración está disponible para Python.",
+    "busy": "Espera a que termine la ejecución actual.",
+    "empty": "Elige \"Depurar este caso\" en una prueba, o pulsa F5 para depurar la primera prueba pública. Haz clic en el margen a la izquierda de los números de línea para poner un punto de interrupción.",
+    "gutter": "Puntos de interrupción (haz clic en una línea, o pulsa F9 en la línea del cursor)",
+    "toolbar": "Depurador",
+    "replaying": "Reproduciendo la prueba…",
+    "actions": {
+      "continue": "Continuar",
+      "step_over": "Paso a paso por encima",
+      "step_into": "Paso a paso por instrucciones",
+      "step_out": "Paso a paso para salir",
+      "step_back": "Paso atrás",
+      "restart": "Reiniciar",
+      "stop": "Detener la depuración"
+    },
+    "pausedAt": "En pausa en la línea {{line}} (paso {{step}} de {{total}})",
+    "returned": "Terminado: devolvió {{value}}",
+    "raised": "Terminado: se lanzó una excepción en la línea {{line}}",
+    "memory": "Terminado: sin memoria",
+    "truncated": "Se dejó de grabar tras {{count}} pasos; aún puedes recorrerlos.",
+    "failed": {
+      "load_error": "La solución no se cargó.",
+      "time_limit": "La prueba alcanzó el límite de tiempo durante la depuración.",
+      "memory_limit": "La prueba alcanzó el límite de memoria durante la depuración.",
+      "output_limit": "La prueba imprimió demasiado durante la depuración.",
+      "diverged": "Este programa se comporta distinto en cada ejecución (hora, azar o identidad de objetos), así que no se puede reproducir paso a paso."
+    },
+    "variables": "Variables",
+    "scopes": {
+      "locals": "Locales",
+      "globals": "Globales"
+    },
+    "noVariables": "No hay variables aquí.",
+    "expand": "Desplegar {{name}}",
+    "collapse": "Plegar {{name}}",
+    "item": "elemento",
+    "more_one": "… {{count}} elemento más",
+    "more_other": "… {{count}} elementos más",
+    "watch": "Inspección",
+    "addWatch": "Añade una expresión para inspeccionar",
+    "removeWatch": "Dejar de inspeccionar {{expr}}",
+    "callStack": "Pila de llamadas",
+    "line": "línea {{line}}",
+    "console": "Consola de depuración",
+    "evaluate": "Evaluar en el marco seleccionado",
+    "consoleHelp": "Cada paso vuelve a reproducir la prueba, así que lo que evalúes aquí nunca cambia el programa."
   }
 }

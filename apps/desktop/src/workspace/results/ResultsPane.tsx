@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { DebugThisCase } from "@/workspace/debug/context";
 import type { PracticeOutcome } from "@/bindings";
 import { SubmitPractice } from "@/practice/SubmitPractice";
 import { useTranslation } from "react-i18next";
@@ -21,7 +22,7 @@ import {
 } from "@/workspace/results/validate";
 import type { Report } from "@/bindings";
 
-export type ResultsTab = "testcases" | "result";
+export type ResultsTab = "testcases" | "result" | "debug";
 
 function usePhaseText() {
   const { t } = useTranslation();
@@ -57,6 +58,7 @@ export function ResultsPane({
   validatorNeedsPython = false,
   onInstallPython,
   practice = null,
+  debugPanel = null,
 }: {
   problem: ProblemView;
   signature: Signature | null;
@@ -74,6 +76,8 @@ export function ResultsPane({
   onInstallPython?: () => void;
   /** What the last Submit did for practice (ADR 0019); null after a Run. */
   practice?: PracticeOutcome | null;
+  /** The Debug tab's content (ADR 0022); no tab when null. */
+  debugPanel?: ReactNode;
 }) {
   const { t } = useTranslation();
   const phaseText = usePhaseText()(phase);
@@ -99,6 +103,11 @@ export function ResultsPane({
           <TabsTrigger value="result" className="px-2 text-xs">
             {t("results.tabs.result")}
           </TabsTrigger>
+          {debugPanel && (
+            <TabsTrigger value="debug" className="px-2 text-xs">
+              {t("debug.tab")}
+            </TabsTrigger>
+          )}
         </TabsList>
         {busy && (
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite" data-testid="phase">
@@ -111,9 +120,12 @@ export function ResultsPane({
         <TabsContent value="testcases" className="space-y-3">
           {problem.public_tests.map((test) => (
             <section key={test.index} className="rounded-lg border p-3 text-sm">
-              <h4 className="mb-1 text-xs font-semibold text-muted-foreground">
-                {t("results.testKind.public")} {test.index}
-              </h4>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <h4 className="text-xs font-semibold text-muted-foreground">
+                  {t("results.testKind.public")} {test.index}
+                </h4>
+                <DebugThisCase input={test.input} label={`${t("results.testKind.public")} ${test.index}`} />
+              </div>
               <pre className="font-mono text-xs whitespace-pre-wrap break-all">
                 {Object.entries(test.input)
                   .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
@@ -199,6 +211,7 @@ export function ResultsPane({
             <p className="text-sm text-muted-foreground">{t("results.empty")}</p>
           )}
         </TabsContent>
+        {debugPanel && <TabsContent value="debug">{debugPanel}</TabsContent>}
       </div>
     </Tabs>
   );
@@ -229,13 +242,14 @@ function CustomTestCard({
   onRemove: () => void;
 }) {
   const { t } = useTranslation();
-  const { errors } = validateCustom(signature, draft.values);
+  const { errors, input } = validateCustom(signature, draft.values);
   return (
     <section className="space-y-2 rounded-lg border border-dashed p-3" data-testid={`custom-${index}`}>
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-semibold text-muted-foreground">
           {t("results.testKind.custom")} {index}
         </h4>
+        <DebugThisCase input={input} label={`${t("results.testKind.custom")} ${index}`} />
         <Button size="sm" variant="ghost" onClick={onRemove} aria-label={t("results.custom.remove", { index })}>
           <Trash2 aria-hidden />
         </Button>

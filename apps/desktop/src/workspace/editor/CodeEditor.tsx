@@ -49,6 +49,8 @@ export type CodeEditorProps = {
   onSubmit?: () => void;
   /** Language-server support (completion, hover, diagnostics, …); none when null. */
   lspExtension?: Extension | null;
+  /** The debugger's breakpoint gutter and paused line (ADR 0022); none when null. */
+  debugExtension?: Extension | null;
   /** Font ligatures (off by default). */
   ligatures?: boolean;
   /** Cursor position and diagnostics counts, after every change. */
@@ -71,6 +73,7 @@ export function CodeEditor(props: CodeEditorProps) {
     theme: new Compartment(),
     readOnly: new Compartment(),
     lsp: new Compartment(),
+    debug: new Compartment(),
   });
 
   const makeState = (doc: string): EditorState => {
@@ -95,6 +98,7 @@ export function CodeEditor(props: CodeEditorProps) {
       c.lang.of([]),
       c.theme.of(themeExtension(p.fontSize ?? 14, p.ligatures)),
       c.lsp.of(p.lspExtension ?? []),
+      c.debug.of(p.debugExtension ?? []),
       c.readOnly.of([EditorState.readOnly.of(!!p.readOnly), EditorView.editable.of(!p.readOnly)]),
       EditorView.contentAttributes.of({ "aria-label": p.ariaLabel }),
       EditorView.updateListener.of((u) => {
@@ -142,6 +146,7 @@ export function CodeEditor(props: CodeEditorProps) {
         c.keymap.reconfigure(keymapExtension(p.keymap ?? "default")),
         c.theme.reconfigure(themeExtension(p.fontSize ?? 14, p.ligatures)),
         c.lsp.reconfigure(p.lspExtension ?? []),
+        c.debug.reconfigure(p.debugExtension ?? []),
         c.readOnly.reconfigure([
           EditorState.readOnly.of(!!p.readOnly),
           EditorView.editable.of(!p.readOnly),
@@ -156,6 +161,7 @@ export function CodeEditor(props: CodeEditorProps) {
     props.readOnly,
     props.ligatures,
     props.lspExtension,
+    props.debugExtension,
   ]);
 
   // Load the grammar for the current language (and after switching documents).

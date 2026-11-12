@@ -647,5 +647,55 @@
       "close": "Close",
       "none": "No accepted solution in {{language}}."
     }
+  },
+  "debug": {
+    "tab": "Debug",
+    "debugCase": "Debug this case",
+    "unsupported": "Debugging is available for Python for now.",
+    "busy": "Wait for the current run to finish.",
+    "empty": "Choose \"Debug this case\" on a test, or press F5 to debug the first public test. Click in the margin left of the line numbers to set a breakpoint.",
+    "gutter": "Breakpoints (click a line, or press F9 on the cursor's line)",
+    "toolbar": "Debugger",
+    "replaying": "Replaying the test…",
+    "actions": {
+      "continue": "Continue",
+      "step_over": "Step over",
+      "step_into": "Step into",
+      "step_out": "Step out",
+      "step_back": "Step back",
+      "restart": "Restart",
+      "stop": "Stop debugging"
+    },
+    "pausedAt": "Paused at line {{line}} (step {{step}} of {{total}})",
+    "returned": "Finished: returned {{value}}",
+    "raised": "Finished: an exception was raised at line {{line}}",
+    "memory": "Finished: out of memory",
+    "truncated": "Stopped recording after {{count}} steps; you can still step through them.",
+    "failed": {
+      "load_error": "The solution did not load.",
+      "time_limit": "The test hit the time limit while debugging.",
+      "memory_limit": "The test hit the memory limit while debugging.",
+      "output_limit": "The test printed too much while debugging.",
+      "diverged": "This program behaves differently on each run (time, randomness or object identity), so it cannot be replayed step by step."
+    },
+    "variables": "Variables",
+    "scopes": {
+      "locals": "Locals",
+      "globals": "Globals"
+    },
+    "noVariables": "No variables here.",
+    "expand": "Expand {{name}}",
+    "collapse": "Collapse {{name}}",
+    "item": "item",
+    "more_one": "… {{count}} more item",
+    "more_other": "… {{count}} more items",
+    "watch": "Watch",
+    "addWatch": "Add an expression to watch",
+    "removeWatch": "Stop watching {{expr}}",
+    "callStack": "Call stack",
+    "line": "line {{line}}",
+    "console": "Debug console",
+    "evaluate": "Evaluate in the selected frame",
+    "consoleHelp": "Each step replays the test, so what you evaluate here never changes the program."
   }
 }

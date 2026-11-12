@@ -48,6 +48,11 @@ import { useLanguageServer } from "@/workspace/editor/lsp/useLanguageServer";
 import { useEditorSession, useJudge } from "@/workspace/hooks";
 import { ProblemPane } from "@/workspace/problem/ProblemPane";
 import { ResultsPane, type ResultsTab } from "@/workspace/results/ResultsPane";
+import { DebugPanel } from "@/workspace/debug/DebugPanel";
+import { DebugCaseContext, type DebugCase } from "@/workspace/debug/context";
+import { useDebugLanguages, useDebugger } from "@/workspace/debug/useDebugger";
+import { debugExtension } from "@/workspace/editor/debug";
+import type { CustomInput } from "@/lib/api";
 import { parseSignature, validateCustom, type CustomTestDraft } from "@/workspace/results/validate";
 
 const route = getRouteApi("/problems/$problemId");
@@ -143,6 +148,47 @@ export function WorkspacePage() {
   const busy = judge.busy !== null;
   const ready = !busy && language !== null && session.code !== null;
 
+  // The debugger (ADR 0022): replay runs of one test; the editor is read-only meanwhile.
+  const dbg = useDebugger(problemId, language, session.docKey);
+  const debugLanguages = useDebugLanguages();
+  const canDebug = language !== null && (debugLanguages.data ?? []).includes(language);
+  const lastDebugCase = useRef<{ input: CustomInput; label: string } | null>(null);
+  const startDebug = useCallback(
+    async (input: CustomInput, label: string) => {
+      if (!ready || !canDebug || session.code === null) return;
+      lastDebugCase.current = { input, label };
+      setTab("debug");
+      await session.flush();
+      await dbg.start(session.code, input, label);
+    },
+    [ready, canDebug, session, dbg],
+  );
+  const debugCase: DebugCase = {
+    onDebug: (input, label) => void startDebug(input, label),
+    disabledReason: !canDebug
+      ? t("debug.unsupported")
+      : busy || dbg.busy
+        ? t("debug.busy")
+        : null,
+  };
+  const debugCurrent = dbg.view?.state.state === "paused" ? dbg.view.state.line : null;
+  const debugEditor = useMemo(
+    () =>
+      canDebug
+        ? debugExtension({
+            breakpoints: new Set(dbg.breakpoints),
+            current: debugCurrent,
+            onToggle: dbg.toggleBreakpoint,
+            label: t("debug.gutter"),
+          })
+        : null,
+    [canDebug, dbg.breakpoints, debugCurrent, dbg.toggleBreakpoint, t],
+  );
+  // A session belongs to one problem and language.
+  const stopDebug = useRef(dbg.stop);
+  stopDebug.current = dbg.stop;
+  useEffect(() => () => void stopDebug.current(), [problemId, language]);
+
   const run = useCallback(async () => {
     if (!ready || !language || session.code === null) return;
     if (!customsValid) {
@@ -190,6 +236,33 @@ export function WorkspacePage() {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented) return;
       const mod = e.ctrlKey || e.metaKey;
+      // Debugger keys (ADR 0022). F5, F10 and F11 never reach WebView2 (reload, full
+      // screen) while the workspace is open.
+      // F9: toggle a breakpoint on the cursor's line (keyboard access to the gutter).
+      if (e.key === "F9" && canDebug && editorView.current) {
+        e.preventDefault();
+        const v = editorView.current;
+        dbg.toggleBreakpoint(v.state.doc.lineAt(v.state.selection.main.head).number);
+        return;
+      }
+      if (e.key === "F5" || e.key === "F10" || e.key === "F11") {
+        e.preventDefault();
+        if (!canDebug) return;
+        if (e.key === "F5" && e.shiftKey && mod) void dbg.act("restart");
+        else if (e.key === "F5" && e.shiftKey) void dbg.stop();
+        else if (e.key === "F5" && dbg.active) void dbg.act("continue");
+        else if (e.key === "F5") {
+          const first = problem.data?.public_tests[0];
+          const target =
+            lastDebugCase.current ??
+            (first ? { input: first.input, label: `${t("results.testKind.public")} ${first.index}` } : null);
+          if (target) void startDebug(target.input, target.label);
+        } else if (e.key === "F10" && e.shiftKey) void dbg.act("step_back");
+        else if (e.key === "F10") void dbg.act("step_over");
+        else if (e.key === "F11" && e.shiftKey) void dbg.act("step_out");
+        else if (e.key === "F11") void dbg.act("step_into");
+        return;
+      }
       if (mod && e.key === "Enter") {
         e.preventDefault();
         void submit();
@@ -207,7 +280,7 @@ export function WorkspacePage() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [run, submit, toggleFocus, focus, setFocus]);
+  }, [run, submit, toggleFocus, focus, setFocus, canDebug, dbg, startDebug, problem.data, t]);
 
   const changeLanguage = async (next: Language) => {
     if (next === language) return;
@@ -468,6 +541,8 @@ export function WorkspacePage() {
                       fontSize={fontSize}
                       ligatures={ligatures}
                       lspExtension={basicCompletion ? phpBasicCompletion : server.extension}
+                      debugExtension={debugEditor}
+                      readOnly={dbg.active}
                       ariaLabel={t("workspace.editorLabel", { language: t(`languages.${session.doc.lang}`) })}
                       onChange={(text) => {
                         session.onChange(text);
@@ -496,6 +571,7 @@ export function WorkspacePage() {
             <ResizableHandle withHandle />
             <ResizablePanel id="results" panelRef={resultsPanel} defaultSize="38" minSize="12" collapsible collapsedSize="0">
               <section aria-label={t("workspace.resultsPane")} className="h-full min-h-0 border-t">
+                <DebugCaseContext.Provider value={debugCase}>
                 <ResultsPane
                   problem={p}
                   signature={signature}
@@ -511,7 +587,9 @@ export function WorkspacePage() {
                   error={judge.error}
                   celebrate={celebrate}
                   practice={judge.lastKind === "submit" ? judge.practice : null}
+                  debugPanel={canDebug || dbg.view ? <DebugPanel dbg={dbg} /> : null}
                 />
+                </DebugCaseContext.Provider>
               </section>
             </ResizablePanel>
           </ResizablePanelGroup>

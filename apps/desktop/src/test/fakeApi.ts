@@ -29,6 +29,10 @@ import type {
   Verdict,
 } from "@/bindings";
 import type { Api, CustomInput } from "@/lib/api";
+import type { DebugAction, DebugInspect, DebugStart, DebugView, EvalResult, StopInfo } from "@/bindings";
+
+/** The lines two-sum's reference runs on public test 1 (line 7 is `seen[n] = i`). */
+export const DEBUG_LINES = [2, 3, 4, 5, 7, 3, 4, 5, 7, 3, 4, 5, 7, 3, 4, 5, 7, 3, 4, 5, 6];
 
 type Row = Omit<ProblemSummary, "title"> & { title: { en: string; es: string } };
 
@@ -764,6 +768,104 @@ export function createFakeApi(
       installed.delete(unitOf(language));
       return null;
     }),
+
+    // Debugger (ADR 0022): a scripted two-sum trace and the same navigation as kb-app.
+    debugLanguages: vi.fn(async () => ["python"] as Language[]),
+    debugStart: vi.fn(async (start: DebugStart) => {
+      dbg.session += 1;
+      dbg.breakpoints = new Set(start.breakpoints);
+      dbg.inspect = { frame: 0, expand: [], watches: start.watches };
+      dbg.at = nextBreakpoint(-1);
+      return debugView();
+    }),
+    debugAction: vi.fn(async (session: number, action: DebugAction) => {
+      if (session !== dbg.session) throw { code: "not_found", message: "no debug session is running" };
+      const at = dbg.at;
+      const last = DEBUG_LINES.length - 1;
+      if (action === "restart") dbg.at = nextBreakpoint(-1);
+      else if (action === "step_back") dbg.at = at === null ? last : Math.max(at - 1, 0);
+      else if (at === null) dbg.at = null;
+      else if (action === "continue") dbg.at = nextBreakpoint(at);
+      else dbg.at = at + 1 <= last ? at + 1 : null;
+      dbg.inspect.frame = 0;
+      return debugView();
+    }),
+    debugSetBreakpoints: vi.fn(async (_session: number, lines: number[]) => {
+      dbg.breakpoints = new Set(lines);
+      return null;
+    }),
+    debugInspect: vi.fn(async (_session: number, inspect: DebugInspect) => {
+      dbg.inspect = inspect;
+      return debugView();
+    }),
+    debugEvaluate: vi.fn(async (_session: number, _frame: number, expr: string): Promise<EvalResult> =>
+      expr === "boom"
+        ? { expr, ok: false, value: null, error: "NameError: name 'boom' is not defined", stdout: "" }
+        : { expr, ok: true, value: { name: "", type: "int", value: `=${expr}`, children: 0 }, error: null, stdout: "" },
+    ),
+    debugEnd: vi.fn(async () => null),
   };
-  return { api, settings, drafts, notes, snapshots, submissions, state, snap, installed, holdInstall };
+
+  const dbg = {
+    session: 0,
+    at: null as number | null,
+    breakpoints: new Set<number>(),
+    inspect: { frame: 0, expand: [], watches: [] } as DebugInspect,
+  };
+  const nextBreakpoint = (from: number): number | null => {
+    for (let i = from + 1; i < DEBUG_LINES.length; i++) if (dbg.breakpoints.has(DEBUG_LINES[i])) return i;
+    return null;
+  };
+  const debugView = (): DebugView => {
+    const at = dbg.at;
+    const base = { session: dbg.session, steps: DEBUG_LINES.length, prints_truncated: false };
+    if (at === null) {
+      return {
+        ...base,
+        state: {
+          state: "finished",
+          outcome: { status: "ok", value: [2, 4], error: null, line: null, step: DEBUG_LINES.length - 1 },
+          truncated: null,
+        },
+        prints: [{ step: 0, text: "starting\n" }],
+      };
+    }
+    // `seen` holds one entry per earlier pass over line 7.
+    const stored = DEBUG_LINES.slice(0, at).filter((l) => l === 7).length;
+    const nums = [5, 8, 12, 1, 3];
+    const seen = Object.fromEntries(nums.slice(0, stored).map((n, i) => [n, i]));
+    const seenText = `{${Object.entries(seen).map(([k, v]) => `${k}: ${v}`).join(", ")}}`;
+    const stop: StopInfo = {
+      step: at,
+      stack: [{ function: "two_sum", line: DEBUG_LINES[at] }],
+      frame: dbg.inspect.frame,
+      locals: [
+        { name: "nums", type: "list", value: JSON.stringify(nums).replaceAll(",", ", "), children: 5 },
+        { name: "seen", type: "dict", value: seenText, children: stored },
+        { name: "n", type: "int", value: String(nums[Math.min(stored, 4)]), children: 0 },
+      ],
+      globals: [],
+      expanded: dbg.inspect.expand.map((path) => ({
+        path,
+        children:
+          path[1] === "seen"
+            ? Object.entries(seen).map(([k, v]) => ({ name: k, type: "int", value: String(v), children: 0 }))
+            : nums.map((n, i) => ({ name: `[${i}]`, type: "int", value: String(n), children: 0 })),
+        more: 0,
+      })),
+      evals: dbg.inspect.watches.map((expr) => ({
+        expr,
+        ok: true,
+        value: { name: "", type: "int", value: `=${expr}`, children: 0 },
+        error: null,
+        stdout: "",
+      })),
+    };
+    return {
+      ...base,
+      state: { state: "paused", line: DEBUG_LINES[at], stop },
+      prints: at > 0 ? [{ step: 0, text: "starting\n" }] : [],
+    };
+  };
+  return { api, settings, drafts, notes, snapshots, submissions, state, snap, installed, holdInstall, dbg };
 }
