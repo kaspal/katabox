@@ -1,0 +1,17 @@
+id = "prime-lockers"
+title = "Prime Lockers"
+title_es = "Taquillas primas"
+difficulty = "medium"
+tags = ["math", "number-theory", "prefix-sum"]
+pattern = "math"
+rank = 7
+
+[signature]
+name = "primeCounts"
+params = [{ name = "limits", type = "int[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

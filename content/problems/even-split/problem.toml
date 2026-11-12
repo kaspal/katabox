@@ -1,0 +1,17 @@
+id = "even-split"
+title = "Even Split"
+title_es = "Cuentas claras"
+difficulty = "easy"
+tags = ["array", "math", "floating-point"]
+pattern = "math"
+rank = 3
+
+[signature]
+name = "settle"
+params = [{ name = "paid", type = "float[]" }]
+returns = "float[]"
+
+[judge]
+checker = "float:1e-6"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

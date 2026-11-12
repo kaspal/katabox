@@ -137,5 +137,6 @@ The build plan's packaging table sets the targets:
 
 ## Follow-ups
 - Signing (SignPath), then winget.
+- ~~Branded installer artwork~~: done in content batch 3 (`pnpm installer-art`).
 - The updater UI (check from Settings, from Rust) once a public endpoint exists.
 - Linux postinst for the AppArmor profile (build plan); MSIX later.

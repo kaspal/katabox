@@ -46,6 +46,7 @@ pnpm dev                         # run the desktop app (needs WebView2 / WebKitG
 cargo check -p katabox-desktop   # desktop shell (needs WebKitGTK on Linux); build.rs builds resources/content.db
 cargo run -p katabox-desktop --features bindings --bin export-bindings  # regenerate apps/desktop/src/bindings.ts after changing a command or IPC type
 pnpm notices                     # third-party notices into src-tauri/resources (release builds refuse the placeholder)
+pnpm installer-art               # NSIS sidebar/header BMPs from icons/katabox.svg (committed; re-run after changing the icon)
 pnpm release:build -- --bundles nsis,msi  # Windows installers into target/release/bundle (notices first; docs/release-checklist.md)
 ```
 

@@ -1,0 +1,17 @@
+id = "shared-tile"
+title = "Shared Tile"
+title_es = "Baldosa común"
+difficulty = "easy"
+tags = ["math", "number-theory"]
+pattern = "math"
+rank = 2
+
+[signature]
+name = "largestTile"
+params = [{ name = "width", type = "int" }, { name = "height", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

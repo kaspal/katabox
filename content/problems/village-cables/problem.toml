@@ -1,0 +1,17 @@
+id = "village-cables"
+title = "Village Cables"
+title_es = "Cables entre aldeas"
+difficulty = "hard"
+tags = ["graph", "union-find", "minimum-spanning-tree", "sorting"]
+pattern = "union-find"
+rank = 9
+
+[signature]
+name = "cheapestNetwork"
+params = [{ name = "n", type = "int" }, { name = "cables", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

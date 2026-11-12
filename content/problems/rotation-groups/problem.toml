@@ -1,0 +1,17 @@
+id = "rotation-groups"
+title = "Rotation Groups"
+title_es = "Grupos de rotación"
+difficulty = "medium"
+tags = ["string", "hash-map"]
+pattern = "strings"
+rank = 7
+
+[signature]
+name = "rotationGroups"
+params = [{ name = "codes", type = "string[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

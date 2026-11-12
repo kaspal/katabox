@@ -1,0 +1,17 @@
+id = "two-lonely-socks"
+title = "Two Lonely Socks"
+title_es = "Dos calcetines solitarios"
+difficulty = "medium"
+tags = ["array", "bit-manipulation"]
+pattern = "bit-manipulation"
+rank = 6
+
+[signature]
+name = "twoLonely"
+params = [{ name = "ids", type = "int[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256
