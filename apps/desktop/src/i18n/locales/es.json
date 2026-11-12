@@ -73,7 +73,31 @@
   },
   "tag": {
     "label": "Etiqueta",
-    "any": "Cualquier etiqueta"
+    "any": "Cualquier etiqueta",
+    "names": {
+      "array": "Arreglo",
+      "bfs": "Búsqueda en anchura",
+      "binary-search": "Búsqueda binaria",
+      "bit-manipulation": "Manipulación de bits",
+      "counting": "Conteo",
+      "dynamic-programming": "Programación dinámica",
+      "graph": "Grafo",
+      "greedy": "Voraz",
+      "hash-map": "Mapa hash",
+      "heap": "Montículo",
+      "intervals": "Intervalos",
+      "matrix": "Matriz",
+      "monotonic-stack": "Pila monótona",
+      "prefix-sum": "Sumas prefijas",
+      "shortest-path": "Camino más corto",
+      "simulation": "Simulación",
+      "sliding-window": "Ventana deslizante",
+      "sorting": "Ordenación",
+      "stack": "Pila",
+      "string": "Cadena",
+      "two-pointers": "Dos punteros",
+      "union-find": "Unión-búsqueda"
+    }
   },
   "common": {
     "loading": "Cargando…",

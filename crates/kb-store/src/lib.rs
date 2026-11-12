@@ -14,6 +14,7 @@
 //! sqlx is used with runtime queries only (no compile-time checked macros), so building
 //! needs no `DATABASE_URL`.
 
+pub mod blob;
 pub mod content;
 pub mod user;
 

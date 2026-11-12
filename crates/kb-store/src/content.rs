@@ -11,11 +11,12 @@ use serde_json::{Map, Value};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions, SqliteRow};
 use sqlx::{Connection, Row, SqliteConnection};
 
+use crate::blob;
 use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 2;
+pub const CONTENT_SCHEMA_VERSION: i64 = 3;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -342,8 +343,8 @@ impl ContentDb {
         .map(|r| {
             Ok(PublicTest {
                 index: r.try_get("idx")?,
-                input: serde_json::from_str(&r.try_get::<String, _>("input")?)?,
-                output: serde_json::from_str(&r.try_get::<String, _>("output")?)?,
+                input: blob::decompress_json(&r.try_get::<Vec<u8>, _>("input")?)?,
+                output: blob::decompress_json(&r.try_get::<Vec<u8>, _>("output")?)?,
             })
         })
         .collect::<Result<Vec<_>>>()?;
@@ -410,8 +411,8 @@ impl ContentDb {
             Ok(TestCase {
                 kind: parse_kind(&r.try_get::<String, _>("kind")?)?,
                 index: r.try_get("idx")?,
-                input: serde_json::from_str(&r.try_get::<String, _>("input")?)?,
-                expected: serde_json::from_str(&r.try_get::<String, _>("output")?)?,
+                input: blob::decompress_json(&r.try_get::<Vec<u8>, _>("input")?)?,
+                expected: blob::decompress_json(&r.try_get::<Vec<u8>, _>("output")?)?,
             })
         })
         .collect::<Result<Vec<_>>>()?;
@@ -608,8 +609,8 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
         .bind(&p.id)
         .bind(kind_code(t.kind))
         .bind(t.index)
-        .bind(serde_json::to_string(&t.input)?)
-        .bind(serde_json::to_string(&t.expected)?)
+        .bind(blob::compress_json(&t.input)?)
+        .bind(blob::compress_json(&t.expected)?)
         .execute(&mut *conn)
         .await?;
     }
@@ -808,6 +809,23 @@ pub(crate) mod tests {
             ]
         );
         assert_eq!(jd.checker, "exact");
+        // Tests come back exactly as packed, though stored compressed (ADR 0018).
+        let packed = sample_problem("gap-a", Difficulty::Easy, 1, true);
+        for t in &jd.tests {
+            let p = packed
+                .tests
+                .iter()
+                .find(|p| (p.kind, p.index) == (t.kind, t.index))
+                .unwrap();
+            assert_eq!((&t.input, &t.expected), (&p.input, &p.expected));
+        }
+        let kinds: Vec<String> =
+            sqlx::query_scalar("SELECT DISTINCT typeof(input) || '/' || typeof(output) FROM tests")
+                .fetch_all(&db.pool)
+                .await
+                .unwrap();
+        assert_eq!(kinds, ["blob/blob"]);
+        assert_eq!(CONTENT_SCHEMA_VERSION, 3);
         // validate.py travels with the problem (ADR 0016); gap-b has none.
         assert_eq!(
             jd.validator.as_deref(),

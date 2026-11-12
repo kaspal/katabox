@@ -50,8 +50,9 @@ CREATE TABLE tests (
     problem_id TEXT NOT NULL REFERENCES problems (id),
     kind       TEXT NOT NULL CHECK (kind IN ('public', 'hidden')),
     idx        INTEGER NOT NULL,
-    input      TEXT NOT NULL,
-    output     TEXT NOT NULL,
+    -- JSON compressed with zstd, one blob each (ADR 0018; kb_store::blob)
+    input      BLOB NOT NULL,
+    output     BLOB NOT NULL,
     PRIMARY KEY (problem_id, kind, idx)
 ) WITHOUT ROWID;
 

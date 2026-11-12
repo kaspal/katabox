@@ -9,7 +9,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { DifficultyLabel } from "@/components/Semantic";
+import { DifficultyLabel, useTagLabel } from "@/components/Semantic";
 import { DEV_NAV, NAV, WORKSPACE_ICON } from "@/app/nav";
 import { UI_LANGS } from "@/i18n";
 import { THEMES, usePrefs, type ThemePref } from "@/lib/prefs";
@@ -29,6 +29,7 @@ export function CommandPalette({
   const navigate = useNavigate();
   const { theme, lang, setTheme, setLang } = usePrefs();
   const problems = useProblems();
+  const tagLabel = useTagLabel();
 
   const run = (action: () => void) => {
     onOpenChange(false);
@@ -61,7 +62,8 @@ export function CommandPalette({
           {(problems.data ?? []).map((p) => (
             <CommandItem
               key={p.id}
-              value={`problem ${p.title} ${p.id}`}
+              // Tags match by their names in the UI language too.
+              value={`problem ${p.title} ${p.id} ${p.tags.map(tagLabel).join(" ")}`}
               onSelect={() =>
                 run(() => void navigate({ to: "/problems/$problemId", params: { problemId: p.id } }))
               }

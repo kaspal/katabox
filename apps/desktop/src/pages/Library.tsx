@@ -6,7 +6,7 @@ import { ArrowDown, ArrowUp, Search, X } from "lucide-react";
 import type { Difficulty, ProblemSummary, StatusFilter } from "@/bindings";
 import { Page } from "@/components/Page";
 import { ErrorNotice } from "@/components/ErrorNotice";
-import { DifficultyLabel, StatusIcon, usePatternLabel } from "@/components/Semantic";
+import { DifficultyLabel, StatusIcon, usePatternLabel, useTagLabel } from "@/components/Semantic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -50,10 +50,11 @@ function sortProblems(list: ProblemSummary[], sort: SortKey, desc: boolean, labe
 }
 
 export function Library() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const search = route.useSearch();
   const navigate = useNavigate({ from: "/library" });
   const patternLabel = usePatternLabel();
+  const tagLabel = useTagLabel();
 
   const setSearch = (patch: Partial<LibrarySearch>) =>
     void navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true });
@@ -167,7 +168,9 @@ export function Library() {
           label={t("tag.label")}
           anyLabel={t("tag.any")}
           value={search.tag}
-          options={tags.map((tag) => [tag, tag])}
+          options={tags
+            .map((tag): [string, string] => [tag, tagLabel(tag)])
+            .sort((a, b) => a[1].localeCompare(b[1], i18n.language))}
           onChange={(v) => setSearch({ tag: v })}
         />
         {hasFilters && (
@@ -248,6 +251,7 @@ function ProblemGrid({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const patternLabel = usePatternLabel();
+  const tagLabel = useTagLabel();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const virtualizer = useVirtualizer({
@@ -388,8 +392,8 @@ function ProblemGrid({
                     <div role="gridcell" className="truncate text-muted-foreground">
                       {patternLabel(p.pattern)}
                     </div>
-                    <div role="gridcell" className="truncate font-mono text-xs text-muted-foreground">
-                      {p.tags.join(", ")}
+                    <div role="gridcell" className="truncate text-xs text-muted-foreground">
+                      {p.tags.map(tagLabel).join(", ")}
                     </div>
                   </div>
                 );
