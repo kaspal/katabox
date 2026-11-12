@@ -4,6 +4,7 @@
 
 mod day;
 pub mod debug;
+pub mod profile;
 mod report;
 
 pub use day::Day;

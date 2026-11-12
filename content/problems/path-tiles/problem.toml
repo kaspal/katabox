@@ -5,6 +5,8 @@ difficulty = "easy"
 tags = ["dynamic-programming", "counting"]
 pattern = "dynamic-programming"
 rank = 3
+profile = true
+profile_sizes = [10, 15, 20, 25, 10000, 100000, 1000000]
 
 [signature]
 name = "tilings"

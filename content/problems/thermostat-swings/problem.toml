@@ -5,6 +5,8 @@ difficulty = "hard"
 tags = ["sliding-window", "monotonic-queue", "array"]
 pattern = "sliding-window"
 rank = 9
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
 
 [signature]
 name = "windowSwings"

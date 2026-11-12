@@ -44,6 +44,8 @@ pub(crate) struct ProblemToml {
     pub rank: u8,
     #[serde(default)]
     pub profile: bool,
+    /// The complexity profiler's sizes (ADR 0024), with `profile = true`.
+    pub profile_sizes: Option<Vec<u32>>,
     pub signature: Signature,
     pub judge: Judge,
 }
@@ -297,6 +299,22 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
     }
     if meta.profile && !dir.join("gen.py").exists() {
         errs.push("profile = true requires gen.py".into());
+    }
+    match (meta.profile, &meta.profile_sizes) {
+        (true, None) => errs.push("profile = true requires profile_sizes".into()),
+        (false, Some(_)) => errs.push("profile_sizes needs profile = true".into()),
+        (true, Some(sizes)) => {
+            if let Some(e) = crate::profile::sizes_error(sizes) {
+                errs.push(e);
+            } else if let Some(e) = crate::profile::files_error(dir, sizes) {
+                errs.push(e);
+            }
+        }
+        (false, None) => {
+            if dir.join("profile").exists() {
+                errs.push("profile/ needs profile = true".into());
+            }
+        }
     }
     // Problem tooling (ADR 0016): gen.py and brute.py drive the stress test together.
     if dir.join("gen.py").exists() != dir.join("solutions/brute.py").exists() {

@@ -140,6 +140,17 @@ sys.stdout.write(json.dumps(out, allow_nan=False))
 sys.stdout.flush()
 "#;
 
+const SIZED_DRIVER: &str = r#"gen = load("gen")
+out = []
+for n in request["sizes"]:
+    inp = gen.generate(request["seed"], n)
+    if not isinstance(inp, dict):
+        raise TypeError(f"generate(seed, {n}) returned {type(inp).__name__}, not a dict")
+    out.append(inp)
+sys.stdout.write(json.dumps(out, allow_nan=False))
+sys.stdout.flush()
+"#;
+
 const VALIDATE_DRIVER: &str = r#"validate = load("validate")
 out = []
 for inp in request["inputs"]:
@@ -189,6 +200,42 @@ pub fn generate_inputs(
     let values: Vec<Value> = serde_json::from_slice(&out.stdout)
         .map_err(|e| JudgeError::Problem(format!("gen.py: unreadable output: {e}")))?;
     if values.len() != seeds.len() {
+        return Err(JudgeError::Problem("gen.py: wrong number of inputs".into()));
+    }
+    values
+        .into_iter()
+        .map(|v| match v {
+            Value::Object(m) => Ok(m),
+            _ => Err(JudgeError::Problem(
+                "gen.py: an input is not an object".into(),
+            )),
+        })
+        .collect()
+}
+
+/// Run `gen.py`'s `generate(seed, n)` for each profile size n (ADR 0024: an int size asks
+/// for an input whose driving dimension is n), in one sandboxed run.
+pub fn generate_sized(
+    env: &JudgeEnv,
+    gen_src: &str,
+    seed: u64,
+    sizes: &[u32],
+    limits: ScriptLimits,
+) -> Result<Vec<Map<String, Value>>, JudgeError> {
+    let request = json!({ "seed": seed, "sizes": sizes }).to_string();
+    let out = run_python(
+        env,
+        &driver(SIZED_DRIVER),
+        &[("gen.py", gen_src)],
+        request.as_bytes(),
+        limits,
+    )?;
+    if !out.succeeded() {
+        return Err(failure("gen.py", &out));
+    }
+    let values: Vec<Value> = serde_json::from_slice(&out.stdout)
+        .map_err(|e| JudgeError::Problem(format!("gen.py: unreadable output: {e}")))?;
+    if values.len() != sizes.len() {
         return Err(JudgeError::Problem("gen.py: wrong number of inputs".into()));
     }
     values

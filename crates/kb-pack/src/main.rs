@@ -13,6 +13,11 @@
 //! writes `tests/hidden/<N..>.json` from `gen.py` (outputs from `solutions/ref.py`), all
 //! run in the sandbox. Generated tests are committed: the build never runs scripts.
 //!
+//! `kb-pack profile PROBLEM_DIR [--root ROOT]` — for a problem with `profile = true`,
+//! writes the complexity profiler's inputs (`profile/inputs/<n>.json`, from gen.py at
+//! each of `profile_sizes`) and the reference times (`profile/reference.json`), all run
+//! in the sandbox (ADR 0024). Committed like the generated tests.
+//!
 //! `kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]` — validates as
 //! above (without `--run`), then compiles every problem into content.db (default
 //! `target/content.db`, pack `core`, this crate's version). Refuses to build if any
@@ -24,7 +29,8 @@ use std::process::ExitCode;
 
 const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run] [--root ROOT]\n  \
                      kb-pack generate PROBLEM_DIR [--size max|small] --seeds 1,2 [--from N] [--root ROOT]\n  \
-                     kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]";
+                     kb-pack profile PROBLEM_DIR [--root ROOT]
+                       kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]";
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
@@ -32,6 +38,7 @@ fn main() -> ExitCode {
         Some("validate") => validate_cmd(args),
         Some("build") => build_cmd(args),
         Some("generate") => generate_cmd(args),
+        Some("profile") => profile_cmd(args),
         _ => usage(""),
     }
 }
@@ -136,6 +143,40 @@ fn generate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
         }
         Err(e) => {
             eprintln!("kb-pack generate: {e}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn profile_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
+    let mut dir: Option<PathBuf> = None;
+    let mut root = PathBuf::from("target/katabox");
+    while let Some(a) = args.next() {
+        match a.as_str() {
+            "--root" => match args.next() {
+                Some(v) => root = v.into(),
+                None => return usage("--root needs a value"),
+            },
+            s if s.starts_with("--") => return usage(&format!("unknown option {s}")),
+            _ => dir = Some(a.into()),
+        }
+    }
+    let Some(dir) = dir else {
+        return usage("profile needs a problem folder");
+    };
+    let env = match kb_pack::env_for(&root) {
+        Ok(e) => e,
+        Err(e) => return usage(&e),
+    };
+    match kb_pack::profile::profile_problem(&dir, &env) {
+        Ok(lines) => {
+            for l in lines {
+                println!("{l}");
+            }
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("kb-pack profile: {e}");
             ExitCode::FAILURE
         }
     }

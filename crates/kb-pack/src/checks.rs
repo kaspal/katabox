@@ -91,6 +91,7 @@ pub enum Check {
     Reference(Language),
     Stress,
     Naive(Language),
+    Profile,
 }
 
 impl Check {
@@ -101,6 +102,7 @@ impl Check {
             Check::Reference(l) => l.id().into(),
             Check::Stress => "stress".into(),
             Check::Naive(l) => format!("naive.{}", l.extension()),
+            Check::Profile => "profile".into(),
         }
     }
 }
@@ -328,6 +330,17 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
             Err(e) => (false, e.to_string()),
         };
         add(Check::Naive(lang), ok, detail);
+    }
+    // 5. The complexity profiler's inputs (ADR 0024): gen.py still makes them.
+    if let Some(sizes) = crate::validate::read_problem_toml(dir)
+        .ok()
+        .and_then(|m| m.profile_sizes)
+    {
+        let (ok, detail) = match crate::profile::check_regenerates(dir, env, &sizes) {
+            Ok(d) => (true, d),
+            Err(e) => (false, e),
+        };
+        add(Check::Profile, ok, detail);
     }
     out
 }

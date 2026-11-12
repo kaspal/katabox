@@ -10,11 +10,13 @@
 pub mod calibration;
 pub mod checker;
 pub mod codegen;
+pub mod complexity;
 pub mod debug;
 mod judge;
 pub mod languages;
 pub mod limits;
 pub mod problem;
+pub mod profile;
 mod protocol;
 pub mod signature;
 pub mod tools;
@@ -28,7 +30,8 @@ pub use kb_core::{CompileInfo, Failure, JudgeEvent, Report, TestCase, TestOutcom
 pub use problem::{Problem, check_input};
 pub use signature::{Param, Signature, Type};
 pub use tools::{
-    ScriptLimits, ScriptOutput, generate_inputs, run_python, run_script, validate_inputs,
+    ScriptLimits, ScriptOutput, generate_inputs, generate_sized, run_python, run_script,
+    validate_inputs,
 };
 
 use kb_core::Language;
