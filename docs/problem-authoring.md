@@ -120,6 +120,51 @@ app run them in the same sandbox as user code.
 
 `gen.py` and `brute.py` come as a pair.
 
+## Complexity profile (ADR 0024)
+
+Every problem with `naive.py` and `naive.rs` is profiled: after an Accepted result, the
+app measures the user's code at growing sizes and estimates its complexity class next to
+the reference solution's line.
+
+- **`problem.toml`:** `profile = true` and `profile_sizes = [300, 1000, 3000, 10000,
+  30000, 100000]`: 4-8 positive, strictly increasing sizes, from small to the problem's
+  max n.
+  - Exponential or small-n problems use small sizes (`[5, 6, …, 12]`).
+  - Add a few small sizes before the large ones when the naive approach is exponential,
+    so it shows its growth before it runs out of time.
+- **`gen.py`:** `generate(seed, size)` also takes an **int** size n, right after
+  `rng = random.Random(seed)`:
+
+  ```python
+  def generate(seed, size):
+      rng = random.Random(seed)
+      if isinstance(size, int):
+          # Profile (ADR 0024): n readings and n queries.
+          return {...}
+  ```
+
+  - n drives the input. Say in the comment how the other dimensions follow it (q = n,
+    a √n × √n grid, k = n/2).
+  - Use values that make the reference do its real work (no early exit at the start).
+  - Use small value ranges, to keep the data lean.
+  - `__main__` accepts `--n N [--seed S]` as well as the positional form.
+- **`kb-pack profile content/problems/<id>`** (sandbox, all four toolchains):
+  1. generates each size with seed 1;
+  2. checks it with `validate.py`;
+  3. writes `profile/inputs/<n>.json`;
+  4. times `ref.*` in every language (3 runs per size, the median, normalized to the
+     reference machine);
+  5. writes `profile/reference.json`.
+
+  Commit both. Re-run it after changing `gen.py`'s int branch, the sizes, a reference
+  solution, or a runtime pin.
+- **`kb-pack validate`** checks the files and the **profile budget: 512 KB compressed**
+  per problem, separate from the tests' budget.
+- **`validate --run`** regenerates every input and checks:
+  - it matches the committed file;
+  - it passes `validate.py`;
+  - the inputs never get smaller with n.
+
 ## Checking
 
 ```sh
@@ -138,6 +183,7 @@ from the reference one), then checks, per problem:
 | stress | `gen.py` makes 500 small inputs (seeds 1-500); each passes `validate.py`; `brute.py`'s answers are the expected outputs; every reference agrees with them (the problem's checker). The first disagreement is printed with its seed and input |
 | naive.py | Accepted on every test it reaches, and **Time Limit Exceeded** under Python's limit |
 | naive.rs | correct, and needs **at least 1.5× Rust's CPU cap** (measured under 3× the cap; the ratio is printed) |
+| profile | with `profile = true`: `gen.py` regenerates every committed profile input exactly, each passes `validate.py`, and they grow with n |
 
 ## Generating tests
 
