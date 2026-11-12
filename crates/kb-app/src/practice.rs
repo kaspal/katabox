@@ -628,17 +628,15 @@ impl App {
         let accepted = verdict.is_accepted();
         let mut out = PracticeOutcome::default();
         let row = self.store.user.review(problem).await?;
-        if review_mode {
-            if let Some(row) = &row {
-                let (next, outcome) = review_after(row, today, accepted);
-                match next {
-                    Some(r) => self.store.user.put_review(&r).await?,
-                    None => {
-                        self.store.user.delete_review(problem).await?;
-                    }
+        if review_mode && let Some(row) = &row {
+            let (next, outcome) = review_after(row, today, accepted);
+            match next {
+                Some(r) => self.store.user.put_review(&r).await?,
+                None => {
+                    self.store.user.delete_review(problem).await?;
                 }
-                out.review = Some(outcome);
             }
+            out.review = Some(outcome);
         }
         if accepted && !was_solved {
             out.first_solve = true;

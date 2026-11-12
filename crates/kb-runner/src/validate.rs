@@ -189,10 +189,10 @@ fn find_link(dir: &Path) -> Result<Option<PathBuf>, SandboxError> {
         if is_link(&meta) {
             return Ok(Some(path));
         }
-        if meta.is_dir() {
-            if let Some(found) = find_link(&path)? {
-                return Ok(Some(found));
-            }
+        if meta.is_dir()
+            && let Some(found) = find_link(&path)?
+        {
+            return Ok(Some(found));
         }
     }
     Ok(None)

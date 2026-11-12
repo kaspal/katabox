@@ -272,10 +272,10 @@ fn validate(f: &ExportFile) -> Result<()> {
         for id in &s.problem_ids {
             check_id(&p, id)?;
         }
-        if let Some(r) = &s.results {
-            if serde_json::from_value::<crate::interview::InterviewResult>(r.clone()).is_err() {
-                return Err(invalid(format!("{p}: bad scorecard")));
-            }
+        if let Some(r) = &s.results
+            && serde_json::from_value::<crate::interview::InterviewResult>(r.clone()).is_err()
+        {
+            return Err(invalid(format!("{p}: bad scorecard")));
         }
     }
     for (i, s) in d.settings.iter().enumerate() {

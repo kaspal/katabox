@@ -78,10 +78,10 @@ impl UserDb {
 
     /// This installation's random id, created on first use (32 hex characters).
     pub async fn install_id(&self) -> Result<String> {
-        if let Some(Value::String(id)) = self.get_setting(INSTALL_ID_SETTING).await? {
-            if !id.is_empty() {
-                return Ok(id);
-            }
+        if let Some(Value::String(id)) = self.get_setting(INSTALL_ID_SETTING).await?
+            && !id.is_empty()
+        {
+            return Ok(id);
         }
         // Two independently keyed std hashers: random per process, seeded by the OS.
         let part = || {
