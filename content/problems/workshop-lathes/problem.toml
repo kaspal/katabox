@@ -1,0 +1,17 @@
+id = "workshop-lathes"
+title = "Workshop Lathes"
+title_es = "Tornos del taller"
+difficulty = "medium"
+tags = ["array", "heap", "simulation"]
+pattern = "heap"
+rank = 7
+
+[signature]
+name = "finishTime"
+params = [{ name = "jobs", type = "int[]" }, { name = "lathes", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

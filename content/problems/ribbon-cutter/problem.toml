@@ -1,0 +1,17 @@
+id = "ribbon-cutter"
+title = "Ribbon Cutter"
+title_es = "Cortar cintas"
+difficulty = "medium"
+tags = ["array", "binary-search"]
+pattern = "binary-search"
+rank = 7
+
+[signature]
+name = "longestPiece"
+params = [{ name = "ribbons", type = "int[]" }, { name = "pieces", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,17 @@
+id = "paint-strokes"
+title = "Paint Strokes"
+title_es = "Pinceladas"
+difficulty = "medium"
+tags = ["array", "intervals", "sorting"]
+pattern = "intervals"
+rank = 7
+
+[signature]
+name = "paintedLength"
+params = [{ name = "strokes", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

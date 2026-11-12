@@ -24,7 +24,13 @@ are fine; the wording, names, examples and tests must be our own.
 | `solutions/naive.py`, `solutions/naive.rs` | Correct but too slow (weak-test guard), where the complexity matters; always both |
 
 Test files are `{"input": {<param>: value, ...}, "output": value}`, one test per file, in
-numeric order. `rank` (1-10) orders the library list.
+numeric order. `rank` (1-10) is a difficulty level that orders the library list (ties by
+id): easy problems 1-4, medium 5-8, hard 9-10, with earlier ranks for the simpler
+problems of the same pattern.
+
+**Tags** are free text in `problem.toml`, but every tag needs a display name in both UI
+languages: add it to `tag.names` in `apps/desktop/src/i18n/locales/en.json` and `es.json`
+(a kb-pack test fails otherwise). Reuse existing tags where they fit.
 
 ## Signature types
 
@@ -126,12 +132,26 @@ This runs `gen.py` in the sandbox, checks each input with `validate.py`, compute
 expected output with `solutions/ref.py` (also in the sandbox), and writes the next
 numbered files in `tests/hidden/` (`--from N` to choose the first number).
 
-**Generated tests are committed.** Building `content.db` never runs scripts, so the app
-and CI build without toolchains. Keep max sizes so a problem's tests stay around 1 MB in
-total (for example n ≤ 10⁵ with values ≤ 10⁹ is about 1 MB); one max test is enough when
-it already makes both naive solutions run out of time. The CPU cap covers the whole run,
-so several max tests add up. To replace max tests, delete their files and run `generate`
-with `--from` set to the first freed number.
+**Generated tests are committed** (ADR 0018). Building `content.db` never runs scripts,
+so the app and CI build without toolchains. To replace max tests, delete their files and
+run `generate` with `--from` set to the first freed number.
+
+### Size budget (ADR 0018)
+
+content.db stores each test's input and output compressed with zstd. `kb-pack validate`
+prints every problem's size (`tests 1016 KB → 465 KB compressed (90% of 512 KB)`) and
+**fails a problem over 512 KB compressed**. Random numbers barely compress, so keep max
+tests lean:
+
+- Use the smallest value range that keeps the problem honest. The constraints may allow
+  values up to 10⁹, but a max test with values below 1000 tests the same complexity in a
+  third of the space.
+- One max test is enough when it already stops both naive solutions. The CPU cap covers
+  the whole run, so several max tests add up anyway.
+- Outputs count too. An answer of one number is cheap; an array of 10⁵ numbers is not.
+- Structure compresses: sorted lists, repeated values and runs cost far less than
+  shuffled random data. Keep some randomness where it matters (for example, to defeat
+  shortcuts), but do not shuffle without a reason.
 
 ## Review checklist
 

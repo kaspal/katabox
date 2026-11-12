@@ -1,0 +1,17 @@
+id = "gallery-turn"
+title = "Gallery Turn"
+title_es = "Girar la galería"
+difficulty = "easy"
+tags = ["matrix", "simulation"]
+pattern = "arrays-hashing"
+rank = 3
+
+[signature]
+name = "turnRight"
+params = [{ name = "grid", type = "int[][]" }]
+returns = "int[][]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256
