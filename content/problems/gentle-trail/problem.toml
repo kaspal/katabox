@@ -1,0 +1,17 @@
+id = "gentle-trail"
+title = "Gentle Trail"
+title_es = "Sendero suave"
+difficulty = "hard"
+tags = ["matrix", "graph", "shortest-path", "heap"]
+pattern = "graphs"
+rank = 10
+
+[signature]
+name = "gentlestClimb"
+params = [{ name = "heights", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

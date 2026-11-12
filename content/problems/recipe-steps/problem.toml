@@ -1,0 +1,17 @@
+id = "recipe-steps"
+title = "Recipe Steps"
+title_es = "Pasos de la receta"
+difficulty = "medium"
+tags = ["graph", "topological-sort", "heap"]
+pattern = "graphs"
+rank = 7
+
+[signature]
+name = "stepOrder"
+params = [{ name = "n", type = "int" }, { name = "before", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

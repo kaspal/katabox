@@ -1,0 +1,17 @@
+id = "quiet-seats"
+title = "Quiet Seats"
+title_es = "Asientos tranquilos"
+difficulty = "easy"
+tags = ["matrix", "string", "simulation"]
+pattern = "arrays-hashing"
+rank = 3
+
+[signature]
+name = "quietSeats"
+params = [{ name = "rows", type = "string[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

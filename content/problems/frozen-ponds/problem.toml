@@ -1,0 +1,17 @@
+id = "frozen-ponds"
+title = "Frozen Ponds"
+title_es = "Estanques helados"
+difficulty = "medium"
+tags = ["matrix", "union-find", "string"]
+pattern = "union-find"
+rank = 6
+
+[signature]
+name = "pondSizes"
+params = [{ name = "ice", type = "string[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,17 @@
+id = "gift-trio"
+title = "Gift Trio"
+title_es = "Trío de regalos"
+difficulty = "medium"
+tags = ["array", "two-pointers", "sorting"]
+pattern = "two-pointers"
+rank = 6
+
+[signature]
+name = "closestTrio"
+params = [{ name = "prices", type = "int[]" }, { name = "target", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,17 @@
+id = "thermometer-medians"
+title = "Thermometer Medians"
+title_es = "Medianas del termómetro"
+difficulty = "hard"
+tags = ["heap", "floating-point"]
+pattern = "heap"
+rank = 9
+
+[signature]
+name = "runningMedians"
+params = [{ name = "readings", type = "int[]" }]
+returns = "float[]"
+
+[judge]
+checker = "float:1e-6"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

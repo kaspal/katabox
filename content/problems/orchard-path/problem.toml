@@ -1,0 +1,17 @@
+id = "orchard-path"
+title = "Orchard Path"
+title_es = "Camino del huerto"
+difficulty = "medium"
+tags = ["matrix", "dynamic-programming"]
+pattern = "dynamic-programming"
+rank = 7
+
+[signature]
+name = "mostApples"
+params = [{ name = "grid", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

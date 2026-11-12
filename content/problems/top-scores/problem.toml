@@ -1,0 +1,17 @@
+id = "top-scores"
+title = "Top Scores"
+title_es = "Mejores marcas"
+difficulty = "easy"
+tags = ["array", "heap", "sorting"]
+pattern = "heap"
+rank = 3
+
+[signature]
+name = "topScores"
+params = [{ name = "scores", type = "int[]" }, { name = "k", type = "int" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256
