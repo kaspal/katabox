@@ -35,7 +35,9 @@ languages: add it to `tag.names` in `apps/desktop/src/i18n/locales/en.json` and 
 ## Signature types
 
 `[signature]` declares the function every language implements. Types: `int`, `float`,
-`string`, `bool`, and any of these followed by `[]` (nestable, e.g. `int[][]`).
+`string`, `bool`, `ListNode`, `TreeNode`, and any of these followed by `[]` (nestable,
+e.g. `int[][]`, `ListNode[]`). kb-pack checks every test input and output against these
+types.
 
 | problem.toml | Python | TypeScript | PHP | Rust |
 | --- | --- | --- | --- | --- |
@@ -43,16 +45,45 @@ languages: add it to `tag.names` in `apps/desktop/src/i18n/locales/en.json` and 
 | `float` | `float` | `number` | `float` | `f64` |
 | `string` | `str` | `string` | `string` | `String` |
 | `bool` | `bool` | `boolean` | `bool` | `bool` |
-| `T[]` | `list[T]` | `T[]` | `array` | `Vec<T>` |
+| `ListNode` | `ListNode \| None` | `ListNode \| null` | `?ListNode` | `Option<Box<ListNode>>` |
+| `TreeNode` | `TreeNode \| None` | `TreeNode \| null` | `?TreeNode` | `Option<Rc<RefCell<TreeNode>>>` |
+| `T[]` | `list[T]` | `T[]` (`(T \| null)[]` for nodes) | `array` | `Vec<T>` |
 
 Names: the function name is camelCase in `problem.toml` (`twoSum`). Python and Rust use
 snake_case (`two_sum`); TypeScript and PHP keep camelCase. A name that is a keyword gets a
 trailing `_`.
 
-There are no tree, linked-list or class types yet, so these shapes stand in for them:
+### Linked lists and binary trees (ADR 0025)
 
-- **Trees:** a parent array (`int[]`, the root's parent is `-1`, any numbering; see
-  `family-generations`, `sales-teams`, `common-boss`) or an edge list (`int[][]`).
+- **What the types are:** `ListNode` is a singly linked list of `int`; `TreeNode` is a
+  binary tree of `int`.
+- **In tests, they are JSON arrays:**
+  - **a list** is its values in order: `[4, 8, 15]` is 4 → 8 → 15, and `[]` is the empty
+    list;
+  - **a tree** is its level order, top to bottom and left to right, with `null` for a
+    missing child. The children of a missing node are not listed and trailing nulls are
+    trimmed: `[1, null, 2, 3]` is 1 with a right child 2, whose left child is 3. `[]` is
+    the empty tree.
+- **Canonical trees only:** kb-pack refuses a tree that is not canonical (a null root, a
+  trailing null, a slot no node owns).
+- **The starter code defines the classes before the function,** and every reference
+  must contain the same definitions. Copy them from `cargo run -p kb-judge -- stub <id>
+  --lang <lang>`. kb-pack compares the function's declaration line.
+- **The scripts:**
+  - `validate.py` receives the raw JSON arrays;
+  - `brute.py`, `naive.py` and the references receive node objects;
+  - `brute.py` builds its result with the starter class.
+- **Recursion depth:** keep tree height at most 1000 in the constraints (and in
+  `validate.py`), so recursive solutions work in every language.
+- **Statements:** explain the encoding once, with a small example (see `playlist-rotation`
+  and `fullest-level`).
+
+### Other shapes
+
+These shapes stand in for structures that have no type:
+
+- **General trees:** a parent array (`int[]`, the root's parent is `-1`, any numbering;
+  see `family-generations`, `sales-teams`, `common-boss`) or an edge list (`int[][]`).
   `validate.py` checks for one root and no loops.
 - **Design problems** (a structure driven by operations): `ops: string[]` names each
   operation and `args: int[][]` holds its numbers, one row per operation; the result is

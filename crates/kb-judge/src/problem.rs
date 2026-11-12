@@ -176,7 +176,10 @@ pub fn check_input(input: &Map<String, Value>, sig: &Signature) -> Result<(), St
     for p in &sig.params {
         match input.get(&p.name) {
             None => return Err(format!("input lacks param {:?}", p.name)),
-            Some(v) => p.ty.check_value(v).map_err(|e| format!("{}: {e}", p.name))?,
+            Some(v) => {
+                p.ty.check_value(v)
+                    .map_err(|e| format!("{}: {e}", p.name))?
+            }
         }
     }
     if let Some(extra) = input

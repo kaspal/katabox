@@ -105,13 +105,36 @@ async fn judge_errors_are_typed() {
     assert_eq!(err.code, AppErrorCode::InvalidCustomInput);
     assert!(err.message.contains("custom input 1") && err.message.contains("target"));
     // And one with a value of the wrong type, naming the param (ADR 0025).
-    let bad = json!({"nums": [1, "x"], "target": 3}).as_object().unwrap().clone();
+    let bad = json!({"nums": [1, "x"], "target": 3})
+        .as_object()
+        .unwrap()
+        .clone();
     let err = app
         .run("two-sum", Language::Python, "x", vec![bad], |_| {})
         .await
         .unwrap_err();
     assert_eq!(err.code, AppErrorCode::InvalidCustomInput);
-    assert!(err.message.contains("custom input 1: nums: [1]: expected an int"), "{}", err.message);
+    assert!(
+        err.message
+            .contains("custom input 1: nums: [1]: expected an int"),
+        "{}",
+        err.message
+    );
+    // A malformed level-order tree is refused with the param and the reason.
+    let bad = json!({"root": [1, null, null, 2]})
+        .as_object()
+        .unwrap()
+        .clone();
+    let err = app
+        .run("hedge-trim", Language::Python, "x", vec![bad], |_| {})
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::InvalidCustomInput);
+    assert!(
+        err.message.contains("custom input 1: root: TreeNode") && err.message.contains("no parent"),
+        "{}",
+        err.message
+    );
     let err = app
         .submit("nope", Language::Python, "x", &submit_opts(), |_| {})
         .await
