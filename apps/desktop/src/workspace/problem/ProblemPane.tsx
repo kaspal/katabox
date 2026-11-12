@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import type { ProblemView } from "@/bindings";
-import { BookOpen, FileText, History, Lightbulb, ListChecks, NotebookPen } from "lucide-react";
+import { BookOpen, FileText, History, Lightbulb, ListChecks, Lock, NotebookPen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePatternLabel, useTagLabel } from "@/components/Semantic";
@@ -49,16 +49,29 @@ function TimeLimit({ problem, language }: { problem: ProblemView; language: Lang
   );
 }
 
+function LockedNote() {
+  const { t } = useTranslation();
+  return (
+    <p className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="review-locked">
+      <Lock aria-hidden className="size-4" />
+      {t("practice.review.locked")}
+    </p>
+  );
+}
+
 export function ProblemPane({
   problem,
   currentCode,
   currentLanguage,
   onRestored,
+  locked = false,
 }: {
   problem: ProblemView;
   currentCode: string | null;
   currentLanguage: Language | null;
   onRestored: (language: Language) => void;
+  /** Review mode (ADR 0019): earlier submissions and history stay hidden until it passes. */
+  locked?: boolean;
 }) {
   const { t } = useTranslation();
   const patternLabel = usePatternLabel();
@@ -73,9 +86,13 @@ export function ProblemPane({
           return (
             <Tooltip key={tab}>
               <TooltipTrigger asChild>
-                <TabsTrigger value={tab} aria-label={label} className="min-w-0 gap-1 px-2 text-xs">
+                <TabsTrigger value={tab} aria-label={label} className="group min-w-0 gap-1 px-2 text-xs">
                   <Icon aria-hidden className="size-3.5 shrink-0" />
-                  <span className="hidden truncate @[34rem]:inline" data-tab-label>
+                  {/* Narrow panes show icons only, except the active tab's name (aria-selected: the tooltip owns data-state). */}
+                  <span
+                    className="hidden truncate group-aria-selected:inline @[34rem]:inline"
+                    data-tab-label
+                  >
                     {label}
                   </span>
                 </TabsTrigger>
@@ -105,18 +122,22 @@ export function ProblemPane({
           <EditorialTab problemId={problem.id} />
         </TabsContent>
         <TabsContent value="submissions">
-          <SubmissionsTab problemId={problem.id} />
+          {locked ? <LockedNote /> : <SubmissionsTab problemId={problem.id} />}
         </TabsContent>
         <TabsContent value="notes" className="h-full">
           <NotesTab problemId={problem.id} />
         </TabsContent>
         <TabsContent value="history">
+          {locked ? (
+            <LockedNote />
+          ) : (
           <HistoryTab
             problemId={problem.id}
             currentCode={currentCode}
             currentLanguage={currentLanguage}
             onRestored={onRestored}
           />
+          )}
         </TabsContent>
       </div>
     </Tabs>

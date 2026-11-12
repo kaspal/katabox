@@ -17,6 +17,15 @@ use kb_core::{JudgeEvent, Language, TestKind, Verdict};
 use kb_store::{ProblemStatus, SnapshotSource};
 use serde_json::json;
 
+/// Submit options for tests: a fixed local date, not a review.
+fn submit_opts() -> kb_app::SubmitOptions {
+    kb_app::SubmitOptions {
+        today: "2026-11-14".into(),
+        review: false,
+        lang: kb_store::UiLang::En,
+    }
+}
+
 fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -104,7 +113,7 @@ async fn every_reference_is_accepted_with_progress() {
     for lang in kb_judge::languages::SUPPORTED {
         let (events, on) = recorder();
         let r = app
-            .submit("two-sum", lang, &reference(lang), on)
+            .submit("two-sum", lang, &reference(lang), &submit_opts(), on)
             .await
             .unwrap();
         assert_eq!(
@@ -150,7 +159,7 @@ async fn a_wrong_answer_shows_the_failing_input_and_hides_the_rest() {
     // A constant answer: wrong on the first public test already.
     let code = "def two_sum(nums: list[int], target: int) -> list[int]:\n    return [0, 1]\n";
     let r = app
-        .submit("two-sum", Language::Python, code, |_| {})
+        .submit("two-sum", Language::Python, code, &submit_opts(), |_| {})
         .await
         .unwrap();
     assert_eq!(r.report.verdict, Verdict::WrongAnswer);
@@ -309,7 +318,7 @@ async fn a_runtime_replaced_by_rename_still_runs_in_the_sandbox() {
         |r: kb_app::SubmitResult| assert_eq!(r.report.verdict, Verdict::Accepted, "{:?}", r.report);
     let code = reference(Language::Python);
     accepted(
-        app.submit("two-sum", Language::Python, &code, |_| {})
+        app.submit("two-sum", Language::Python, &code, &submit_opts(), |_| {})
             .await
             .unwrap(),
     );
@@ -321,7 +330,7 @@ async fn a_runtime_replaced_by_rename_still_runs_in_the_sandbox() {
     std::fs::remove_dir_all(root.join("toolchains/python-3.14")).unwrap();
     std::fs::rename(&staged, root.join("toolchains/python-3.14")).unwrap();
     accepted(
-        app.submit("two-sum", Language::Python, &code, |_| {})
+        app.submit("two-sum", Language::Python, &code, &submit_opts(), |_| {})
             .await
             .unwrap(),
     );
@@ -413,4 +422,55 @@ async fn the_first_run_calibrates_this_machine() {
         (300.0 * again.applied).ceil() as u32,
         "{view:?}"
     );
+}
+
+/// A real Accepted submit (ADR 0019): the first solve schedules a review in 3 days and
+/// suggests a next problem; a review-mode submit three days later moves it to 7 days.
+#[tokio::test]
+async fn a_first_accepted_submit_schedules_a_review() {
+    let app = app("practice").await;
+    let r = app
+        .submit(
+            "two-sum",
+            Language::Python,
+            &reference(Language::Python),
+            &submit_opts(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert!(r.report.verdict.is_accepted(), "{:?}", r.report);
+    assert!(r.practice.first_solve);
+    let next = r.practice.next.expect("a next problem");
+    assert_ne!(next.id, "two-sum");
+    let state = app
+        .review_state("two-sum", "2026-11-14")
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(state.due_on, "2026-11-17");
+
+    let review = kb_app::SubmitOptions {
+        today: "2026-11-17".into(),
+        review: true,
+        lang: kb_store::UiLang::En,
+    };
+    let r = app
+        .submit(
+            "two-sum",
+            Language::Rust,
+            &reference(Language::Rust),
+            &review,
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        r.practice.review,
+        Some(kb_app::practice::ReviewOutcome::Scheduled {
+            due_on: "2026-11-24".into(),
+            interval_days: 7
+        })
+    );
+    assert!(!r.practice.first_solve);
 }

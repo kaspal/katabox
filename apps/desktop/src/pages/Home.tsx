@@ -1,26 +1,16 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, CalendarDays, CheckCircle2, PlayCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, PlayCircle } from "lucide-react";
 import type { Difficulty } from "@/bindings";
 import { Page } from "@/components/Page";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { DifficultyLabel } from "@/components/Semantic";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePracticePrefs } from "@/lib/practice";
 import { useContinue, useProblems } from "@/lib/queries";
+import { DailyCard, HomeCard as Card, ReviewCard } from "@/practice/HomeCards";
 import { relativeTime } from "@/lib/time";
-
-function Card({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-3 rounded-lg border bg-card p-5 text-card-foreground">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-        {icon}
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
 
 export { relativeTime } from "@/lib/time";
 
@@ -28,6 +18,7 @@ export function Home() {
   const { t, i18n } = useTranslation();
   const cont = useContinue();
   const problems = useProblems();
+  const practice = usePracticePrefs();
 
   const counts = (["easy", "medium", "hard"] as Difficulty[]).map((d) => {
     const all = (problems.data ?? []).filter((p) => p.difficulty === d);
@@ -89,9 +80,8 @@ export function Home() {
           )}
         </Card>
 
-        <Card title={t("home.daily")} icon={<CalendarDays aria-hidden className="size-4" />}>
-          <p className="text-sm text-muted-foreground">{t("home.dailySoon")}</p>
-        </Card>
+        {practice.daily && <DailyCard />}
+        {practice.review && <ReviewCard />}
       </div>
     </Page>
   );

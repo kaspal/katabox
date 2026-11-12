@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import type { PracticeOutcome } from "@/bindings";
+import { SubmitPractice } from "@/practice/SubmitPractice";
 import { useTranslation } from "react-i18next";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import type { JudgeEvent, ProblemView } from "@/bindings";
@@ -54,6 +56,7 @@ export function ResultsPane({
   celebrate,
   validatorNeedsPython = false,
   onInstallPython,
+  practice = null,
 }: {
   problem: ProblemView;
   signature: Signature | null;
@@ -69,6 +72,8 @@ export function ResultsPane({
   /** The problem has validate.py but Python is not installed (constraints unchecked). */
   validatorNeedsPython?: boolean;
   onInstallPython?: () => void;
+  /** What the last Submit did for practice (ADR 0019); null after a Run. */
+  practice?: PracticeOutcome | null;
 }) {
   const { t } = useTranslation();
   const phaseText = usePhaseText()(phase);
@@ -178,7 +183,13 @@ export function ResultsPane({
           {error && !customError ? (
             <ErrorNotice error={error} />
           ) : report ? (
-            <ResultView report={report} celebrate={celebrate} />
+            <ResultView
+              report={report}
+              celebrate={celebrate}
+              afterSummary={
+                practice && <SubmitPractice practice={practice} accepted={report.verdict === "accepted"} />
+              }
+            />
           ) : busy ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 aria-hidden className="size-4 animate-spin" />

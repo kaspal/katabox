@@ -24,6 +24,7 @@ export function EditorStatusBar({
   status,
   onFormat,
   onInstall,
+  basicCompletion = false,
 }: {
   language: Language;
   server: ServerState;
@@ -31,6 +32,8 @@ export function EditorStatusBar({
   onFormat: () => void;
   /** Offered when the server is unavailable because it is not installed. */
   onInstall?: () => void;
+  /** A static completion list stands in for the missing server (PHP). */
+  basicCompletion?: boolean;
 }) {
   const { t } = useTranslation();
   const name = t(`languages.${language}`);
@@ -73,6 +76,9 @@ export function EditorStatusBar({
         )}
       />
       {text}
+      {basicCompletion && (
+        <span data-testid="basic-completion"> · {t("lsp.status.basicCompletion")}</span>
+      )}
     </span>
   );
   return (

@@ -107,11 +107,14 @@ describe("Settings → Languages", () => {
     expect(within(screen.getByTestId("language-python")).getByRole("checkbox", { name: "Python" })).toBeEnabled();
   });
 
-  it("installed languages cannot be selected again", async () => {
+  it("installed languages show no checkbox, only their state and Uninstall", async () => {
     renderApp("/settings");
     const ts = await screen.findByTestId("language-typescript");
-    expect(within(ts).getByRole("checkbox")).toBeDisabled();
+    expect(within(ts).queryByRole("checkbox")).toBeNull();
     expect(within(ts).getByText("Installed")).toBeInTheDocument();
+    expect(within(ts).getByRole("button", { name: /Uninstall/ })).toBeInTheDocument();
+    // A language that is not installed still has one.
+    expect(within(screen.getByTestId("language-rust")).getByRole("checkbox")).toBeEnabled();
   });
 });
 

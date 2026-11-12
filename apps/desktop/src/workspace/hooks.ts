@@ -2,9 +2,12 @@
 // language) and judge runs (Run/Submit with progress).
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { JudgeEvent, Language, Report } from "@/bindings";
+import type { JudgeEvent, Language, PracticeOutcome, Report } from "@/bindings";
 import { api, type CustomInput } from "@/lib/api";
+import { practiceKeys } from "@/lib/practice";
+import { usePrefs } from "@/lib/prefs";
 import { queryKeys, useCalibration } from "@/lib/queries";
+import { localToday } from "@/lib/today";
 
 export const AUTOSAVE_MS = 600;
 
@@ -19,8 +22,12 @@ export type EditorDoc = { lang: Language; key: string; text: string; rev: number
  * one language's key with another's text and stays mounted while loading.
  * Edits autosave after AUTOSAVE_MS; `flush()` saves now (before Run/Submit and before
  * switching language). `reload()` drops the cached text (after restoring a snapshot).
+ *
+ * Review mode (ADR 0019): every language starts from its stub and nothing is saved, so
+ * the earlier code stays hidden and untouched until the review is passed.
  */
-export function useEditorSession(problem: string, language: Language | null) {
+export function useEditorSession(problem: string, language: Language | null, opts: { review?: boolean } = {}) {
+  const review = opts.review === true;
   const cache = useRef(new Map<string, string>());
   const pending = useRef<{ lang: Language; code: string } | null>(null);
   const timer = useRef<number | undefined>(undefined);
@@ -31,6 +38,7 @@ export function useEditorSession(problem: string, language: Language | null) {
 
   const write = useCallback(
     async (lang: Language, text: string) => {
+      if (review) return;
       setSave("saving");
       try {
         await api.saveDraft(problem, lang, text);
@@ -39,7 +47,7 @@ export function useEditorSession(problem: string, language: Language | null) {
         setSave("error");
       }
     },
-    [problem],
+    [problem, review],
   );
 
   const flush = useCallback(async () => {
@@ -49,12 +57,12 @@ export function useEditorSession(problem: string, language: Language | null) {
     if (p) await write(p.lang, p.code);
   }, [write]);
 
-  // A new problem starts empty (no cross-problem leftovers).
+  // A new problem (or entering/leaving review mode) starts empty.
   useEffect(() => {
     cache.current.clear();
     setDoc(null);
     setSave("idle");
-  }, [problem]);
+  }, [problem, review]);
 
   // Load when the language or revision changes.
   useEffect(() => {
@@ -70,7 +78,7 @@ export function useEditorSession(problem: string, language: Language | null) {
     setLoadError(null);
     void (async () => {
       try {
-        const draft = await api.loadDraft(problem, language);
+        const draft = review ? null : await api.loadDraft(problem, language);
         const text = draft ? draft.code : await api.getStub(problem, language);
         if (!live) return;
         cache.current.set(key, text);
@@ -82,7 +90,7 @@ export function useEditorSession(problem: string, language: Language | null) {
     return () => {
       live = false;
     };
-  }, [problem, language, revision]);
+  }, [problem, language, revision, review]);
 
   // Save what is pending when leaving the problem.
   useEffect(() => () => void flush(), [flush]);
@@ -92,14 +100,15 @@ export function useEditorSession(problem: string, language: Language | null) {
       setDoc((d) => {
         if (!d) return d;
         cache.current.set(d.key, text);
-        pending.current = { lang: d.lang, code: text };
+        if (!review) pending.current = { lang: d.lang, code: text };
         return { ...d, text };
       });
+      if (review) return;
       setSave("saving");
       window.clearTimeout(timer.current);
       timer.current = window.setTimeout(() => void flush(), AUTOSAVE_MS);
     },
-    [flush],
+    [flush, review],
   );
 
   const reload = useCallback(
@@ -130,6 +139,9 @@ export type Phase = { kind: "idle" } | { kind: "starting" } | { kind: "event"; e
 /** Run and Submit with progress; one at a time. */
 export function useJudge(problem: string) {
   const queryClient = useQueryClient();
+  const { lang } = usePrefs();
+  /** What the last Submit did for practice (review, daily problem, next problem). */
+  const [practice, setPractice] = useState<PracticeOutcome | null>(null);
   // Unmeasured (null) until the first Run or Submit measures this machine.
   const measured = useCalibration().data != null;
   const [busy, setBusy] = useState<"run" | "submit" | null>(null);
@@ -139,6 +151,15 @@ export function useJudge(problem: string) {
   const [lastKind, setLastKind] = useState<"run" | "submit" | null>(null);
   const running = useRef(false);
 
+  // Another problem (e.g. opened from the Next card): forget the last result.
+  useEffect(() => {
+    setReport(null);
+    setError(null);
+    setPractice(null);
+    setLastKind(null);
+    setPhase({ kind: "idle" });
+  }, [problem]);
+
   const start = useCallback(
     async (kind: "run" | "submit", job: (onEvent: (e: JudgeEvent) => void) => Promise<Report>) => {
       if (running.current) return;
@@ -147,6 +168,7 @@ export function useJudge(problem: string) {
       setLastKind(kind);
       setError(null);
       setReport(null);
+      setPractice(null);
       setPhase({ kind: "starting" });
       try {
         const r = await job((event) => setPhase({ kind: "event", event }));
@@ -164,7 +186,13 @@ export function useJudge(problem: string) {
           void queryClient.invalidateQueries({ queryKey: ["problem", problem] });
         }
         if (kind === "submit") {
-          for (const key of [["submissions", problem], ["editorial", problem], ["problems"], ["continue"]]) {
+          for (const key of [
+            ["submissions", problem],
+            ["editorial", problem],
+            ["problems"],
+            ["continue"],
+            practiceKeys.all,
+          ]) {
             void queryClient.invalidateQueries({ queryKey: key });
           }
         }
@@ -179,10 +207,20 @@ export function useJudge(problem: string) {
     [problem, start],
   );
   const submit = useCallback(
-    (language: Language, code: string) =>
-      start("submit", async (onEvent) => (await api.submit(problem, language, code, onEvent)).report),
-    [problem, start],
+    (language: Language, code: string, opts: { review?: boolean } = {}) =>
+      start("submit", async (onEvent) => {
+        const result = await api.submit(
+          problem,
+          language,
+          code,
+          { today: localToday(), review: opts.review === true, lang },
+          onEvent,
+        );
+        setPractice(result.practice);
+        return result.report;
+      }),
+    [problem, start, lang],
   );
 
-  return { busy, phase, report, error, lastKind, run, submit };
+  return { busy, phase, report, error, lastKind, run, submit, practice };
 }

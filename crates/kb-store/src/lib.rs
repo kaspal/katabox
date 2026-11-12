@@ -16,6 +16,7 @@
 
 pub mod blob;
 pub mod content;
+pub mod practice;
 pub mod user;
 
 use std::path::Path;
@@ -24,6 +25,7 @@ pub use content::{
     CONTENT_SCHEMA_VERSION, ContentDb, ContentMeta, JudgeData, PackMeta, PackProblem, PackText,
     ProblemFilter, ProblemSummary, ProblemView, PublicTest, StatusFilter, UiLang, build,
 };
+pub use practice::{DailyPick, INSTALL_ID_SETTING, ListRow, ReviewRow};
 pub use user::{
     BACKUPS_KEPT, Draft, DraftRef, ProblemStatus, SNAPSHOT_CAP, Snapshot, SnapshotSource,
     StatusInfo, Submission, SubmissionSummary, UserDb,
@@ -47,6 +49,8 @@ pub enum StoreError {
     InvalidPack(String),
     #[error("unexpected data in the database: {0}")]
     Corrupt(String),
+    #[error("invalid request: {0}")]
+    Invalid(String),
 }
 
 pub type Result<T, E = StoreError> = std::result::Result<T, E>;

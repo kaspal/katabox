@@ -132,8 +132,7 @@
     "browse": "Browse problems",
     "solved": "Solved",
     "solvedOf": "{{solved}} of {{total}}",
-    "daily": "Daily problem",
-    "dailySoon": "A daily pick arrives in a later version."
+    "daily": "Daily problem"
   },
   "workspace": {
     "title": "Workspace",
@@ -377,7 +376,8 @@
       "ready": "{{language}} language server: ready",
       "restarting": "{{language}} language server: restarting (attempt {{attempt}})…",
       "stopped": "{{language}} language server: paused while idle; it resumes when you type",
-      "unavailable": "{{language}} language server: unavailable"
+      "unavailable": "{{language}} language server: unavailable",
+      "basicCompletion": "basic completion of keywords and common functions"
     },
     "reason": "Why: {{reason}}",
     "errors_one": "{{count}} error",
@@ -446,5 +446,82 @@
     "licenses": "Downloaded from their official sites: Python (PSF License), Node.js (MIT), PHP (PHP License), Rust and rust-analyzer (MIT or Apache-2.0), TypeScript and its language server (Apache-2.0), basedpyright (MIT).",
     "unsupportedPlatform": "KataBox cannot install languages on this system yet.",
     "onDisk": "{{disk}} on disk"
+  },
+  "practice": {
+    "daily": {
+      "title": "Daily problem",
+      "open": "Solve it",
+      "solved": "Solved today",
+      "none": "No problems available.",
+      "hint": "A new pick every day, leaning toward your weakest pattern."
+    },
+    "streak": {
+      "label": "Daily streak: {{count}}",
+      "none": "Solve the daily problem to start a streak."
+    },
+    "review": {
+      "title": "Review",
+      "empty": "Nothing to review today.",
+      "start": "Review",
+      "snooze": "Snooze 1 day",
+      "remove": "Remove from review",
+      "interval": "Interval: {{days}} days",
+      "lapsed": "Try again",
+      "banner": "Review: your earlier code is hidden until you pass.",
+      "passed": "Review passed. Next review on {{date}}.",
+      "graduated": "Review passed: this problem is mastered and leaves your review queue.",
+      "lapsedBanner": "Not this time: the review restarts at 3 days. Try again when you are ready.",
+      "locked": "Hidden until you pass this review.",
+      "add": "Review in 3 days",
+      "inQueue": "In your review queue (due {{date}})",
+      "scheduled": "First review on {{date}}."
+    },
+    "next": {
+      "title": "Next",
+      "open": "Open",
+      "allSolved": "You have solved every problem."
+    },
+    "patterns": {
+      "title": "Patterns",
+      "solved": "{{solved}} / {{total}} solved",
+      "browse": "Browse",
+      "next": "Next: {{title}}",
+      "done": "All solved",
+      "empty": "No problems yet."
+    },
+    "lists": {
+      "tabProblems": "Problems",
+      "tab": "Lists",
+      "new": "New list",
+      "newEllipsis": "New list…",
+      "name": "Name",
+      "create": "Create",
+      "rename": "Rename",
+      "delete": "Delete",
+      "deleteTitle": "Delete this list?",
+      "deleteConfirm": "“{{name}}” will be deleted. The problems stay in the library.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "empty": "No lists yet. Create one, then add problems from the library or the workspace.",
+      "emptyList": "This list is empty. Add problems from the library or the workspace.",
+      "progress": "{{solved}} / {{total}} solved",
+      "unavailable": "Unavailable (removed from the problem pack)",
+      "remove": "Remove from list",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "reorderHint": "Drag the rows, or focus one and press Alt+↑ / Alt+↓.",
+      "addTo": "Add to list",
+      "back": "All lists",
+      "open": "Open",
+      "actions": "List actions",
+      "problemActions": "Problem actions"
+    },
+    "settings": {
+      "title": "Practice",
+      "review": "Review reminders on Home",
+      "daily": "Daily problem on Home",
+      "on": "On",
+      "off": "Off"
+    }
   }
 }

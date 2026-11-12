@@ -40,6 +40,10 @@ pub(crate) const MIGRATIONS: &[Migration] = &[
         version: 2,
         sql: include_str!("../migrations/0002_snapshot_verdict.sql"),
     },
+    Migration {
+        version: 3,
+        sql: include_str!("../migrations/0003_practice.sql"),
+    },
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -143,7 +147,7 @@ pub struct Submission {
 /// single connection rules out SQLITE_BUSY between our own transactions.
 #[derive(Debug, Clone)]
 pub struct UserDb {
-    pool: SqlitePool,
+    pub(crate) pool: SqlitePool,
     backup: Option<PathBuf>,
 }
 
@@ -792,7 +796,7 @@ pub(crate) mod tests {
     use kb_core::{Message, MessageCode, TestKind, TestResult};
     use serde_json::json;
 
-    const TABLES: [&str; 7] = [
+    const TABLES: [&str; 11] = [
         "settings",
         "drafts",
         "submissions",
@@ -800,6 +804,10 @@ pub(crate) mod tests {
         "snapshots",
         "notes",
         "hint_unlocks",
+        "reviews",
+        "daily_picks",
+        "lists",
+        "list_items",
     ];
 
     async fn fresh(name: &str) -> (PathBuf, UserDb) {
@@ -981,7 +989,7 @@ pub(crate) mod tests {
         db.close().await;
 
         let db = UserDb::open(&path).await.unwrap();
-        assert_eq!(db.schema_version().await.unwrap(), 2);
+        assert_eq!(db.schema_version().await.unwrap(), MIGRATIONS.len() as i64);
         assert!(db.backup_path().is_some());
         let old = db.list_snapshots("p").await.unwrap();
         assert_eq!((old[0].code.as_str(), old[0].verdict), ("x", None));

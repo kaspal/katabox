@@ -16,6 +16,7 @@ import {
   type Report,
   type Result,
 } from "../bindings";
+import { localToday } from "@/lib/today";
 import "./smoke.css";
 
 const ALL_PROBLEMS = {
@@ -149,7 +150,8 @@ export default function SmokeScreen() {
           await call(commands.run(problem.id, language, code, inputs, onEvent)),
         );
       } else {
-        const r = await call(commands.submit(problem.id, language, code, onEvent));
+        const opts = { today: localToday(), review: false, lang: "en" as const };
+        const r = await call(commands.submit(problem.id, language, code, opts, onEvent));
         setReport(r.report);
         refreshList();
       }

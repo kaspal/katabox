@@ -173,14 +173,19 @@ function LanguageCard({
       data-testid={`language-${unit}`}
       data-installed={s.installed || undefined}
     >
-      <Checkbox
-        id={id}
-        checked={checked}
-        disabled={disabled}
-        onCheckedChange={(v) => onCheck(v === true)}
-        aria-describedby={`${id}-details`}
-        className="mt-0.5"
-      />
+      {s.installed ? (
+        // Installed: nothing to select (Uninstall is below); keep the column aligned.
+        <span aria-hidden className="mt-0.5 size-4 shrink-0" />
+      ) : (
+        <Checkbox
+          id={id}
+          checked={checked}
+          disabled={disabled}
+          onCheckedChange={(v) => onCheck(v === true)}
+          aria-describedby={`${id}-details`}
+          className="mt-0.5"
+        />
+      )}
       <div className="min-w-0 flex-1 space-y-1">
         <label htmlFor={id} className="font-medium">
           {t(`install.unit.${unit}`)}

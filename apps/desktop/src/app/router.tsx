@@ -27,6 +27,9 @@ export type LibrarySearch = {
   tag?: string;
   sort?: SortKey;
   desc?: boolean;
+  /** The Lists tab (ADR 0019), and the open list. */
+  view?: "lists";
+  list?: number;
 };
 
 const oneOf = <T extends string>(v: unknown, values: readonly T[]): T | undefined =>
@@ -43,6 +46,8 @@ export function parseLibrarySearch(s: Record<string, unknown>): LibrarySearch {
     tag: text(s.tag),
     sort: oneOf(s.sort, SORT_KEYS),
     desc: s.desc === true || s.desc === "true" ? true : undefined,
+    view: oneOf(s.view, ["lists"] as const),
+    list: typeof s.list === "number" && Number.isInteger(s.list) ? s.list : undefined,
   };
 }
 
@@ -55,10 +60,17 @@ const libraryRoute = createRoute({
   validateSearch: parseLibrarySearch,
   component: Library,
 });
+/** `?review=true` opens a problem in review mode (ADR 0019). */
+export type ProblemSearch = { review?: boolean };
+export const parseProblemSearch = (s: Record<string, unknown>): ProblemSearch => ({
+  review: s.review === true || s.review === "true" ? true : undefined,
+});
+
 // The workspace is lazy: CodeMirror, KaTeX and Markdown load only when a problem opens.
 const problemRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/problems/$problemId",
+  validateSearch: parseProblemSearch,
   component: lazyRouteComponent(() => import("@/workspace/WorkspacePage"), "WorkspacePage"),
 });
 const progressRoute = createRoute({

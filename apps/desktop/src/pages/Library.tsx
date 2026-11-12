@@ -20,13 +20,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { LibrarySearch, SortKey } from "@/app/router";
 import { useProblems } from "@/lib/queries";
+import { ListsView } from "@/practice/ListsView";
+import { AddToListMenu } from "@/practice/shared";
 import { cn } from "@/lib/utils";
 
 const route = getRouteApi("/library");
 const ROW_HEIGHT = 40;
 const ANY = "__any";
 const DIFFICULTY_ORDER: Record<Difficulty, number> = { easy: 0, medium: 1, hard: 2 };
-const COLUMNS = "grid-cols-[48px_minmax(0,2fr)_120px_minmax(0,1fr)_minmax(0,1fr)]";
+const COLUMNS = "grid-cols-[48px_minmax(0,2fr)_120px_minmax(0,1fr)_minmax(0,1fr)_36px]";
 
 function sortProblems(list: ProblemSummary[], sort: SortKey, desc: boolean, label: (p: string) => string) {
   const key = (p: ProblemSummary): string | number => {
@@ -114,6 +116,34 @@ export function Library() {
     void navigate({ search: { sort: search.sort, desc: search.desc }, replace: true });
   };
 
+  const viewTabs = (
+    <ToggleGroup
+      type="single"
+      variant="outline"
+      size="sm"
+      aria-label={t("library.title")}
+      value={search.view ?? "problems"}
+      onValueChange={(v) => v && setSearch({ view: v === "lists" ? "lists" : undefined, list: undefined })}
+      className="mb-3"
+    >
+      <ToggleGroupItem value="problems" className="px-3">
+        {t("practice.lists.tabProblems")}
+      </ToggleGroupItem>
+      <ToggleGroupItem value="lists" className="px-3">
+        {t("practice.lists.tab")}
+      </ToggleGroupItem>
+    </ToggleGroup>
+  );
+
+  if (search.view === "lists") {
+    return (
+      <Page title={t("library.title")}>
+        {viewTabs}
+        <ListsView openId={search.list} onOpen={(id) => setSearch({ list: id })} />
+      </Page>
+    );
+  }
+
   return (
     <Page
       title={t("library.title")}
@@ -123,6 +153,7 @@ export function Library() {
         </span>
       }
     >
+      {viewTabs}
       <div className="flex flex-wrap items-center gap-2" role="toolbar">
         <div className="relative w-64">
           <Search aria-hidden className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
@@ -340,6 +371,9 @@ function ProblemGrid({
             {header("difficulty", t("library.columns.difficulty"))}
             {header("pattern", t("library.columns.pattern"))}
             {header(null, t("library.columns.tags"))}
+            <span role="columnheader" className="sr-only">
+              {t("practice.lists.addTo")}
+            </span>
           </div>
         </div>
 
@@ -394,6 +428,9 @@ function ProblemGrid({
                     </div>
                     <div role="gridcell" className="truncate text-xs text-muted-foreground">
                       {p.tags.map(tagLabel).join(", ")}
+                    </div>
+                    <div role="gridcell" onDoubleClick={(e) => e.stopPropagation()}>
+                      <AddToListMenu problem={p.id} />
                     </div>
                   </div>
                 );
