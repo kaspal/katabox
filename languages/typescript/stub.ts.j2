@@ -25,5 +25,5 @@ export class TreeNode {
 
 {% endif %}
 export function {{ function }}({% for p in params %}{{ p.name }}: {{ p.type }}{% if not loop.last %}, {% endif %}{% endfor %}): {{ returns }} {
-
+  throw new Error("Not implemented");
 }

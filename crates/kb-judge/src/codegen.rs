@@ -9,8 +9,10 @@ use crate::JudgeError;
 use crate::languages::{LanguageDef, definition};
 use crate::signature::Signature;
 
-/// Starter code for the editor: the function with its typed signature and an empty body,
-/// after the `ListNode` / `TreeNode` definitions it uses (ADR 0025).
+/// Starter code for the editor: the function with its typed signature and a placeholder
+/// body that type-checks and fails clearly when run (`raise NotImplementedError`,
+/// `throw new Error("Not implemented")`, `todo!()`; PHP's is empty), after the
+/// `ListNode` / `TreeNode` definitions it uses (ADR 0025).
 pub fn starter_code(lang: Language, sig: &Signature) -> Result<String, JudgeError> {
     let def = definition(lang)?;
     render(def.stub_template, template_context(&def, sig))
@@ -174,7 +176,7 @@ mod tests {
     fn python_stub() {
         assert_eq!(
             starter_code(Language::Python, &two_sum()).unwrap(),
-            "def two_sum(nums: list[int], target: int) -> list[int]:\n    pass\n"
+            "def two_sum(nums: list[int], target: int) -> list[int]:\n    raise NotImplementedError\n"
         );
     }
 
@@ -182,7 +184,7 @@ mod tests {
     fn typescript_stub() {
         assert_eq!(
             starter_code(Language::TypeScript, &two_sum()).unwrap(),
-            "export function twoSum(nums: number[], target: number): number[] {\n\n}\n"
+            "export function twoSum(nums: number[], target: number): number[] {\n  throw new Error(\"Not implemented\");\n}\n"
         );
     }
 

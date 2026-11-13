@@ -56,8 +56,9 @@ fn problem(name: &str, param: &str, ty: &str, ret: &str, cases: &[(Value, Value)
 fn solution(lang: Language, p: &Problem, body: &str) -> String {
     let stub = starter_code(lang, &p.signature).unwrap();
     match lang {
-        Language::Python => stub.replace("    pass\n", body),
-        Language::TypeScript | Language::Php => stub.replacen("{\n\n}", &format!("{{\n{body}}}"), 1),
+        Language::Python => stub.replace("    raise NotImplementedError\n", body),
+        Language::TypeScript => stub.replace("  throw new Error(\"Not implemented\");\n", body),
+        Language::Php => stub.replacen("{\n\n}", &format!("{{\n{body}}}"), 1),
         Language::Rust => stub.replace(
             "    // Do not write `fn main`: KataBox provides it and calls this function.\n    todo!()\n",
             body,

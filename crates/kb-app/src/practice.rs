@@ -68,6 +68,22 @@ fn solved(p: &ProblemSummary) -> bool {
     p.status == Some(ProblemStatus::Solved)
 }
 
+/// Where a brand-new user starts: the lowest-ranked problem (then by id) of the first
+/// pattern in track order that has problems in the pack.
+pub fn start_here(all: &[ProblemSummary]) -> Option<&ProblemSummary> {
+    all.iter().min_by(|a, b| {
+        pattern_order(&a.pattern, &b.pattern)
+            .then_with(|| a.rank.cmp(&b.rank))
+            .then_with(|| a.id.cmp(&b.id))
+    })
+}
+
+/// No problem solved yet: the daily problem and "next problem" both point to
+/// [`start_here`].
+fn brand_new(all: &[ProblemSummary]) -> bool {
+    !all.iter().any(solved)
+}
+
 // --- Progress page ------------------------------------------------------------------
 
 /// Solved and total problems of one difficulty or tag.
@@ -226,9 +242,16 @@ pub fn pattern_progress(all: &[ProblemSummary]) -> Vec<PatternProgress> {
 /// What to solve after `current`: the lowest-ranked unsolved problem of the same pattern
 /// at or above its rank; otherwise the lowest-ranked unsolved problem of the following
 /// patterns in track order (wrapping around), then of the same pattern below its rank.
-/// Never a solved problem, never `current`.
+/// Never a solved problem, never `current`. Before the first solve it is [`start_here`]
+/// (unless that is `current`).
 pub fn next_problem<'a>(all: &'a [ProblemSummary], current: &str) -> Option<&'a ProblemSummary> {
     let here = all.iter().find(|p| p.id == current)?;
+    if brand_new(all)
+        && let Some(start) = start_here(all)
+        && start.id != current
+    {
+        return Some(start);
+    }
     if let Some(p) = lowest_unsolved(all, &here.pattern, here.rank, current) {
         return Some(p);
     }
@@ -275,12 +298,16 @@ fn weakest_pattern(all: &[ProblemSummary]) -> Option<String> {
 
 /// The daily problem for `day`: a deterministic, weighted choice over the unsolved
 /// problems (every problem once all are solved), seeded by the day and the install id.
-/// Problems in the weakest pattern weigh [`WEAKEST_WEIGHT`].
+/// Problems in the weakest pattern weigh [`WEAKEST_WEIGHT`]. Before the first solve it is
+/// [`start_here`], so a brand-new user starts at the beginning of the track.
 pub fn daily_pick<'a>(
     all: &'a [ProblemSummary],
     day: Day,
     install_id: &str,
 ) -> Option<&'a ProblemSummary> {
+    if brand_new(all) {
+        return start_here(all);
+    }
     let mut candidates: Vec<&ProblemSummary> = all.iter().filter(|p| !solved(p)).collect();
     if candidates.is_empty() {
         candidates = all.iter().collect();
@@ -805,7 +832,8 @@ mod tests {
             p("a1", "arrays-hashing", 1, false),
             p("s2", "sorting", 2, false),
             p("t1", "two-pointers", 1, false),
-            p("d3", "design", 3, false),
+            // One solve, so the track order (not the brand-new start) decides.
+            p("d3", "design", 3, true),
         ];
         let order: Vec<String> = pattern_progress(&all)
             .into_iter()
@@ -817,6 +845,48 @@ mod tests {
         );
         assert_eq!(next_problem(&all, "a1").unwrap().id, "s2");
         assert_eq!(next_problem(&all, "s2").unwrap().id, "t1");
+    }
+
+    #[test]
+    fn a_brand_new_user_starts_at_the_first_pattern_of_the_track() {
+        // Nothing solved; the pack's first track pattern is arrays-hashing (no
+        // fundamentals here), whose lowest rank is 1, tied: by id.
+        let mut all = vec![
+            p("g1", "graphs", 1, false),
+            p("ab", "arrays-hashing", 1, false),
+            p("aa", "arrays-hashing", 2, false),
+            p("ac", "arrays-hashing", 1, false),
+            p("z0", "zzz-unknown", 0, false),
+        ];
+        assert_eq!(start_here(&all).unwrap().id, "ab");
+        for k in 0..60 {
+            let d = day("2026-01-01").add_days(k);
+            for install in ["install-a", "install-b"] {
+                assert_eq!(daily_pick(&all, d, install).unwrap().id, "ab");
+            }
+        }
+        assert_eq!(next_problem(&all, "g1").unwrap().id, "ab");
+        assert_eq!(next_problem(&all, "z0").unwrap().id, "ab");
+        // From the start problem itself: the usual rule (never `current`).
+        assert_eq!(next_problem(&all, "ab").unwrap().id, "ac");
+        assert_eq!(next_problem(&all, "missing"), None);
+        assert_eq!(start_here(&[]), None);
+
+        // One solve (not even the start problem): the usual rules apply.
+        all[0].status = Some(ProblemStatus::Solved); // g1
+        assert_eq!(next_problem(&all, "z0").unwrap().id, "ab"); // wraps to the first pattern
+        assert_eq!(next_problem(&all, "aa").unwrap().id, "z0"); // next pattern with unsolved
+        assert_eq!(next_problem(&all, "ac").unwrap().id, "ab"); // same pattern, rank ≥ 1
+        let picks: HashSet<String> = (0..60)
+            .map(|k| {
+                daily_pick(&all, day("2026-01-01").add_days(k), "i")
+                    .unwrap()
+                    .id
+                    .clone()
+            })
+            .collect();
+        assert!(picks.len() > 1, "the weighted pick is back: {picks:?}");
+        assert!(!picks.contains("g1"), "never the solved one");
     }
 
     #[test]

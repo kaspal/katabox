@@ -18,4 +18,4 @@ class TreeNode:
 
 {% endif %}
 def {{ function }}({% for p in params %}{{ p.name }}: {{ p.type }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {{ returns }}:
-    pass
+    raise NotImplementedError

@@ -651,6 +651,61 @@ async fn submits_drive_reviews_daily_problem_and_streak() {
     app.close().await;
 }
 
+/// A brand-new user starts at the first problem of the first track pattern (from
+/// `PATTERN_TRACK` and the ranks); after one solve the usual daily and next rules apply.
+#[tokio::test]
+async fn a_brand_new_user_starts_at_fundamentals() {
+    use crate::practice::{PATTERN_TRACK, daily_pick, next_problem};
+    let app = app("brand-new").await;
+    let today = "2026-11-14";
+    let all = app.all_problems(UiLang::En).await.unwrap();
+    let start = all
+        .iter()
+        .filter(|p| p.pattern == PATTERN_TRACK[0])
+        .min_by(|a, b| a.rank.cmp(&b.rank).then_with(|| a.id.cmp(&b.id)))
+        .expect("the pack has fundamentals problems");
+
+    // No solves: the daily problem and "next problem" both point to it.
+    let daily = app.daily_problem(today, UiLang::En).await.unwrap().unwrap();
+    assert_eq!(daily.problem.id, start.id);
+    for from in ["two-sum", "nested-brackets"] {
+        let next = app.next_problem(from, UiLang::En).await.unwrap().unwrap();
+        assert_eq!(next.id, start.id, "next from {from}");
+    }
+
+    // One solve (two-sum, not the start problem): the usual rules.
+    app.store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Python,
+            "x",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+    let all = app.all_problems(UiLang::En).await.unwrap();
+    let next = app
+        .next_problem("two-sum", UiLang::En)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(Some(&next), next_problem(&all, "two-sum"));
+    let two_sum = all.iter().find(|p| p.id == "two-sum").unwrap();
+    assert_eq!(next.pattern, two_sum.pattern, "stays in two-sum's pattern");
+    // Today's pick is kept all day; a new day takes the weighted pick.
+    let tomorrow = "2026-11-15";
+    let daily = app
+        .daily_problem(tomorrow, UiLang::En)
+        .await
+        .unwrap()
+        .unwrap();
+    let install = app.store.user.install_id().await.unwrap();
+    let expected = daily_pick(&all, tomorrow.parse().unwrap(), &install).unwrap();
+    assert_eq!(daily.problem.id, expected.id);
+    app.close().await;
+}
+
 #[tokio::test]
 async fn lists_with_unavailable_problems_and_the_pattern_map() {
     let app = app("lists").await;

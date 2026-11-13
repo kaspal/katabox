@@ -58,6 +58,9 @@ offline, and survive restarts and time-zone changes.
   that day return it, even after other problems are solved. A new local date picks
   again. If the picked problem leaves the pack, it is replaced.
 - **Never a solved problem while unsolved ones remain:** candidates exclude solved ones.
+- **A brand-new user starts at the beginning** (added in chore/hardening): until at
+  least one problem is solved, the pick is the lowest-ranked problem (then by id) of the
+  first `PATTERN_TRACK` pattern that has problems (`start_here`), not a weighted draw.
 - **Streak:** an Accepted Submit of the day's pick on that day marks the day solved. The
   streak is the number of consecutive solved days ending today, or yesterday when today's
   pick is still open.
@@ -76,6 +79,8 @@ offline, and survive restarts and time-zone changes.
      wrapping around (which reaches lower ranks of the same pattern last);
   3. otherwise "You have solved every problem".
   - It never suggests a solved problem or the current one.
+  - Before the first solve it is the same `start_here` problem as the daily pick
+    (unless that is the current problem; then the rules above apply).
 
 ### Personal lists (`lists`, `list_items`)
 - **Operations:** create, rename (1-80 characters, trimmed) and delete (items cascade).
