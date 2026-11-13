@@ -153,7 +153,7 @@ pub struct StopInfo {
     pub evals: Vec<EvalResult>,
     /// The visualizer's structured snapshot, when it was asked for (ADR 0027).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub snapshot: Option<Snapshot>,
+    pub snapshot: Option<DebugSnapshot>,
 }
 
 /// A bounded, structured copy of the variables the visualizer asked for, taken at the
@@ -161,7 +161,7 @@ pub struct StopInfo {
 /// is a second `ref` to the same id.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
-pub struct Snapshot {
+pub struct DebugSnapshot {
     /// The requested variables (that exist at the stop), then every other local holding
     /// a ListNode / TreeNode.
     #[serde(default)]
@@ -178,10 +178,10 @@ pub struct Snapshot {
     pub error: Option<String>,
 }
 
-impl Snapshot {
+impl DebugSnapshot {
     /// An empty snapshot that only says why.
-    pub fn failed(error: &str) -> Snapshot {
-        Snapshot {
+    pub fn failed(error: &str) -> DebugSnapshot {
+        DebugSnapshot {
             roots: vec![],
             objects: vec![],
             truncated: true,
@@ -307,7 +307,7 @@ mod tests {
             ],
             "truncated": true
         });
-        let s: Snapshot = serde_json::from_value(raw.clone()).unwrap();
+        let s: DebugSnapshot = serde_json::from_value(raw.clone()).unwrap();
         assert_eq!(s.roots[0].value, s.roots[1].value);
         assert_eq!(
             s.roots[2].value,
@@ -329,13 +329,13 @@ mod tests {
         assert!(s.truncated && s.error.is_none());
         // Round trip, and an unknown kind is an error (kb-judge turns it into `invalid`).
         assert_eq!(
-            serde_json::from_value::<Snapshot>(serde_json::to_value(&s).unwrap()).unwrap(),
+            serde_json::from_value::<DebugSnapshot>(serde_json::to_value(&s).unwrap()).unwrap(),
             s
         );
         let bad = serde_json::json!({"roots": [], "objects": [{"kind": "blob"}]});
-        assert!(serde_json::from_value::<Snapshot>(bad).is_err());
+        assert!(serde_json::from_value::<DebugSnapshot>(bad).is_err());
         assert_eq!(
-            Snapshot::failed("too_large").error.as_deref(),
+            DebugSnapshot::failed("too_large").error.as_deref(),
             Some("too_large")
         );
     }

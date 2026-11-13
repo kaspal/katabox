@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use kb_core::Language;
-use kb_core::debug::{SnapObject, SnapValue, Snapshot, StopInfo, Trace};
+use kb_core::debug::{SnapObject, SnapValue, DebugSnapshot, StopInfo, Trace};
 use kb_judge::debug::{self, DebugRun, SNAPSHOT_MAX_BYTES, StopRequest};
 use kb_judge::{JudgeEnv, Problem};
 use kb_runner::ROOT_MARKER;
@@ -83,13 +83,13 @@ fn stop(
 }
 
 /// The snapshot, which must not be a failure.
-fn snap(s: &StopInfo) -> &Snapshot {
+fn snap(s: &StopInfo) -> &DebugSnapshot {
     let snap = s.snapshot.as_ref().expect("a snapshot");
     assert_eq!(snap.error, None, "{snap:?}");
     snap
 }
 
-fn root<'a>(snap: &'a Snapshot, name: &str) -> &'a SnapValue {
+fn root<'a>(snap: &'a DebugSnapshot, name: &str) -> &'a SnapValue {
     &snap
         .roots
         .iter()
@@ -105,7 +105,7 @@ fn id_of(v: &SnapValue) -> u32 {
     }
 }
 
-fn object<'a>(snap: &'a Snapshot, v: &SnapValue) -> &'a SnapObject {
+fn object<'a>(snap: &'a DebugSnapshot, v: &SnapValue) -> &'a SnapObject {
     &snap.objects[id_of(v) as usize]
 }
 
@@ -122,7 +122,7 @@ fn text(v: &SnapValue) -> &str {
 }
 
 /// A list's items as display text.
-fn items(snap: &Snapshot, v: &SnapValue) -> (Vec<String>, u32) {
+fn items(snap: &DebugSnapshot, v: &SnapValue) -> (Vec<String>, u32) {
     match object(snap, v) {
         SnapObject::List { items, len, .. } => {
             (items.iter().map(|i| text(i).to_string()).collect(), *len)
@@ -132,7 +132,7 @@ fn items(snap: &Snapshot, v: &SnapValue) -> (Vec<String>, u32) {
 }
 
 /// (input number, next) of a ListNode.
-fn list_node(snap: &Snapshot, v: &SnapValue) -> (Option<u32>, String, SnapValue) {
+fn list_node(snap: &DebugSnapshot, v: &SnapValue) -> (Option<u32>, String, SnapValue) {
     match object(snap, v) {
         SnapObject::ListNode { val, next, input } => (*input, text(val).to_string(), next.clone()),
         other => panic!("not a ListNode: {other:?}"),

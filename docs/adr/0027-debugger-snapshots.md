@@ -30,9 +30,9 @@ Date: 2026-11-13 · Status: accepted (maintainer sign-off on the data path)
   restart) and every inspect sends it. The UI sends it only while the Visualize view is
   open.
 
-### Format (`kb_core::debug::Snapshot`)
+### Format (`kb_core::debug::DebugSnapshot`)
 ```
-Snapshot   { roots: [SnapRoot], objects: [SnapObject], truncated, error? }
+DebugSnapshot { roots: [SnapRoot], objects: [SnapObject], truncated, error? }
 SnapRoot   { name, value: SnapValue }
 SnapValue  = {t:"ref", id} | {t:"int"|"float"|"str"|"bool"|"none", v: text} | {t:"opaque", v: type name}
 SnapObject = {kind:"list"|"set", type, items, len} | {kind:"map", type, entries: [[k, v]], len}

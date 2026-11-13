@@ -558,7 +558,8 @@
       "open": "Solve it",
       "solved": "Solved today",
       "none": "No problems available.",
-      "hint": "A new pick every day, leaning toward your weakest pattern."
+      "hint": "A new pick every day, leaning toward your weakest pattern.",
+      "hint_start": "Start here: the first problem of the first pattern. After your first solve, picks lean toward your weakest pattern."
     },
     "streak": {
       "label": "Daily streak: {{count}}",
@@ -750,7 +751,58 @@
     "line": "line {{line}}",
     "console": "Debug console",
     "evaluate": "Evaluate in the selected frame",
-    "consoleHelp": "Each step replays the test, so what you evaluate here never changes the program."
+    "consoleHelp": "Each step replays the test, so what you evaluate here never changes the program.",
+    "visualize": {
+      "variablesTab": "Variables",
+      "tab": "Visualize",
+      "intro": "Draws the chosen variables at each step. Changes since the previous step are marked.",
+      "paused": "Pause the program at a breakpoint to see its variables drawn.",
+      "choose": "Variables to draw",
+      "show": "Draw {{name}}",
+      "pointer": "Use {{name}} as a pointer",
+      "pointers": "Pointers",
+      "viewAs": "Draw {{name}} as",
+      "as": {
+        "auto": "Auto",
+        "graph": "Graph",
+        "heap": "Heap (tree)"
+      },
+      "defaults": "Reset to defaults",
+      "empty": "Choose a variable to draw.",
+      "missing": "{{name}} is not defined at this step.",
+      "larger": "Open larger",
+      "largerTitle": "Visualize: step {{step}} of {{total}}",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "changed": "Changed since the previous step",
+      "showing": "Showing the first {{shown}} of {{total}}",
+      "showingSome": "Showing the first {{shown}}",
+      "truncated": "Large values are cut so each step stays fast.",
+      "error": {
+        "too_large": "Too much to draw at this step.",
+        "other": "These variables could not be drawn at this step."
+      },
+      "cycle": "Cycle: back to {{value}}",
+      "removed": "Removed: {{keys}}",
+      "end": "end",
+      "empty_value": "(empty)",
+      "key": "Key",
+      "value": "Value",
+      "index": "Index",
+      "aria": {
+        "array": "{{name}}, array: {{values}}",
+        "grid": "{{name}}, grid with {{rows}} rows and {{cols}} columns",
+        "linked": "{{name}}, linked list: {{values}}",
+        "tree": "{{name}}, binary tree with {{count}} nodes",
+        "heap": "{{name}}, heap drawn as a tree with {{count}} nodes",
+        "set": "{{name}}, set: {{values}}",
+        "graph": "{{name}}, graph with {{nodes}} nodes and {{edges}} edges",
+        "map": "{{name}}, map with {{count}} entries",
+        "scalar": "{{name}} = {{value}}"
+      },
+      "changedCount_one": "{{count}} change",
+      "changedCount_other": "{{count}} changes"
+    }
   },
   "complexity": {
     "button": "Complexity",

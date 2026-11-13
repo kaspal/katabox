@@ -56,6 +56,13 @@
   --chart-you: #3651c9;
   --chart-ref: #9a4b00;
 
+  /* Visualizer (ADR 0027): node fill, links and outlines, pointer labels, changes since the
+     previous step (always with a dashed outline and a marker too) */
+  --viz-node: #eef1f8;
+  --viz-edge: #5b6577;
+  --viz-pointer: #0b5cad;
+  --viz-changed: #9a4b00;
+
   /* Code syntax (editor and highlighted blocks; styles/syntax.css) */
   --syntax-keyword: #6f42c1;
   --syntax-string: #116329;
@@ -117,6 +124,11 @@
 
   --chart-you: #8aa4ff;
   --chart-ref: #e3b341;
+
+  --viz-node: #1b2130;
+  --viz-edge: #8f98a8;
+  --viz-pointer: #82aaff;
+  --viz-changed: #f0b871;
 
   --syntax-keyword: #c792ea;
   --syntax-string: #9ad18b;

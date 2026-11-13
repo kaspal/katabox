@@ -67,6 +67,7 @@ export const CELEBRATE_MS = 1200;
 
 /** Ctrl/Cmd + key, as shown in buttons and tooltips. */
 const KEYS = { run: "Ctrl+'", submit: "Ctrl+Enter", focus: "Ctrl+Shift+F" };
+const NO_PARAMS: string[] = [];
 
 export function WorkspacePage() {
   const { t, i18n } = useTranslation();
@@ -603,7 +604,11 @@ export function WorkspacePage() {
                       <ComplexityPanel state={complexity.state} onMeasure={() => void complexity.measure()} disabled={busy} />
                     ) : null
                   }
-                  debugPanel={canDebug || dbg.view ? <DebugPanel dbg={dbg} /> : null}
+                  debugPanel={
+                    canDebug || dbg.view ? (
+                      <DebugPanel dbg={dbg} problem={problemId} params={signature?.params.map((p) => p.name) ?? NO_PARAMS} />
+                    ) : null
+                  }
                 />
                 </DebugCaseContext.Provider>
               </section>

@@ -57,6 +57,23 @@ describe("Home: daily problem and reviews", () => {
     await waitFor(() => expect(fake.api.reviewRemove).toHaveBeenCalledWith("valid-brackets"));
   });
 
+  it("captions the daily pick for a brand-new user until the first solve (ADR 0019)", async () => {
+    // The fake pack has a solved problem: the usual caption.
+    setFakeApi({ daily: { id: "valid-brackets" } });
+    const first = renderApp("/");
+    expect(await screen.findByTestId("daily-hint")).toHaveTextContent("leaning toward your weakest pattern");
+    first.unmount();
+
+    // Nothing solved yet: the start of the track.
+    const fake = setFakeApi({ daily: { id: "two-sum" } });
+    const original = vi.mocked(fake.api.listProblems).getMockImplementation()!;
+    vi.mocked(fake.api.listProblems).mockImplementation(async (f) =>
+      (await original(f)).map((p) => ({ ...p, status: null })),
+    );
+    renderApp("/");
+    await waitFor(() => expect(screen.getByTestId("daily-hint")).toHaveTextContent(/^Start here: the first problem/));
+  });
+
   it("hides the cards when Settings → Practice turns them off, in Spanish too", async () => {
     setFakeApi({ settings: { "practice.daily": false, "practice.review": false, ui_lang: "es" } });
     renderApp("/");

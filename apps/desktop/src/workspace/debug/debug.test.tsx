@@ -105,10 +105,17 @@ describe("Debugger (ADR 0022)", () => {
 
     await user.click(within(panel).getByRole("button", { name: "Expand seen" }));
     await waitFor(() =>
-      expect(fake.api.debugInspect).toHaveBeenLastCalledWith(1, { frame: 0, expand: [["locals", "seen"]], watches: [] }),
+      expect(fake.api.debugInspect).toHaveBeenLastCalledWith(1, {
+        frame: 0,
+        expand: [["locals", "seen"]],
+        watches: [],
+        // The Visualize tab is closed: no snapshot (ADR 0027).
+        visualize: null,
+      }),
     );
     const vars = within(panel).getByTestId("debug-variables");
-    await waitFor(() => expect(within(vars).getAllByRole("treeitem").length).toBe(4));
+    // nums, seen (with its one entry), n, i.
+    await waitFor(() => expect(within(vars).getAllByRole("treeitem").length).toBe(5));
     expect(within(vars).getByRole("button", { name: "Collapse seen" })).toBeInTheDocument();
 
     await user.type(within(panel).getByRole("textbox", { name: "Add an expression to watch" }), "len(seen){Enter}");

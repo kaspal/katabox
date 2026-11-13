@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { DifficultyLabel, usePatternLabel } from "@/components/Semantic";
 import { useDailyProblem, useReviewActions, useReviewsDue } from "@/lib/practice";
+import { useProblems } from "@/lib/queries";
 import { StreakBadge } from "@/practice/shared";
 
 export function HomeCard({
@@ -36,6 +37,9 @@ export function DailyCard() {
   const patternLabel = usePatternLabel();
   const daily = useDailyProblem();
   const d = daily.data;
+  // Until the first solve the pick is always the start of the track (ADR 0019).
+  const problems = useProblems();
+  const brandNew = problems.data !== undefined && !problems.data.some((p) => p.status === "solved");
   return (
     <HomeCard title={t("practice.daily.title")} icon={<CalendarDays aria-hidden className="size-4" />} testId="daily-card">
       {daily.isPending ? (
@@ -73,7 +77,9 @@ export function DailyCard() {
           </div>
           <div className="flex items-center justify-between gap-3 border-t pt-3">
             <StreakBadge count={d.streak} />
-            <span className="text-xs text-muted-foreground">{t("practice.daily.hint")}</span>
+            <span className="text-xs text-muted-foreground" data-testid="daily-hint">
+              {t(brandNew ? "practice.daily.hint_start" : "practice.daily.hint")}
+            </span>
           </div>
         </>
       )}

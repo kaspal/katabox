@@ -984,6 +984,30 @@ line?: number | null;
  */
 step: number }
 /**
+ * A bounded, structured copy of the variables the visualizer asked for, taken at the
+ * stop (ADR 0027). Objects are numbered within one snapshot; a shared node or a cycle
+ * is a second `ref` to the same id.
+ */
+export type DebugSnapshot = { 
+/**
+ * The requested variables (that exist at the stop), then every other local holding
+ * a ListNode / TreeNode.
+ */
+roots?: SnapRoot[]; 
+/**
+ * Indexed by [`SnapValue::Ref`] ids.
+ */
+objects?: SnapObject[]; 
+/**
+ * A cap was hit: some containers list fewer items than their `len`, or some
+ * values were not followed.
+ */
+truncated?: boolean; 
+/**
+ * Why there is no snapshot: `too_large`, `invalid`, or the harness's exception.
+ */
+error?: string | null }
+/**
  * What a new debug session is about.
  */
 export type DebugStart = { problem: string; language: Language; code: string; 
@@ -1668,30 +1692,6 @@ export type Snapshot = { id: number; problem_id: string; language: Language; cod
  * Verdict of the Run or Submit that saved it (None for restores and old rows).
  */
 verdict: Verdict | null; created_at: number }
-/**
- * A bounded, structured copy of the variables the visualizer asked for, taken at the
- * stop (ADR 0027). Objects are numbered within one snapshot; a shared node or a cycle
- * is a second `ref` to the same id.
- */
-export type Snapshot = { 
-/**
- * The requested variables (that exist at the stop), then every other local holding
- * a ListNode / TreeNode.
- */
-roots?: SnapRoot[]; 
-/**
- * Indexed by [`SnapValue::Ref`] ids.
- */
-objects?: SnapObject[]; 
-/**
- * A cap was hit: some containers list fewer items than their `len`, or some
- * values were not followed.
- */
-truncated?: boolean; 
-/**
- * Why there is no snapshot: `too_large`, `invalid`, or the harness's exception.
- */
-error?: string | null }
 export type SnapshotSource = "run" | "submit" | 
 /**
  * The draft that was replaced by restoring another snapshot.
@@ -1729,7 +1729,7 @@ frame: number; locals: VarInfo[]; globals: VarInfo[]; expanded: Expansion[]; eva
 /**
  * The visualizer's structured snapshot, when it was asked for (ADR 0027).
  */
-snapshot?: Snapshot | null }
+snapshot?: DebugSnapshot | null }
 export type SubmissionSummary = { id: number; problem_id: string; language: Language; verdict: Verdict; time_us: number; memory_kb: number; created_at: number }
 /**
  * A submission as the UI sees it: hidden tests redacted.

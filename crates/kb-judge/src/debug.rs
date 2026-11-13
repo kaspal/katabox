@@ -14,7 +14,7 @@
 //! run fixes `PYTHONHASHSEED` and seeds `random` so ordinary programs replay exactly.
 
 use kb_core::debug::{
-    DebugOutcome, EvalResult, Expansion, PrintChunk, Snapshot, StackFrame, Step, StopInfo, Trace,
+    DebugOutcome, EvalResult, Expansion, PrintChunk, DebugSnapshot, StackFrame, Step, StopInfo, Trace,
     Truncation, VarInfo,
 };
 use kb_core::{Language, Limits};
@@ -277,12 +277,12 @@ struct RawStop {
 
 /// The harness's snapshot, checked: over [`SNAPSHOT_MAX_BYTES`] is `too_large`, a shape
 /// kb-core does not know is `invalid`. Either way the stop itself still succeeds.
-fn decode_snapshot(raw: Value) -> Snapshot {
+fn decode_snapshot(raw: Value) -> DebugSnapshot {
     let size = serde_json::to_string(&raw).map_or(usize::MAX, |s| s.len());
     if size > SNAPSHOT_MAX_BYTES {
-        return Snapshot::failed("too_large");
+        return DebugSnapshot::failed("too_large");
     }
-    serde_json::from_value(raw).unwrap_or_else(|_| Snapshot::failed("invalid"))
+    serde_json::from_value(raw).unwrap_or_else(|_| DebugSnapshot::failed("invalid"))
 }
 
 fn parse(stdout: &[u8], nonce: &str) -> Vec<Result<Record, String>> {
