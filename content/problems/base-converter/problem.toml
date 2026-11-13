@@ -1,0 +1,17 @@
+id = "base-converter"
+title = "Base Converter"
+title_es = "Conversor de bases"
+difficulty = "easy"
+tags = ["math", "string"]
+pattern = "math"
+rank = 4
+
+[signature]
+name = "convertBase"
+params = [{ name = "number", type = "string" }, { name = "source", type = "int" }, { name = "target", type = "int" }]
+returns = "string"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

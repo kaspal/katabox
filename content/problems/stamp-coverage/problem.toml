@@ -1,0 +1,17 @@
+id = "stamp-coverage"
+title = "Stamp Coverage"
+title_es = "La hoja de sellos"
+difficulty = "hard"
+tags = ["array", "prefix-sum", "matrix"]
+pattern = "arrays-hashing"
+rank = 9
+
+[signature]
+name = "busiestCells"
+params = [{ name = "rows", type = "int" }, { name = "cols", type = "int" }, { name = "stamps", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

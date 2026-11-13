@@ -535,3 +535,115 @@ fn assert_debuggable(problems: &[(&str, &str)]) {
         );
     }
 }
+
+/// Content to 150, milestone 1: fundamentals, range queries, geometry, road repairs.
+#[test]
+fn content_150_m1_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("temperature-swing", "temperatureSwing"),
+        ("grade-bands", "gradeBands"),
+        ("vowel-tally", "vowelTally"),
+        ("leap-years", "leapYears"),
+        ("halving-steps", "halvingSteps"),
+        ("title-case", "titleCase"),
+        ("mileage-log", "tripTotals"),
+        ("stock-ledger", "stockLedger"),
+        ("gauge-corrections", "gaugeReadings"),
+        ("cold-snap", "coldSnaps"),
+        ("road-repairs", "roadRepairs"),
+        ("turn-signals", "turnSignals"),
+        ("fenced-garden", "whereIsPoint"),
+        ("crossing-paths", "pathsCross"),
+        ("tree-fence", "fenceArea"),
+    ]);
+}
+
+/// Content to 150, milestone 2: linked lists, trees, tries, heap, backtracking.
+#[test]
+fn content_150_m2_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("two-queues-merge", "mergeQueues"),
+        ("split-the-train", "splitTrain"),
+        ("zigzag-boarding", "zigzagBoarding"),
+        ("batch-reversal", "reverseBatches"),
+        ("window-view", "windowView"),
+        ("bracket-notation", "bracketNotation"),
+        ("catalogue-check", "isSearchTree"),
+        ("kth-smallest-code", "kthSmallest"),
+        ("garden-walk", "longestWalk"),
+        ("rebuild-tree", "rebuildTree"),
+        ("richest-trail", "richestTrail"),
+        ("best-code-pair", "bestXorPair"),
+        ("word-grid-hunt", "findWords"),
+        ("nearest-stalls", "nearestStalls"),
+        ("coin-bag-combos", "coinCombos"),
+    ]);
+}
+
+/// Content to 150, milestone 3: graphs, dynamic programming, greedy, intervals.
+#[test]
+fn content_150_m3_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("two-teams", "twoTeams"),
+        ("ferry-timetable", "ferryTimes"),
+        ("toll-refunds", "tollRefunds"),
+        ("mutual-reach", "mutualReach"),
+        ("critical-footbridges", "criticalBridges"),
+        ("backpack-weight", "bestPack"),
+        ("shared-melody", "sharedMelody"),
+        ("log-cutting", "cutCost"),
+        ("lantern-street", "brightestStreet"),
+        ("digit-budget", "digitBudget"),
+        ("mirror-cuts", "mirrorCuts"),
+        ("most-talks", "mostTalks"),
+        ("stepping-stones", "canCross"),
+        ("fuel-stops", "fuelStops"),
+        ("merge-bookings", "mergeBookings"),
+    ]);
+}
+
+/// Content to 150, milestone 4: arrays, sorting, two pointers, sliding window, stack,
+/// binary search.
+#[test]
+fn content_150_m4_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("orchard-plots", "plotTotals"),
+        ("stamp-coverage", "busiestCells"),
+        ("medal-table", "medalTable"),
+        ("biggest-number", "biggestNumber"),
+        ("steep-drops", "steepDrops"),
+        ("three-bins", "sortBins"),
+        ("biggest-tank", "biggestTank"),
+        ("trapped-rain", "trappedRain"),
+        ("fresh-playlist", "freshStretch"),
+        ("shopping-walk", "shortestWalk"),
+        ("folder-path", "cleanPath"),
+        ("billboard", "largestPoster"),
+        ("highest-peak", "peakIndex"),
+        ("rotated-shelf", "findLabel"),
+        ("seat-map-lookup", "hasTicket"),
+    ]);
+}
+
+/// Content to 150, milestone 5: binary search, intervals, math, bits, strings, design.
+#[test]
+fn content_150_m5_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("kth-gap", "kthGap"),
+        ("insert-slot", "insertSlot"),
+        ("city-skyline", "skyline"),
+        ("base-converter", "convertBase"),
+        ("fast-power", "powerMod"),
+        ("team-picks", "teamPicks"),
+        ("blocked-walks", "blockedWalks"),
+        ("bit-counts", "bitCounts"),
+        ("menu-masks", "menuCombos"),
+        ("skill-squad", "smallestSquad"),
+        ("pattern-count", "countPattern"),
+        ("longest-mirror", "longestMirror"),
+        ("repeated-chunk", "longestRepeat"),
+        ("request-throttle", "throttle"),
+        ("recent-pages", "recentPages"),
+        ("popular-pages", "popularPages"),
+    ]);
+}

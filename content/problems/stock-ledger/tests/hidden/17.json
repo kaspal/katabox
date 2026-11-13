@@ -1,0 +1,1 @@
+{"input":{"args":[[1,5],[0,1],[0,0]],"ops":["set","total","total"],"stock":[11,13]},"output":[16,11]}

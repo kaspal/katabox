@@ -1,0 +1,17 @@
+id = "backpack-weight"
+title = "Backpack Weight"
+title_es = "El peso de la mochila"
+difficulty = "medium"
+tags = ["dynamic-programming", "knapsack"]
+pattern = "dynamic-programming"
+rank = 4
+
+[signature]
+name = "bestPack"
+params = [{ name = "weights", type = "int[]" }, { name = "values", type = "int[]" }, { name = "capacity", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

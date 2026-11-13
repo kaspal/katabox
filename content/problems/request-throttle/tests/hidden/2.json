@@ -1,0 +1,1 @@
+{"input":{"args":[[3,3],[3,3],[1,4]],"limit":3,"ops":["request","request","request"],"window":6},"output":[1,1,1]}

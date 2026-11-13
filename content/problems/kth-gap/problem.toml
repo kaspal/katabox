@@ -1,0 +1,19 @@
+id = "kth-gap"
+title = "K-th Gap"
+title_es = "La k-ésima distancia"
+difficulty = "hard"
+tags = ["binary-search", "sorting", "two-pointers"]
+pattern = "binary-search"
+rank = 9
+profile = true
+profile_sizes = [100, 300, 1000, 3000, 10000, 30000]
+
+[signature]
+name = "kthGap"
+params = [{ name = "posts", type = "int[]" }, { name = "k", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

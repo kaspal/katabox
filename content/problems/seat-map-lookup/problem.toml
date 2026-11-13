@@ -1,0 +1,17 @@
+id = "seat-map-lookup"
+title = "Seat Map Lookup"
+title_es = "Buscar en el plano de asientos"
+difficulty = "medium"
+tags = ["binary-search", "matrix"]
+pattern = "binary-search"
+rank = 6
+
+[signature]
+name = "hasTicket"
+params = [{ name = "seats", type = "int[][]" }, { name = "ticket", type = "int" }]
+returns = "bool"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -5,8 +5,8 @@ def validate(inp):
     ops, args = inp["ops"], inp["args"]
     if not isinstance(ops, list) or not isinstance(args, list):
         return "ops and args are arrays"
-    if not 1 <= len(ops) <= 10**5 or len(args) != len(ops):
-        return "1 ≤ ops.length ≤ 10⁵ and args.length = ops.length"
+    if not 1 <= len(ops) <= 150_000 or len(args) != len(ops):
+        return "1 ≤ ops.length ≤ 1.5·10⁵ and args.length = ops.length"
     for op, a in zip(ops, args):
         if op not in ARITY:
             return "ops[i] is write, read, undo or redo"

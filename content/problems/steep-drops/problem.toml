@@ -1,0 +1,19 @@
+id = "steep-drops"
+title = "Steep Drops"
+title_es = "Caídas bruscas"
+difficulty = "hard"
+tags = ["sorting", "divide-and-conquer", "merge-sort"]
+pattern = "sorting"
+rank = 9
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
+
+[signature]
+name = "steepDrops"
+params = [{ name = "prices", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

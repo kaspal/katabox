@@ -1,0 +1,17 @@
+id = "word-grid-hunt"
+title = "Word Grid Hunt"
+title_es = "Caza de palabras"
+difficulty = "hard"
+tags = ["trie", "backtracking", "matrix"]
+pattern = "tries"
+rank = 9
+
+[signature]
+name = "findWords"
+params = [{ name = "grid", type = "string[]" }, { name = "words", type = "string[]" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,1 @@
+{"input": {"limit": 3, "window": 60, "ops": ["count"], "args": [[3, 100]]}, "output": [0]}

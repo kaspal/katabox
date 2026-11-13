@@ -1,0 +1,17 @@
+id = "digit-budget"
+title = "Digit Budget"
+title_es = "Presupuesto de cifras"
+difficulty = "hard"
+tags = ["dynamic-programming", "digit-dp", "math"]
+pattern = "dynamic-programming"
+rank = 9
+
+[signature]
+name = "digitBudget"
+params = [{ name = "limit", type = "int" }, { name = "total", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

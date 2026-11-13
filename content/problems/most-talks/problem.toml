@@ -1,0 +1,17 @@
+id = "most-talks"
+title = "Most Talks"
+title_es = "El mayor número de charlas"
+difficulty = "easy"
+tags = ["greedy", "sorting", "intervals"]
+pattern = "greedy"
+rank = 1
+
+[signature]
+name = "mostTalks"
+params = [{ name = "talks", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

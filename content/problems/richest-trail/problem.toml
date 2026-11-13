@@ -1,0 +1,17 @@
+id = "richest-trail"
+title = "Richest Trail"
+title_es = "La ruta más rica"
+difficulty = "hard"
+tags = ["binary-tree", "tree", "dfs", "dynamic-programming"]
+pattern = "trees"
+rank = 9
+
+[signature]
+name = "richestTrail"
+params = [{ name = "root", type = "TreeNode" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

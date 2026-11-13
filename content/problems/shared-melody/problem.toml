@@ -1,0 +1,17 @@
+id = "shared-melody"
+title = "Shared Melody"
+title_es = "La melodía compartida"
+difficulty = "medium"
+tags = ["dynamic-programming", "string"]
+pattern = "dynamic-programming"
+rank = 5
+
+[signature]
+name = "sharedMelody"
+params = [{ name = "first", type = "int[]" }, { name = "second", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

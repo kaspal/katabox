@@ -1,0 +1,17 @@
+id = "turn-signals"
+title = "Turn Signals"
+title_es = "Intermitentes"
+difficulty = "easy"
+tags = ["math", "cross-product"]
+pattern = "geometry"
+rank = 1
+
+[signature]
+name = "turnSignals"
+params = [{ name = "routes", type = "int[][]" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

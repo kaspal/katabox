@@ -1,0 +1,17 @@
+id = "folder-path"
+title = "Folder Path"
+title_es = "La ruta de la carpeta"
+difficulty = "easy"
+tags = ["stack", "string"]
+pattern = "stack"
+rank = 3
+
+[signature]
+name = "cleanPath"
+params = [{ name = "path", type = "string" }]
+returns = "string"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

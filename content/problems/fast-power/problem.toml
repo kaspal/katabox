@@ -1,0 +1,17 @@
+id = "fast-power"
+title = "Fast Power"
+title_es = "Potencia rápida"
+difficulty = "easy"
+tags = ["math", "divide-and-conquer"]
+pattern = "math"
+rank = 5
+
+[signature]
+name = "powerMod"
+params = [{ name = "base", type = "int" }, { name = "exponent", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

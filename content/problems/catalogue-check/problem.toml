@@ -1,0 +1,17 @@
+id = "catalogue-check"
+title = "Catalogue Order Check"
+title_es = "Revisión del catálogo"
+difficulty = "medium"
+tags = ["binary-tree", "binary-search-tree", "dfs"]
+pattern = "trees"
+rank = 4
+
+[signature]
+name = "isSearchTree"
+params = [{ name = "root", type = "TreeNode" }]
+returns = "bool"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,19 @@
+id = "critical-footbridges"
+title = "Critical Footbridges"
+title_es = "Pasarelas críticas"
+difficulty = "hard"
+tags = ["graph", "dfs", "bridges"]
+pattern = "graphs"
+rank = 10
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 50000]
+
+[signature]
+name = "criticalBridges"
+params = [{ name = "n", type = "int" }, { name = "bridges", type = "int[][]" }]
+returns = "int[][]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

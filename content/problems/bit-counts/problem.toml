@@ -1,0 +1,17 @@
+id = "bit-counts"
+title = "Bit Counts Table"
+title_es = "Tabla de bits encendidos"
+difficulty = "easy"
+tags = ["bit-manipulation", "dynamic-programming"]
+pattern = "bit-manipulation"
+rank = 3
+
+[signature]
+name = "bitCounts"
+params = [{ name = "n", type = "int" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

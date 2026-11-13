@@ -1,0 +1,17 @@
+id = "fuel-stops"
+title = "Fuel Stops"
+title_es = "Paradas para repostar"
+difficulty = "hard"
+tags = ["greedy", "heap"]
+pattern = "greedy"
+rank = 8
+
+[signature]
+name = "fuelStops"
+params = [{ name = "target", type = "int" }, { name = "fuel", type = "int" }, { name = "stations", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,17 @@
+id = "kth-smallest-code"
+title = "K-th Smallest Code"
+title_es = "El k-ésimo código"
+difficulty = "medium"
+tags = ["binary-tree", "binary-search-tree", "dfs"]
+pattern = "trees"
+rank = 5
+
+[signature]
+name = "kthSmallest"
+params = [{ name = "root", type = "TreeNode" }, { name = "k", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,17 @@
+id = "skill-squad"
+title = "Skill Squad"
+title_es = "Equipo de habilidades"
+difficulty = "hard"
+tags = ["bit-manipulation", "dynamic-programming", "bfs"]
+pattern = "bit-manipulation"
+rank = 9
+
+[signature]
+name = "smallestSquad"
+params = [{ name = "skills", type = "int" }, { name = "people", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

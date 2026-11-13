@@ -1,0 +1,17 @@
+id = "window-view"
+title = "Window View"
+title_es = "Vista desde la ventana"
+difficulty = "easy"
+tags = ["binary-tree", "tree", "bfs"]
+pattern = "trees"
+rank = 1
+
+[signature]
+name = "windowView"
+params = [{ name = "root", type = "TreeNode" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,17 @@
+id = "insert-slot"
+title = "Insert a Slot"
+title_es = "Añadir una franja"
+difficulty = "medium"
+tags = ["intervals", "array"]
+pattern = "intervals"
+rank = 5
+
+[signature]
+name = "insertSlot"
+params = [{ name = "slots", type = "int[][]" }, { name = "fresh", type = "int[]" }]
+returns = "int[][]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

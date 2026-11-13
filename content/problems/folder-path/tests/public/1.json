@@ -1,0 +1,1 @@
+{"input": {"path": "/photos/./2019//summer/../winter/"}, "output": "/photos/2019/winter"}

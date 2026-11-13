@@ -1,0 +1,19 @@
+id = "orchard-plots"
+title = "Orchard Plots"
+title_es = "Parcelas del huerto"
+difficulty = "medium"
+tags = ["array", "prefix-sum", "matrix"]
+pattern = "arrays-hashing"
+rank = 7
+profile = true
+profile_sizes = [100, 300, 1000, 3000, 10000, 30000]
+
+[signature]
+name = "plotTotals"
+params = [{ name = "grid", type = "int[][]" }, { name = "queries", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

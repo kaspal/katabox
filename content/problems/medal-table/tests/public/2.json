@@ -1,0 +1,1 @@
+{"input": {"countries": ["peru", "fiji"], "medals": [[1, 0, 0], [1, 0, 0]]}, "output": ["fiji", "peru"]}

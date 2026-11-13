@@ -1,0 +1,1 @@
+{"input":{"fence":[[1,-4],[-7,-1],[-2,8]],"points":[[-2,8],[2,0],[11,-11],[-7,7],[7,-4]]},"output":["boundary","outside","outside","outside","outside"]}

@@ -1,0 +1,17 @@
+id = "batch-reversal"
+title = "Batch Reversal"
+title_es = "Inversión por lotes"
+difficulty = "hard"
+tags = ["linked-list"]
+pattern = "linked-list"
+rank = 9
+
+[signature]
+name = "reverseBatches"
+params = [{ name = "line", type = "ListNode" }, { name = "k", type = "int" }]
+returns = "ListNode"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

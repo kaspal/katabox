@@ -13,10 +13,11 @@ def generate(seed, size):
         args += [[1 if rng.random() < 0.5 else 21] for _ in range(size - h)]
         return {"ops": ops, "args": args}
     if size == "max":
-        # 5·10⁴ writes (key 1 first, then small keys 2-20 over and over), then 5·10⁴
+        # 7.5·10⁴ writes (key 1 first, then small keys 2-20 over and over), then 7.5·10⁴
         # reads of key 1 or of a key never written: searching the writes from the newest
-        # is 2.5·10⁹ steps. Small numbers keep the data lean.
-        n = 50_000
+        # is 5.6·10⁹ steps. Small numbers keep the data lean. Only one test this big
+        # (seed 1): most of the Rust reference's time is reading the input.
+        n = 75_000
         ops = ["write"] * n + ["read"] * n
         args = [[1, 7]] + [[2 + k % 19, k % 10] for k in range(n - 1)]
         args += [[1 if rng.random() < 0.5 else 21] for _ in range(n)]

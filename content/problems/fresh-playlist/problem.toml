@@ -1,0 +1,19 @@
+id = "fresh-playlist"
+title = "Fresh Playlist"
+title_es = "Lista sin repeticiones"
+difficulty = "medium"
+tags = ["sliding-window", "hash-map"]
+pattern = "sliding-window"
+rank = 5
+profile = true
+profile_sizes = [100, 300, 1000, 3000, 10000, 30000]
+
+[signature]
+name = "freshStretch"
+params = [{ name = "plays", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

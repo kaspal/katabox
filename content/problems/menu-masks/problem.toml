@@ -1,0 +1,17 @@
+id = "menu-masks"
+title = "Menu Masks"
+title_es = "Menús con máscaras"
+difficulty = "easy"
+tags = ["bit-manipulation", "enumeration"]
+pattern = "bit-manipulation"
+rank = 4
+
+[signature]
+name = "menuCombos"
+params = [{ name = "prices", type = "int[]" }, { name = "budget", type = "int" }]
+returns = "int[][]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

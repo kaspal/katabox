@@ -1,0 +1,17 @@
+id = "coin-bag-combos"
+title = "Coin Bag Combos"
+title_es = "Combinaciones de monedas"
+difficulty = "medium"
+tags = ["backtracking", "array"]
+pattern = "backtracking"
+rank = 5
+
+[signature]
+name = "coinCombos"
+params = [{ name = "coins", type = "int[]" }, { name = "target", type = "int" }]
+returns = "int[][]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

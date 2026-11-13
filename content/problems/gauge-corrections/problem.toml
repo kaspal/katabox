@@ -1,0 +1,19 @@
+id = "gauge-corrections"
+title = "Gauge Corrections"
+title_es = "Correcciones de los medidores"
+difficulty = "medium"
+tags = ["fenwick-tree", "prefix-sum"]
+pattern = "range-queries"
+rank = 6
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
+
+[signature]
+name = "gaugeReadings"
+params = [{ name = "readings", type = "int[]" }, { name = "ops", type = "string[]" }, { name = "args", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

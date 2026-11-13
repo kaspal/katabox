@@ -571,3 +571,148 @@ fn list_and_tree_nodes_are_shown_readably() {
         ]
     );
 }
+
+/// Content to 150, milestone 1: fundamentals, range queries, geometry, road repairs.
+#[test]
+fn content_150_m1_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 15] = [
+        ("temperature-swing", "temperature_swing", None),
+        ("grade-bands", "grade_bands", None),
+        ("vowel-tally", "vowel_tally", None),
+        ("leap-years", "leap_years", None),
+        ("halving-steps", "halving_steps", None),
+        ("title-case", "title_case", None),
+        ("mileage-log", "trip_totals", None),
+        ("stock-ledger", "stock_ledger", Some(("<locals>.", 1))),
+        (
+            "gauge-corrections",
+            "gauge_readings",
+            Some(("<locals>.", 1)),
+        ),
+        ("cold-snap", "cold_snaps", Some(("<locals>.", 2))),
+        ("road-repairs", "road_repairs", None),
+        ("turn-signals", "turn_signals", None),
+        ("fenced-garden", "where_is_point", None),
+        ("crossing-paths", "paths_cross", Some(("<locals>.", 1))),
+        ("tree-fence", "fence_area", Some(("<locals>.", 2))),
+    ];
+    assert_debuggable(&problems);
+}
+
+/// Content to 150, milestone 2: linked lists, trees, tries, heap, backtracking.
+#[test]
+fn content_150_m2_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 15] = [
+        ("two-queues-merge", "merge_queues", None),
+        ("split-the-train", "split_train", None),
+        ("zigzag-boarding", "zigzag_boarding", None),
+        ("batch-reversal", "reverse_batches", None),
+        ("window-view", "window_view", None),
+        (
+            "bracket-notation",
+            "bracket_notation",
+            Some(("<locals>.write", 2)),
+        ),
+        (
+            "catalogue-check",
+            "is_search_tree",
+            Some(("<locals>.ok", 2)),
+        ),
+        ("kth-smallest-code", "kth_smallest", None),
+        ("garden-walk", "longest_walk", Some(("<locals>.depth", 2))),
+        (
+            "rebuild-tree",
+            "rebuild_tree",
+            Some(("TreeNode.__init__", 1)),
+        ),
+        ("richest-trail", "richest_trail", Some(("<locals>.gain", 2))),
+        ("best-code-pair", "best_xor_pair", None),
+        ("word-grid-hunt", "find_words", Some(("<locals>.dfs", 2))),
+        ("nearest-stalls", "nearest_stalls", None),
+        ("coin-bag-combos", "coin_combos", Some(("<locals>.pick", 2))),
+    ];
+    assert_debuggable(&problems);
+}
+
+/// Content to 150, milestone 3: graphs, dynamic programming, greedy, intervals.
+#[test]
+fn content_150_m3_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 15] = [
+        ("two-teams", "two_teams", None),
+        ("ferry-timetable", "ferry_times", None),
+        ("toll-refunds", "toll_refunds", None),
+        ("mutual-reach", "mutual_reach", None),
+        ("critical-footbridges", "critical_bridges", None),
+        ("backpack-weight", "best_pack", None),
+        ("shared-melody", "shared_melody", None),
+        ("log-cutting", "cut_cost", None),
+        (
+            "lantern-street",
+            "brightest_street",
+            Some(("<locals>.best", 3)),
+        ),
+        ("digit-budget", "digit_budget", Some(("<locals>.free", 2))),
+        ("mirror-cuts", "mirror_cuts", None),
+        ("most-talks", "most_talks", None),
+        ("stepping-stones", "can_cross", None),
+        ("fuel-stops", "fuel_stops", None),
+        ("merge-bookings", "merge_bookings", None),
+    ];
+    assert_debuggable(&problems);
+}
+
+/// Content to 150, milestone 4: arrays, sorting, two pointers, sliding window, stack,
+/// binary search.
+#[test]
+fn content_150_m4_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 15] = [
+        ("orchard-plots", "plot_totals", None),
+        ("stamp-coverage", "busiest_cells", None),
+        ("medal-table", "medal_table", None),
+        ("biggest-number", "biggest_number", None),
+        ("steep-drops", "steep_drops", Some(("<locals>.sort", 3))),
+        ("three-bins", "sort_bins", None),
+        ("biggest-tank", "biggest_tank", None),
+        ("trapped-rain", "trapped_rain", None),
+        ("fresh-playlist", "fresh_stretch", None),
+        ("shopping-walk", "shortest_walk", None),
+        ("folder-path", "clean_path", None),
+        ("billboard", "largest_poster", None),
+        ("highest-peak", "peak_index", None),
+        ("rotated-shelf", "find_label", None),
+        ("seat-map-lookup", "has_ticket", None),
+    ];
+    assert_debuggable(&problems);
+}
+
+/// Content to 150, milestone 5: binary search, intervals, math, bits, strings, design.
+#[test]
+fn content_150_m5_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 16] = [
+        ("kth-gap", "kth_gap", None),
+        ("insert-slot", "insert_slot", None),
+        ("city-skyline", "skyline", None),
+        ("base-converter", "convert_base", None),
+        ("fast-power", "power_mod", None),
+        ("team-picks", "team_picks", None),
+        (
+            "blocked-walks",
+            "blocked_walks",
+            Some(("<locals>.paths", 1)),
+        ),
+        ("bit-counts", "bit_counts", None),
+        ("menu-masks", "menu_combos", None),
+        ("skill-squad", "smallest_squad", None),
+        ("pattern-count", "count_pattern", None),
+        ("longest-mirror", "longest_mirror", None),
+        (
+            "repeated-chunk",
+            "longest_repeat",
+            Some(("<locals>.repeats", 1)),
+        ),
+        ("request-throttle", "throttle", None),
+        ("recent-pages", "recent_pages", None),
+        ("popular-pages", "popular_pages", Some(("<locals>.use", 1))),
+    ];
+    assert_debuggable(&problems);
+}

@@ -1,0 +1,17 @@
+id = "highest-peak"
+title = "Highest Peak"
+title_es = "La cumbre más alta"
+difficulty = "easy"
+tags = ["binary-search", "array"]
+pattern = "binary-search"
+rank = 3
+
+[signature]
+name = "peakIndex"
+params = [{ name = "heights", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

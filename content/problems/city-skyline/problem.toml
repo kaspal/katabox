@@ -1,0 +1,17 @@
+id = "city-skyline"
+title = "City Skyline"
+title_es = "El perfil de la ciudad"
+difficulty = "hard"
+tags = ["intervals", "heap", "sweep-line"]
+pattern = "intervals"
+rank = 10
+
+[signature]
+name = "skyline"
+params = [{ name = "buildings", type = "int[][]" }]
+returns = "int[][]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

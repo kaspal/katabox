@@ -1,0 +1,17 @@
+id = "repeated-chunk"
+title = "Repeated Chunk"
+title_es = "El trozo repetido"
+difficulty = "hard"
+tags = ["string", "binary-search", "rolling-hash"]
+pattern = "strings"
+rank = 10
+
+[signature]
+name = "longestRepeat"
+params = [{ name = "text", type = "string" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

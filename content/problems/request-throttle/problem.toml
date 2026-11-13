@@ -1,0 +1,17 @@
+id = "request-throttle"
+title = "Request Throttle"
+title_es = "Limitador de peticiones"
+difficulty = "easy"
+tags = ["design", "queue", "sliding-window"]
+pattern = "design"
+rank = 4
+
+[signature]
+name = "throttle"
+params = [{ name = "limit", type = "int" }, { name = "window", type = "int" }, { name = "ops", type = "string[]" }, { name = "args", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

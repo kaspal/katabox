@@ -1,0 +1,1 @@
+{"input":{"grid":["efd","fed","fde","fed"],"words":["dff","eefed","ddedd","f","e","dd","e","f"]},"output":["dd","dff","e","f"]}
