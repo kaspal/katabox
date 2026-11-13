@@ -493,6 +493,7 @@ async fn a_debug_session_on_two_sum() {
         input: input.as_object().unwrap().clone(),
         breakpoints: vec![7],
         watches: vec!["target - n".into()],
+        visualize: None,
     };
     let v = app.debug_start(start.clone()).await.unwrap();
     let paused = |v: &kb_app::debug::DebugView| match &v.state {
@@ -527,6 +528,7 @@ async fn a_debug_session_on_two_sum() {
                 frame: 0,
                 expand: vec![vec![json!("locals"), json!("seen")]],
                 watches: vec!["len(seen)".into()],
+                visualize: Some(vec!["seen".into()]),
             },
         )
         .await
@@ -534,6 +536,30 @@ async fn a_debug_session_on_two_sum() {
     let (_, stop) = paused(&v);
     assert_eq!(stop.expanded[0].children[0].value, "0");
     assert_eq!(stop.evals[0].value.as_ref().unwrap().value, "1");
+    // The visualizer's snapshot of `seen` (ADR 0027): a dict with one entry.
+    let snap = stop.snapshot.as_ref().expect("a snapshot");
+    assert_eq!(snap.roots[0].name, "seen");
+    assert!(
+        matches!(
+            &snap.objects[0],
+            kb_core::debug::SnapObject::Map { len: 1, .. }
+        ),
+        "{snap:?}"
+    );
+    // Closing the view (no `visualize`) stops it.
+    let v = app
+        .debug_inspect(
+            id,
+            DebugInspect {
+                frame: 0,
+                expand: vec![vec![json!("locals"), json!("seen")]],
+                watches: vec!["len(seen)".into()],
+                visualize: None,
+            },
+        )
+        .await
+        .unwrap();
+    assert!(paused(&v).1.snapshot.is_none());
     let e = app
         .debug_evaluate(id, 0, "sorted(seen)".into())
         .await
@@ -588,6 +614,7 @@ async fn a_typescript_debug_session_on_two_sum() {
             .clone(),
         breakpoints: vec![6],
         watches: vec!["target - nums[i]".into()],
+        visualize: None,
     };
     assert!(kb_app::debug::languages().contains(&Language::TypeScript));
     let v = app.debug_start(start).await.unwrap();
@@ -625,6 +652,7 @@ async fn a_typescript_debug_session_on_two_sum() {
                 frame: 0,
                 expand: vec![vec![json!("locals"), json!("nums")]],
                 watches: vec!["seen.size".into()],
+                visualize: None,
             },
         )
         .await

@@ -41,6 +41,10 @@
   --color-heat-4: var(--heat-4);
   --color-chart-you: var(--chart-you);
   --color-chart-ref: var(--chart-ref);
+  --color-viz-node: var(--viz-node);
+  --color-viz-edge: var(--viz-edge);
+  --color-viz-pointer: var(--viz-pointer);
+  --color-viz-changed: var(--viz-changed);
   --color-verdict-wrong: var(--verdict-wrong);
   --color-verdict-error: var(--verdict-error);
   --color-verdict-limit: var(--verdict-limit);

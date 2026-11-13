@@ -29,7 +29,18 @@ import type {
   Verdict,
 } from "@/bindings";
 import type { Api, CustomInput } from "@/lib/api";
-import type { DebugAction, DebugInspect, DebugStart, DebugView, EvalResult, ProfileView, StopInfo } from "@/bindings";
+import type {
+  DebugAction,
+  DebugInspect,
+  DebugSnapshot,
+  DebugStart,
+  DebugView,
+  EvalResult,
+  ProfileView,
+  SnapObject,
+  SnapRoot,
+  StopInfo,
+} from "@/bindings";
 
 /** The lines two-sum's reference runs on public test 1 (line 7 is `seen[n] = i`). */
 export const DEBUG_LINES = [2, 3, 4, 5, 7, 3, 4, 5, 7, 3, 4, 5, 7, 3, 4, 5, 7, 3, 4, 5, 6];
@@ -791,7 +802,7 @@ export function createFakeApi(
     debugStart: vi.fn(async (start: DebugStart) => {
       dbg.session += 1;
       dbg.breakpoints = new Set(start.breakpoints);
-      dbg.inspect = { frame: 0, expand: [], watches: start.watches };
+      dbg.inspect = { frame: 0, expand: [], watches: start.watches, visualize: start.visualize ?? null };
       dbg.at = nextBreakpoint(-1);
       return debugView();
     }),
@@ -825,6 +836,36 @@ export function createFakeApi(
       if (state.gate) await state.gate;
       return state.nextProfile ?? linearProfile();
     }),
+  };
+
+  /** The visualizer's snapshot of the scripted two-sum (ADR 0027), when asked for. */
+  const visualizeSnapshot = (
+    names: string[] | null,
+    nums: number[],
+    seen: Record<string, number>,
+    stored: number,
+  ): DebugSnapshot | null => {
+    if (names === null) return null;
+    const int = (n: number) => ({ t: "int" as const, v: String(n) });
+    const objects: SnapObject[] = [];
+    const roots: SnapRoot[] = [];
+    for (const name of names) {
+      if (name === "nums") {
+        objects.push({ kind: "list", type: "list", items: nums.map(int), len: nums.length });
+        roots.push({ name, value: { t: "ref", id: objects.length - 1 } });
+      } else if (name === "seen") {
+        objects.push({
+          kind: "map",
+          type: "dict",
+          entries: Object.entries(seen).map(([k, v]) => [int(Number(k)), int(v)]),
+          len: Object.keys(seen).length,
+        });
+        roots.push({ name, value: { t: "ref", id: objects.length - 1 } });
+      } else if (name === "i") {
+        roots.push({ name, value: int(stored) });
+      }
+    }
+    return { roots, objects, truncated: false, error: null };
   };
 
   const dbg = {
@@ -864,6 +905,7 @@ export function createFakeApi(
         { name: "nums", type: "list", value: JSON.stringify(nums).replaceAll(",", ", "), children: 5 },
         { name: "seen", type: "dict", value: seenText, children: stored },
         { name: "n", type: "int", value: String(nums[Math.min(stored, 4)]), children: 0 },
+        { name: "i", type: "int", value: String(stored), children: 0 },
       ],
       globals: [],
       expanded: dbg.inspect.expand.map((path) => ({
@@ -881,6 +923,7 @@ export function createFakeApi(
         error: null,
         stdout: "",
       })),
+      snapshot: visualizeSnapshot(dbg.inspect.visualize ?? null, nums, seen, stored),
     };
     return {
       ...base,

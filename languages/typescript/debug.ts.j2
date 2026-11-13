@@ -2,7 +2,7 @@
 //
 // Request on stdin: {"nonce", "max_output_bytes", "trace_budget", "input": {param: value},
 // "mode": "trace" | "stop", "max_steps", "max_pauses", "step", "frame",
-// "expand": [[scope, name, i...]], "evals": [expr]}. Records go to fd 1 as
+// "expand": [[scope, name, i...]], "evals": [expr], "visualize": [name] (optional)}. Records go to fd 1 as
 // "\n<nonce> <json>\n" (ADR 0008), the same records as the Python debug harness.
 //
 // Two threads in one file. The main thread imports the solution and calls it. A worker
@@ -14,7 +14,7 @@
 // one step, describes it and ends the process there, so nothing after it runs.
 import { Worker, isMainThread, parentPort, workerData } from "node:worker_threads";
 import { readFileSync, writeSync } from "node:fs";
-import { inspect } from "node:util";
+import { inspect, types as utilTypes } from "node:util";
 
 const SOLUTION: string = {{ solution_file | tojson }};
 const FUNCTION: string = {{ function | tojson }};
@@ -43,6 +43,348 @@ const FNV_PRIME = 0x100000001b3n;
 const MASK = (1n << 64n) - 1n;
 
 type Rec = Record<string, unknown>;
+
+// --- The visualizer's snapshot (ADR 0027) -------------------------------------------------
+// A bounded, structured copy of the requested variables, built in the main thread while it
+// is paused at the stop. It never runs user code: Proxies are opaque (checked first, since
+// a Proxy of an array passes Array.isArray), only own data properties are read (never a
+// getter), Maps and Sets are walked with the saved iterator methods, scalars are formatted
+// here, and the result is serialised by hand from null-prototype objects (no toJSON). The
+// built-ins it uses are saved now, before the solution loads.
+const SNAP_MAX_OBJECTS = 1000;
+const SNAP_MAX_ITEMS = 500;
+const SNAP_MAX_VALUES = 10_000;
+// Estimated JSON bytes: past this the snapshot is cut (truncated), well before the hard cap.
+const SNAP_SOFT_BYTES = 200_000;
+const SNAP_MAX_DEPTH = 32;
+const SNAP_MAX_STR = 64;
+const SNAP_MAX_NAMES = 16;
+const SNAP_MAX_BYTES = 256 * 1024;
+const S = {
+  apply: Reflect.apply,
+  getDesc: Object.getOwnPropertyDescriptor,
+  getProto: Object.getPrototypeOf,
+  hasOwn: Object.hasOwn,
+  isArray: Array.isArray,
+  isInteger: Number.isInteger,
+  is: Object.is,
+  ownKeys: Reflect.ownKeys,
+  isProxy: utilTypes.isProxy,
+  isMap: utilTypes.isMap,
+  isSet: utilTypes.isSet,
+  objectProto: Object.prototype,
+  mapEntries: Map.prototype.entries,
+  mapSize: Object.getOwnPropertyDescriptor(Map.prototype, "size")!.get!,
+  mapGet: Map.prototype.get,
+  mapSet: Map.prototype.set,
+  mapHas: Map.prototype.has,
+  setValues: Set.prototype.values,
+  setSize: Object.getOwnPropertyDescriptor(Set.prototype, "size")!.get!,
+  mapIterNext: Object.getPrototypeOf(new Map().entries()).next,
+  setIterNext: Object.getPrototypeOf(new Set().values()).next,
+  strSlice: String.prototype.slice,
+  stringify: JSON.stringify,
+  byteLength: Buffer.byteLength,
+  Map,
+};
+// Input nodes, numbered when the harness builds them (identity across steps).
+const INPUT_IDS = new S.Map<object, number>();
+
+function snapOwn(obj: object, key: string): { ok: boolean; value?: unknown } {
+  const d = S.getDesc(obj, key);
+  if (d === undefined || !S.hasOwn(d, "value")) return { ok: false };
+  return { ok: true, value: d.value };
+}
+
+function snapTypeName(v: unknown): string {
+  if (v === null) return "null";
+  if (typeof v !== "object" && typeof v !== "function") return typeof v;
+  try {
+    if (S.isProxy(v)) return "Proxy";
+    const proto = S.getProto(v);
+    if (proto === null) return "Object";
+    const ctor = snapOwn(proto, "constructor");
+    if (ctor.ok && typeof ctor.value === "function") {
+      const name = snapOwn(ctor.value as object, "name");
+      if (name.ok && typeof name.value === "string" && name.value !== "") return name.value;
+    }
+  } catch {
+    // fall through
+  }
+  return "Object";
+}
+
+/** ["list" | "tree", fields] for a ListNode / TreeNode instance, else null. */
+function snapNode(v: unknown): ["list" | "tree", Record<string, unknown>] | null {
+  if (v === null || typeof v !== "object" || S.isProxy(v)) return null;
+  const name = snapTypeName(v);
+  if (name !== "ListNode" && name !== "TreeNode") return null;
+  const keys = name === "ListNode" ? ["val", "next"] : ["val", "left", "right"];
+  const fields: Record<string, unknown> = { __proto__: null } as unknown as Record<string, unknown>;
+  for (let i = 0; i < keys.length; i++) {
+    const k = keys[i];
+    const f = snapOwn(v, k);
+    if (!f.ok) return null;
+    fields[k] = f.value;
+  }
+  return [name === "ListNode" ? "list" : "tree", fields];
+}
+
+/** Number the input's nodes in a fixed walk of the arguments. */
+function numberInputs(args: unknown[]): void {
+  const queue: unknown[] = [];
+  for (let i = 0; i < args.length; i++) queue[queue.length] = args[i];
+  for (let k = 0; k < queue.length; k++) {
+    const v = queue[k];
+    if (S.isArray(v) && !S.isProxy(v)) {
+      const n = snapOwn(v as object, "length").value as number;
+      for (let i = 0; i < n; i++) queue[queue.length] = snapOwn(v as object, `${i}`).value;
+      continue;
+    }
+    const node = snapNode(v);
+    if (node === null || S.apply(S.mapHas, INPUT_IDS, [v])) continue;
+    S.apply(S.mapSet, INPUT_IDS, [v, S.apply(S.mapSize, INPUT_IDS, [])]);
+    const links = node[0] === "list" ? ["next"] : ["left", "right"];
+    for (let i = 0; i < links.length; i++) queue[queue.length] = node[1][links[i]];
+  }
+}
+
+function snapScalar(v: unknown): Rec | null {
+  const t = typeof v;
+  const mk = (tag: string, text: string): Rec => {
+    const o = { __proto__: null } as unknown as Rec;
+    o.t = tag;
+    o.v = text;
+    return o;
+  };
+  const cut = (text: string): string =>
+    text.length <= SNAP_MAX_STR ? text : S.apply(S.strSlice, text, [0, SNAP_MAX_STR - 1]) + "…";
+  if (t === "number") {
+    const negZero = S.is(v, -0);
+    return mk(S.isInteger(v) && !negZero ? "int" : "float", negZero ? "-0" : `${v as number}`);
+  }
+  if (t === "bigint") {
+    const text = `${v as bigint}`;
+    return mk("int", text.length <= SNAP_MAX_STR ? text : S.apply(S.strSlice, text, [0, 20]) + `… (${text.length - (text[0] === "-" ? 1 : 0)} digits)`);
+  }
+  if (t === "string") return mk("str", cut(v as string));
+  if (t === "boolean") return mk("bool", v ? "true" : "false");
+  if (v === null) return mk("none", "null");
+  if (t === "undefined") return mk("none", "undefined");
+  return null;
+}
+
+/** JSON text of the snapshot's own structure (null-prototype objects and arrays). */
+function snapEncode(v: unknown): string {
+  if (v === null || typeof v !== "object") {
+    return typeof v === "string" ? (S.stringify(v) as string) : typeof v === "number" ? `${v}` : typeof v === "boolean" ? (v ? "true" : "false") : "null";
+  }
+  if (S.isArray(v)) {
+    let out = "[";
+    for (let i = 0; i < (v as unknown[]).length; i++) out += (i ? "," : "") + snapEncode((v as unknown[])[i]);
+    return out + "]";
+  }
+  let out = "{";
+  let first = true;
+  for (const k in v as Rec) {
+    const x = (v as Rec)[k];
+    if (x === undefined) continue;
+    out += (first ? "" : ",") + (S.stringify(k) as string) + ":" + snapEncode(x);
+    first = false;
+  }
+  return out + "}";
+}
+
+/** The visualizer's snapshot (ADR 0027) as JSON text. `values` are the frame's locals,
+ * then its globals, in the order of `localNames` and `globalNames`. */
+function snapshot(names: unknown[], localNames: string[], globalNames: string[], values: unknown[]): string {
+  const obj = (): Rec => ({ __proto__: null }) as unknown as Rec;
+  const objects: unknown[] = [];
+  const roots: unknown[] = [];
+  const ids = new S.Map<unknown, number>();
+  const queue: [unknown, ["list" | "tree", Record<string, unknown>] | null, number, number][] = [];
+  let truncated = false;
+  let budget = SNAP_MAX_VALUES;
+  let size = 0;
+  const full = (): boolean => budget <= 0 || size > SNAP_SOFT_BYTES;
+
+  const opaque = (v: unknown): Rec => {
+    const o = obj();
+    o.t = "opaque";
+    o.v = snapTypeName(v);
+    return o;
+  };
+  const valueOf = (v: unknown, depth: number): Rec => {
+    size += 24;
+    const scalar = snapScalar(v);
+    if (scalar !== null) {
+      size += (scalar.v as string).length;
+      return scalar;
+    }
+    if (typeof v !== "object" || v === null || S.isProxy(v)) return opaque(v);
+    let node: ReturnType<typeof snapNode> = null;
+    const plain = S.getProto(v) === S.objectProto || S.getProto(v) === null;
+    if (!S.isArray(v) && !S.isMap(v) && !S.isSet(v) && !plain) {
+      node = snapNode(v);
+      if (node === null) return opaque(v);
+    }
+    const known = S.apply(S.mapGet, ids, [v]) as number | undefined;
+    const ref = (id: number): Rec => {
+      const o = obj();
+      o.t = "ref";
+      o.id = id;
+      return o;
+    };
+    if (known !== undefined) return ref(known);
+    if (objects.length >= SNAP_MAX_OBJECTS || depth >= SNAP_MAX_DEPTH) {
+      truncated = true;
+      return opaque(v);
+    }
+    const index = objects.length;
+    size += 48;
+    S.apply(S.mapSet, ids, [v, index]);
+    objects[index] = null;
+    queue[queue.length] = [v, node, index, depth];
+    return ref(index);
+  };
+
+  const fill = (v: unknown, node: ReturnType<typeof snapNode>, index: number, depth: number): void => {
+    const o = obj();
+    if (node !== null) {
+      budget--;
+      o.kind = node[0] === "list" ? "list_node" : "tree_node";
+      o.val = valueOf(node[1].val, depth + 1);
+      const links = node[0] === "list" ? ["next"] : ["left", "right"];
+      for (let i = 0; i < links.length; i++) o[links[i]] = valueOf(node[1][links[i]], depth + 1);
+      const n = S.apply(S.mapGet, INPUT_IDS, [v]);
+      if (n !== undefined) o.input = n;
+    } else if (S.isMap(v) || (!S.isArray(v) && !S.isSet(v))) {
+      const entries: unknown[] = [];
+      const add = (k: unknown, x: unknown): boolean => {
+        if (entries.length >= SNAP_MAX_ITEMS || budget <= 1 || full()) {
+          truncated = true;
+          return false;
+        }
+        budget -= 2;
+        entries[entries.length] = [valueOf(k, depth + 1), valueOf(x, depth + 1)];
+        return true;
+      };
+      let len = 0;
+      if (S.isMap(v)) {
+        o.type = snapTypeName(v);
+        len = S.apply(S.mapSize, v, []) as number;
+        const it = S.apply(S.mapEntries, v, []);
+        for (;;) {
+          const step = S.apply(S.mapIterNext, it, []) as { done: boolean; value: [unknown, unknown] };
+          if (step.done || !add(step.value[0], step.value[1])) break;
+        }
+      } else {
+        o.type = "Object";
+        const own = S.ownKeys(v as object) as (string | symbol)[];
+        const keys: string[] = [];
+        for (let i = 0; i < own.length; i++) if (typeof own[i] === "string") keys[keys.length] = own[i] as string;
+        len = keys.length;
+        for (let i = 0; i < keys.length; i++) {
+          const f = snapOwn(v as object, keys[i]);
+          if (!add(keys[i], f.ok ? f.value : undefined)) break;
+        }
+      }
+      o.kind = "map";
+      o.entries = entries;
+      o.len = len;
+    } else {
+      const items: unknown[] = [];
+      const pushRec = (rec: () => Rec): boolean => {
+        if (items.length >= SNAP_MAX_ITEMS || full()) {
+          truncated = true;
+          return false;
+        }
+        budget--;
+        items[items.length] = rec();
+        return true;
+      };
+      const push = (x: unknown): boolean => pushRec(() => valueOf(x, depth + 1));
+      let len = 0;
+      if (S.isSet(v)) {
+        o.kind = "set";
+        len = S.apply(S.setSize, v, []) as number;
+        const it = S.apply(S.setValues, v, []);
+        for (;;) {
+          const step = S.apply(S.setIterNext, it, []) as { done: boolean; value: unknown };
+          if (step.done || !push(step.value)) break;
+        }
+      } else {
+        o.kind = "list";
+        len = snapOwn(v as object, "length").value as number;
+        for (let i = 0; i < len; i++) {
+          // An index may be an accessor: never call its getter.
+          const d = S.getDesc(v as object, `${i}`);
+          const ok =
+            d === undefined
+              ? push(undefined)
+              : S.hasOwn(d, "value")
+                ? push(d.value)
+                : pushRec(() => {
+                    const o2 = obj();
+                    o2.t = "opaque";
+                    o2.v = "accessor";
+                    return o2;
+                  });
+          if (!ok) break;
+        }
+      }
+      o.type = snapTypeName(v);
+      o.items = items;
+      o.len = len;
+    }
+    objects[index] = o;
+  };
+
+  const has = (list: string[], x: string): boolean => {
+    for (let i = 0; i < list.length; i++) if (list[i] === x) return true;
+    return false;
+  };
+  const failed = (error: string): string => `{"roots":[],"objects":[],"truncated":true,"error":${S.stringify(error)}}`;
+  try {
+    const chosen: string[] = [];
+    const lookup = (name: string): { ok: boolean; value?: unknown } => {
+      for (let i = 0; i < localNames.length; i++) if (localNames[i] === name) return { ok: true, value: values[i] };
+      for (let i = 0; i < globalNames.length; i++) if (globalNames[i] === name) return { ok: true, value: values[localNames.length + i] };
+      return { ok: false };
+    };
+    for (let i = 0; i < names.length && i < SNAP_MAX_NAMES; i++) {
+      const name = names[i];
+      if (typeof name !== "string" || has(chosen, name)) continue;
+      const found = lookup(name);
+      if (!found.ok) continue;
+      chosen[chosen.length] = name;
+      const r = obj();
+      r.name = name;
+      r.value = valueOf(found.value, 0);
+      roots[roots.length] = r;
+    }
+    // Every other local holding a node, so pointers like slow / fast are labelled.
+    for (let i = 0; i < localNames.length; i++) {
+      const name = localNames[i];
+      if (has(chosen, name) || snapNode(values[i]) === null) continue;
+      chosen[chosen.length] = name;
+      const r = obj();
+      r.name = name;
+      r.value = valueOf(values[i], 0);
+      roots[roots.length] = r;
+    }
+    for (let k = 0; k < queue.length; k++) fill(queue[k][0], queue[k][1], queue[k][2], queue[k][3]);
+    const snap = obj();
+    snap.roots = roots;
+    snap.objects = objects;
+    snap.truncated = truncated;
+    const text = snapEncode(snap);
+    return (S.byteLength(text, "utf8") as number) > SNAP_MAX_BYTES ? failed("too_large") : text;
+  } catch (e) {
+    return failed("snapshot failed: " + snapTypeName(e));
+  }
+}
+
 type VarInfo = { name: string; type: string; value: string; children: number };
 
 function emitTo(nonce: string, text: string): void {
@@ -209,6 +551,8 @@ async function mainThread(): Promise<void> {
       more: Math.max(kids.length - CHILDREN_MAX, 0),
     };
   };
+  g.__katabox_snapshot = (names: unknown[], localNames: string[], globalNames: string[], values: unknown[]) =>
+    snapshot(names, localNames, globalNames, values);
   g.__katabox_mark = () => {
     evalOut = "";
   };
@@ -249,6 +593,7 @@ async function mainThread(): Promise<void> {
 {% if uses_nodes %}
   const classes = nodeClasses(mod);
   const args = PARAMS.map((p, k) => fromJson(PARAM_SHAPES[k][0], PARAM_SHAPES[k][1], request.input[p], classes));
+  if (Array.isArray(request.visualize)) numberInputs(args);
 {% else %}
   const args = PARAMS.map((p) => request.input[p]);
 {% endif %}
@@ -374,6 +719,46 @@ async function recorderThread(): Promise<void> {
       .map((p) => [p.name, p.value] as [string, any]);
   };
 
+  /** A RemoteObject as an argument of Runtime.callFunctionOn. */
+  const asArgument = (obj: any): Rec => {
+    if (obj.objectId) return { objectId: obj.objectId };
+    if ("unserializableValue" in obj) return { unserializableValue: obj.unserializableValue };
+    if (obj.type === "undefined") return {};
+    return { value: obj.value };
+  };
+
+  /** The visualizer's snapshot (ADR 0027), built in the main thread in one call. */
+  const snapshotOf = async (chosen: any, locals: [string, any][], globals: [string, any][]): Promise<unknown> => {
+    const failed = (error: string) => ({ roots: [], objects: [], truncated: true, error });
+    try {
+      // First occurrence wins: the scope chain lists inner scopes first.
+      const seen = new Set<string>();
+      const pick = (vars: [string, any][]) => vars.filter(([n]) => (seen.has(n) ? false : (seen.add(n), true)));
+      const ls = pick(locals);
+      const gs = pick(globals);
+      const target = chosen.scopeChain.find((sc: any) => sc.object?.objectId)?.object.objectId;
+      if (!target) return failed("snapshot failed: no scope");
+      const r = await post("Runtime.callFunctionOn", {
+        objectId: target,
+        functionDeclaration:
+          "function (names, localNames, globalNames, ...values) { return globalThis.__katabox_snapshot(names, localNames, globalNames, values); }",
+        arguments: [
+          { value: (request.visualize as unknown[]).slice(0, SNAP_MAX_NAMES) },
+          { value: ls.map(([n]) => n) },
+          { value: gs.map(([n]) => n) },
+          ...ls.map(([, v]) => asArgument(v)),
+          ...gs.map(([, v]) => asArgument(v)),
+        ],
+        returnByValue: true,
+        silent: true,
+      });
+      if (r.exceptionDetails || typeof r.result?.value !== "string") return failed("snapshot failed");
+      return JSON.parse(r.result.value);
+    } catch (e) {
+      return failed("snapshot failed: " + String(e).slice(0, 200));
+    }
+  };
+
   const describeStop = async (callFrames: any[]): Promise<Rec> => {
     const frames = callFrames.filter((f) => f.location.scriptId === solutionId);
     const index = Math.min(Math.max((request.frame as number) ?? 0, 0), frames.length - 1);
@@ -432,6 +817,10 @@ async function recorderThread(): Promise<void> {
       } else {
         (record.evals as unknown[]).push({ expr, ok: true, value: await describeRemote("", r.result), stdout: out });
       }
+    }
+    if (Array.isArray(request.visualize)) {
+      // After the evaluations: the snapshot shows the state the Variables view shows.
+      record.snapshot = await snapshotOf(chosen, locals, globals);
     }
     return record;
   };

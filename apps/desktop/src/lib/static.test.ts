@@ -151,6 +151,15 @@ describe.each([
     }
   });
 
+  it("the visualizer's labels read as text and its lines stand out (ADR 0027)", () => {
+    for (const bg of ["background", "card", "viz-node"]) {
+      for (const text of ["foreground", "viz-pointer", "viz-changed"]) {
+        expect(contrast(t[text], t[bg]), `${text} on ${bg}`).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(contrast(t["viz-edge"], t[bg]), `viz-edge on ${bg}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   it("the focus ring and inputs stand out (≥ 3:1)", () => {
     for (const bg of ["background", "card"]) {
       expect(contrast(t.ring, t[bg]), `ring on ${bg}`).toBeGreaterThanOrEqual(3);

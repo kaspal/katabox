@@ -957,7 +957,12 @@ frame: number;
 /**
  * Expanded variables: `[scope, name, i, j, …]`.
  */
-expand: JsonValue[][]; watches: string[] }
+expand: JsonValue[][]; watches: string[]; 
+/**
+ * Variables for the visualizer's snapshot (ADR 0027); `None` while the Visualize
+ * view is closed, so stops cost what they did before.
+ */
+visualize?: string[] | null }
 /**
  * The traced call's result.
  */
@@ -979,6 +984,30 @@ line?: number | null;
  */
 step: number }
 /**
+ * A bounded, structured copy of the variables the visualizer asked for, taken at the
+ * stop (ADR 0027). Objects are numbered within one snapshot; a shared node or a cycle
+ * is a second `ref` to the same id.
+ */
+export type DebugSnapshot = { 
+/**
+ * The requested variables (that exist at the stop), then every other local holding
+ * a ListNode / TreeNode.
+ */
+roots?: SnapRoot[]; 
+/**
+ * Indexed by [`SnapValue::Ref`] ids.
+ */
+objects?: SnapObject[]; 
+/**
+ * A cap was hit: some containers list fewer items than their `len`, or some
+ * values were not followed.
+ */
+truncated?: boolean; 
+/**
+ * Why there is no snapshot: `too_large`, `invalid`, or the harness's exception.
+ */
+error?: string | null }
+/**
  * What a new debug session is about.
  */
 export type DebugStart = { problem: string; language: Language; code: string; 
@@ -986,7 +1015,11 @@ export type DebugStart = { problem: string; language: Language; code: string;
  * The test's arguments, keyed by parameter name (public, custom or the first
  * failing test the user already sees).
  */
-input: Partial<{ [key in string]: JsonValue }>; breakpoints: number[]; watches: string[] }
+input: Partial<{ [key in string]: JsonValue }>; breakpoints: number[]; watches: string[]; 
+/**
+ * Variables for the visualizer's snapshot at every stop (ADR 0027).
+ */
+visualize?: string[] | null }
 /**
  * What the debugger shows.
  */
@@ -1639,6 +1672,21 @@ export type RootSource =
  * `<app local data>/sandbox` (the default; created when missing).
  */
 "app_data"
+/**
+ * A container or a node. `len` is the real length; `items` / `entries` may list fewer
+ * (the snapshot's caps).
+ */
+export type SnapObject = { kind: "list"; type: string; items: SnapValue[]; len: number } | { kind: "map"; type: string; entries: ([SnapValue, SnapValue])[]; len: number } | { kind: "set"; type: string; items: SnapValue[]; len: number } | { kind: "list_node"; val: SnapValue; next: SnapValue; input?: number | null } | { kind: "tree_node"; val: SnapValue; left: SnapValue; right: SnapValue; input?: number | null }
+export type SnapRoot = { name: string; value: SnapValue }
+/**
+ * A value in a snapshot: a reference to an object, or a scalar as display text (so big
+ * integers never lose digits), or an object the snapshot does not look into.
+ */
+export type SnapValue = { t: "ref"; id: number } | { t: "int"; v: string } | { t: "float"; v: string } | { t: "str"; v: string } | { t: "bool"; v: string } | { t: "none"; v: string } | 
+/**
+ * Any other object: its type name only.
+ */
+{ t: "opaque"; v: string }
 export type Snapshot = { id: number; problem_id: string; language: Language; code: string; source: SnapshotSource; 
 /**
  * Verdict of the Run or Submit that saved it (None for restores and old rows).
@@ -1677,7 +1725,11 @@ export type StopInfo = { step: number; stack: StackFrame[];
 /**
  * The selected frame (index into `stack`).
  */
-frame: number; locals: VarInfo[]; globals: VarInfo[]; expanded: Expansion[]; evals: EvalResult[] }
+frame: number; locals: VarInfo[]; globals: VarInfo[]; expanded: Expansion[]; evals: EvalResult[]; 
+/**
+ * The visualizer's structured snapshot, when it was asked for (ADR 0027).
+ */
+snapshot?: DebugSnapshot | null }
 export type SubmissionSummary = { id: number; problem_id: string; language: Language; verdict: Verdict; time_us: number; memory_kb: number; created_at: number }
 /**
  * A submission as the UI sees it: hidden tests redacted.

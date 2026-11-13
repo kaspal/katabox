@@ -1,5 +1,6 @@
 // The Debug tab (ADR 0022): toolbar, where the program is, Variables, Watch, Call Stack
-// and the Debug Console. Every action replays the test in the sandbox.
+// and the Debug Console, and the Visualize view (ADR 0027). Every action replays the test
+// in the sandbox.
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -18,10 +19,12 @@ import {
 import type { DebugAction, StopInfo, VarInfo } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { cn } from "@/lib/utils";
 import type { Debugger, VarPath } from "@/workspace/debug/useDebugger";
+import { VisualizeTab } from "@/workspace/debug/visualize/VisualizeTab";
 
 export const DEBUG_KEYS: Record<DebugAction | "stop", string> = {
   continue: "F5",
@@ -340,8 +343,9 @@ function Status({ dbg }: { dbg: Debugger }) {
   );
 }
 
-export function DebugPanel({ dbg }: { dbg: Debugger }) {
+export function DebugPanel({ dbg, problem, params }: { dbg: Debugger; problem: string; params: string[] }) {
   const { t } = useTranslation();
+  const [tab, setTab] = useState<"variables" | "visualize">("variables");
   const stop = dbg.view?.state.state === "paused" ? dbg.view.state.stop : null;
   if (!dbg.view && !dbg.busy && !dbg.error) {
     return <p className="text-sm text-muted-foreground">{t("debug.empty")}</p>;
@@ -353,16 +357,29 @@ export function DebugPanel({ dbg }: { dbg: Debugger }) {
         <DebugToolbar dbg={dbg} />
       </div>
       {dbg.error !== null && <ErrorNotice error={dbg.error} />}
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-3">
-          {stop && <Variables stop={stop} dbg={dbg} />}
-          <Watch stop={stop} dbg={dbg} />
-        </div>
-        <div className="space-y-3">
-          {stop && <CallStack stop={stop} dbg={dbg} />}
-          <DebugConsole dbg={dbg} />
-        </div>
-      </div>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+        <TabsList aria-label={t("debug.toolbar")}>
+          <TabsTrigger value="variables">{t("debug.visualize.variablesTab")}</TabsTrigger>
+          <TabsTrigger value="visualize" data-testid="visualize-tab">
+            {t("debug.visualize.tab")}
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="variables">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-3">
+              {stop && <Variables stop={stop} dbg={dbg} />}
+              <Watch stop={stop} dbg={dbg} />
+            </div>
+            <div className="space-y-3">
+              {stop && <CallStack stop={stop} dbg={dbg} />}
+              <DebugConsole dbg={dbg} />
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="visualize">
+          <VisualizeTab dbg={dbg} problem={problem} params={params} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

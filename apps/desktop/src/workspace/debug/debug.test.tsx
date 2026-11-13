@@ -95,6 +95,44 @@ describe("Debugger (ADR 0022)", () => {
     expect(within(panel).getByTestId("debug-prints")).toHaveTextContent("starting");
   });
 
+  it("F5 never re-debugs another problem's test after the page moves to a new problem", async () => {
+    const { user, fake, history } = await openTwoSum();
+    // Debug Public 2 here (F5 would debug it again on this problem), then stop.
+    const card = screen.getByText("Public 2").closest("section")!;
+    await user.click(within(card).getByRole("button", { name: "Debug this case" }));
+    await waitFor(() =>
+      expect(fake.api.debugStart).toHaveBeenLastCalledWith(expect.objectContaining({ input: { nums: [7, -3, 10, 5], target: 2 } })),
+    );
+    fireEvent.keyDown(window, { key: "F5", shiftKey: true });
+    await waitFor(() => expect(screen.queryByTestId("debug-status")).toBeNull());
+
+    // The same page, another problem: F5 debugs its own first public test.
+    act(() => void history.push("/problems/valid-brackets"));
+    await screen.findByRole("heading", { name: "Valid Brackets" });
+    await editor();
+    fireEvent.keyDown(window, { key: "F5" });
+    await waitFor(() =>
+      expect(fake.api.debugStart).toHaveBeenLastCalledWith(
+        expect.objectContaining({ problem: "valid-brackets", input: { nums: [5, 8, 12, 1, 3], target: 15 } }),
+      ),
+    );
+  });
+
+  it("ends the session when the page moves to another problem", async () => {
+    const { user, fake, view, history } = await openTwoSum();
+    breakpointOn(view, 7);
+    const panel = await debugFirstPublic(user);
+    await waitFor(() => expect(within(panel).getByTestId("debug-status")).toHaveTextContent("line 7"));
+    expect(view.state.readOnly).toBe(true);
+
+    act(() => void history.push("/problems/valid-brackets"));
+    await screen.findByRole("heading", { name: "Valid Brackets" });
+    await waitFor(() => expect(fake.api.debugEnd).toHaveBeenCalledWith(1));
+    await waitFor(() => expect(screen.queryByTestId("debug-status")).toBeNull());
+    const next = await editor();
+    expect(next.state.readOnly).toBe(false);
+  });
+
   it("expands variables, watches expressions and evaluates in the console", async () => {
     const { user, fake, view } = await openTwoSum();
     breakpointOn(view, 7);
@@ -105,10 +143,17 @@ describe("Debugger (ADR 0022)", () => {
 
     await user.click(within(panel).getByRole("button", { name: "Expand seen" }));
     await waitFor(() =>
-      expect(fake.api.debugInspect).toHaveBeenLastCalledWith(1, { frame: 0, expand: [["locals", "seen"]], watches: [] }),
+      expect(fake.api.debugInspect).toHaveBeenLastCalledWith(1, {
+        frame: 0,
+        expand: [["locals", "seen"]],
+        watches: [],
+        // The Visualize tab is closed: no snapshot (ADR 0027).
+        visualize: null,
+      }),
     );
     const vars = within(panel).getByTestId("debug-variables");
-    await waitFor(() => expect(within(vars).getAllByRole("treeitem").length).toBe(4));
+    // nums, seen (with its one entry), n, i.
+    await waitFor(() => expect(within(vars).getAllByRole("treeitem").length).toBe(5));
     expect(within(vars).getByRole("button", { name: "Collapse seen" })).toBeInTheDocument();
 
     await user.type(within(panel).getByRole("textbox", { name: "Add an expression to watch" }), "len(seen){Enter}");

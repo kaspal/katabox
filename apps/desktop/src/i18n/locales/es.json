@@ -558,7 +558,8 @@
       "open": "Resolver",
       "solved": "Resuelto hoy",
       "none": "No hay problemas disponibles.",
-      "hint": "Uno nuevo cada día, con preferencia por tu patrón más flojo."
+      "hint": "Uno nuevo cada día, con preferencia por tu patrón más flojo.",
+      "hint_start": "Empieza aquí: el primer problema del primer patrón. Tras tu primer problema resuelto, la elección se inclina hacia tu patrón más débil."
     },
     "streak": {
       "label": "Racha diaria: {{count}}",
@@ -750,7 +751,58 @@
     "line": "línea {{line}}",
     "console": "Consola de depuración",
     "evaluate": "Evaluar en el marco seleccionado",
-    "consoleHelp": "Cada paso vuelve a reproducir la prueba, así que lo que evalúes aquí nunca cambia el programa."
+    "consoleHelp": "Cada paso vuelve a reproducir la prueba, así que lo que evalúes aquí nunca cambia el programa.",
+    "visualize": {
+      "variablesTab": "Variables",
+      "tab": "Visualizar",
+      "intro": "Dibuja las variables elegidas en cada paso. Se marcan los cambios desde el paso anterior.",
+      "paused": "Pausa el programa en un punto de interrupción para ver sus variables dibujadas.",
+      "choose": "Variables para dibujar",
+      "show": "Dibujar {{name}}",
+      "pointer": "Usar {{name}} como puntero",
+      "pointers": "Puntero",
+      "viewAs": "Dibujar {{name}} como",
+      "as": {
+        "auto": "Automático",
+        "graph": "Grafo",
+        "heap": "Montículo (árbol)"
+      },
+      "defaults": "Restablecer valores predeterminados",
+      "empty": "Elige una variable para dibujar.",
+      "missing": "{{name}} no está definida en este paso.",
+      "larger": "Abrir en grande",
+      "largerTitle": "Visualizar: paso {{step}} de {{total}}",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "changed": "Cambió desde el paso anterior",
+      "showing": "Se muestran los primeros {{shown}} de {{total}}",
+      "showingSome": "Se muestran los primeros {{shown}}",
+      "truncated": "Los valores grandes se recortan para que cada paso siga siendo rápido.",
+      "error": {
+        "too_large": "Hay demasiado para dibujar en este paso.",
+        "other": "No se pudieron dibujar estas variables en este paso."
+      },
+      "cycle": "Ciclo: vuelve a {{value}}",
+      "removed": "Eliminadas: {{keys}}",
+      "end": "fin",
+      "empty_value": "(vacío)",
+      "key": "Clave",
+      "value": "Valor",
+      "index": "Índice",
+      "aria": {
+        "array": "{{name}}, arreglo: {{values}}",
+        "grid": "{{name}}, cuadrícula de {{rows}} filas y {{cols}} columnas",
+        "linked": "{{name}}, lista enlazada: {{values}}",
+        "tree": "{{name}}, árbol binario con {{count}} nodos",
+        "heap": "{{name}}, montículo dibujado como árbol con {{count}} nodos",
+        "set": "{{name}}, conjunto: {{values}}",
+        "graph": "{{name}}, grafo con {{nodes}} nodos y {{edges}} aristas",
+        "map": "{{name}}, mapa con {{count}} entradas",
+        "scalar": "{{name}} = {{value}}"
+      },
+      "changedCount_one": "{{count}} cambio",
+      "changedCount_other": "{{count}} cambios"
+    }
   },
   "complexity": {
     "button": "Complejidad",
