@@ -14,8 +14,8 @@
 //! run fixes `PYTHONHASHSEED` and seeds `random` so ordinary programs replay exactly.
 
 use kb_core::debug::{
-    DebugOutcome, EvalResult, Expansion, PrintChunk, StackFrame, Step, StopInfo, Trace, Truncation,
-    VarInfo,
+    DebugOutcome, EvalResult, Expansion, PrintChunk, Snapshot, StackFrame, Step, StopInfo, Trace,
+    Truncation, VarInfo,
 };
 use kb_core::{Language, Limits};
 use kb_runner::{SandboxSpec, Termination};
@@ -51,6 +51,12 @@ pub const JS_CPU_FACTOR: u32 = 8;
 /// … but never more than this.
 pub const CPU_MAX_MS: u32 = 60_000;
 
+/// The largest visualizer snapshot a stop may carry (ADR 0027); the harness enforces it
+/// too. Well inside [`RECORD_ALLOWANCE`]: a stop run prints no trace and no prints.
+pub const SNAPSHOT_MAX_BYTES: usize = 256 * 1024;
+/// The most variables one snapshot request names.
+pub const SNAPSHOT_MAX_NAMES: usize = 16;
+
 /// Trace tokens: printable ASCII without `"`, `\` and `~` (the harness's `ALPHABET`).
 fn alphabet() -> Vec<char> {
     (33u8..126)
@@ -69,6 +75,8 @@ pub struct StopRequest {
     pub expand: Vec<Vec<Value>>,
     /// Watch and console expressions.
     pub evals: Vec<String>,
+    /// Variables for the visualizer's snapshot (ADR 0027); `None` = no snapshot.
+    pub visualize: Option<Vec<String>>,
 }
 
 /// The result of one replay run.
@@ -149,7 +157,14 @@ pub fn stop(
             trace.steps.len()
         )));
     }
-    let request = serde_json::json!({
+    let request = stop_request(language, input, req);
+    let (records, facts) = run(problem, language, source, request, env)?;
+    interpret(records, &facts, Some((trace, req.step)))
+}
+
+/// The stop run's request (the runner adds the nonce and the print cap).
+fn stop_request(language: Language, input: &Map<String, Value>, req: &StopRequest) -> Value {
+    let mut request = serde_json::json!({
         "mode": "stop",
         "input": input,
         "step": req.step,
@@ -158,8 +173,12 @@ pub fn stop(
         "evals": req.evals,
         "max_steps": max_steps(language),
     });
-    let (records, facts) = run(problem, language, source, request, env)?;
-    interpret(records, &facts, Some((trace, req.step)))
+    // Only when asked: without it the request (and the harness's work) is as before.
+    if let Some(names) = &req.visualize {
+        let names: Vec<&String> = names.iter().take(SNAPSHOT_MAX_NAMES).collect();
+        request["visualize"] = serde_json::json!(names);
+    }
+    request
 }
 
 /// What the sandbox reported besides stdout.
@@ -252,6 +271,18 @@ struct RawStop {
     globals: Vec<VarInfo>,
     expanded: Vec<Expansion>,
     evals: Vec<EvalResult>,
+    #[serde(default)]
+    snapshot: Option<Value>,
+}
+
+/// The harness's snapshot, checked: over [`SNAPSHOT_MAX_BYTES`] is `too_large`, a shape
+/// kb-core does not know is `invalid`. Either way the stop itself still succeeds.
+fn decode_snapshot(raw: Value) -> Snapshot {
+    let size = serde_json::to_string(&raw).map_or(usize::MAX, |s| s.len());
+    if size > SNAPSHOT_MAX_BYTES {
+        return Snapshot::failed("too_large");
+    }
+    serde_json::from_value(raw).unwrap_or_else(|_| Snapshot::failed("invalid"))
 }
 
 fn parse(stdout: &[u8], nonce: &str) -> Vec<Result<Record, String>> {
@@ -326,6 +357,7 @@ fn interpret(
                     globals: raw.globals,
                     expanded: raw.expanded,
                     evals: raw.evals,
+                    snapshot: raw.snapshot.map(decode_snapshot),
                 }));
             }
             Record::Trace {
@@ -499,6 +531,99 @@ N {\"kind\":\"outcome\",\"status\":\"error\",\"error\":\"File C:\\\\work\\\\solu
         )
         .unwrap();
         assert_eq!(bad, DebugRun::Diverged);
+        assert_eq!(s.snapshot, None, "no snapshot unless asked for");
+    }
+
+    /// The visualizer's snapshot (ADR 0027): decoded with identity and cycles intact,
+    /// `too_large` over the byte cap, `invalid` for an unknown shape; the stop succeeds.
+    #[test]
+    fn stops_carry_a_checked_snapshot() {
+        use kb_core::debug::{SnapObject, SnapValue};
+        let trace = Trace {
+            steps: vec![Step { line: 3, depth: 1 }],
+            truncated: None,
+            prints: vec![],
+            prints_truncated: false,
+            outcome: None,
+        };
+        let hash = trace.prefix_hash(0);
+        let rec = |snapshot: &str| {
+            // One record per line.
+            let snapshot = snapshot.replace('\n', "");
+            format!(
+                "N {{\"kind\":\"stop\",\"step\":0,\"hash\":{hash},\"stack\":[{{\"function\":\"f\",\"line\":3}}],\"frame\":0,\"locals\":[],\"globals\":[],\"expanded\":[],\"evals\":[],\"snapshot\":{snapshot}}}\n"
+            )
+        };
+        let stop = |snapshot: &str| match interpret(
+            parse(rec(snapshot).as_bytes(), "N"),
+            &facts(),
+            Some((&trace, 0)),
+        )
+        .unwrap()
+        {
+            DebugRun::Stop(s) => s.snapshot.unwrap(),
+            other => panic!("{other:?}"),
+        };
+        // head and slow share node 0; node 1's next is node 0 again (a cycle).
+        let s = stop(
+            r#"{"roots":[{"name":"head","value":{"t":"ref","id":0}},{"name":"slow","value":{"t":"ref","id":0}}],
+                "objects":[{"kind":"list_node","val":{"t":"int","v":"1"},"next":{"t":"ref","id":1},"input":0},
+                           {"kind":"list_node","val":{"t":"int","v":"2"},"next":{"t":"ref","id":0},"input":1}],
+                "truncated":false}"#,
+        );
+        assert_eq!(s.roots[0].value, SnapValue::Ref { id: 0 });
+        assert_eq!(s.roots[1].value, s.roots[0].value);
+        assert!(matches!(
+            &s.objects[1],
+            SnapObject::ListNode {
+                next: SnapValue::Ref { id: 0 },
+                input: Some(1),
+                ..
+            }
+        ));
+        assert_eq!(s.error, None);
+
+        // Truncated: a list keeps its real length.
+        let s = stop(
+            r#"{"roots":[{"name":"a","value":{"t":"ref","id":0}}],"objects":[{"kind":"list","type":"list","items":[{"t":"int","v":"0"}],"len":100000}],"truncated":true}"#,
+        );
+        assert!(s.truncated);
+        assert!(
+            matches!(&s.objects[0], SnapObject::List { len: 100000, items, .. } if items.len() == 1)
+        );
+
+        // Over the byte cap, and a shape kb-core does not know.
+        let big = format!(
+            r#"{{"roots":[],"objects":[{{"kind":"list","type":"list","items":[{{"t":"str","v":"{}"}}],"len":1}}],"truncated":false}}"#,
+            "x".repeat(SNAPSHOT_MAX_BYTES)
+        );
+        assert_eq!(stop(&big).error.as_deref(), Some("too_large"));
+        assert_eq!(
+            stop(r#"{"roots":[],"objects":[{"kind":"blob"}]}"#)
+                .error
+                .as_deref(),
+            Some("invalid")
+        );
+        // The harness's own failure comes through as its message.
+        assert_eq!(
+            stop(r#"{"error":"RecursionError"}"#).error.as_deref(),
+            Some("RecursionError")
+        );
+    }
+
+    #[test]
+    fn visualize_is_sent_only_when_asked_and_capped() {
+        let input = Map::new();
+        let plain = stop_request(Language::Python, &input, &StopRequest::default());
+        assert!(plain.get("visualize").is_none(), "{plain}");
+        let req = StopRequest {
+            visualize: Some((0..40).map(|i| format!("v{i}")).collect()),
+            ..Default::default()
+        };
+        let asked = stop_request(Language::Python, &input, &req);
+        let names = asked["visualize"].as_array().unwrap();
+        assert_eq!(names.len(), SNAPSHOT_MAX_NAMES);
+        assert_eq!(names[0], "v0");
     }
 
     #[test]

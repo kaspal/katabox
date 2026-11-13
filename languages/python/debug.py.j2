@@ -2,13 +2,15 @@
 #
 # Request on stdin: {"nonce", "max_output_bytes", "trace_budget", "input": {param: value},
 # "mode": "trace" | "stop", "max_steps", "step", "frame", "expand": [[scope, name, i...]],
-# "evals": [expr]}. Records go to the real stdout as "\n<nonce> <json>\n" (ADR 0008).
+# "evals": [expr], "visualize": [name] (optional)}. Records go to the real stdout as "\n<nonce> <json>\n" (ADR 0008).
 #
 # A step is a LINE event in the user's file (sys.monitoring, PEP 669; every other file is
 # disabled at its first event, so harness and library frames are invisible). "trace"
 # runs the test once and records each step's line and user-frame depth. "stop" replays
 # to one step, describes the frames there and exits at once: nothing after it runs, and
 # evaluations never reach a later step.
+import builtins
+import collections
 import importlib.util
 import io
 import json
@@ -43,6 +45,56 @@ MAX_CODES = len(ALPHABET) + len(ALPHABET) ** 2
 REPR_MAX = 200
 CHILDREN_MAX = 100
 EVAL_MAX = 2000
+
+# --- The visualizer's snapshot (ADR 0027) ---------------------------------------------
+# A bounded, structured copy of the requested variables, taken at the stop just before
+# the process exits. It never runs user code: only exact built-in containers and
+# ListNode / TreeNode instance fields are followed (read through object.__getattribute__,
+# never getattr), scalars are formatted here, everything else is its type name. The
+# built-ins it uses are saved now, before the solution loads, so a solution that patches
+# builtins or collections cannot change what the snapshot sees.
+SNAP_MAX_OBJECTS = 1000
+SNAP_MAX_ITEMS = 500
+SNAP_MAX_VALUES = 10_000
+# Estimated JSON bytes: past this the snapshot is cut (truncated), well before the hard cap.
+SNAP_SOFT_BYTES = 200_000
+SNAP_MAX_DEPTH = 32
+SNAP_MAX_STR = 64
+SNAP_MAX_NAMES = 16
+SNAP_MAX_BYTES = 256 * 1024
+_ID = builtins.id
+_TYPE = builtins.type
+_LEN = builtins.len
+_STR = builtins.str
+_INT = builtins.int
+_FLOAT = builtins.float
+_BOOL = builtins.bool
+_LIST = builtins.list
+_TUPLE = builtins.tuple
+_DICT = builtins.dict
+_SET = builtins.set
+_FROZENSET = builtins.frozenset
+_NONE = builtins.type(None)
+_DEQUE = collections.deque
+_DEFAULTDICT = collections.defaultdict
+_COUNTER = collections.Counter
+_ORDEREDDICT = collections.OrderedDict
+_OBJ_GET = builtins.object.__getattribute__
+_TYPE_GET = builtins.type.__getattribute__
+_DICT_ITEMS = builtins.dict.items
+_DICT_GET = builtins.dict.get
+_LIST_APPEND = builtins.list.append
+_OD_ITEMS = collections.OrderedDict.items
+_INT_STR = builtins.int.__repr__
+_INT_BITS = builtins.int.bit_length
+_FLOAT_REPR = builtins.float.__repr__
+_DUMPS = json.dumps
+_SNAP_LISTS = (_LIST, _TUPLE, _DEQUE)
+_SNAP_MAPS = (_DICT, _DEFAULTDICT, _COUNTER, _ORDEREDDICT)
+_SNAP_SETS = (_SET, _FROZENSET)
+# Input nodes, numbered when the harness builds them (identity across steps).
+INPUT_IDS = {}
+INPUT_KEEP = []
 
 
 class StepCapture(io.TextIOBase):
@@ -264,6 +316,174 @@ def evaluate(frame, expr):
     return result
 
 
+def snap_type_name(value):
+    try:
+        name = _TYPE_GET(_TYPE(value), "__name__")
+        return name if _TYPE(name) is _STR else "object"
+    except BaseException:
+        return "object"
+
+
+def snap_node(value):
+    """("list" | "tree", the instance __dict__) for a ListNode / TreeNode, else None."""
+    name = snap_type_name(value)
+    if name != "ListNode" and name != "TreeNode":
+        return None
+    try:
+        fields = _OBJ_GET(value, "__dict__")
+    except BaseException:
+        return None  # __slots__ or no instance dict: shown as its type name
+    if _TYPE(fields) is not _DICT:
+        return None
+    want = ("val", "next") if name == "ListNode" else ("val", "left", "right")
+    for k in want:
+        if _DICT_GET(fields, k, fields) is fields:
+            return None
+    return ("list" if name == "ListNode" else "tree"), fields
+
+
+def number_inputs(args):
+    """Number the ListNode / TreeNode instances the harness built for the input, in a
+    fixed walk of the arguments, and keep them alive (an address is never reused)."""
+    queue, k = _LIST(args), 0
+    while k < _LEN(queue):
+        value = queue[k]
+        k += 1
+        if _TYPE(value) is _LIST:
+            for item in value:
+                _LIST_APPEND(queue, item)
+            continue
+        node = snap_node(value)
+        if node is None or _DICT_GET(INPUT_IDS, _ID(value)) is not None:
+            continue
+        INPUT_IDS[_ID(value)] = _LEN(INPUT_KEEP)
+        _LIST_APPEND(INPUT_KEEP, value)
+        kind, fields = node
+        for key in ("next",) if kind == "list" else ("left", "right"):
+            _LIST_APPEND(queue, fields[key])
+
+
+def snap_scalar(value):
+    t = _TYPE(value)
+    if t is _BOOL:
+        return {"t": "bool", "v": "True" if value else "False"}
+    if t is _INT:
+        bits = _INT_BITS(value)
+        if bits > 13_000:  # beyond str()'s 4300-digit limit
+            return {"t": "int", "v": ("-" if value < 0 else "") + "≈2^" + _INT_STR(bits)}
+        text = _INT_STR(value)
+        if _LEN(text) > SNAP_MAX_STR:
+            text = text[:20] + "… (" + _INT_STR(_LEN(text) - (value < 0)) + " digits)"
+        return {"t": "int", "v": text}
+    if t is _FLOAT:
+        return {"t": "float", "v": _FLOAT_REPR(value)}
+    if t is _STR:
+        text = value if _LEN(value) <= SNAP_MAX_STR else value[: SNAP_MAX_STR - 1] + "…"
+        return {"t": "str", "v": text}
+    if t is _NONE:
+        return {"t": "none", "v": "None"}
+    return None
+
+
+def snapshot(frame, names):
+    """The visualizer's snapshot of `names` in `frame` (ADR 0027)."""
+    objects, ids, queue = [], {}, []
+    snap = {"roots": [], "objects": objects, "truncated": False}
+    budget = [SNAP_MAX_VALUES]
+    size = [0]
+
+    def full():
+        return budget[0] <= 0 or size[0] > SNAP_SOFT_BYTES
+
+    def value_of(value, depth):
+        size[0] += 24
+        scalar = snap_scalar(value)
+        if scalar is not None:
+            size[0] += _LEN(scalar["v"])
+            return scalar
+        t = _TYPE(value)
+        node = None
+        if t not in _SNAP_LISTS and t not in _SNAP_MAPS and t not in _SNAP_SETS:
+            node = snap_node(value)
+            if node is None:
+                return {"t": "opaque", "v": snap_type_name(value)}
+        key = _ID(value)
+        known = _DICT_GET(ids, key)
+        if known is not None:
+            return {"t": "ref", "id": known}
+        if _LEN(objects) >= SNAP_MAX_OBJECTS or depth >= SNAP_MAX_DEPTH:
+            snap["truncated"] = True
+            return {"t": "opaque", "v": snap_type_name(value)}
+        index = _LEN(objects)
+        size[0] += 48
+        ids[key] = index
+        _LIST_APPEND(objects, None)
+        _LIST_APPEND(queue, (value, node, index, depth))
+        return {"t": "ref", "id": index}
+
+    def fill(value, node, index, depth):
+        t = _TYPE(value)
+        if node is not None:
+            kind, fields = node
+            budget[0] -= 1
+            obj = {
+                "kind": "list_node" if kind == "list" else "tree_node",
+                "val": value_of(fields["val"], depth + 1),
+            }
+            for k in ("next",) if kind == "list" else ("left", "right"):
+                obj[k] = value_of(fields[k], depth + 1)
+            number = _DICT_GET(INPUT_IDS, _ID(value))
+            if number is not None:
+                obj["input"] = number
+        elif t in _SNAP_MAPS:
+            entries = []
+            pairs = _OD_ITEMS(value) if t is _ORDEREDDICT else _DICT_ITEMS(value)
+            for k, v in pairs:
+                if _LEN(entries) >= SNAP_MAX_ITEMS or budget[0] <= 1 or full():
+                    snap["truncated"] = True
+                    break
+                budget[0] -= 2
+                _LIST_APPEND(entries, [value_of(k, depth + 1), value_of(v, depth + 1)])
+            obj = {"kind": "map", "type": snap_type_name(value), "entries": entries, "len": _LEN(value)}
+        else:
+            items = []
+            for v in value:
+                if _LEN(items) >= SNAP_MAX_ITEMS or full():
+                    snap["truncated"] = True
+                    break
+                budget[0] -= 1
+                _LIST_APPEND(items, value_of(v, depth + 1))
+            kind = "set" if t in _SNAP_SETS else "list"
+            obj = {"kind": kind, "type": snap_type_name(value), "items": items, "len": _LEN(value)}
+        objects[index] = obj
+
+    try:
+        local_items = _LIST(_DICT_ITEMS(_DICT(frame.f_locals)))
+        scopes = [_DICT(local_items), _DICT(visible_globals(frame))]
+        chosen = []
+        for name in _LIST(names)[:SNAP_MAX_NAMES]:
+            if _TYPE(name) is not _STR or name in chosen:
+                continue
+            for scope in scopes:
+                if name in scope:
+                    _LIST_APPEND(chosen, name)
+                    _LIST_APPEND(snap["roots"], {"name": name, "value": value_of(scope[name], 0)})
+                    break
+        # Every other local holding a node, so pointers like slow / fast are labelled.
+        for name, value in local_items:
+            if name not in chosen and _TYPE(name) is _STR and snap_node(value) is not None:
+                _LIST_APPEND(snap["roots"], {"name": name, "value": value_of(value, 0)})
+        k = 0
+        while k < _LEN(queue):
+            fill(*queue[k])
+            k += 1
+        if _LEN(_DUMPS(snap, allow_nan=False, separators=(",", ":"))) > SNAP_MAX_BYTES:
+            return {"roots": [], "objects": [], "truncated": True, "error": "too_large"}
+        return snap
+    except BaseException as e:
+        return {"roots": [], "objects": [], "truncated": True, "error": "snapshot failed: " + snap_type_name(e)}
+
+
 def describe_stop(state, frame):
     """Everything the debugger shows at the stop: stack, variables, expansions, evals."""
     frames = user_frames(state, frame)
@@ -290,6 +510,9 @@ def describe_stop(state, frame):
             record["expanded"].append({"path": path, "children": [], "more": 0})
     for expr in req.get("evals", []):
         record["evals"].append(evaluate(chosen, expr))
+    if req.get("visualize") is not None:
+        # After the evaluations: the snapshot shows the state the Variables view shows.
+        record["snapshot"] = snapshot(chosen, req["visualize"])
     return record
 
 
@@ -412,6 +635,8 @@ def main():
 {% if uses_nodes %}
     classes = node_classes(module)
     args = [from_json(*PARAM_SHAPES[k], request["input"][p], classes) for k, p in enumerate(PARAMS)]
+    if request.get("visualize") is not None:
+        number_inputs(args)
 {% else %}
     args = [request["input"][p] for p in PARAMS]
 {% endif %}

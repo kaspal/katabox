@@ -73,6 +73,9 @@ pub struct DebugStart {
     pub input: Map<String, Value>,
     pub breakpoints: Vec<u32>,
     pub watches: Vec<String>,
+    /// Variables for the visualizer's snapshot at every stop (ADR 0027).
+    #[serde(default)]
+    pub visualize: Option<Vec<String>>,
 }
 
 /// The UI's view state, replayed at every stop.
@@ -84,6 +87,10 @@ pub struct DebugInspect {
     /// Expanded variables: `[scope, name, i, j, …]`.
     pub expand: Vec<Vec<Value>>,
     pub watches: Vec<String>,
+    /// Variables for the visualizer's snapshot (ADR 0027); `None` while the Visualize
+    /// view is closed, so stops cost what they did before.
+    #[serde(default)]
+    pub visualize: Option<Vec<String>>,
 }
 
 #[derive(Debug)]
@@ -98,6 +105,20 @@ pub(crate) struct Session {
     at: Option<usize>,
     breakpoints: BTreeSet<u32>,
     inspect: DebugInspect,
+}
+
+impl Session {
+    /// The stop run for step `at` with the session's view state (frame, expansions,
+    /// watches and the visualizer's variables, kept across every action).
+    fn stop_request(&self, at: usize) -> StopRequest {
+        StopRequest {
+            step: u32::try_from(at).unwrap_or(u32::MAX),
+            frame: self.inspect.frame,
+            expand: self.inspect.expand.clone(),
+            evals: self.inspect.watches.clone(),
+            visualize: self.inspect.visualize.clone(),
+        }
+    }
 }
 
 /// The judge languages the debugger supports (Python today).
@@ -226,6 +247,7 @@ impl App {
             breakpoints,
             inspect: DebugInspect {
                 watches: start.watches,
+                visualize: start.visualize,
                 ..Default::default()
             },
         };
@@ -283,6 +305,7 @@ impl App {
             frame,
             expand: vec![],
             evals: vec![expr.clone()],
+            visualize: None,
         };
         let run = self.replay(&s, req).await;
         self.put_session(s);
@@ -344,12 +367,7 @@ impl App {
                 truncated: s.trace.truncated,
             },
             Some(at) => {
-                let req = StopRequest {
-                    step: u32::try_from(at).unwrap_or(u32::MAX),
-                    frame: s.inspect.frame,
-                    expand: s.inspect.expand.clone(),
-                    evals: s.inspect.watches.clone(),
-                };
+                let req = s.stop_request(at);
                 match self.replay(&s, req).await {
                     Ok(DebugRun::Stop(stop)) => DebugState::Paused {
                         line: s.trace.steps[at].line,
@@ -419,6 +437,44 @@ mod tests {
             prints_truncated: false,
             outcome: None,
         }
+    }
+
+    /// The visualizer's variables ride on every stop of the session: after any action,
+    /// including a step back, until the UI replaces the view state (ADR 0027).
+    #[test]
+    fn the_stop_request_keeps_the_visualizer_variables() {
+        let mut s = Session {
+            id: 1,
+            problem: "p".into(),
+            language: Language::Python,
+            code: String::new(),
+            input: Map::new(),
+            trace: trace(&[(3, 1), (4, 1), (5, 1)]),
+            at: Some(0),
+            breakpoints: BTreeSet::new(),
+            inspect: DebugInspect {
+                frame: 0,
+                expand: vec![],
+                watches: vec!["x".into()],
+                visualize: Some(vec!["nums".into(), "i".into()]),
+            },
+        };
+        let names = Some(vec!["nums".to_string(), "i".to_string()]);
+        for action in [
+            DebugAction::StepOver,
+            DebugAction::StepOver,
+            DebugAction::StepBack,
+            DebugAction::Restart,
+        ] {
+            s.at = navigate(&s.trace, s.at, action, &s.breakpoints).or(Some(0));
+            let req = s.stop_request(s.at.unwrap());
+            assert_eq!(req.visualize, names, "{action:?}");
+            assert_eq!(req.evals, ["x"]);
+        }
+        assert_eq!(s.stop_request(2).step, 2);
+        // The view closed: no snapshot from then on.
+        s.inspect.visualize = None;
+        assert_eq!(s.stop_request(1).visualize, None);
     }
 
     fn bp(lines: &[u32]) -> BTreeSet<u32> {

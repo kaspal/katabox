@@ -201,3 +201,5 @@ state, so it is not planned.
   by this ADR for now. The UI uses its own small types (`kb_core::debug`).
 
 **Follow-up:** JavaScript/TypeScript debugging, built on the inspector probe above, is ADR 0023.
+
+**Follow-up:** the visualizer's structured snapshot at a stop (one more key in the stop record, no extra run) is ADR 0027.

@@ -151,6 +151,121 @@ pub struct StopInfo {
     pub globals: Vec<VarInfo>,
     pub expanded: Vec<Expansion>,
     pub evals: Vec<EvalResult>,
+    /// The visualizer's structured snapshot, when it was asked for (ADR 0027).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<Snapshot>,
+}
+
+/// A bounded, structured copy of the variables the visualizer asked for, taken at the
+/// stop (ADR 0027). Objects are numbered within one snapshot; a shared node or a cycle
+/// is a second `ref` to the same id.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct Snapshot {
+    /// The requested variables (that exist at the stop), then every other local holding
+    /// a ListNode / TreeNode.
+    #[serde(default)]
+    pub roots: Vec<SnapRoot>,
+    /// Indexed by [`SnapValue::Ref`] ids.
+    #[serde(default)]
+    pub objects: Vec<SnapObject>,
+    /// A cap was hit: some containers list fewer items than their `len`, or some
+    /// values were not followed.
+    #[serde(default)]
+    pub truncated: bool,
+    /// Why there is no snapshot: `too_large`, `invalid`, or the harness's exception.
+    #[serde(default)]
+    pub error: Option<String>,
+}
+
+impl Snapshot {
+    /// An empty snapshot that only says why.
+    pub fn failed(error: &str) -> Snapshot {
+        Snapshot {
+            roots: vec![],
+            objects: vec![],
+            truncated: true,
+            error: Some(error.to_string()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct SnapRoot {
+    pub name: String,
+    pub value: SnapValue,
+}
+
+/// A value in a snapshot: a reference to an object, or a scalar as display text (so big
+/// integers never lose digits), or an object the snapshot does not look into.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "t", rename_all = "snake_case")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub enum SnapValue {
+    Ref {
+        id: u32,
+    },
+    Int {
+        v: String,
+    },
+    Float {
+        v: String,
+    },
+    Str {
+        v: String,
+    },
+    Bool {
+        v: String,
+    },
+    None {
+        v: String,
+    },
+    /// Any other object: its type name only.
+    Opaque {
+        v: String,
+    },
+}
+
+/// A container or a node. `len` is the real length; `items` / `entries` may list fewer
+/// (the snapshot's caps).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub enum SnapObject {
+    List {
+        #[serde(rename = "type")]
+        type_name: String,
+        items: Vec<SnapValue>,
+        len: u32,
+    },
+    Map {
+        #[serde(rename = "type")]
+        type_name: String,
+        entries: Vec<(SnapValue, SnapValue)>,
+        len: u32,
+    },
+    Set {
+        #[serde(rename = "type")]
+        type_name: String,
+        items: Vec<SnapValue>,
+        len: u32,
+    },
+    ListNode {
+        val: SnapValue,
+        next: SnapValue,
+        /// The node's number among the input's nodes (stable across steps), if the
+        /// harness built it.
+        #[serde(default)]
+        input: Option<u32>,
+    },
+    TreeNode {
+        val: SnapValue,
+        left: SnapValue,
+        right: SnapValue,
+        #[serde(default)]
+        input: Option<u32>,
+    },
 }
 
 #[cfg(test)]
@@ -174,5 +289,54 @@ mod tests {
         }
         assert_eq!(t.prefix_hash(1), h);
         assert_ne!(t.prefix_hash(0), h);
+    }
+
+    #[test]
+    fn snapshots_decode_refs_scalars_and_nodes() {
+        // Two roots share node 0 (identity); node 1 points back to node 0 (a cycle).
+        let raw = serde_json::json!({
+            "roots": [
+                {"name": "slow", "value": {"t": "ref", "id": 0}},
+                {"name": "fast", "value": {"t": "ref", "id": 0}},
+                {"name": "i", "value": {"t": "int", "v": "123456789012345678901234567890"}}
+            ],
+            "objects": [
+                {"kind": "list_node", "val": {"t": "int", "v": "1"}, "next": {"t": "ref", "id": 1}, "input": 0},
+                {"kind": "list_node", "val": {"t": "str", "v": "x"}, "next": {"t": "ref", "id": 0}},
+                {"kind": "map", "type": "dict", "entries": [[{"t": "str", "v": "k"}, {"t": "none", "v": "None"}]], "len": 3}
+            ],
+            "truncated": true
+        });
+        let s: Snapshot = serde_json::from_value(raw.clone()).unwrap();
+        assert_eq!(s.roots[0].value, s.roots[1].value);
+        assert_eq!(
+            s.roots[2].value,
+            SnapValue::Int {
+                v: "123456789012345678901234567890".into()
+            }
+        );
+        let SnapObject::ListNode { next, input, .. } = &s.objects[1] else {
+            panic!("{:?}", s.objects[1]);
+        };
+        assert_eq!((next, *input), (&SnapValue::Ref { id: 0 }, None));
+        assert!(matches!(
+            s.objects[0],
+            SnapObject::ListNode { input: Some(0), .. }
+        ));
+        assert!(
+            matches!(&s.objects[2], SnapObject::Map { len: 3, entries, .. } if entries.len() == 1)
+        );
+        assert!(s.truncated && s.error.is_none());
+        // Round trip, and an unknown kind is an error (kb-judge turns it into `invalid`).
+        assert_eq!(
+            serde_json::from_value::<Snapshot>(serde_json::to_value(&s).unwrap()).unwrap(),
+            s
+        );
+        let bad = serde_json::json!({"roots": [], "objects": [{"kind": "blob"}]});
+        assert!(serde_json::from_value::<Snapshot>(bad).is_err());
+        assert_eq!(
+            Snapshot::failed("too_large").error.as_deref(),
+            Some("too_large")
+        );
     }
 }
