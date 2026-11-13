@@ -699,7 +699,8 @@ async fn lists_with_unavailable_problems_and_the_pattern_map() {
     assert!(app.lists(UiLang::En).await.unwrap().is_empty());
 
     let map = app.patterns(UiLang::En).await.unwrap();
-    assert_eq!(map[0].pattern, "arrays-hashing");
+    // The track starts with fundamentals (content to 150).
+    assert_eq!(map[0].pattern, "fundamentals");
     let total: u32 = map.iter().map(|m| m.total).sum();
     assert_eq!(
         total as usize,
