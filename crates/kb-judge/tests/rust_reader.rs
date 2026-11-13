@@ -72,6 +72,15 @@ fn problem_dirs() -> Vec<PathBuf> {
     dirs
 }
 
+/// The problems whose tests reach the Rust harness as JSON: program problems (ADR 0028)
+/// run the user's program on stdin text, with no harness and no JSON reader.
+fn function_problem_dirs() -> Vec<PathBuf> {
+    problem_dirs()
+        .into_iter()
+        .filter(|dir| kb_judge::Problem::load(dir).unwrap().mode == kb_judge::ProblemMode::Function)
+        .collect()
+}
+
 #[test]
 fn every_test_file_reads_as_serde_json_does() {
     let mut files = 0;
@@ -101,8 +110,9 @@ fn request(dir: &Path) -> String {
 
 #[test]
 fn whole_requests_read_as_serde_json_does() {
-    // Every tenth problem: the inputs are the files above, this adds the outer object.
-    for dir in problem_dirs().iter().step_by(10) {
+    // Every tenth function problem: the inputs are the files above, this adds the outer
+    // object. Program problems (ADR 0028) send no JSON request.
+    for dir in function_problem_dirs().iter().step_by(10) {
         same_as_serde(&request(dir));
     }
 }
@@ -122,7 +132,7 @@ fn typed<T: ReadJson + FromJson + PartialEq + Debug>(text: &str) {
 #[test]
 fn every_test_input_takes_the_fast_path_with_the_generic_result() {
     let mut checked = 0;
-    for dir in problem_dirs() {
+    for dir in function_problem_dirs() {
         let problem = kb_judge::Problem::load(&dir).unwrap();
         for file in test_files(&dir) {
             let v: Value = serde_json::from_str(&std::fs::read_to_string(&file).unwrap()).unwrap();
@@ -356,10 +366,15 @@ fn malformed_input_is_an_error_never_a_panic() {
             "typed accepted {text:?}"
         );
     }
-    // Every proper prefix of real requests and test files.
+    // Every proper prefix of real test files. Small files only: checking every prefix is
+    // quadratic in the file's size, and a max test of several hundred KB would take an
+    // hour in a debug build.
     for dir in problem_dirs().iter().step_by(15) {
-        for file in test_files(dir).iter().take(3) {
-            let text = std::fs::read_to_string(file).unwrap();
+        let small = test_files(dir)
+            .into_iter()
+            .filter(|f| std::fs::metadata(f).unwrap().len() <= 8 * 1024);
+        for file in small.take(3) {
+            let text = std::fs::read_to_string(&file).unwrap();
             let text = text.trim_end();
             for end in 0..text.len() {
                 if text.is_char_boundary(end) {

@@ -2,7 +2,7 @@
 
 Probar todos los rectángulos, incluso con sumas acumuladas, cuesta O(R²·C²): unos 1,6·10⁹ rectángulos en un campo de 10 × 8000. El truco es fijar solo las **filas** y dejar que un algoritmo de una dimensión elija las columnas.
 
-Fija una fila superior `top` y una inferior `bottom`. Cada rectángulo con exactamente esas filas es un tramo de columnas consecutivas, y su total es la suma de ese tramo en el array
+Fija una fila superior `top` y una inferior `bottom`. Cada rectángulo con exactamente esas filas es un tramo de columnas consecutivas, y su total es la suma de ese tramo en el arreglo
 
 ```
 col[j] = grid[top][j] + grid[top + 1][j] + ... + grid[bottom][j]

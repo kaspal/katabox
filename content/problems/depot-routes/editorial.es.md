@@ -13,7 +13,7 @@ Todos los tiempos de las calles son positivos, así que sirve el **algoritmo de 
 
 **Por qué una sola vez:** una búsqueda por llamada cuesta O(Q·(N + M) log N), unos 10⁹ pasos de montículo en los límites. Una sola búsqueda cuesta O((N + M) log N) y cada llamada O(1).
 
-**Montículos en cada lenguaje:** Python tiene `heapq` y Rust `BinaryHeap` (envuelve los pares en `Reverse` para tener un montículo de mínimos). TypeScript no tiene montículo: escribe uno binario pequeño sobre dos arrays paralelos (tiempos y cruces) con subida y bajada. `SplPriorityQueue` de PHP es un montículo de máximos, así que inserta cada cruce con el tiempo **negado** como prioridad.
+**Montículos en cada lenguaje:** Python tiene `heapq` y Rust `BinaryHeap` (envuelve los pares en `Reverse` para tener un montículo de mínimos). TypeScript no tiene montículo: escribe uno binario pequeño sobre dos arreglos paralelos (tiempos y cruces) con subida y bajada. `SplPriorityQueue` de PHP es un montículo de máximos, así que inserta cada cruce con el tiempo **negado** como prioridad.
 
 **Complejidad:** tiempo O((N + M) log N + Q), memoria O(N + M). El mayor tiempo posible es (N − 1)·10⁴ < 10⁸, así que bastan enteros normales en todas partes.
 
