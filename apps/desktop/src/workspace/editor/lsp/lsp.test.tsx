@@ -49,6 +49,28 @@ describe("EditorStatusBar", () => {
     // Format needs a ready server.
     expect(screen.getByRole("button", { name: "Format" })).toHaveProperty("disabled", server.state !== "ready");
   });
+
+  it("keeps a long status on one line: the status text truncates, the counts never wrap", () => {
+    // PHP has no server, so its status is the longest ("… unavailable · basic completion …").
+    render(
+      <TooltipProvider>
+        <EditorStatusBar
+          language="php"
+          server={{ state: "unavailable", reason: "not bundled" }}
+          status={{ line: 28, col: 1, errors: 0, warnings: 0 }}
+          onFormat={() => {}}
+          basicCompletion
+        />
+      </TooltipProvider>,
+    );
+    const label = screen.getByTestId("lsp-status");
+    expect(label).toHaveAttribute("title", expect.stringMatching(/^PHP language server: unavailable · basic completion/));
+    expect(label).toHaveClass("min-w-0");
+    expect(label.querySelector(".truncate")).toHaveTextContent(/unavailable · basic completion/);
+    expect(screen.getByRole("status")).toHaveClass("whitespace-nowrap", "overflow-hidden");
+    expect(screen.getByTestId("problems-count")).toHaveClass("shrink-0");
+    expect(screen.getByText("Ln 28, Col 1").parentElement).toHaveClass("shrink-0");
+  });
 });
 
 async function editor() {
