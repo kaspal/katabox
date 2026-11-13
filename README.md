@@ -8,7 +8,7 @@
 
 ## Planned features
 
-- A growing catalog of original problems across ~20 patterns (arrays, two pointers, sliding window, trees, graphs, dynamic programming…)
+- 150 original problems across 23 patterns (fundamentals, arrays, two pointers, sliding window, trees, graphs, dynamic programming…)
 - Public examples, your own custom tests (expected output computed for you) and hidden tests that show the first failing input
 - Editor with autocomplete and diagnostics; step-through debugger with "Debug this case"
 - Tiered hints, editorials and reference solutions in every language
