@@ -1,0 +1,17 @@
+id = "blocked-walks"
+title = "Blocked Walks"
+title_es = "Paseos con cortes"
+difficulty = "hard"
+tags = ["math", "combinatorics", "dynamic-programming", "modular-arithmetic"]
+pattern = "math"
+rank = 9
+
+[signature]
+name = "blockedWalks"
+params = [{ name = "rows", type = "int" }, { name = "cols", type = "int" }, { name = "blocked", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -684,3 +684,35 @@ fn content_150_m4_problems_are_debuggable() {
     ];
     assert_debuggable(&problems);
 }
+
+/// Content to 150, milestone 5: binary search, intervals, math, bits, strings, design.
+#[test]
+fn content_150_m5_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 16] = [
+        ("kth-gap", "kth_gap", None),
+        ("insert-slot", "insert_slot", None),
+        ("city-skyline", "skyline", None),
+        ("base-converter", "convert_base", None),
+        ("fast-power", "power_mod", None),
+        ("team-picks", "team_picks", None),
+        (
+            "blocked-walks",
+            "blocked_walks",
+            Some(("<locals>.paths", 1)),
+        ),
+        ("bit-counts", "bit_counts", None),
+        ("menu-masks", "menu_combos", None),
+        ("skill-squad", "smallest_squad", None),
+        ("pattern-count", "count_pattern", None),
+        ("longest-mirror", "longest_mirror", None),
+        (
+            "repeated-chunk",
+            "longest_repeat",
+            Some(("<locals>.repeats", 1)),
+        ),
+        ("request-throttle", "throttle", None),
+        ("recent-pages", "recent_pages", None),
+        ("popular-pages", "popular_pages", Some(("<locals>.use", 1))),
+    ];
+    assert_debuggable(&problems);
+}

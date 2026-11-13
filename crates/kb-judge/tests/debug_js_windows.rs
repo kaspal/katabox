@@ -624,3 +624,26 @@ fn content_150_m4_problems_are_debuggable_in_typescript() {
         ("seat-map-lookup", "hasTicket"),
     ]);
 }
+
+/// Content to 150, milestone 5: binary search, intervals, math, bits, strings, design.
+#[test]
+fn content_150_m5_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("kth-gap", "kthGap"),
+        ("insert-slot", "insertSlot"),
+        ("city-skyline", "skyline"),
+        ("base-converter", "convertBase"),
+        ("fast-power", "powerMod"),
+        ("team-picks", "teamPicks"),
+        ("blocked-walks", "blockedWalks"),
+        ("bit-counts", "bitCounts"),
+        ("menu-masks", "menuCombos"),
+        ("skill-squad", "smallestSquad"),
+        ("pattern-count", "countPattern"),
+        ("longest-mirror", "longestMirror"),
+        ("repeated-chunk", "longestRepeat"),
+        ("request-throttle", "throttle"),
+        ("recent-pages", "recentPages"),
+        ("popular-pages", "popularPages"),
+    ]);
+}

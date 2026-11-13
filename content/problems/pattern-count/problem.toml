@@ -1,0 +1,19 @@
+id = "pattern-count"
+title = "Pattern Count"
+title_es = "Contar el patrón"
+difficulty = "medium"
+tags = ["string", "string-matching", "kmp"]
+pattern = "strings"
+rank = 8
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
+
+[signature]
+name = "countPattern"
+params = [{ name = "text", type = "string" }, { name = "pattern", type = "string" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

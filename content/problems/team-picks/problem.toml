@@ -1,0 +1,19 @@
+id = "team-picks"
+title = "Team Picks"
+title_es = "Elegir equipos"
+difficulty = "medium"
+tags = ["math", "combinatorics", "modular-arithmetic"]
+pattern = "math"
+rank = 8
+profile = true
+profile_sizes = [100, 300, 1000, 3000, 10000, 30000]
+
+[signature]
+name = "teamPicks"
+params = [{ name = "queries", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256
