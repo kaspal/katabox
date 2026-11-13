@@ -1,0 +1,13 @@
+id = "trail-diameter"
+title = "Trail Diameter"
+title_es = "La ruta más larga"
+difficulty = "medium"
+tags = ["graph", "bfs", "tree"]
+pattern = "graphs"
+rank = 6
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

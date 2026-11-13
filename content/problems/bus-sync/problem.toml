@@ -1,0 +1,13 @@
+id = "bus-sync"
+title = "Bus Sync"
+title_es = "Autobuses a la vez"
+difficulty = "hard"
+tags = ["chinese-remainder", "number-theory", "math"]
+pattern = "math"
+rank = 9
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

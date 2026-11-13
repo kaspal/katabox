@@ -1,0 +1,13 @@
+id = "packed-labels"
+title = "Packed Labels"
+title_es = "Etiquetas empaquetadas"
+difficulty = "medium"
+tags = ["string", "binary-search", "prefix-sum"]
+pattern = "strings"
+rank = 7
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

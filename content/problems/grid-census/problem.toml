@@ -1,0 +1,13 @@
+id = "grid-census"
+title = "Grid Census"
+title_es = "Censo de la parcela"
+difficulty = "easy"
+tags = ["input-parsing", "matrix", "counting"]
+pattern = "fundamentals"
+rank = 8
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

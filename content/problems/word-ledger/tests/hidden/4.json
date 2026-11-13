@@ -1,0 +1,1 @@
+{"stdin":"4\ntiraramo rafiko? rafiko\nrafiko tiraramo; tiraramo,\n","stdout":"rafiko 3\ntiraramo 3\n"}

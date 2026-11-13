@@ -1,0 +1,1 @@
+{"stdin": "2\nrain,rain!sun\n\nsun...rain\n", "stdout": "rain 3\nsun 2\n"}

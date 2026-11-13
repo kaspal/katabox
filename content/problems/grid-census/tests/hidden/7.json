@@ -1,0 +1,1 @@
+{"stdin":"3 2\n##\n##\n##\n7\nrow 0\nrow 2\nrow 2\nrow 0\ncol 0\ncol 1\nrow 0\n","stdout":"2\n2\n2\n2\n3\n3\n2\n"}

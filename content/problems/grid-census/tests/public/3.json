@@ -1,0 +1,1 @@
+{"stdin": "2 5\n.....\n#.#.#\n3\ncol 4\nrow 1\ncol 1\n", "stdout": "1\n3\n0\n"}

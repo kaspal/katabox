@@ -1,0 +1,5 @@
+A line leaves at minute `t` exactly when `t ≡ r (mod m)`. Walking minute by minute, or even departure by departure of the line with the longest period, can take billions of steps here: the lcm reaches 9·10¹⁵ and a period is at most 10⁶. Can two congruences be replaced by a single one of the same kind?
+---
+Say the lines so far all leave at `t ≡ x (mod M)`, that is `t = x + M·k`. A new line needs `M·k ≡ r − x (mod m)`. With `g = gcd(M, m)`, this has a solution only when `g` divides `r − x`; then `k` is fixed modulo `m / g` by a modular inverse, which the extended Euclidean algorithm gives you. Do not assume the `m` are coprime.
+---
+Merge the lines one at a time, keeping `(x, M)` with `0 ≤ x < M` and starting from `(0, 1)`. For each line: `g = gcd(M, m)`; if `g` does not divide `r − x`, the answer is `-1`. Otherwise, with `m' = m / g`, take `k = ((r − x)/g mod m') · inverse(M/g mod m', m') mod m'`, then `x ← x + M·k` and `M ← M·m'` (the lcm). The final `x` is the answer. The product inside `k` stays below 10¹², and `M·k` below the lcm ≤ 9·10¹⁵.

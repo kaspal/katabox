@@ -1,0 +1,1 @@
+{"stdin": "2\n3a2b10c\n1z\n4\n1 1\n1 4\n1 6\n2 1\n", "stdout": "a\nb\nc\nz\n"}

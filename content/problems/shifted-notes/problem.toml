@@ -1,0 +1,13 @@
+id = "shifted-notes"
+title = "Shifted Notes"
+title_es = "Notas desplazadas"
+difficulty = "easy"
+tags = ["string", "simulation"]
+pattern = "strings"
+rank = 2
+mode = "program"
+
+[judge]
+checker = "lines"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256
