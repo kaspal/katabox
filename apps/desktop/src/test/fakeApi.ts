@@ -54,6 +54,7 @@ export const PROBLEMS: Row[] = [
     difficulty: "easy",
     pattern: "arrays-hashing",
     rank: 1,
+    mode: "function",
     tags: ["array", "hash-map"],
     status: "solved",
   },
@@ -63,6 +64,7 @@ export const PROBLEMS: Row[] = [
     difficulty: "easy",
     pattern: "stack",
     rank: 2,
+    mode: "function",
     tags: ["stack", "string"],
     status: null,
   },
@@ -72,6 +74,7 @@ export const PROBLEMS: Row[] = [
     difficulty: "medium",
     pattern: "sliding-window",
     rank: 3,
+    mode: "function",
     tags: ["string"],
     status: "attempted",
   },
@@ -81,10 +84,29 @@ export const PROBLEMS: Row[] = [
     difficulty: "hard",
     pattern: "intervals",
     rank: 4,
+    mode: "function",
     tags: ["array", "sorting"],
     status: null,
   },
 ];
+
+/** A program problem (ADR 0028), listed only with `createFakeApi({ withProgram: true })`. */
+export const PROGRAM_ROW: Row = {
+  id: "line-sum",
+  title: { en: "Line Sum", es: "Suma de líneas" },
+  difficulty: "easy",
+  pattern: "fundamentals",
+  rank: 7,
+  mode: "program",
+  tags: ["input-parsing"],
+  status: null,
+};
+
+export const PROGRAM_SIGNATURE = {
+  name: "main",
+  params: [{ name: "stdin", type: "string" }],
+  returns: "string",
+};
 
 export const APP_INFO: AppInfo = {
   app_version: "0.1.0",
@@ -231,6 +253,8 @@ export function createFakeApi(
     activity?: ActivityRow[];
     reviewSummary?: ReviewSummary;
     notices?: string | null;
+    /** List the program problem `line-sum` too (ADR 0028). */
+    withProgram?: boolean;
   } = {},
 ) {
   const installed = new Set<Language>(opts.installed ?? ["python", "typescript", "php"]);
@@ -372,8 +396,9 @@ export function createFakeApi(
     ),
     listProblems: vi.fn(async (f: ProblemFilter) => {
       const lang = f.lang ?? "en";
-      return PROBLEMS.filter(
+      return (opts.withProgram ? [...PROBLEMS, PROGRAM_ROW] : PROBLEMS).filter(
         (p) =>
+          (!f.mode || p.mode === f.mode) &&
           (!f.difficulty || p.difficulty === f.difficulty) &&
           (!f.pattern || p.pattern === f.pattern) &&
           (!f.tag || p.tags.includes(f.tag)) &&
@@ -382,8 +407,9 @@ export function createFakeApi(
       ).map((p) => ({ ...p, title: p.title[lang] }));
     }),
     getProblem: vi.fn(async (id: string, lang: "en" | "es"): Promise<ProblemView> => {
-      const p = PROBLEMS.find((x) => x.id === id);
+      const p = [...PROBLEMS, PROGRAM_ROW].find((x) => x.id === id);
       if (!p) throw { code: "not_found", message: `not found: problem ${id}` };
+      const program = p.mode === "program";
       return {
         ...p,
         title: p.title[lang],
@@ -391,7 +417,8 @@ export function createFakeApi(
         statement: lang === "es" ? "Devuelve los índices `nums`.\n\n```python\nx = 1\n```" : "Return the indices of `nums`.\n\n```python\nx = 1\n```",
         editorial: null,
         hints: ["First hint.", "Second hint.", "Third hint."],
-        signature: SIGNATURE,
+        signature: program ? PROGRAM_SIGNATURE : SIGNATURE,
+        checker: program ? "tokens" : "unordered",
         time_limit_ms: 300,
         memory_mb: 256,
         time_scale: state.calibration?.applied ?? 1,
@@ -406,10 +433,15 @@ export function createFakeApi(
           language,
           time_limit_ms: Math.ceil(300 * factor * (state.calibration?.applied ?? 1)),
         })),
-        public_tests: [
-          { index: 1, input: { nums: [5, 8, 12, 1, 3], target: 15 }, output: [2, 4] },
-          { index: 2, input: { nums: [7, -3, 10, 5], target: 2 }, output: [1, 3] },
-        ],
+        public_tests: program
+          ? [
+              { index: 1, input: { stdin: "2\n3 4\n" }, output: "7\n" },
+              { index: 2, input: { stdin: "1\n10\n" }, output: "10\n" },
+            ]
+          : [
+              { index: 1, input: { nums: [5, 8, 12, 1, 3], target: 15 }, output: [2, 4] },
+              { index: 2, input: { nums: [7, -3, 10, 5], target: 2 }, output: [1, 3] },
+            ],
         has_validator: id === "two-sum",
         profile: id === "two-sum",
       };

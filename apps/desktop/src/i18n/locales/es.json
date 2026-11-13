@@ -41,6 +41,12 @@
     "medium": "Media",
     "hard": "Difícil"
   },
+  "mode": {
+    "label": "Tipo de problema",
+    "function": "Función",
+    "program": "Programa",
+    "badge": "Programa · stdin/stdout"
+  },
   "status": {
     "label": "Estado",
     "any": "Cualquier estado",
@@ -92,6 +98,7 @@
       "bit-manipulation": "Manipulación de bits",
       "bitmask": "Máscara de bits",
       "bridges": "Puentes",
+      "chinese-remainder": "Teorema chino del resto",
       "combinatorics": "Combinatoria",
       "convex-hull": "Envolvente convexa",
       "counting": "Conteo",
@@ -137,6 +144,7 @@
       "simulation": "Simulación",
       "sliding-window": "Ventana deslizante",
       "sorting": "Ordenación",
+      "sparse-table": "Tabla dispersa",
       "stack": "Pila",
       "string": "Cadena",
       "string-matching": "Búsqueda de patrones",
@@ -473,6 +481,16 @@
       "invalid": "La entrada personalizada {{index}} no es válida: {{message}}",
       "needsPython": "Las entradas personalizadas se comprueban contra las restricciones del problema solo si Python está instalado.",
       "installPython": "Instalar Python"
+    },
+    "program": {
+      "input": "Entrada (stdin)",
+      "expected": "Salida esperada",
+      "actual": "Tu salida",
+      "stderr": "Salida de errores (stderr)",
+      "output": "Salida",
+      "firstDiff": "primera diferencia",
+      "missing": "(la salida termina aquí)",
+      "timeNote": "Los tiempos incluyen el arranque de cada ejecución."
     }
   },
   "lsp": {
@@ -803,7 +821,8 @@
       },
       "changedCount_one": "{{count}} cambio",
       "changedCount_other": "{{count}} cambios"
-    }
+    },
+    "programUnsupported": "Por ahora, los problemas de programa se pueden depurar en Python."
   },
   "complexity": {
     "button": "Complejidad",

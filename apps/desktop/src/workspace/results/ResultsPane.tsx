@@ -3,6 +3,7 @@ import { DebugThisCase } from "@/workspace/debug/context";
 import type { PracticeOutcome } from "@/bindings";
 import { SubmitPractice } from "@/practice/SubmitPractice";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import type { JudgeEvent, ProblemView } from "@/bindings";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,7 @@ export function ResultsPane({
 }) {
   const { t } = useTranslation();
   const phaseText = usePhaseText()(phase);
+  const program = problem.mode === "program";
   const nextId = () => Math.max(0, ...customs.map((c) => c.id)) + 1;
   const customError =
     isAppError(error) && error.code === "invalid_custom_input" ? error.message : null;
@@ -123,24 +125,54 @@ export function ResultsPane({
       <div className="min-h-0 flex-1 overflow-auto p-3">
         <TabsContent value="testcases" className="space-y-3">
           {problem.public_tests.map((test) => (
-            <section key={test.index} className="rounded-lg border p-3 text-sm">
+            <section key={test.index} className="rounded-lg border p-3 text-sm" data-testid={`public-${test.index}`}>
               <div className="mb-1 flex items-center justify-between gap-2">
                 <h4 className="text-xs font-semibold text-muted-foreground">
                   {t("results.testKind.public")} {test.index}
                 </h4>
                 <DebugThisCase input={test.input} label={`${t("results.testKind.public")} ${test.index}`} />
               </div>
-              <pre className="font-mono text-xs whitespace-pre-wrap break-all">
-                {Object.entries(test.input)
-                  .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
-                  .join("\n")}
-              </pre>
-              <p className="mt-1 font-mono text-xs text-muted-foreground">
-                {t("results.expected")}: {JSON.stringify(test.output)}
-              </p>
+              {program ? (
+                <div className="grid gap-2 md:grid-cols-2">
+                  <div className="min-w-0">
+                    <p className="mb-1 text-xs text-muted-foreground">{t("results.program.input")}</p>
+                    <pre className="max-h-48 overflow-auto rounded-md bg-muted/50 p-2 font-mono text-xs whitespace-pre" tabIndex={0}>
+                      {typeof test.input.stdin === "string" ? test.input.stdin : ""}
+                    </pre>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="mb-1 text-xs text-muted-foreground">{t("results.program.expected")}</p>
+                    <pre className="max-h-48 overflow-auto rounded-md bg-muted/50 p-2 font-mono text-xs whitespace-pre" tabIndex={0}>
+                      {typeof test.output === "string" ? test.output : ""}
+                    </pre>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <pre className="font-mono text-xs whitespace-pre-wrap break-all">
+                    {Object.entries(test.input)
+                      .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
+                      .join("\n")}
+                  </pre>
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">
+                    {t("results.expected")}: {JSON.stringify(test.output)}
+                  </p>
+                </>
+              )}
             </section>
           ))}
+          {program &&
+            customs.map((c, i) => (
+              <ProgramCustomCard
+                key={c.id}
+                index={i + 1}
+                draft={c}
+                onChange={(values) => onCustoms(customs.map((x) => (x.id === c.id ? { ...x, values } : x)))}
+                onRemove={() => onCustoms(customs.filter((x) => x.id !== c.id))}
+              />
+            ))}
           {signature &&
+            !program &&
             customs.map((c, i) => (
               <CustomTestCard
                 key={c.id}
@@ -182,9 +214,11 @@ export function ResultsPane({
                     ...customs,
                     {
                       id: nextId(),
-                      values: problem.public_tests[0]
-                        ? valuesFrom(signature, problem.public_tests[0].input)
-                        : Object.fromEntries(signature.params.map((p) => [p.name, ""])),
+                      values: program
+                        ? { stdin: typeof problem.public_tests[0]?.input.stdin === "string" ? problem.public_tests[0].input.stdin : "" }
+                        : problem.public_tests[0]
+                          ? valuesFrom(signature, problem.public_tests[0].input)
+                          : Object.fromEntries(signature.params.map((p) => [p.name, ""])),
                     },
                   ])
                 }
@@ -202,6 +236,8 @@ export function ResultsPane({
             <ResultView
               report={report}
               celebrate={celebrate}
+              mode={problem.mode}
+              checker={problem.checker}
               afterSummary={
                 (practice || complexity) && (
                   <>
@@ -226,7 +262,7 @@ export function ResultsPane({
   );
 }
 
-function fieldErrorText(t: ReturnType<typeof useTranslation>["t"], e: FieldError): string {
+function fieldErrorText(t: TFunction, e: FieldError): string {
   switch (e.kind) {
     case "empty":
       return t("results.custom.errors.empty");
@@ -240,6 +276,48 @@ function fieldErrorText(t: ReturnType<typeof useTranslation>["t"], e: FieldError
       return t("results.custom.errors.type", { type: e.expected });
     }
   }
+}
+
+/** A program problem's custom test (ADR 0028): the stdin text, typed as is. The expected
+ * output comes from the reference solution when it runs. */
+function ProgramCustomCard({
+  index,
+  draft,
+  onChange,
+  onRemove,
+}: {
+  index: number;
+  draft: CustomTestDraft;
+  onChange: (values: Record<string, string>) => void;
+  onRemove: () => void;
+}) {
+  const { t } = useTranslation();
+  const id = `custom-${draft.id}-stdin`;
+  const stdin = draft.values.stdin ?? "";
+  return (
+    <section className="space-y-2 rounded-lg border border-dashed p-3" data-testid={`custom-${index}`}>
+      <div className="flex items-center justify-between">
+        <h4 className="text-xs font-semibold text-muted-foreground">
+          {t("results.testKind.custom")} {index}
+        </h4>
+        <DebugThisCase input={{ stdin }} label={`${t("results.testKind.custom")} ${index}`} />
+        <Button size="sm" variant="ghost" onClick={onRemove} aria-label={t("results.custom.remove", { index })}>
+          <Trash2 aria-hidden />
+        </Button>
+      </div>
+      <label htmlFor={id} className="block text-xs text-muted-foreground">
+        {t("results.program.input")}
+      </label>
+      <textarea
+        id={id}
+        value={stdin}
+        onChange={(e) => onChange({ stdin: e.target.value })}
+        spellCheck={false}
+        rows={Math.min(12, Math.max(3, stdin.split("\n").length))}
+        className="w-full rounded-md border bg-background p-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      />
+    </section>
+  );
 }
 
 function CustomTestCard({

@@ -30,7 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { InstallDialog } from "@/languages/InstallDialog";
-import { DifficultyLabel } from "@/components/Semantic";
+import { DifficultyLabel, ModeLabel } from "@/components/Semantic";
 import { api } from "@/lib/api";
 import { isAppError } from "@/lib/errors";
 import { useFocusMode } from "@/lib/focus";
@@ -150,7 +150,13 @@ export function WorkspacePage() {
   }, [problemId]);
 
   const signature = useMemo(() => (problem.data ? parseSignature(problem.data.signature) : null), [problem.data]);
-  const customInputs = signature ? customs.map((c) => validateCustom(signature, c.values).input) : [];
+  // A program problem's custom test is its stdin text, as typed (ADR 0028).
+  const program = problem.data?.mode === "program";
+  const customInputs: (CustomInput | null)[] = program
+    ? customs.map((c) => ({ stdin: c.values.stdin ?? "" }))
+    : signature
+      ? customs.map((c) => validateCustom(signature, c.values).input)
+      : [];
   const customsValid = customInputs.every((i) => i !== null);
   const complexity = useComplexity(problemId, judge.judged);
   const profiling = complexity.state.status === "running";
@@ -160,7 +166,9 @@ export function WorkspacePage() {
   // The debugger (ADR 0022): replay runs of one test; the editor is read-only meanwhile.
   const dbg = useDebugger(problemId, language, session.docKey);
   const debugLanguages = useDebugLanguages();
-  const canDebug = language !== null && (debugLanguages.data ?? []).includes(language);
+  // Program problems can be debugged in Python only for now (ADR 0028).
+  const programNoDebug = program && language !== "python";
+  const canDebug = language !== null && (debugLanguages.data ?? []).includes(language) && !programNoDebug;
   // The last test debugged here (F5 debugs it again). Kept per problem: the page is reused
   // when another problem opens, and another problem's input would not fit its signature.
   const lastDebugCase = useRef<{ problem: string; input: CustomInput; label: string } | null>(null);
@@ -177,7 +185,7 @@ export function WorkspacePage() {
   const debugCase: DebugCase = {
     onDebug: (input, label) => void startDebug(input, label),
     disabledReason: !canDebug
-      ? t("debug.unsupported")
+      ? t(programNoDebug ? "debug.programUnsupported" : "debug.unsupported")
       : busy || dbg.busy
         ? t("debug.busy")
         : null,
@@ -349,6 +357,7 @@ export function WorkspacePage() {
         )}
         <h1 className="truncate text-base font-semibold">{p.title}</h1>
         <DifficultyLabel difficulty={p.difficulty} className="text-xs" />
+        <ModeLabel mode={p.mode} />
         <div className="ml-auto flex items-center gap-2">
           {inInterview && <InterviewTimer compact />}
           {!inInterview && (solvedIn.data?.length ?? 0) > 0 && (

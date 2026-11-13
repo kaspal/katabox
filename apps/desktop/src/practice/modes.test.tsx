@@ -31,8 +31,8 @@ function running(minutesLeft: number): InterviewView {
     mix: "medium+hard",
     languages: ["python", "rust"],
     problems: [
-      { id: "valid-brackets", title: "Valid Brackets", difficulty: "medium", pattern: "stack", rank: 2, tags: [], status: null },
-      { id: "merge-meetings", title: "Merge Meetings", difficulty: "hard", pattern: "intervals", rank: 4, tags: [], status: null },
+      { id: "valid-brackets", title: "Valid Brackets", difficulty: "medium", pattern: "stack", rank: 2, mode: "function", tags: [], status: null },
+      { id: "merge-meetings", title: "Merge Meetings", difficulty: "hard", pattern: "intervals", rank: 4, mode: "function", tags: [], status: null },
     ],
   };
 }

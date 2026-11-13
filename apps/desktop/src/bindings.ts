@@ -1125,7 +1125,11 @@ more: number }
  * Details of the first test that did not pass. For hidden tests this is the only one
  * revealed, and only after submitting.
  */
-export type Failure = { kind: TestKind; index: number; verdict: Verdict; input: Partial<{ [key in string]: JsonValue }>; expected: JsonValue; actual: JsonValue | null; message: Message | null; stdout: string }
+export type Failure = { kind: TestKind; index: number; verdict: Verdict; input: Partial<{ [key in string]: JsonValue }>; expected: JsonValue; actual: JsonValue | null; message: Message | null; stdout: string; 
+/**
+ * A program problem's stderr (ADR 0028).
+ */
+stderr?: string | null }
 /**
  * What Import found in a file, before merging.
  */
@@ -1444,6 +1448,10 @@ export type PrintChunk = { step: number; text: string }
  */
 export type ProblemFilter = { difficulty: Difficulty | null; tag: string | null; pattern: string | null; 
 /**
+ * Function or program problems only (ADR 0028).
+ */
+mode: ProblemMode | null; 
+/**
  * Applied by [`crate::Store::list_problems`] (status lives in user.db);
  * [`ContentDb::list_problems`] ignores it.
  */
@@ -1456,6 +1464,11 @@ query: string | null;
  * Language of the returned titles (English fallback).
  */
 lang: UiLang | null }
+/**
+ * How a problem is solved (ADR 0028): a function the harness calls, or a whole program
+ * that reads stdin and writes stdout.
+ */
+export type ProblemMode = "function" | "program"
 /**
  * One problem of a scorecard.
  */
@@ -1477,7 +1490,7 @@ export type ProblemStatus =
  * Accepted at least once (never goes back to attempted).
  */
 "solved"
-export type ProblemSummary = { id: string; title: string; difficulty: Difficulty; pattern: string; rank: number; tags: string[]; 
+export type ProblemSummary = { id: string; title: string; difficulty: Difficulty; pattern: string; rank: number; mode: ProblemMode; tags: string[]; 
 /**
  * Filled by [`crate::Store::list_problems`]; `None` from [`ContentDb`] alone.
  */
@@ -1489,9 +1502,19 @@ export type ProblemView = { id: string;
 /**
  * The language requested; each text falls back to English when missing.
  */
-lang: UiLang; title: string; statement: string; editorial: string | null; hints: string[]; difficulty: Difficulty; pattern: string; rank: number; tags: string[]; signature: JsonValue; 
+lang: UiLang; title: string; statement: string; editorial: string | null; hints: string[]; difficulty: Difficulty; pattern: string; rank: number; tags: string[]; 
 /**
- * The base time limit, set for Rust; each language scales it (ADR 0017).
+ * A function or a whole program (ADR 0028).
+ */
+mode: ProblemMode; signature: JsonValue; 
+/**
+ * How output is compared (`exact`, `tokens`, `lines`, ...): the UI's output diff
+ * follows it.
+ */
+checker: string; 
+/**
+ * The base time limit, set for Rust; each language scales it (ADR 0017). For a
+ * program problem it applies to each test's run (ADR 0028).
  */
 time_limit_ms: number; memory_mb: number; public_tests: PublicTest[]; 
 /**
@@ -1779,13 +1802,19 @@ time_us: number; memory_kb: number;
  */
 message: Message | null }) & { 
 /**
- * What the function returned, when it returned.
+ * What the function returned, when it returned. For a program problem (ADR 0028):
+ * its stdout as a JSON string (capped for storage).
  */
 actual: JsonValue | null; 
 /**
- * The user's prints during this test (stdout and stderr, capped).
+ * The user's prints during this test (stdout and stderr, capped). For a program
+ * problem: its stdout, the same text as `actual` (capped).
  */
-stdout: string }
+stdout: string; 
+/**
+ * A program problem's stderr, kept apart from its answer (capped; ADR 0028).
+ */
+stderr?: string | null }
 export type ToolchainInfo = { language: Language; present: boolean; 
 /**
  * The program the judge starts (the compiler for Rust), when present.

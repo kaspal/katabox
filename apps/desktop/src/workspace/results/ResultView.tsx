@@ -1,11 +1,12 @@
 import { DebugThisCase } from "@/workspace/debug/context";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import type { Failure, JsonValue, Report, TestKind } from "@/bindings";
+import type { Failure, JsonValue, ProblemMode, Report, TestKind } from "@/bindings";
 import { VerdictBadge } from "@/components/Verdict";
 import { describeMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { diffParts } from "@/workspace/results/jsonDiff";
+import { firstLine, normalizeText, textDiff, type Span } from "@/workspace/results/textDiff";
 
 export const ms = (us: number) => (us / 1000).toFixed(us < 10_000 ? 2 : 0);
 export const mb = (kb: number) => (kb / 1024).toFixed(1);
@@ -34,8 +35,146 @@ export function testLabel(t: TFunction, kind: TestKind, index: number) {
   return `${t(`results.testKind.${kind}`)} ${index}`;
 }
 
-export function FailureView({ failure }: { failure: Failure }) {
+const asText = (v: JsonValue | null | undefined): string => (typeof v === "string" ? v : "");
+
+/** A program's text, line by line, with one span marked (the first difference): a
+ * dotted underline, bold and a screen-reader note besides the colour. `missing`: the text
+ * ended where the other one goes on. */
+function ProgramText({
+  label,
+  text,
+  mark,
+  missing,
+  testId,
+}: {
+  label: string;
+  text: string;
+  mark: Span | null;
+  missing: boolean;
+  testId: string;
+}) {
+  const { t } = useTranslation();
+  const lines = normalizeText(text).replace(/\n$/, "").split("\n");
+  return (
+    <div className="min-w-0 flex-1">
+      <p className="mb-1 text-xs font-medium text-muted-foreground">{label}</p>
+      <pre
+        className="max-h-72 overflow-auto rounded-md border bg-muted/50 p-2 font-mono text-xs whitespace-pre"
+        data-testid={testId}
+        tabIndex={0}
+      >
+        {lines.map((line, i) => {
+          const here = mark !== null && mark.line === i;
+          return (
+            <span key={i} className="block min-h-[1em]">
+              {here ? (
+                <>
+                  {line.slice(0, mark.start)}
+                  <mark
+                    className="rounded-sm bg-verdict-wrong/15 font-bold text-verdict-wrong underline decoration-dotted"
+                    data-diff=""
+                  >
+                    {line.slice(mark.start, mark.end) || " "}
+                  </mark>
+                  <span className="sr-only"> ({t("results.program.firstDiff")})</span>
+                  {line.slice(mark.end)}
+                </>
+              ) : (
+                line
+              )}
+            </span>
+          );
+        })}
+        {missing && (
+          <span className="block text-verdict-wrong italic" data-diff="">
+            {t("results.program.missing")}
+          </span>
+        )}
+      </pre>
+    </div>
+  );
+}
+
+/** The first failure of a program problem (ADR 0028): its stdin, the expected and the
+ * actual output side by side with the first difference marked, and stderr. */
+function ProgramFailureView({ failure, checker }: { failure: Failure; checker: string }) {
   const { t, i18n } = useTranslation();
+  const expected = asText(failure.expected);
+  const actual = failure.actual === null ? null : asText(failure.actual);
+  const diff = actual !== null && failure.verdict === "wrong_answer" ? textDiff(expected, actual, checker) : null;
+  return (
+    <section className="space-y-3 rounded-lg border border-verdict-wrong/30 p-3" data-testid="first-failure">
+      <h4 className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+        {t("results.firstFailure", { test: testLabel(t, failure.kind, failure.index) })}
+        <VerdictBadge verdict={failure.verdict} />
+        <span className="ml-auto font-normal">
+          <DebugThisCase input={failure.input} label={testLabel(t, failure.kind, failure.index)} />
+        </span>
+      </h4>
+      <div>
+        <p className="mb-1 text-xs font-medium text-muted-foreground">{t("results.program.input")}</p>
+        <pre
+          className="max-h-48 overflow-auto rounded-md border bg-muted/50 p-2 font-mono text-xs whitespace-pre"
+          data-testid="program-stdin"
+          tabIndex={0}
+        >
+          {asText(failure.input.stdin)}
+        </pre>
+      </div>
+      <div className="flex flex-col gap-3 md:flex-row">
+        <ProgramText
+          label={t("results.program.expected")}
+          text={expected}
+          mark={diff?.expected ?? null}
+          missing={diff !== null && diff.expected === null}
+          testId="program-expected"
+        />
+        {actual !== null && (
+          <ProgramText
+            label={t("results.program.actual")}
+            text={actual}
+            mark={diff?.actual ?? null}
+            missing={diff !== null && diff.actual === null}
+            testId="program-actual"
+          />
+        )}
+      </div>
+      {failure.message && (
+        <div>
+          <p className="text-sm">{describeMessage(i18n, failure.message)}</p>
+          {failure.message.text && (
+            <pre className="mt-1 max-h-48 overflow-auto rounded-md bg-muted/50 p-2 font-mono text-xs whitespace-pre-wrap">
+              {failure.message.text}
+            </pre>
+          )}
+        </div>
+      )}
+      {failure.stderr && (
+        <div>
+          <p className="mb-1 text-xs font-medium text-muted-foreground">{t("results.program.stderr")}</p>
+          <pre
+            className="max-h-40 overflow-auto rounded-md bg-muted/50 p-2 font-mono text-xs whitespace-pre-wrap"
+            data-testid="program-stderr"
+          >
+            {failure.stderr}
+          </pre>
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function FailureView({
+  failure,
+  mode = "function",
+  checker = "exact",
+}: {
+  failure: Failure;
+  mode?: ProblemMode;
+  checker?: string;
+}) {
+  const { t, i18n } = useTranslation();
+  if (mode === "program") return <ProgramFailureView failure={failure} checker={checker} />;
   const hasActual = failure.actual !== null;
   return (
     <section className="space-y-3 rounded-lg border border-verdict-wrong/30 p-3" data-testid="first-failure">
@@ -89,13 +228,19 @@ export function ResultView({
   report,
   celebrate = false,
   afterSummary,
+  mode = "function",
+  checker = "exact",
 }: {
   report: Report;
   celebrate?: boolean;
   /** Shown right under the verdict summary, above the details (the practice outcome). */
   afterSummary?: React.ReactNode;
+  /** A program problem shows text output and stderr (ADR 0028). */
+  mode?: ProblemMode;
+  checker?: string;
 }) {
   const { t, i18n } = useTranslation();
+  const program = mode === "program";
   const accepted = report.verdict === "accepted";
   const passed = report.tests.filter((r) => r.verdict === "accepted").length;
   return (
@@ -114,6 +259,7 @@ export function ResultView({
         <span className="text-sm text-muted-foreground tabular-nums">
           {t("results.time", { ms: ms(report.time_us) })} · {t("results.memory", { mb: mb(report.memory_kb) })}
         </span>
+        {program && <span className="text-xs text-muted-foreground">{t("results.program.timeNote")}</span>}
       </header>
       {afterSummary}
 
@@ -137,7 +283,7 @@ export function ResultView({
               <th className="py-1 pr-3 font-medium">{t("results.test")}</th>
               <th className="py-1 pr-3 font-medium">{t("results.verdict")}</th>
               <th className="py-1 pr-3 font-medium">{t("results.timeCol")}</th>
-              <th className="py-1 font-medium">{t("results.returned")}</th>
+              <th className="py-1 font-medium">{t(program ? "results.program.output" : "results.returned")}</th>
             </tr>
           </thead>
           <tbody>
@@ -149,7 +295,13 @@ export function ResultView({
                 </td>
                 <td className="py-1 pr-3 tabular-nums whitespace-nowrap">{ms(r.time_us)} ms</td>
                 <td className="max-w-0 truncate py-1 font-mono text-xs">
-                  {r.actual === null ? (r.kind === "hidden" ? t("results.hidden") : "") : JSON.stringify(r.actual)}
+                  {r.actual === null
+                    ? r.kind === "hidden"
+                      ? t("results.hidden")
+                      : ""
+                    : program
+                      ? firstLine(asText(r.actual))
+                      : JSON.stringify(r.actual)}
                 </td>
               </tr>
             ))}
@@ -162,7 +314,7 @@ export function ResultView({
         </p>
       )}
 
-      {report.first_failure && <FailureView failure={report.first_failure} />}
+      {report.first_failure && <FailureView failure={report.first_failure} mode={mode} checker={checker} />}
     </div>
   );
 }
