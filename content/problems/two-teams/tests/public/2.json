@@ -1,0 +1,1 @@
+{"input": {"n": 3, "rivalries": [[0, 1], [1, 2], [2, 0]]}, "output": false}

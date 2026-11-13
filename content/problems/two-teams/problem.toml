@@ -1,0 +1,17 @@
+id = "two-teams"
+title = "Two Teams"
+title_es = "Dos equipos"
+difficulty = "medium"
+tags = ["graph", "bfs", "bipartite"]
+pattern = "graphs"
+rank = 4
+
+[signature]
+name = "twoTeams"
+params = [{ name = "n", type = "int" }, { name = "rivalries", type = "int[][]" }]
+returns = "bool"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

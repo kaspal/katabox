@@ -1,0 +1,17 @@
+id = "log-cutting"
+title = "Log Cutting"
+title_es = "Cortar el tronco"
+difficulty = "hard"
+tags = ["dynamic-programming", "interval-dp"]
+pattern = "dynamic-programming"
+rank = 8
+
+[signature]
+name = "cutCost"
+params = [{ name = "length", type = "int" }, { name = "marks", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

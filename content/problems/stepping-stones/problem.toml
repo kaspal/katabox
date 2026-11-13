@@ -1,0 +1,19 @@
+id = "stepping-stones"
+title = "Stepping Stones"
+title_es = "Piedras del río"
+difficulty = "medium"
+tags = ["greedy", "array"]
+pattern = "greedy"
+rank = 4
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
+
+[signature]
+name = "canCross"
+params = [{ name = "jumps", type = "int[]" }]
+returns = "bool"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

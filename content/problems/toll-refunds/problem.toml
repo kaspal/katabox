@@ -1,0 +1,17 @@
+id = "toll-refunds"
+title = "Toll Refunds"
+title_es = "Peajes con reembolso"
+difficulty = "medium"
+tags = ["graph", "shortest-path", "bellman-ford"]
+pattern = "graphs"
+rank = 7
+
+[signature]
+name = "tollRefunds"
+params = [{ name = "n", type = "int" }, { name = "roads", type = "int[][]" }, { name = "start", type = "int" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

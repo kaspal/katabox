@@ -579,3 +579,25 @@ fn content_150_m2_problems_are_debuggable_in_typescript() {
         ("coin-bag-combos", "coinCombos"),
     ]);
 }
+
+/// Content to 150, milestone 3: graphs, dynamic programming, greedy, intervals.
+#[test]
+fn content_150_m3_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("two-teams", "twoTeams"),
+        ("ferry-timetable", "ferryTimes"),
+        ("toll-refunds", "tollRefunds"),
+        ("mutual-reach", "mutualReach"),
+        ("critical-footbridges", "criticalBridges"),
+        ("backpack-weight", "bestPack"),
+        ("shared-melody", "sharedMelody"),
+        ("log-cutting", "cutCost"),
+        ("lantern-street", "brightestStreet"),
+        ("digit-budget", "digitBudget"),
+        ("mirror-cuts", "mirrorCuts"),
+        ("most-talks", "mostTalks"),
+        ("stepping-stones", "canCross"),
+        ("fuel-stops", "fuelStops"),
+        ("merge-bookings", "mergeBookings"),
+    ]);
+}

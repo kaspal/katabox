@@ -620,12 +620,43 @@ fn content_150_m2_problems_are_debuggable() {
         ),
         ("kth-smallest-code", "kth_smallest", None),
         ("garden-walk", "longest_walk", Some(("<locals>.depth", 2))),
-        ("rebuild-tree", "rebuild_tree", Some(("TreeNode.__init__", 1))),
+        (
+            "rebuild-tree",
+            "rebuild_tree",
+            Some(("TreeNode.__init__", 1)),
+        ),
         ("richest-trail", "richest_trail", Some(("<locals>.gain", 2))),
         ("best-code-pair", "best_xor_pair", None),
         ("word-grid-hunt", "find_words", Some(("<locals>.dfs", 2))),
         ("nearest-stalls", "nearest_stalls", None),
         ("coin-bag-combos", "coin_combos", Some(("<locals>.pick", 2))),
+    ];
+    assert_debuggable(&problems);
+}
+
+/// Content to 150, milestone 3: graphs, dynamic programming, greedy, intervals.
+#[test]
+fn content_150_m3_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 15] = [
+        ("two-teams", "two_teams", None),
+        ("ferry-timetable", "ferry_times", None),
+        ("toll-refunds", "toll_refunds", None),
+        ("mutual-reach", "mutual_reach", None),
+        ("critical-footbridges", "critical_bridges", None),
+        ("backpack-weight", "best_pack", None),
+        ("shared-melody", "shared_melody", None),
+        ("log-cutting", "cut_cost", None),
+        (
+            "lantern-street",
+            "brightest_street",
+            Some(("<locals>.best", 3)),
+        ),
+        ("digit-budget", "digit_budget", Some(("<locals>.free", 2))),
+        ("mirror-cuts", "mirror_cuts", None),
+        ("most-talks", "most_talks", None),
+        ("stepping-stones", "can_cross", None),
+        ("fuel-stops", "fuel_stops", None),
+        ("merge-bookings", "merge_bookings", None),
     ];
     assert_debuggable(&problems);
 }
