@@ -34,6 +34,6 @@ The second write clears the undone write of key 1, so `redo` has nothing to do.
 
 ### Constraints
 
-- 1 ≤ ops.length ≤ 10⁵, args.length = ops.length
+- 1 ≤ ops.length ≤ 1.5·10⁵, args.length = ops.length
 - Each `ops[i]` is `"write"`, `"read"`, `"undo"` or `"redo"`, with the numbers described above
 - 1 ≤ key ≤ 10⁹, 0 ≤ value ≤ 10⁹

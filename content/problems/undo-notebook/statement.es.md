@@ -34,6 +34,6 @@ La segunda escritura borra la escritura deshecha de la clave 1, así que `redo` 
 
 ### Restricciones
 
-- 1 ≤ ops.length ≤ 10⁵, args.length = ops.length
+- 1 ≤ ops.length ≤ 1.5·10⁵, args.length = ops.length
 - Cada `ops[i]` es `"write"`, `"read"`, `"undo"` o `"redo"`, con los números descritos arriba
 - 1 ≤ key ≤ 10⁹, 0 ≤ value ≤ 10⁹
