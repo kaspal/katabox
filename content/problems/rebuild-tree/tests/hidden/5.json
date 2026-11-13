@@ -1,0 +1,1 @@
+{"input":{"inorder":[-6,-1,9,23,1],"preorder":[9,-6,-1,23,1]},"output":[9,-6,23,null,-1,null,1]}

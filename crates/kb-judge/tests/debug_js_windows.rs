@@ -557,3 +557,25 @@ fn content_150_m1_problems_are_debuggable_in_typescript() {
         ("tree-fence", "fenceArea"),
     ]);
 }
+
+/// Content to 150, milestone 2: linked lists, trees, tries, heap, backtracking.
+#[test]
+fn content_150_m2_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("two-queues-merge", "mergeQueues"),
+        ("split-the-train", "splitTrain"),
+        ("zigzag-boarding", "zigzagBoarding"),
+        ("batch-reversal", "reverseBatches"),
+        ("window-view", "windowView"),
+        ("bracket-notation", "bracketNotation"),
+        ("catalogue-check", "isSearchTree"),
+        ("kth-smallest-code", "kthSmallest"),
+        ("garden-walk", "longestWalk"),
+        ("rebuild-tree", "rebuildTree"),
+        ("richest-trail", "richestTrail"),
+        ("best-code-pair", "bestXorPair"),
+        ("word-grid-hunt", "findWords"),
+        ("nearest-stalls", "nearestStalls"),
+        ("coin-bag-combos", "coinCombos"),
+    ]);
+}

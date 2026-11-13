@@ -1,0 +1,19 @@
+id = "best-code-pair"
+title = "Best Code Pair"
+title_es = "La mejor pareja de códigos"
+difficulty = "medium"
+tags = ["trie", "bit-manipulation"]
+pattern = "tries"
+rank = 5
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
+
+[signature]
+name = "bestXorPair"
+params = [{ name = "codes", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

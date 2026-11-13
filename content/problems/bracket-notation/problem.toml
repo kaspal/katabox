@@ -1,0 +1,17 @@
+id = "bracket-notation"
+title = "Bracket Notation"
+title_es = "Notación con paréntesis"
+difficulty = "easy"
+tags = ["binary-tree", "tree", "dfs", "string"]
+pattern = "trees"
+rank = 3
+
+[signature]
+name = "bracketNotation"
+params = [{ name = "root", type = "TreeNode" }]
+returns = "string"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

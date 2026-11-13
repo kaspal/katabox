@@ -598,3 +598,34 @@ fn content_150_m1_problems_are_debuggable() {
     ];
     assert_debuggable(&problems);
 }
+
+/// Content to 150, milestone 2: linked lists, trees, tries, heap, backtracking.
+#[test]
+fn content_150_m2_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 15] = [
+        ("two-queues-merge", "merge_queues", None),
+        ("split-the-train", "split_train", None),
+        ("zigzag-boarding", "zigzag_boarding", None),
+        ("batch-reversal", "reverse_batches", None),
+        ("window-view", "window_view", None),
+        (
+            "bracket-notation",
+            "bracket_notation",
+            Some(("<locals>.write", 2)),
+        ),
+        (
+            "catalogue-check",
+            "is_search_tree",
+            Some(("<locals>.ok", 2)),
+        ),
+        ("kth-smallest-code", "kth_smallest", None),
+        ("garden-walk", "longest_walk", Some(("<locals>.depth", 2))),
+        ("rebuild-tree", "rebuild_tree", Some(("TreeNode.__init__", 1))),
+        ("richest-trail", "richest_trail", Some(("<locals>.gain", 2))),
+        ("best-code-pair", "best_xor_pair", None),
+        ("word-grid-hunt", "find_words", Some(("<locals>.dfs", 2))),
+        ("nearest-stalls", "nearest_stalls", None),
+        ("coin-bag-combos", "coin_combos", Some(("<locals>.pick", 2))),
+    ];
+    assert_debuggable(&problems);
+}

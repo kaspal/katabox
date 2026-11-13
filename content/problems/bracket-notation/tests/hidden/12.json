@@ -1,0 +1,1 @@
+{"input":{"root":[9,0,null,5,-2,2,4,null,null,null,null,null,-4]},"output":"9(0(5(2)(4()(-4)))(-2))"}

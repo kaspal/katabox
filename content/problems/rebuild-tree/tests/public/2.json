@@ -1,0 +1,1 @@
+{"input": {"preorder": [1, 2, 3], "inorder": [3, 2, 1]}, "output": [1, 2, null, 3]}

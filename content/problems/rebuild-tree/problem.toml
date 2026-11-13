@@ -1,0 +1,17 @@
+id = "rebuild-tree"
+title = "Rebuild the Family Tree"
+title_es = "Reconstruir el árbol familiar"
+difficulty = "medium"
+tags = ["binary-tree", "tree", "divide-and-conquer", "hash-map"]
+pattern = "trees"
+rank = 7
+
+[signature]
+name = "rebuildTree"
+params = [{ name = "preorder", type = "int[]" }, { name = "inorder", type = "int[]" }]
+returns = "TreeNode"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

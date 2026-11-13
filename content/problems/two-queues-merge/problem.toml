@@ -1,0 +1,17 @@
+id = "two-queues-merge"
+title = "Two Queues Merge"
+title_es = "Dos colas en una"
+difficulty = "easy"
+tags = ["linked-list", "two-pointers"]
+pattern = "linked-list"
+rank = 1
+
+[signature]
+name = "mergeQueues"
+params = [{ name = "first", type = "ListNode" }, { name = "second", type = "ListNode" }]
+returns = "ListNode"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

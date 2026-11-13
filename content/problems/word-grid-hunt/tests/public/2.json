@@ -1,0 +1,1 @@
+{"input": {"grid": ["ab"], "words": ["aba", "ba", "b"]}, "output": ["b", "ba"]}

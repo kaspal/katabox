@@ -85,6 +85,7 @@
       "bin-packing": "Empaquetado",
       "binary-lifting": "Salto binario",
       "binary-search": "Búsqueda binaria",
+      "binary-search-tree": "Árbol binario de búsqueda",
       "binary-tree": "Árbol binario",
       "bit-manipulation": "Manipulación de bits",
       "bitmask": "Máscara de bits",

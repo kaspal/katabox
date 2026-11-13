@@ -1,0 +1,17 @@
+id = "garden-walk"
+title = "Longest Garden Walk"
+title_es = "El paseo más largo del jardín"
+difficulty = "medium"
+tags = ["binary-tree", "tree", "dfs"]
+pattern = "trees"
+rank = 6
+
+[signature]
+name = "longestWalk"
+params = [{ name = "root", type = "TreeNode" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256
