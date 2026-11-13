@@ -1,0 +1,17 @@
+id = "crossing-paths"
+title = "Crossing Paths"
+title_es = "Caminos que se cruzan"
+difficulty = "medium"
+tags = ["math", "cross-product"]
+pattern = "geometry"
+rank = 6
+
+[signature]
+name = "pathsCross"
+params = [{ name = "pairs", type = "int[][]" }]
+returns = "bool[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

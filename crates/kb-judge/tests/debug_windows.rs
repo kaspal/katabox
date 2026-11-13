@@ -571,3 +571,30 @@ fn list_and_tree_nodes_are_shown_readably() {
         ]
     );
 }
+
+/// Content to 150, milestone 1: fundamentals, range queries, geometry, road repairs.
+#[test]
+fn content_150_m1_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 15] = [
+        ("temperature-swing", "temperature_swing", None),
+        ("grade-bands", "grade_bands", None),
+        ("vowel-tally", "vowel_tally", None),
+        ("leap-years", "leap_years", None),
+        ("halving-steps", "halving_steps", None),
+        ("title-case", "title_case", None),
+        ("mileage-log", "trip_totals", None),
+        ("stock-ledger", "stock_ledger", Some(("<locals>.", 1))),
+        (
+            "gauge-corrections",
+            "gauge_readings",
+            Some(("<locals>.", 1)),
+        ),
+        ("cold-snap", "cold_snaps", Some(("<locals>.", 2))),
+        ("road-repairs", "road_repairs", None),
+        ("turn-signals", "turn_signals", None),
+        ("fenced-garden", "where_is_point", None),
+        ("crossing-paths", "paths_cross", Some(("<locals>.", 1))),
+        ("tree-fence", "fence_area", Some(("<locals>.", 2))),
+    ];
+    assert_debuggable(&problems);
+}

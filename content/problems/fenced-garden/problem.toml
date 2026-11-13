@@ -1,0 +1,17 @@
+id = "fenced-garden"
+title = "Fenced Garden"
+title_es = "El huerto vallado"
+difficulty = "medium"
+tags = ["math", "cross-product", "ray-casting"]
+pattern = "geometry"
+rank = 4
+
+[signature]
+name = "whereIsPoint"
+params = [{ name = "fence", type = "int[][]" }, { name = "points", type = "int[][]" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

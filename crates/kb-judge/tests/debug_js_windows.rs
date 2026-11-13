@@ -535,3 +535,25 @@ fn assert_debuggable(problems: &[(&str, &str)]) {
         );
     }
 }
+
+/// Content to 150, milestone 1: fundamentals, range queries, geometry, road repairs.
+#[test]
+fn content_150_m1_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("temperature-swing", "temperatureSwing"),
+        ("grade-bands", "gradeBands"),
+        ("vowel-tally", "vowelTally"),
+        ("leap-years", "leapYears"),
+        ("halving-steps", "halvingSteps"),
+        ("title-case", "titleCase"),
+        ("mileage-log", "tripTotals"),
+        ("stock-ledger", "stockLedger"),
+        ("gauge-corrections", "gaugeReadings"),
+        ("cold-snap", "coldSnaps"),
+        ("road-repairs", "roadRepairs"),
+        ("turn-signals", "turnSignals"),
+        ("fenced-garden", "whereIsPoint"),
+        ("crossing-paths", "pathsCross"),
+        ("tree-fence", "fenceArea"),
+    ]);
+}

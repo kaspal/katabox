@@ -1,0 +1,17 @@
+id = "title-case"
+title = "Title Case Fixer"
+title_es = "Arreglar los títulos"
+difficulty = "easy"
+tags = ["string"]
+pattern = "fundamentals"
+rank = 6
+
+[signature]
+name = "titleCase"
+params = [{ name = "text", type = "string" }]
+returns = "string"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

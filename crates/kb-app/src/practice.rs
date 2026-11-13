@@ -17,13 +17,15 @@ use crate::{App, AppError, AppErrorCode, Result};
 /// The order patterns are learnt in (the pattern map and the "next problem" fallback):
 /// the order of `pattern.*` in the UI's locale files. Patterns not listed sort after
 /// these, by id.
-pub const PATTERN_TRACK: [&str; 20] = [
+pub const PATTERN_TRACK: [&str; 23] = [
+    "fundamentals",
     "arrays-hashing",
     "sorting",
     "two-pointers",
     "sliding-window",
     "stack",
     "binary-search",
+    "range-queries",
     "linked-list",
     "trees",
     "tries",
@@ -34,6 +36,7 @@ pub const PATTERN_TRACK: [&str; 20] = [
     "greedy",
     "intervals",
     "math",
+    "geometry",
     "bit-manipulation",
     "strings",
     "union-find",

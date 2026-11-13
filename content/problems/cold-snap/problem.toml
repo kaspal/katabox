@@ -1,0 +1,19 @@
+id = "cold-snap"
+title = "Cold Snap Monitor"
+title_es = "Vigilancia de heladas"
+difficulty = "hard"
+tags = ["segment-tree", "lazy-propagation"]
+pattern = "range-queries"
+rank = 9
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
+
+[signature]
+name = "coldSnaps"
+params = [{ name = "temps", type = "int[]" }, { name = "ops", type = "string[]" }, { name = "args", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

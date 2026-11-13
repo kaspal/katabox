@@ -1,0 +1,17 @@
+id = "vowel-tally"
+title = "Vowel Tally"
+title_es = "Recuento de vocales"
+difficulty = "easy"
+tags = ["string", "counting"]
+pattern = "fundamentals"
+rank = 3
+
+[signature]
+name = "vowelTally"
+params = [{ name = "text", type = "string" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

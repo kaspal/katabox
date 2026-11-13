@@ -9,12 +9,14 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 const PATTERNS: &[&str] = &[
+    "fundamentals",
     "arrays-hashing",
     "sorting",
     "two-pointers",
     "sliding-window",
     "stack",
     "binary-search",
+    "range-queries",
     "linked-list",
     "trees",
     "tries",
@@ -25,6 +27,7 @@ const PATTERNS: &[&str] = &[
     "greedy",
     "intervals",
     "math",
+    "geometry",
     "bit-manipulation",
     "strings",
     "union-find",
@@ -469,6 +472,13 @@ fn check_tests(
                 continue;
             }
         };
+        // JSON numbers beyond ±(2⁵³ − 1) lose precision in JavaScript (JSON.parse).
+        if let Some(n) = unsafe_integer(&v) {
+            errs.push(format!(
+                "{}: {n} is outside ±(2⁵³ − 1), where JavaScript loses precision",
+                p.display()
+            ));
+        }
         let Some(input) = v.get("input").and_then(|i| i.as_object()) else {
             errs.push(format!("{}: missing object \"input\"", p.display()));
             continue;
@@ -496,6 +506,30 @@ fn check_tests(
     n
 }
 
+/// The largest integer every language reads exactly from JSON (JavaScript's
+/// `Number.MAX_SAFE_INTEGER`).
+pub const MAX_SAFE_INTEGER: i64 = (1 << 53) - 1;
+
+/// The first number in `value` that is an integer outside ±(2⁵³ − 1), if any.
+fn unsafe_integer(value: &serde_json::Value) -> Option<String> {
+    use serde_json::Value;
+    match value {
+        Value::Number(n) => {
+            let ok = match (n.as_i64(), n.as_u64(), n.as_f64()) {
+                (Some(i), _, _) => i.abs() <= MAX_SAFE_INTEGER,
+                (None, Some(_), _) => false,
+                // A float with an integral value beyond 2⁵³ is the same trap.
+                (None, None, Some(f)) => f.fract() != 0.0 || f.abs() <= MAX_SAFE_INTEGER as f64,
+                _ => true,
+            };
+            (!ok).then(|| n.to_string())
+        }
+        Value::Array(items) => items.iter().find_map(unsafe_integer),
+        Value::Object(map) => map.values().find_map(unsafe_integer),
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
@@ -506,6 +540,23 @@ pub(crate) mod tests {
             normalize("  def  f(a:  int) -> int:  "),
             "def f(a: int) -> int:"
         );
+    }
+
+    #[test]
+    fn integers_stay_within_javascript_safe_range() {
+        use serde_json::json;
+        assert_eq!(
+            unsafe_integer(&json!({"input": {"a": [1, -5, 9007199254740991i64]}})),
+            None
+        );
+        assert_eq!(
+            unsafe_integer(&json!({"input": {"a": [[9007199254740992i64]]}})).as_deref(),
+            Some("9007199254740992")
+        );
+        assert!(unsafe_integer(&json!({"output": -9007199254740993i64})).is_some());
+        assert!(unsafe_integer(&json!({"output": 18446744073709551615u64})).is_some());
+        assert!(unsafe_integer(&json!({"output": 1e20})).is_some());
+        assert_eq!(unsafe_integer(&json!({"output": 0.5})), None);
     }
 
     #[test]

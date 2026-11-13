@@ -1,0 +1,1 @@
+{"input":{"args":[[1,2],[0,0],[1,1],[1,2,35]],"ops":["coldest","coldest","coldest","shift"],"temps":[-20,28,26]},"output":[26,-20,28]}

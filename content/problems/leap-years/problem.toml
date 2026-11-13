@@ -1,0 +1,17 @@
+id = "leap-years"
+title = "Leap Years Between"
+title_es = "Años bisiestos entre dos fechas"
+difficulty = "easy"
+tags = ["math", "simulation"]
+pattern = "fundamentals"
+rank = 4
+
+[signature]
+name = "leapYears"
+params = [{ name = "start", type = "int" }, { name = "end", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

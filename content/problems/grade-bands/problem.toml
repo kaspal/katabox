@@ -1,0 +1,17 @@
+id = "grade-bands"
+title = "Grade Bands"
+title_es = "Franjas de notas"
+difficulty = "easy"
+tags = ["array", "string"]
+pattern = "fundamentals"
+rank = 2
+
+[signature]
+name = "gradeBands"
+params = [{ name = "scores", type = "int[]" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256
