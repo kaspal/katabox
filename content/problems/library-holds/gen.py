@@ -17,11 +17,14 @@ def generate(seed, size):
         # slow on a plain list: 4·10⁴ cancels from members who are not waiting (each
         # searches the whole line, 2·10⁹ steps in all) and 10⁴ returns (each shifts
         # the whole line).
+        # Seed 1 is the original test; seed 2 is the same shape on another book with other
+        # member numbers, so the naive solution's total stays well over its CPU cap.
         n, k, r = 50_000, 40_000, 10_000
+        book, base = (1, 0) if seed % 2 else (7, 10**6)
         ops = ["hold"] * n + ["cancel"] * k + ["return"] * r
-        args = [[1, m] for m in range(1, n + 1)]
-        args += [[1, m] for m in range(n + 1, n + k + 1)]
-        args += [[1]] * r
+        args = [[book, base + m] for m in range(1, n + 1)]
+        args += [[book, base + m] for m in range(n + 1, n + k + 1)]
+        args += [[book]] * r
         return {"ops": ops, "args": args}
     books, members = rng.randint(1, 2), rng.randint(1, 4)
     ops, args = [], []

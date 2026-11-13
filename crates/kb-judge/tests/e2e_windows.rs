@@ -167,13 +167,27 @@ fn wrong_answer_typescript() {
 }
 
 #[test]
-fn starter_stubs_parse_and_get_wrong_answer() {
+fn starter_stubs_parse_and_fail_clearly() {
     let sig = two_sum().signature;
-    for lang in [Language::Python, Language::TypeScript] {
-        let r = run(lang, &starter_code(lang, &sig).unwrap());
-        assert_eq!(r.verdict, Verdict::WrongAnswer, "{lang}");
-        assert_eq!(r.first_failure.unwrap().actual, Some(json!(null)), "{lang}");
-    }
+    // Python's stub raises NotImplementedError and TypeScript's throws "Not
+    // implemented": runtime errors naming it, from the user's own code (not a harness
+    // failure).
+    let r = run(
+        Language::Python,
+        &starter_code(Language::Python, &sig).unwrap(),
+    );
+    assert_eq!(r.verdict, Verdict::RuntimeError);
+    let msg = failure_message(&r, MessageCode::Exception);
+    assert!(msg.contains("NotImplementedError"), "{msg}");
+    assert!(msg.contains("solution.py"), "{msg}");
+    let r = run(
+        Language::TypeScript,
+        &starter_code(Language::TypeScript, &sig).unwrap(),
+    );
+    assert_eq!(r.verdict, Verdict::RuntimeError);
+    let msg = failure_message(&r, MessageCode::Exception);
+    assert!(msg.contains("Not implemented"), "{msg}");
+    assert!(msg.contains("solution.ts"), "{msg}");
     // Typed returns: PHP's empty body fails its `: array` return type, and Rust's stub is
     // `todo!()`. Both compile and run.
     let r = run(Language::Php, &starter_code(Language::Php, &sig).unwrap());

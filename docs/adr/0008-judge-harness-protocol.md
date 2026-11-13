@@ -81,3 +81,5 @@ prints must not corrupt results, and users must see the first failing input.
 - Verified on Windows only (`crates/kb-judge/tests/e2e_windows.rs`, 21 tests). Linux
   should work through the same kb-runner API but is untested, in particular Node under
   the seccomp policy and `RLIMIT_NPROC` counting Node's threads.
+- The Rust harness's JSON reader lives in `languages/rust/json.rs` and reads test inputs
+  straight into the argument types; the protocol above is unchanged (ADR 0026).

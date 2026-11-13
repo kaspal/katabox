@@ -8,7 +8,7 @@
 
 ## Funciones planeadas
 
-- Un catálogo creciente de problemas originales en ~20 patrones (arreglos, dos punteros, ventana deslizante, árboles, grafos, programación dinámica…)
+- 150 problemas originales en 23 patrones (fundamentos, arreglos, dos punteros, ventana deslizante, árboles, grafos, programación dinámica…)
 - Ejemplos públicos, tus propias pruebas (la salida esperada se calcula por ti) y pruebas ocultas que muestran la primera entrada que falla
 - Editor con autocompletado y diagnósticos; depurador paso a paso con "Depurar este caso"
 - Pistas por niveles, explicaciones y soluciones de referencia en cada lenguaje

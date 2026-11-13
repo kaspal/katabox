@@ -29,10 +29,141 @@ mod kb_harness {
 
     type Args = ({% for p in params %}{{ p.type }},{% endfor %});
 
+    /// The generic path: a test from the `Json` tree. Its messages are the ones users see.
     fn parse_args(input: &Json) -> Result<Args, String> {
         Ok(({% for key in param_keys %}
             FromJson::from_json(input.get({{ key | tojson }}).ok_or("missing input {{ key }}")?)?,{% endfor %}
         ))
+    }
+
+    /// The fast path (ADR 0026): a test object read straight into the argument types.
+    /// The first occurrence of a key wins and unknown keys are skipped, as in `parse_args`;
+    /// a missing key or a value that does not fit is a mismatch, handled by `read_test`.
+    fn read_args(p: &mut Parser<'_>) -> Result<Args, ReadError> {
+{% for key in param_keys %}
+        let mut a{{ loop.index0 }}: Option<{{ params[loop.index0].type }}> = None;
+{% endfor %}
+        if p.peek() != Some(b'{') {
+            return Err(ReadError::Mismatch);
+        }
+        p.enter()?;
+        p.i += 1;
+        if p.peek() == Some(b'}') {
+            p.i += 1;
+        } else {
+            loop {
+                p.ws();
+                let key = p.string()?;
+                p.ws();
+                p.eat(":")?;
+                match key.as_str() {
+{% for key in param_keys %}
+                    {{ key | tojson }} if a{{ loop.index0 }}.is_none() => a{{ loop.index0 }} = Some(ReadJson::read(p)?),
+{% endfor %}
+                    _ => {
+                        p.value()?;
+                    }
+                }
+                match p.peek() {
+                    Some(b',') => p.i += 1,
+                    Some(b'}') => {
+                        p.i += 1;
+                        break;
+                    }
+                    _ => return Err(ReadError::Syntax(format!("bad JSON object at byte {}", p.i))),
+                }
+            }
+        }
+        p.depth -= 1;
+        Ok(({% for key in param_keys %}a{{ loop.index0 }}.ok_or(ReadError::Mismatch)?,{% endfor %}))
+    }
+
+    /// One test: the fast path, or on a mismatch the generic path from the same start.
+    /// `Err` means the request is not valid JSON (exit 70).
+    fn read_test(p: &mut Parser<'_>) -> Result<Result<Args, String>, String> {
+        let (start, depth) = (p.i, p.depth);
+        match read_args(p) {
+            Ok(args) => Ok(Ok(args)),
+            Err(ReadError::Syntax(e)) => Err(e),
+            Err(ReadError::Mismatch) => {
+                p.i = start;
+                p.depth = depth;
+                let v = p.value()?;
+                Ok(parse_args(&v))
+            }
+        }
+    }
+
+    /// The whole request: every field as `Json`, except the first `tests`, whose tests are
+    /// read into arguments. Malformed JSON anywhere is an error, as with `parse`.
+    fn read_request(input: &str) -> Result<(Json, Vec<Result<Args, String>>), String> {
+        let mut p = Parser::new(input);
+        if p.peek() != Some(b'{') {
+            return parse(input).map(|v| (v, Vec::new()));
+        }
+        p.enter()?;
+        p.i += 1;
+        let mut fields = Vec::new();
+        let mut tests = None;
+        if p.peek() == Some(b'}') {
+            p.i += 1;
+        } else {
+            loop {
+                p.ws();
+                let key = p.string()?;
+                p.ws();
+                p.eat(":")?;
+                if key == "tests" && tests.is_none() {
+                    tests = Some(read_tests(&mut p)?);
+                    fields.push((key, Json::Null));
+                } else {
+                    let v = p.value()?;
+                    fields.push((key, v));
+                }
+                match p.peek() {
+                    Some(b',') => p.i += 1,
+                    Some(b'}') => {
+                        p.i += 1;
+                        break;
+                    }
+                    _ => return Err(format!("bad JSON object at byte {}", p.i)),
+                }
+            }
+        }
+        p.depth -= 1;
+        p.ws();
+        if p.i != p.s.len() {
+            return Err("trailing characters after JSON".into());
+        }
+        Ok((Json::Obj(fields), tests.unwrap_or_default()))
+    }
+
+    /// The `tests` array; any other value means no tests, as before.
+    fn read_tests(p: &mut Parser<'_>) -> Result<Vec<Result<Args, String>>, String> {
+        if p.peek() != Some(b'[') {
+            p.value()?;
+            return Ok(Vec::new());
+        }
+        p.enter()?;
+        p.i += 1;
+        let mut out = Vec::new();
+        if p.peek() == Some(b']') {
+            p.i += 1;
+        } else {
+            loop {
+                out.push(read_test(p)?);
+                match p.peek() {
+                    Some(b',') => p.i += 1,
+                    Some(b']') => {
+                        p.i += 1;
+                        break;
+                    }
+                    _ => return Err(format!("bad JSON array at byte {}", p.i)),
+                }
+            }
+        }
+        p.depth -= 1;
+        Ok(out)
     }
 
     fn call(args: Args) -> {{ returns }} {
@@ -40,305 +171,7 @@ mod kb_harness {
         crate::{{ function }}({% for p in params %}a{{ loop.index0 }}{% if not loop.last %}, {% endif %}{% endfor %})
     }
 
-    // ---- JSON ---------------------------------------------------------------------
-
-    #[derive(Debug, Clone)]
-    pub enum Json {
-        Null,
-        Bool(bool),
-        /// Number as written, converted on demand.
-        Num(String),
-        Str(String),
-        Arr(Vec<Json>),
-        Obj(Vec<(String, Json)>),
-    }
-
-    impl Json {
-        pub fn get(&self, key: &str) -> Option<&Json> {
-            match self {
-                Json::Obj(fields) => fields.iter().find(|(k, _)| k == key).map(|(_, v)| v),
-                _ => None,
-            }
-        }
-    }
-
-    struct Parser<'a> {
-        s: &'a [u8],
-        i: usize,
-    }
-
-    impl Parser<'_> {
-        fn ws(&mut self) {
-            while self.i < self.s.len() && matches!(self.s[self.i], b' ' | b'\t' | b'\n' | b'\r') {
-                self.i += 1;
-            }
-        }
-
-        fn eat(&mut self, lit: &str) -> Result<(), String> {
-            if self.s[self.i..].starts_with(lit.as_bytes()) {
-                self.i += lit.len();
-                Ok(())
-            } else {
-                Err(format!("bad JSON at byte {}", self.i))
-            }
-        }
-
-        fn value(&mut self) -> Result<Json, String> {
-            self.ws();
-            let c = *self.s.get(self.i).ok_or("unexpected end of JSON")?;
-            let v = match c {
-                b'n' => self.eat("null").map(|_| Json::Null)?,
-                b't' => self.eat("true").map(|_| Json::Bool(true))?,
-                b'f' => self.eat("false").map(|_| Json::Bool(false))?,
-                b'"' => Json::Str(self.string()?),
-                b'[' => {
-                    self.i += 1;
-                    let mut items = Vec::new();
-                    self.ws();
-                    if self.s.get(self.i) == Some(&b']') {
-                        self.i += 1;
-                    } else {
-                        loop {
-                            items.push(self.value()?);
-                            self.ws();
-                            match self.s.get(self.i) {
-                                Some(b',') => self.i += 1,
-                                Some(b']') => {
-                                    self.i += 1;
-                                    break;
-                                }
-                                _ => return Err(format!("bad JSON array at byte {}", self.i)),
-                            }
-                        }
-                    }
-                    Json::Arr(items)
-                }
-                b'{' => {
-                    self.i += 1;
-                    let mut fields = Vec::new();
-                    self.ws();
-                    if self.s.get(self.i) == Some(&b'}') {
-                        self.i += 1;
-                    } else {
-                        loop {
-                            self.ws();
-                            let k = self.string()?;
-                            self.ws();
-                            self.eat(":")?;
-                            fields.push((k, self.value()?));
-                            self.ws();
-                            match self.s.get(self.i) {
-                                Some(b',') => self.i += 1,
-                                Some(b'}') => {
-                                    self.i += 1;
-                                    break;
-                                }
-                                _ => return Err(format!("bad JSON object at byte {}", self.i)),
-                            }
-                        }
-                    }
-                    Json::Obj(fields)
-                }
-                _ => {
-                    let start = self.i;
-                    while self.i < self.s.len()
-                        && matches!(self.s[self.i], b'-' | b'+' | b'.' | b'e' | b'E' | b'0'..=b'9')
-                    {
-                        self.i += 1;
-                    }
-                    if start == self.i {
-                        return Err(format!("bad JSON at byte {start}"));
-                    }
-                    Json::Num(String::from_utf8_lossy(&self.s[start..self.i]).into_owned())
-                }
-            };
-            Ok(v)
-        }
-
-        fn hex4(&mut self) -> Result<u32, String> {
-            let h = self.s.get(self.i..self.i + 4).ok_or("bad \\u escape")?;
-            self.i += 4;
-            u32::from_str_radix(std::str::from_utf8(h).map_err(|e| e.to_string())?, 16)
-                .map_err(|e| e.to_string())
-        }
-
-        fn string(&mut self) -> Result<String, String> {
-            self.eat("\"")?;
-            let mut out = Vec::new();
-            loop {
-                let c = *self.s.get(self.i).ok_or("unterminated JSON string")?;
-                self.i += 1;
-                match c {
-                    b'"' => break,
-                    b'\\' => {
-                        let e = *self.s.get(self.i).ok_or("bad escape")?;
-                        self.i += 1;
-                        let ch = match e {
-                            b'"' => '"',
-                            b'\\' => '\\',
-                            b'/' => '/',
-                            b'b' => '\u{8}',
-                            b'f' => '\u{c}',
-                            b'n' => '\n',
-                            b'r' => '\r',
-                            b't' => '\t',
-                            b'u' => {
-                                let hi = self.hex4()?;
-                                let code = if (0xD800..0xDC00).contains(&hi) {
-                                    self.eat("\\u")?;
-                                    let lo = self.hex4()?;
-                                    0x10000 + ((hi - 0xD800) << 10) + (lo.wrapping_sub(0xDC00) & 0x3FF)
-                                } else {
-                                    hi
-                                };
-                                char::from_u32(code).unwrap_or('\u{FFFD}')
-                            }
-                            _ => return Err("bad escape".into()),
-                        };
-                        let mut buf = [0u8; 4];
-                        out.extend_from_slice(ch.encode_utf8(&mut buf).as_bytes());
-                    }
-                    _ => out.push(c),
-                }
-            }
-            String::from_utf8(out).map_err(|e| e.to_string())
-        }
-    }
-
-    pub fn parse(s: &str) -> Result<Json, String> {
-        let mut p = Parser { s: s.as_bytes(), i: 0 };
-        let v = p.value()?;
-        p.ws();
-        if p.i != p.s.len() {
-            return Err("trailing characters after JSON".into());
-        }
-        Ok(v)
-    }
-
-    pub fn write_str(out: &mut String, s: &str) {
-        out.push('"');
-        for c in s.chars() {
-            match c {
-                '"' => out.push_str("\\\""),
-                '\\' => out.push_str("\\\\"),
-                '\n' => out.push_str("\\n"),
-                '\r' => out.push_str("\\r"),
-                '\t' => out.push_str("\\t"),
-                c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
-                c => out.push(c),
-            }
-        }
-        out.push('"');
-    }
-
-    pub trait FromJson: Sized {
-        fn from_json(v: &Json) -> Result<Self, String>;
-    }
-
-    impl FromJson for i64 {
-        fn from_json(v: &Json) -> Result<Self, String> {
-            match v {
-                Json::Num(n) => n
-                    .parse::<i64>()
-                    .or_else(|_| {
-                        n.parse::<f64>()
-                            .ok()
-                            .filter(|f| f.fract() == 0.0 && f.abs() < 9.2e18)
-                            .map(|f| f as i64)
-                            .ok_or(())
-                    })
-                    .map_err(|_| format!("{n} is not an i64")),
-                _ => Err(format!("expected an integer, got {v:?}")),
-            }
-        }
-    }
-
-    impl FromJson for f64 {
-        fn from_json(v: &Json) -> Result<Self, String> {
-            match v {
-                Json::Num(n) => n.parse().map_err(|_| format!("{n} is not an f64")),
-                _ => Err(format!("expected a number, got {v:?}")),
-            }
-        }
-    }
-
-    impl FromJson for bool {
-        fn from_json(v: &Json) -> Result<Self, String> {
-            match v {
-                Json::Bool(b) => Ok(*b),
-                _ => Err(format!("expected a bool, got {v:?}")),
-            }
-        }
-    }
-
-    impl FromJson for String {
-        fn from_json(v: &Json) -> Result<Self, String> {
-            match v {
-                Json::Str(s) => Ok(s.clone()),
-                _ => Err(format!("expected a string, got {v:?}")),
-            }
-        }
-    }
-
-    impl<T: FromJson> FromJson for Vec<T> {
-        fn from_json(v: &Json) -> Result<Self, String> {
-            match v {
-                Json::Arr(items) => items.iter().map(T::from_json).collect(),
-                _ => Err(format!("expected an array, got {v:?}")),
-            }
-        }
-    }
-
-    pub trait ToJson {
-        /// Appends this value as JSON; fails for values JSON cannot represent.
-        fn write_json(&self, out: &mut String) -> Result<(), String>;
-    }
-
-    impl ToJson for i64 {
-        fn write_json(&self, out: &mut String) -> Result<(), String> {
-            out.push_str(&self.to_string());
-            Ok(())
-        }
-    }
-
-    impl ToJson for f64 {
-        fn write_json(&self, out: &mut String) -> Result<(), String> {
-            if !self.is_finite() {
-                return Err(format!("{self} is not a finite number"));
-            }
-            // Debug keeps a fractional part (2.0, not 2) and uses JSON-compatible exponents.
-            out.push_str(&format!("{self:?}"));
-            Ok(())
-        }
-    }
-
-    impl ToJson for bool {
-        fn write_json(&self, out: &mut String) -> Result<(), String> {
-            out.push_str(if *self { "true" } else { "false" });
-            Ok(())
-        }
-    }
-
-    impl ToJson for String {
-        fn write_json(&self, out: &mut String) -> Result<(), String> {
-            write_str(out, self);
-            Ok(())
-        }
-    }
-
-    impl<T: ToJson> ToJson for Vec<T> {
-        fn write_json(&self, out: &mut String) -> Result<(), String> {
-            out.push('[');
-            for (i, v) in self.iter().enumerate() {
-                if i > 0 {
-                    out.push(',');
-                }
-                v.write_json(out)?;
-            }
-            out.push(']');
-            Ok(())
-        }
-    }
+{{ json_code }}
 
 {% if uses_nodes %}
 {{ nodes_code }}
@@ -356,6 +189,14 @@ mod kb_harness {
                 head = Some(node);
             }
             Ok(head)
+        }
+    }
+
+    // Node values take the generic path: read as `Json`, then converted as above.
+    impl ReadJson for Option<Box<ListNode>> {
+        fn read(p: &mut Parser<'_>) -> Result<Self, ReadError> {
+            let v = p.value()?;
+            FromJson::from_json(&v).map_err(|_| ReadError::Mismatch)
         }
     }
 
@@ -410,6 +251,13 @@ mod kb_harness {
                 }
             }
             Ok(nodes.into_iter().next().flatten())
+        }
+    }
+
+    impl ReadJson for Option<Rc<RefCell<TreeNode>>> {
+        fn read(p: &mut Parser<'_>) -> Result<Self, ReadError> {
+            let v = p.value()?;
+            FromJson::from_json(&v).map_err(|_| ReadError::Mismatch)
         }
     }
 
@@ -580,23 +428,6 @@ mod kb_harness {
         if std::io::stdin().read_to_string(&mut input).is_err() {
             std::process::exit(70);
         }
-        let request = match parse(&input) {
-            Ok(r) => r,
-            Err(_) => std::process::exit(70),
-        };
-        let nonce = match request.get("nonce") {
-            Some(Json::Str(s)) => s.clone(),
-            _ => std::process::exit(70),
-        };
-        let cap = match request.get("max_output_bytes") {
-            Some(Json::Num(n)) => n.parse::<usize>().unwrap_or(65536),
-            _ => 65536,
-        };
-        let tests = match request.get("tests") {
-            Some(Json::Arr(t)) => t.clone(),
-            _ => Vec::new(),
-        };
-
         panic::set_hook(Box::new(|info| {
             let payload = info.payload();
             let msg = payload
@@ -616,7 +447,25 @@ mod kb_harness {
         // Run on a thread with a large stack: deep recursion is common in solutions.
         let worker = std::thread::Builder::new()
             .stack_size(64 << 20)
-            .spawn(move || run_all(&nonce, cap, &tests));
+            .spawn(move || {
+                // Read on this thread: arguments such as `Rc` trees cannot cross threads.
+                // The tests are read straight into arguments (ADR 0026); the rest stays
+                // `Json`. A broken request ends the process before any record, as before.
+                let (request, tests) = match read_request(&input) {
+                    Ok(r) => r,
+                    Err(_) => std::process::exit(70),
+                };
+                let nonce = match request.get("nonce") {
+                    Some(Json::Str(s)) => s.clone(),
+                    _ => std::process::exit(70),
+                };
+                let cap = match request.get("max_output_bytes") {
+                    Some(Json::Int(n)) => usize::try_from(*n).unwrap_or(65536),
+                    Some(Json::Num(n)) => n.parse::<usize>().unwrap_or(65536),
+                    _ => 65536,
+                };
+                run_all(&nonce, cap, tests);
+            });
         let code = match worker.map(|w| w.join()) {
             Ok(Ok(())) => 0,
             _ => 70,
@@ -625,16 +474,16 @@ mod kb_harness {
         std::process::exit(code);
     }
 
-    fn run_all(nonce: &str, cap: usize, tests: &[Json]) {
+    fn run_all(nonce: &str, cap: usize, tests: Vec<Result<Args, String>>) {
         let mut out = std::mem::ManuallyDrop::new(capture::real_stdout());
         let mut emit = |body: String| {
             let _ = out.write_all(record(nonce, &body).as_bytes());
             let _ = out.flush();
         };
         emit("\"kind\":\"ready\"".into());
-        for (i, test) in tests.iter().enumerate() {
+        for (i, test) in tests.into_iter().enumerate() {
             let mut body = format!("\"kind\":\"result\",\"test\":{i}");
-            let args = match parse_args(test) {
+            let args = match test {
                 Ok(a) => a,
                 Err(e) => {
                     let mut err = String::new();

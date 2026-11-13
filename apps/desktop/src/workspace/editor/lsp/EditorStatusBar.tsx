@@ -65,32 +65,43 @@ export function EditorStatusBar({
             ? CircleSlash
             : CircleDashed;
   const reason = server.state === "unavailable" ? server.reason : null;
+  // The status text is the one part that gives way on a narrow bar: it truncates (full text
+  // in the title) so the counts and the cursor position never wrap.
+  const fullText = basicCompletion ? `${text} · ${t("lsp.status.basicCompletion")}` : text;
   const label = (
-    <span className="inline-flex items-center gap-1.5" data-testid="lsp-status" data-state={server.state}>
+    <span
+      className="inline-flex min-w-0 items-center gap-1.5"
+      data-testid="lsp-status"
+      data-state={server.state}
+      title={fullText}
+    >
       <Icon
         aria-hidden
         className={cn(
           "size-3.5",
           server.state === "ready" && "text-verdict-accepted",
           Icon === Loader2 && "animate-spin",
+          "shrink-0",
         )}
       />
-      {text}
-      {basicCompletion && (
-        <span data-testid="basic-completion"> · {t("lsp.status.basicCompletion")}</span>
-      )}
+      <span className="truncate">
+        {text}
+        {basicCompletion && (
+          <span data-testid="basic-completion"> · {t("lsp.status.basicCompletion")}</span>
+        )}
+      </span>
     </span>
   );
   return (
     <div
-      className="flex h-7 shrink-0 items-center gap-4 border-t bg-muted/40 px-3 text-xs text-muted-foreground"
+      className="flex h-7 shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap border-t bg-muted/40 px-3 text-xs text-muted-foreground"
       role="status"
       aria-live="polite"
     >
       {reason ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span tabIndex={0} className="cursor-help">
+            <span tabIndex={0} className="flex min-w-0 cursor-help">
               {label}
             </span>
           </TooltipTrigger>
@@ -106,7 +117,7 @@ export function EditorStatusBar({
         </Button>
       )}
       {status && (
-        <span className="inline-flex items-center gap-3" data-testid="problems-count">
+        <span className="inline-flex shrink-0 items-center gap-3" data-testid="problems-count">
           <span className={cn("inline-flex items-center gap-1", status.errors > 0 && "text-destructive")}>
             <AlertCircle aria-hidden className="size-3.5" />
             {t("lsp.errors", { count: status.errors })}
@@ -117,7 +128,7 @@ export function EditorStatusBar({
           </span>
         </span>
       )}
-      <span className="ml-auto inline-flex items-center gap-3">
+      <span className="ml-auto inline-flex shrink-0 items-center gap-3">
         {status && <span className="tabular-nums">{t("lsp.position", { line: status.line, col: status.col })}</span>}
         <Tooltip>
           <TooltipTrigger asChild>
