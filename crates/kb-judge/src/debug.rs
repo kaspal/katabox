@@ -14,8 +14,8 @@
 //! run fixes `PYTHONHASHSEED` and seeds `random` so ordinary programs replay exactly.
 
 use kb_core::debug::{
-    DebugOutcome, EvalResult, Expansion, PrintChunk, DebugSnapshot, StackFrame, Step, StopInfo, Trace,
-    Truncation, VarInfo,
+    DebugOutcome, DebugSnapshot, EvalResult, Expansion, PrintChunk, StackFrame, Step, StopInfo,
+    Trace, Truncation, VarInfo,
 };
 use kb_core::{Language, Limits};
 use kb_runner::{SandboxSpec, Termination};

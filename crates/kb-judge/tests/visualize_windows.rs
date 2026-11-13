@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use kb_core::Language;
-use kb_core::debug::{SnapObject, SnapValue, DebugSnapshot, StopInfo, Trace};
+use kb_core::debug::{DebugSnapshot, SnapObject, SnapValue, StopInfo, Trace};
 use kb_judge::debug::{self, DebugRun, SNAPSHOT_MAX_BYTES, StopRequest};
 use kb_judge::{JudgeEnv, Problem};
 use kb_runner::ROOT_MARKER;
