@@ -83,3 +83,5 @@ prints must not corrupt results, and users must see the first failing input.
   the seccomp policy and `RLIMIT_NPROC` counting Node's threads.
 - The Rust harness's JSON reader lives in `languages/rust/json.rs` and reads test inputs
   straight into the argument types; the protocol above is unchanged (ADR 0026).
+
+**Follow-up:** program problems (stdin/stdout, one run per test, no harness) are ADR 0028.
