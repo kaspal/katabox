@@ -7,11 +7,11 @@ Trees are written in level order, top to bottom and left to right, with `null` f
 ### Example 1
 
 ```
-root = [1, 2, 3, 4, 5]
-Output: 3
+root = [6, 4, 7, 2, 5, null, 8]
+Output: 4
 ```
 
-For example 4 → 2 → 1 → 3.
+For example 2 → 4 → 6 → 7 → 8.
 
 ### Example 2
 

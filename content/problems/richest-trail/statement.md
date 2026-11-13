@@ -16,11 +16,11 @@ The trail 2 → 3.
 ### Example 2
 
 ```
-root = [-5, 4, 8, null, null, -2, 6]
-Output: 14
+root = [6, -8, 5, 3, null, 4, -2]
+Output: 15
 ```
 
-The trail −2 → 8 → 6 has 12; 8 → 6 has 14; going up to −5 would only lose coins.
+The trail 6 → 5 → 4. Going down to −8 would cost more than the 3 below it gives back.
 
 ### Example 3
 

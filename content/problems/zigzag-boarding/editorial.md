@@ -6,6 +6,6 @@
 
 ### Walkthrough
 
-`[1, 2, 3, 4, 5]`: front `[1, 2, 3]`, back `[4, 5]`, reversed `[5, 4]`. Interleaving gives `1, 5, 2, 4, 3`.
+`[3, 8, 1, 6, 9]`: front `[3, 8, 1]`, back `[6, 9]`, reversed `[9, 6]`. Interleaving gives `3, 9, 8, 6, 1`.
 
 **Complexity:** O(n) time, O(1) extra space. Detaching the last node for every position walks the list each time, O(n²): about 5·10⁹ steps for 10⁵ passengers.

@@ -5,8 +5,8 @@ Una forma de pagar es una bolsa de monedas: el orden no importa, así que escrib
 ### Ejemplo 1
 
 ```
-coins = [2, 3, 5], target = 8
-Salida: [[2, 2, 2, 2], [2, 3, 3], [3, 5]]
+coins = [3, 4, 7], target = 10
+Salida: [[3, 3, 4], [3, 7]]
 ```
 
 ### Ejemplo 2

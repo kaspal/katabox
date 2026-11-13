@@ -5,11 +5,11 @@ Given the `codes`, return the largest value of `codes[i] XOR codes[j]` over two 
 ### Example 1
 
 ```
-codes = [3, 10, 5, 25, 2, 8]
-Output: 28
+codes = [9, 14, 3, 20, 5]
+Output: 29
 ```
 
-5 XOR 25 = 00101 XOR 11001 = 11100 = 28.
+9 XOR 20 = 01001 XOR 10100 = 11101 = 29.
 
 ### Example 2
 

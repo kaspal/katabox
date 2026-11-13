@@ -6,6 +6,6 @@
 
 ### Paso a paso
 
-`[1, 2, 3, 4, 5]`: delantera `[1, 2, 3]`, trasera `[4, 5]`, invertida `[5, 4]`. Al intercalar queda `1, 5, 2, 4, 3`.
+`[3, 8, 1, 6, 9]`: delantera `[3, 8, 1]`, trasera `[6, 9]`, invertida `[9, 6]`. Al intercalar queda `3, 9, 8, 6, 1`.
 
 **Complejidad:** O(n) en tiempo y O(1) de espacio extra. Separar el último nodo para cada posición recorre la lista cada vez, O(n²): unos 5·10⁹ pasos para 10⁵ pasajeros.

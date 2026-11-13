@@ -18,6 +18,6 @@ Un recorrido en postorden calcula `ganancia` para cada nodo y se queda con el me
 
 ### Paso a paso
 
-`[-5, 4, 8, null, null, -2, 6]`: ganancia(−2) = −2, ganancia(6) = 6, ganancia(8) = 8 + 6 = 14, ganancia(4) = 4. El doblez en 8 vale 8 + 0 + 6 = 14; el doblez en −5 vale −5 + 4 + 14 = 13. La respuesta es 14.
+`[6, -8, 5, 3, null, 4, -2]`: ganancia(3) = 3, ganancia(−8) = −8 + 3 = −5, ganancia(4) = 4, ganancia(−2) = −2, ganancia(5) = 5 + 4 = 9. El doblez en 5 vale 5 + 4 + 0 = 9; el doblez en 6 vale 6 + max(0, −5) + max(0, 9) = 15. La respuesta es 15.
 
 **Complejidad:** O(n) en tiempo y O(h) para la recursión.

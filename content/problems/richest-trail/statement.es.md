@@ -16,11 +16,11 @@ La ruta 2 → 3.
 ### Ejemplo 2
 
 ```
-root = [-5, 4, 8, null, null, -2, 6]
-Salida: 14
+root = [6, -8, 5, 3, null, 4, -2]
+Salida: 15
 ```
 
-La ruta −2 → 8 → 6 suma 12; 8 → 6 suma 14; subir hasta el −5 solo restaría monedas.
+La ruta 6 → 5 → 4. Bajar hasta el −8 costaría más de lo que devuelve el 3 que tiene debajo.
 
 ### Ejemplo 3
 

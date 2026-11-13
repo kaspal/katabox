@@ -18,6 +18,6 @@ A post-order walk computes `gain` for every node and keeps the maximum bend. The
 
 ### Walkthrough
 
-`[-5, 4, 8, null, null, -2, 6]`: gain(−2) = −2, gain(6) = 6, gain(8) = 8 + 6 = 14, gain(4) = 4. The bend at 8 is 8 + 0 + 6 = 14; the bend at −5 is −5 + 4 + 14 = 13. The answer is 14.
+`[6, -8, 5, 3, null, 4, -2]`: gain(3) = 3, gain(−8) = −8 + 3 = −5, gain(4) = 4, gain(−2) = −2, gain(5) = 5 + 4 = 9. The bend at 5 is 5 + 4 + 0 = 9; the bend at 6 is 6 + max(0, −5) + max(0, 9) = 15. The answer is 15.
 
 **Complexity:** O(n) time, O(h) for the recursion.

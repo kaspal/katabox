@@ -7,8 +7,8 @@ Los árboles se escriben por niveles, de arriba abajo y de izquierda a derecha, 
 ### Ejemplo 1
 
 ```
-root = [1, 2, 3, null, 5, null, 4]
-Salida: [1, 3, 4]
+root = [7, 3, 9, 1, 5, null, null, null, 2]
+Salida: [7, 9, 5, 2]
 ```
 
 ### Ejemplo 2

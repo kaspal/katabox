@@ -5,8 +5,8 @@ A way to pay is a bag of coins: order does not matter, so write each one with it
 ### Example 1
 
 ```
-coins = [2, 3, 5], target = 8
-Output: [[2, 2, 2, 2], [2, 3, 3], [3, 5]]
+coins = [3, 4, 7], target = 10
+Output: [[3, 3, 4], [3, 7]]
 ```
 
 ### Example 2

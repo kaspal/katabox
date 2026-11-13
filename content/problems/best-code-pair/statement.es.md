@@ -5,11 +5,11 @@ Dados los códigos, `codes`, devuelve el mayor valor de `codes[i] XOR codes[j]` 
 ### Ejemplo 1
 
 ```
-codes = [3, 10, 5, 25, 2, 8]
-Salida: 28
+codes = [9, 14, 3, 20, 5]
+Salida: 29
 ```
 
-5 XOR 25 = 00101 XOR 11001 = 11100 = 28.
+9 XOR 20 = 01001 XOR 10100 = 11101 = 29.
 
 ### Ejemplo 2
 

@@ -7,8 +7,8 @@ Trees are written in level order, top to bottom and left to right, with `null` f
 ### Example 1
 
 ```
-preorder = [3, 9, 20, 15, 7], inorder = [9, 3, 15, 20, 7]
-Output: [3, 9, 20, null, null, 15, 7]
+preorder = [5, 2, 4, 8, 6], inorder = [2, 4, 5, 6, 8]
+Output: [5, 2, 8, null, 4, 6]
 ```
 
 ### Example 2

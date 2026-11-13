@@ -7,8 +7,8 @@ Los árboles se escriben por niveles, de arriba abajo y de izquierda a derecha, 
 ### Ejemplo 1
 
 ```
-preorder = [3, 9, 20, 15, 7], inorder = [9, 3, 15, 20, 7]
-Salida: [3, 9, 20, null, null, 15, 7]
+preorder = [5, 2, 4, 8, 6], inorder = [2, 4, 5, 6, 8]
+Salida: [5, 2, 8, null, 4, 6]
 ```
 
 ### Ejemplo 2

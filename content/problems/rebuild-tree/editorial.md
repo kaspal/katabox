@@ -6,6 +6,6 @@ A dictionary from value to inorder position, built once, makes each lookup O(1);
 
 ### Walkthrough
 
-`preorder = [3, 9, 20, 15, 7]`, `inorder = [9, 3, 15, 20, 7]`: root 3 is at inorder position 1, so the left subtree is `[9]` and the right subtree has preorder `[20, 15, 7]` and inorder `[15, 20, 7]`, whose root is 20 with children 15 and 7.
+`preorder = [5, 2, 4, 8, 6]`, `inorder = [2, 4, 5, 6, 8]`: root 5 is at inorder position 2, so the left subtree has preorder `[2, 4]` and inorder `[2, 4]` (2 with right child 4), and the right subtree has preorder `[8, 6]` and inorder `[6, 8]` (8 with left child 6).
 
 **Complexity:** O(n) time, O(n) for the map and O(h) for the recursion.

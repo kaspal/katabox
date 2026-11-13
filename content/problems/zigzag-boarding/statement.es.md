@@ -7,8 +7,8 @@ Las listas se escriben como sus valores en orden: `[1, 4, 9]` es la lista 1 → 
 ### Ejemplo 1
 
 ```
-queue = [1, 2, 3, 4, 5]
-Salida: [1, 5, 2, 4, 3]
+queue = [3, 8, 1, 6, 9]
+Salida: [3, 9, 8, 6, 1]
 ```
 
 ### Ejemplo 2
