@@ -124,6 +124,7 @@ fn template_context(def: &LanguageDef, sig: &Signature) -> Value {
         param_shapes,
         return_shape => shape(&sig.returns),
         nodes_code => def.nodes_code,
+        json_code => def.json_code,
     }
 }
 

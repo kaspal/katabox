@@ -27,6 +27,9 @@ pub struct LanguageDef {
     /// The node types' JSON conversion code (ADR 0025), inserted into the harnesses of
     /// signatures that use `ListNode` or `TreeNode`.
     pub nodes_code: &'static str,
+    /// The harness's JSON reader and writer, inserted into every harness of a language that
+    /// keeps it in its own file (Rust: `languages/rust/json.rs`, ADR 0026); empty otherwise.
+    pub json_code: &'static str,
     /// The debugger's replay run (ADR 0022): its command line and harness template, for
     /// languages that can be debugged (Python, TypeScript).
     pub debug: Option<(String, &'static str)>,
@@ -132,6 +135,10 @@ pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
         ),
         Language::JavaScript => return Err(JudgeError::Unsupported(lang)),
     };
+    let json_code = match lang {
+        Language::Rust => lang_file!("rust", "json.rs"),
+        _ => "",
+    };
     let bad = |msg: String| JudgeError::Internal(format!("languages/{lang}/language.toml: {msg}"));
     let t: LanguageToml = toml::from_str(toml_src).map_err(|e| bad(e.to_string()))?;
     if t.id != lang.id() || t.extension != lang.extension() {
@@ -161,6 +168,7 @@ pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
         stub_template,
         harness_template,
         nodes_code,
+        json_code,
         debug,
     })
 }
