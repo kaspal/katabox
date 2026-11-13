@@ -767,6 +767,7 @@ mod tests {
             difficulty: Difficulty::Easy,
             pattern: pattern.into(),
             rank,
+            mode: kb_core::ProblemMode::Function,
             tags: vec![],
             status: solved_.then_some(ProblemStatus::Solved),
         }

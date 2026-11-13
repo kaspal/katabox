@@ -11,7 +11,10 @@ CREATE TABLE problems (
     difficulty    TEXT NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
     pattern       TEXT NOT NULL,
     rank          INTEGER NOT NULL,
-    -- {"name": ..., "params": [{"name": ..., "type": ...}], "returns": ...}
+    -- 'function' (the harness calls the solution) or 'program' (stdin/stdout; ADR 0028)
+    mode          TEXT NOT NULL DEFAULT 'function' CHECK (mode IN ('function', 'program')),
+    -- {"name": ..., "params": [{"name": ..., "type": ...}], "returns": ...}; a program
+    -- problem stores its synthetic main(stdin: string) -> string
     signature     TEXT NOT NULL,
     checker       TEXT NOT NULL,
     time_limit_ms INTEGER NOT NULL,

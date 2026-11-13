@@ -205,15 +205,16 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
             }
         };
         match kb_judge::judge(&problem, &problem.tests, lang, &src, env) {
-            Ok(r) if r.verdict.is_accepted() && r.cpu_us <= budget_us => {
+            Ok(r) if r.verdict.is_accepted() && limited_cpu(&problem, &r) <= budget_us => {
                 add(
                     Check::Reference(lang),
                     true,
                     format!(
-                        "AC {}/{} tests, {} ms CPU of {} ms allowed ({SPEED_SHARE}% of {cap_ms} ms); tests {} ms",
+                        "AC {}/{} tests, {} ms CPU{} of {} ms allowed ({SPEED_SHARE}% of {cap_ms} ms); tests {} ms",
                         r.total_tests,
                         r.total_tests,
-                        ms(r.cpu_us),
+                        ms(limited_cpu(&problem, &r)),
+                        per_test(&problem),
                         ms(budget_us),
                         ms(r.time_us)
                     ),
@@ -223,8 +224,9 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                 Check::Reference(lang),
                 false,
                 format!(
-                    "too slow: {} ms CPU, over {SPEED_SHARE}% of the {cap_ms} ms {} budget ({} ms); tests {} ms",
-                    ms(r.cpu_us),
+                    "too slow: {} ms CPU{}, over {SPEED_SHARE}% of the {cap_ms} ms {} budget ({} ms); tests {} ms",
+                    ms(limited_cpu(&problem, &r)),
+                    per_test(&problem),
                     lang.id(),
                     ms(budget_us),
                     ms(r.time_us)
@@ -287,7 +289,7 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                             naive_margin(&name, None, cap)
                         }
                         Ok(r) if r.verdict.is_accepted() => {
-                            naive_margin(&name, Some(ms(r.cpu_us)), cap)
+                            naive_margin(&name, Some(ms(limited_cpu(&problem, &r))), cap)
                         }
                         Ok(r) => (
                             false,
@@ -347,6 +349,24 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
 }
 
 /// Microseconds as whole milliseconds, for messages.
+/// The CPU the time limit measures: the whole run for a function problem, the slowest
+/// test's run for a program problem (one run per test; ADR 0028).
+fn limited_cpu(problem: &kb_judge::Problem, r: &kb_judge::Report) -> u64 {
+    if problem.mode == kb_core::ProblemMode::Program {
+        r.tests.iter().map(|t| t.result.time_us).max().unwrap_or(0)
+    } else {
+        r.cpu_us
+    }
+}
+
+fn per_test(problem: &kb_judge::Problem) -> &'static str {
+    if problem.mode == kb_core::ProblemMode::Program {
+        " (slowest test)"
+    } else {
+        ""
+    }
+}
+
 fn ms(us: u64) -> u64 {
     us / 1000
 }

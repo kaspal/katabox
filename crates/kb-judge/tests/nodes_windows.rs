@@ -49,7 +49,16 @@ fn problem(name: &str, param: &str, ty: &str, ret: &str, cases: &[(Value, Value)
         .collect();
     let sig = json!({"name": name, "params": [{"name": param, "type": ty}], "returns": ret});
     // A generous limit: the deep and long cases are about correctness, not speed.
-    Problem::from_parts(name, &sig, "exact", 2000, 512, tests).unwrap()
+    Problem::from_parts(
+        name,
+        kb_judge::ProblemMode::Function,
+        &sig,
+        "exact",
+        2000,
+        512,
+        tests,
+    )
+    .unwrap()
 }
 
 /// The starter code with its body replaced by `body` (the node definitions stay).

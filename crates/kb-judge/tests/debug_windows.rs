@@ -716,3 +716,146 @@ fn content_150_m5_problems_are_debuggable() {
     ];
     assert_debuggable(&problems);
 }
+
+// ---- Program problems (ADR 0028) -------------------------------------------------------
+
+const PROGRAM: &str = "import sys
+
+
+def total(xs):
+    s = 0
+    for x in xs:
+        s += x
+    return s
+
+
+if __name__ == \"__main__\":
+    n = int(input())
+    data = list(map(int, sys.stdin.read().split()))
+    sys.stdout.buffer.write(b\"sum \")
+    print(total(data[:n]))
+    sys.exit(0)
+";
+
+fn program_problem() -> Problem {
+    let mut input = Map::new();
+    input.insert("stdin".into(), json!("3\n4 5 6 7\n"));
+    let tests = vec![kb_core::TestCase {
+        kind: kb_core::TestKind::Public,
+        index: 1,
+        input,
+        expected: json!("sum 15\n"),
+    }];
+    Problem::from_parts(
+        "program-debug",
+        kb_judge::ProblemMode::Program,
+        &Value::Null,
+        "tokens",
+        300,
+        256,
+        tests,
+    )
+    .unwrap()
+}
+
+/// A whole program is traced from its first line: `__main__`, stdin through `input()` and
+/// `sys.stdin.read()`, `sys.stdout.buffer`, `sys.exit(0)` as a normal end, the module's
+/// variables shown once, and a visualizer snapshot of a module variable.
+#[test]
+fn program_problems_are_traced_as_whole_programs() {
+    let p = program_problem();
+    let inp = p.tests[0].input.clone();
+    let t = trace(&p, PROGRAM, &inp);
+    assert!(t.truncated.is_none());
+    let o = t.outcome.as_ref().unwrap();
+    assert_eq!(o.status, OutcomeStatus::Ok, "{o:?}");
+    let printed: String = t.prints.iter().map(|c| c.text.as_str()).collect();
+    assert_eq!(printed.replace("\r\n", "\n"), "sum 15\n");
+    // The module's first line is step 0 (depth 1); total() runs one level deeper.
+    assert_eq!(t.steps[0], kb_core::debug::Step { line: 1, depth: 1 });
+    assert!(t.steps.iter().any(|s| s.depth == 2 && s.line == 5));
+
+    let line_of =
+        |needle: &str| PROGRAM.lines().position(|l| l.contains(needle)).unwrap() as u32 + 1;
+    let at = t
+        .steps
+        .iter()
+        .position(|s| s.line == line_of("print(total"))
+        .unwrap();
+    let s = stop(
+        &p,
+        PROGRAM,
+        &inp,
+        &t,
+        StopRequest {
+            step: at as u32,
+            visualize: Some(vec!["data".into()]),
+            ..Default::default()
+        },
+    );
+    assert_eq!(s.stack[0].function, "<module>");
+    assert_eq!(local(&s, "n"), "3");
+    assert_eq!(local(&s, "data"), "[4, 5, 6, 7]");
+    assert!(
+        s.locals
+            .iter()
+            .all(|v| v.name != "sys" && v.name != "total"),
+        "{:?}",
+        s.locals
+    );
+    assert!(
+        s.globals.is_empty(),
+        "module variables are listed once: {:?}",
+        s.globals
+    );
+    let snap = s.snapshot.as_ref().unwrap();
+    assert_eq!(snap.roots[0].name, "data");
+    assert!(matches!(
+        &snap.objects[0],
+        kb_core::debug::SnapObject::List { len: 4, .. }
+    ));
+
+    // Inside total(): two frames, the function's locals.
+    let inner = t
+        .steps
+        .iter()
+        .position(|s| s.depth == 2 && s.line == line_of("s += x"))
+        .unwrap();
+    let s = stop(
+        &p,
+        PROGRAM,
+        &inp,
+        &t,
+        StopRequest {
+            step: inner as u32,
+            ..Default::default()
+        },
+    );
+    assert_eq!(s.stack.len(), 2);
+    assert_eq!(s.stack[0].function, "total");
+    assert_eq!(local(&s, "xs"), "[4, 5, 6]");
+}
+
+#[test]
+fn program_problems_report_errors_and_exit_codes() {
+    let p = program_problem();
+    let inp = p.tests[0].input.clone();
+    // A syntax error is a load error, as for a function.
+    match debug::trace(&p, Language::Python, "print(\n", &inp, &env()).unwrap() {
+        DebugRun::LoadError(m) => assert!(m.contains("SyntaxError"), "{m}"),
+        other => panic!("{other:?}"),
+    }
+    // sys.exit(2) is an error; an exception names its line.
+    let t = trace(&p, "import sys\nsys.exit(2)\n", &inp);
+    let o = t.outcome.as_ref().unwrap();
+    assert_eq!(o.status, OutcomeStatus::Error);
+    assert!(o.error.as_deref().unwrap().contains("SystemExit: 2"));
+    let t = trace(&p, "x = 1\nraise ValueError('boom')\n", &inp);
+    let o = t.outcome.as_ref().unwrap();
+    assert_eq!((o.status, o.line), (OutcomeStatus::Error, Some(2)));
+    // TypeScript cannot debug program problems yet.
+    assert!(matches!(
+        debug::trace(&p, Language::TypeScript, "console.log(1);\n", &inp, &env()),
+        Err(JudgeError::Unsupported(Language::TypeScript))
+    ));
+}

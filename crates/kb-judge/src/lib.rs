@@ -17,17 +17,18 @@ pub mod languages;
 pub mod limits;
 pub mod problem;
 pub mod profile;
+pub mod program;
 mod protocol;
 pub mod signature;
 pub mod tools;
 
 pub use checker::{CheckOutcome, Checker};
-pub use codegen::{harness, signature_line, starter_code};
+pub use codegen::{harness, program_starter, signature_line, starter_code};
 pub use judge::{BINARY_CACHE_SIZE, JudgeEnv, judge, judge_with_progress};
 /// The judge's data types live in kb-core (so kb-store can store them without the judge);
 /// re-exported here so this crate's API is unchanged.
 pub use kb_core::{CompileInfo, Failure, JudgeEvent, Report, TestCase, TestOutcome};
-pub use problem::{Problem, check_input};
+pub use problem::{Problem, ProblemMode, check_input, program_signature};
 pub use signature::{Param, Signature, Type};
 pub use tools::{
     ScriptLimits, ScriptOutput, generate_inputs, generate_sized, run_python, run_script,

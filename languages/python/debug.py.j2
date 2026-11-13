@@ -17,6 +17,7 @@ import json
 import os
 import random
 import sys
+import threading
 import traceback
 
 SOLUTION = {{ solution_file | tojson }}
@@ -97,6 +98,20 @@ INPUT_IDS = {}
 INPUT_KEEP = []
 
 
+class CaptureBuffer:
+    """`sys.stdout.buffer` for a program that writes bytes (decoded as UTF-8)."""
+
+    def __init__(self, text):
+        self.text = text
+
+    def write(self, b):
+        self.text.write(bytes(b).decode("utf-8", "replace"))
+        return len(b)
+
+    def flush(self):
+        pass
+
+
 class StepCapture(io.TextIOBase):
     """The user's prints while tracing, each chunk tagged with the step it happened at."""
 
@@ -106,6 +121,7 @@ class StepCapture(io.TextIOBase):
         self.chunks = []
         self.size = 0
         self.truncated = False
+        self.buffer = CaptureBuffer(self)
 
     def writable(self):
         return True
@@ -277,6 +293,9 @@ def user_frames(state, frame):
 
 
 def scope_items(frame, scope):
+    if frame.f_code.co_name == "<module>":
+        # A program's module frame (ADR 0028): its globals are its variables, shown once.
+        return visible_globals(frame) if scope == "locals" else []
     if scope == "locals":
         return list(frame.f_locals.items())
     return visible_globals(frame)
@@ -458,7 +477,10 @@ def snapshot(frame, names):
         objects[index] = obj
 
     try:
-        local_items = _LIST(_DICT_ITEMS(_DICT(frame.f_locals)))
+        if frame.f_code.co_name == "<module>":
+            local_items = _LIST(visible_globals(frame))
+        else:
+            local_items = _LIST(_DICT_ITEMS(_DICT(frame.f_locals)))
         scopes = [_DICT(local_items), _DICT(visible_globals(frame))]
         chosen = []
         for name in _LIST(names)[:SNAP_MAX_NAMES]:
@@ -533,6 +555,23 @@ def main():
     sys.setrecursionlimit(max(sys.getrecursionlimit(), 10_000))
     random.seed(0)
 
+{% if program %}
+    # A program problem (ADR 0028): the solution is the whole program, run below as
+    # __main__ with every step traced. A syntax error is a load error, as for a function.
+    try:
+        with open(SOLUTION, "rb") as f:
+            compile(f.read(), SOLUTION, "exec")
+        spec = importlib.util.spec_from_file_location("__main__", SOLUTION)
+        module = importlib.util.module_from_spec(spec)
+    except BaseException as e:
+        finish({"kind": "load_error", "message": "".join(traceback.format_exception_only(e))})
+    # The test's stdin on fd 0 (kb-judge writes stdin.txt next to this file), so input(),
+    # sys.stdin.read(), sys.stdin.buffer and open(0) all read it.
+    fd = os.open("stdin.txt", os.O_RDONLY)
+    os.dup2(fd, 0)
+    os.close(fd)
+    sys.stdin = open(0, "r", encoding="utf-8", closefd=False)
+{% else %}
     sys.stdout = sys.stderr = io.StringIO()
     try:
         spec = importlib.util.spec_from_file_location("solution", SOLUTION)
@@ -546,6 +585,7 @@ def main():
     fn = next((f for f in (getattr(module, a, None) for a in ALIASES) if callable(f)), None)
     if fn is None:
         finish({"kind": "load_error", "message": "function " + FUNCTION + "() is not defined"})
+{% endif %}
 
     state = State(request)
 
@@ -632,7 +672,8 @@ def main():
     M.register_callback(TOOL, E.PY_UNWIND, on_unwind)
     M.register_callback(TOOL, E.PY_THROW, on_throw)
 
-{% if uses_nodes %}
+{% if program %}
+{% elif uses_nodes %}
     classes = node_classes(module)
     args = [from_json(*PARAM_SHAPES[k], request["input"][p], classes) for k, p in enumerate(PARAMS)]
     if request.get("visualize") is not None:
@@ -650,11 +691,33 @@ def main():
         E.LINE | E.PY_START | E.PY_RESUME | E.PY_RETURN | E.PY_YIELD | E.PY_UNWIND | E.PY_THROW,
     )
     try:
+{% if program %}
+        sys.modules["__main__"] = module
+        spec.loader.exec_module(module)
+        # A program may finish its work in threads it started (the stack-size idiom).
+        for t in threading.enumerate():
+            if t is not threading.main_thread() and not t.daemon:
+                t.join()
+        outcome["status"] = "ok"
+        outcome["value"] = None
+{% else %}
         value = fn(*args)
         outcome["status"] = "ok"
         outcome["value"] = value
+{% endif %}
     except MemoryError:
         outcome["status"] = "memory"
+{% if program %}
+    except SystemExit as e:
+        # sys.exit() or sys.exit(0) ends a program normally; another code is an error.
+        if e.code is None or e.code == 0:
+            outcome["status"] = "ok"
+            outcome["value"] = None
+        else:
+            outcome["status"] = "error"
+            outcome["error"] = "SystemExit: " + str(e.code)
+            outcome["line"] = None
+{% endif %}
     except BaseException as e:
         outcome["status"] = "error"
         tb = e.__traceback__

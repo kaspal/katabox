@@ -1,0 +1,18 @@
+# Program problem: this file is the whole program. Read the input from stdin and write
+# the answer to stdout; the judge compares stdout with the expected output.
+#
+# sys.stdin.buffer.read() reads all of stdin at once, which is much faster than calling
+# input() line by line on large inputs. Debug prints must go to stderr
+# (print(..., file=sys.stderr)): everything on stdout counts as your answer.
+import sys
+
+
+def main() -> None:
+    tokens = sys.stdin.buffer.read().split()  # every word or number, as bytes
+    # Example: n = int(tokens[0])
+    out: list[str] = []
+    # Collect the answer lines in `out`, then write them once.
+    sys.stdout.write("\n".join(out) + "\n")
+
+
+main()

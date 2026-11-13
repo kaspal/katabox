@@ -3,6 +3,7 @@
 
 use std::path::{Path, PathBuf};
 
+pub use kb_core::ProblemMode;
 use kb_core::{TestCase, TestKind};
 use serde::Deserialize;
 use serde_json::{Map, Value};
@@ -11,16 +12,34 @@ use crate::JudgeError;
 use crate::checker::Checker;
 use crate::signature::{RawSignature, Signature};
 
+/// The parameter a program problem's test input holds: the whole stdin text.
+pub const STDIN_PARAM: &str = "stdin";
+
+/// The signature every program problem has inside the judge, `main(stdin: string) ->
+/// string`: a test's input is `{"stdin": text}` and its expected value the stdout text,
+/// so tests, custom tests and failures need no second shape (ADR 0028).
+pub fn program_signature() -> Signature {
+    Signature::from_json(&serde_json::json!({
+        "name": "main",
+        "params": [{"name": STDIN_PARAM, "type": "string"}],
+        "returns": "string",
+    }))
+    .expect("the program signature is valid")
+}
+
 #[derive(Debug, Clone)]
 pub struct Problem {
     pub id: String,
     /// The package folder for [`Problem::load`]; empty for [`Problem::from_parts`]
     /// (content.db). Nothing in the judge reads it.
     pub dir: PathBuf,
+    pub mode: ProblemMode,
+    /// For a program problem, always [`program_signature`].
     pub signature: Signature,
     pub checker: Checker,
-    /// Base CPU time for the user's code across the whole batch of tests, set for Rust;
-    /// each language scales it and adds its startup allowance ([`crate::limits`], ADR 0017).
+    /// Base CPU time for the user's code across the whole batch of tests (a function
+    /// problem) or for each test's run (a program problem, ADR 0028), set for Rust; each
+    /// language scales it and adds its startup allowance ([`crate::limits`], ADR 0017).
     pub time_limit_ms: u32,
     pub memory_mb: u32,
     /// Public tests first, then hidden, each in file-name order (numeric when possible).
@@ -30,7 +49,9 @@ pub struct Problem {
 #[derive(Debug, Deserialize)]
 struct ProblemToml {
     id: String,
-    signature: RawSignature,
+    #[serde(default)]
+    mode: Option<String>,
+    signature: Option<RawSignature>,
     judge: JudgeToml,
 }
 
@@ -49,6 +70,14 @@ struct TestFile {
     output: Value,
 }
 
+/// A program problem's test file: the stdin text and the expected stdout text.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ProgramTestFile {
+    stdin: String,
+    stdout: String,
+}
+
 impl Problem {
     /// Load `dir/problem.toml` and `dir/tests/{public,hidden}/*.json`.
     pub fn load(dir: &Path) -> Result<Problem, JudgeError> {
@@ -57,16 +86,41 @@ impl Problem {
             .map_err(|e| bad(format!("problem.toml: {e}")))?;
         let meta: ProblemToml =
             toml::from_str(&src).map_err(|e| bad(format!("problem.toml: {e}")))?;
-        let signature: Signature = meta.signature.try_into().map_err(bad)?;
-        let mut tests = load_tests(&dir.join("tests/public"), TestKind::Public, &signature)?;
+        let mode: ProblemMode = meta
+            .mode
+            .as_deref()
+            .unwrap_or("function")
+            .parse()
+            .map_err(bad)?;
+        let signature: Signature = match (mode, meta.signature) {
+            (ProblemMode::Function, Some(raw)) => raw.try_into().map_err(bad)?,
+            (ProblemMode::Function, None) => {
+                return Err(bad("problem.toml: missing [signature]".into()));
+            }
+            (ProblemMode::Program, None) => program_signature(),
+            (ProblemMode::Program, Some(_)) => {
+                return Err(bad(
+                    "problem.toml: a program problem has no [signature] (its program reads stdin)"
+                        .into(),
+                ));
+            }
+        };
+        let mut tests = load_tests(
+            &dir.join("tests/public"),
+            TestKind::Public,
+            mode,
+            &signature,
+        )?;
         tests.extend(load_tests(
             &dir.join("tests/hidden"),
             TestKind::Hidden,
+            mode,
             &signature,
         )?);
         Problem::new(
             meta.id,
             dir.to_path_buf(),
+            mode,
             signature,
             &meta.judge.checker,
             meta.judge.time_limit_ms,
@@ -77,9 +131,12 @@ impl Problem {
     }
 
     /// Build a problem from stored parts (kb-store's `JudgeData`), with the same checks
-    /// as [`Problem::load`]. `signature` is the JSON form of `[signature]`.
+    /// as [`Problem::load`]. `signature` is the JSON form of `[signature]`; a program
+    /// problem's is [`program_signature`] whatever is passed.
+    #[allow(clippy::too_many_arguments)]
     pub fn from_parts(
         id: &str,
+        mode: ProblemMode,
         signature: &Value,
         checker: &str,
         time_limit_ms: u32,
@@ -87,14 +144,24 @@ impl Problem {
         tests: Vec<TestCase>,
     ) -> Result<Problem, JudgeError> {
         let bad = |msg: String| JudgeError::Problem(format!("{id}: {msg}"));
-        let signature = Signature::from_json(signature).map_err(bad)?;
+        let signature = match mode {
+            ProblemMode::Function => Signature::from_json(signature).map_err(bad)?,
+            ProblemMode::Program => program_signature(),
+        };
         for t in &tests {
             check_input(&t.input, &signature)
                 .map_err(|e| bad(format!("{:?} test {}: {e}", t.kind, t.index)))?;
+            if mode == ProblemMode::Program && !t.expected.is_string() {
+                return Err(bad(format!(
+                    "{:?} test {}: expected output is not text",
+                    t.kind, t.index
+                )));
+            }
         }
         Problem::new(
             id.to_string(),
             PathBuf::new(),
+            mode,
             signature,
             checker,
             time_limit_ms,
@@ -104,9 +171,11 @@ impl Problem {
         .map_err(bad)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn new(
         id: String,
         dir: PathBuf,
+        mode: ProblemMode,
         signature: Signature,
         checker: &str,
         time_limit_ms: u32,
@@ -117,6 +186,19 @@ impl Problem {
         if checker == Checker::Custom {
             return Err("custom checkers are not supported by the judge yet".into());
         }
+        // Text checkers compare stdout text; value checkers compare returned JSON.
+        match (mode, checker.is_text()) {
+            (ProblemMode::Program, false) => {
+                return Err(
+                    "a program problem needs a text checker (tokens | tokens-float:<eps> | lines)"
+                        .into(),
+                );
+            }
+            (ProblemMode::Function, true) => {
+                return Err("text checkers are for program problems (mode = \"program\")".into());
+            }
+            _ => {}
+        }
         if time_limit_ms == 0 || memory_mb == 0 {
             return Err("judge limits must be positive".into());
         }
@@ -126,6 +208,7 @@ impl Problem {
         Ok(Problem {
             id,
             dir,
+            mode,
             signature,
             checker,
             time_limit_ms,
@@ -139,7 +222,12 @@ impl Problem {
     }
 }
 
-fn load_tests(dir: &Path, kind: TestKind, sig: &Signature) -> Result<Vec<TestCase>, JudgeError> {
+fn load_tests(
+    dir: &Path,
+    kind: TestKind,
+    mode: ProblemMode,
+    sig: &Signature,
+) -> Result<Vec<TestCase>, JudgeError> {
     let entries = match std::fs::read_dir(dir) {
         Ok(e) => e,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
@@ -158,13 +246,25 @@ fn load_tests(dir: &Path, kind: TestKind, sig: &Signature) -> Result<Vec<TestCas
     for (i, path) in files.iter().enumerate() {
         let bad = |msg: String| JudgeError::Problem(format!("{}: {msg}", path.display()));
         let src = std::fs::read_to_string(path).map_err(|e| bad(e.to_string()))?;
-        let t: TestFile = serde_json::from_str(&src).map_err(|e| bad(e.to_string()))?;
-        check_input(&t.input, sig).map_err(bad)?;
+        let (input, expected) = match mode {
+            ProblemMode::Function => {
+                let t: TestFile = serde_json::from_str(&src).map_err(|e| bad(e.to_string()))?;
+                (t.input, t.output)
+            }
+            ProblemMode::Program => {
+                let t: ProgramTestFile =
+                    serde_json::from_str(&src).map_err(|e| bad(e.to_string()))?;
+                let mut input = Map::new();
+                input.insert(STDIN_PARAM.into(), Value::String(t.stdin));
+                (input, Value::String(t.stdout))
+            }
+        };
+        check_input(&input, sig).map_err(bad)?;
         tests.push(TestCase {
             kind,
             index: u32::try_from(i + 1).unwrap_or(u32::MAX),
-            input: t.input,
-            expected: t.output,
+            input,
+            expected,
         });
     }
     Ok(tests)
@@ -224,8 +324,16 @@ mod tests {
             "params": [{"name": "nums", "type": "int[]"}, {"name": "target", "type": "int"}],
             "returns": "int[]"
         });
-        let p = Problem::from_parts("two-sum", &sig, "unordered", 2000, 256, disk.tests.clone())
-            .unwrap();
+        let p = Problem::from_parts(
+            "two-sum",
+            ProblemMode::Function,
+            &sig,
+            "unordered",
+            2000,
+            256,
+            disk.tests.clone(),
+        )
+        .unwrap();
         assert_eq!(p.signature, disk.signature);
         assert_eq!(p.checker, disk.checker);
         assert_eq!(p.tests, disk.tests);
@@ -234,12 +342,46 @@ mod tests {
 
         let err = |r: Result<Problem, JudgeError>| r.unwrap_err().to_string();
         let t = disk.tests.clone();
-        assert!(err(Problem::from_parts("x", &sig, "custom", 1, 1, t.clone())).contains("custom"));
-        assert!(err(Problem::from_parts("x", &sig, "exact", 0, 1, t.clone())).contains("positive"));
-        assert!(err(Problem::from_parts("x", &sig, "exact", 1, 1, vec![])).contains("no tests"));
         assert!(
             err(Problem::from_parts(
                 "x",
+                ProblemMode::Function,
+                &sig,
+                "custom",
+                1,
+                1,
+                t.clone()
+            ))
+            .contains("custom")
+        );
+        assert!(
+            err(Problem::from_parts(
+                "x",
+                ProblemMode::Function,
+                &sig,
+                "exact",
+                0,
+                1,
+                t.clone()
+            ))
+            .contains("positive")
+        );
+        assert!(
+            err(Problem::from_parts(
+                "x",
+                ProblemMode::Function,
+                &sig,
+                "exact",
+                1,
+                1,
+                vec![]
+            ))
+            .contains("no tests")
+        );
+        assert!(
+            err(Problem::from_parts(
+                "x",
+                ProblemMode::Function,
                 &serde_json::json!({"name": 1}),
                 "exact",
                 1,
@@ -250,6 +392,105 @@ mod tests {
         );
         let mut bad = t[0].clone();
         bad.input.remove("target");
-        assert!(err(Problem::from_parts("x", &sig, "exact", 1, 1, vec![bad])).contains("target"));
+        assert!(
+            err(Problem::from_parts(
+                "x",
+                ProblemMode::Function,
+                &sig,
+                "exact",
+                1,
+                1,
+                vec![bad]
+            ))
+            .contains("target")
+        );
+        // Text checkers belong to program problems.
+        assert!(
+            err(Problem::from_parts(
+                "x",
+                ProblemMode::Function,
+                &sig,
+                "tokens",
+                1,
+                1,
+                t.clone()
+            ))
+            .contains("program")
+        );
+    }
+
+    /// A program package in a temporary folder.
+    fn program_dir(name: &str, toml_extra: &str, tests: &[&str]) -> PathBuf {
+        let dir =
+            std::env::temp_dir().join(format!("kb-judge-program-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("tests/public")).unwrap();
+        std::fs::write(
+            dir.join("problem.toml"),
+            format!(
+                "id = \"{name}\"\nmode = \"program\"\n{toml_extra}\n[judge]\nchecker = \"tokens\"\ntime_limit_ms = 300\nmemory_mb = 256\n"
+            ),
+        )
+        .unwrap();
+        for (i, test) in tests.iter().enumerate() {
+            std::fs::write(dir.join(format!("tests/public/{}.json", i + 1)), test).unwrap();
+        }
+        dir
+    }
+
+    #[test]
+    fn loads_a_program_problem_with_its_synthetic_signature() {
+        let dir = program_dir("sum", "", &[r#"{"stdin": "2\n3 4\n", "stdout": "7\n"}"#]);
+        let p = Problem::load(&dir).unwrap();
+        assert_eq!(p.mode, ProblemMode::Program);
+        assert_eq!(p.signature, program_signature());
+        assert_eq!(p.checker, Checker::Tokens);
+        assert_eq!(p.tests[0].input["stdin"], "2\n3 4\n");
+        assert_eq!(p.tests[0].expected, "7\n");
+        // The same from stored parts, whatever signature JSON is passed.
+        let q = Problem::from_parts(
+            "sum",
+            ProblemMode::Program,
+            &Value::Null,
+            "tokens",
+            300,
+            256,
+            p.tests.clone(),
+        )
+        .unwrap();
+        assert_eq!(q.signature, program_signature());
+        assert!(
+            Problem::from_parts(
+                "sum",
+                ProblemMode::Program,
+                &Value::Null,
+                "exact",
+                300,
+                256,
+                p.tests.clone()
+            )
+            .unwrap_err()
+            .to_string()
+            .contains("text checker")
+        );
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn program_problems_refuse_a_signature_and_other_test_shapes() {
+        let err = |dir: &Path| Problem::load(dir).unwrap_err().to_string();
+        let dir = program_dir(
+            "sig",
+            "[signature]\nname = \"f\"\nparams = []\nreturns = \"int\"\n",
+            &[r#"{"stdin": "", "stdout": ""}"#],
+        );
+        assert!(err(&dir).contains("no [signature]"), "{}", err(&dir));
+        std::fs::remove_dir_all(&dir).unwrap();
+        let dir = program_dir("shape", "", &[r#"{"input": {"stdin": ""}, "output": ""}"#]);
+        assert!(err(&dir).contains("unknown field"), "{}", err(&dir));
+        std::fs::remove_dir_all(&dir).unwrap();
+        let dir = program_dir("extra", "", &[r#"{"stdin": "", "stdout": "", "note": 1}"#]);
+        assert!(err(&dir).contains("unknown field"), "{}", err(&dir));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

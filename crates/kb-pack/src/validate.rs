@@ -49,7 +49,11 @@ pub(crate) struct ProblemToml {
     pub profile: bool,
     /// The complexity profiler's sizes (ADR 0024), with `profile = true`.
     pub profile_sizes: Option<Vec<u32>>,
-    pub signature: Signature,
+    /// A function (the default) or a whole program reading stdin (ADR 0028).
+    #[serde(default)]
+    pub mode: kb_core::ProblemMode,
+    /// Required for a function problem; a program problem has none.
+    pub signature: Option<Signature>,
     pub judge: Judge,
 }
 
@@ -281,21 +285,40 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
     if !(1..=10).contains(&meta.rank) {
         errs.push(format!("rank must be 1-10, got {}", meta.rank));
     }
-    if meta.signature.name.is_empty() || meta.signature.returns.is_empty() {
-        errs.push("signature needs a name and a return type".into());
-    }
-    for p in &meta.signature.params {
-        if p.name.is_empty() || p.ty.is_empty() {
-            errs.push("every param needs a name and a type".into());
-        } else if let Err(e) = p.ty.parse::<kb_judge::Type>() {
-            errs.push(format!("param {:?}: {e}", p.name));
+    let program = meta.mode == kb_core::ProblemMode::Program;
+    match (&meta.signature, program) {
+        (Some(sig), false) => {
+            if sig.name.is_empty() || sig.returns.is_empty() {
+                errs.push("signature needs a name and a return type".into());
+            }
+            for p in &sig.params {
+                if p.name.is_empty() || p.ty.is_empty() {
+                    errs.push("every param needs a name and a type".into());
+                } else if let Err(e) = p.ty.parse::<kb_judge::Type>() {
+                    errs.push(format!("param {:?}: {e}", p.name));
+                }
+            }
+            if let Err(e) = sig.returns.parse::<kb_judge::Type>() {
+                errs.push(format!("returns: {e}"));
+            }
         }
+        (None, false) => errs.push("missing [signature]".into()),
+        (Some(_), true) => {
+            errs.push("a program problem has no [signature] (its program reads stdin)".into())
+        }
+        (None, true) => {}
     }
-    if let Err(e) = meta.signature.returns.parse::<kb_judge::Type>() {
-        errs.push(format!("returns: {e}"));
+    match meta.judge.checker.parse::<kb_judge::Checker>() {
+        Err(e) => errs.push(e),
+        Ok(c) if c.is_text() != program => errs.push(if program {
+            "a program problem needs a text checker (tokens | tokens-float:<eps> | lines)".into()
+        } else {
+            "text checkers (tokens, lines) are for program problems".into()
+        }),
+        Ok(_) => {}
     }
-    if let Err(e) = meta.judge.checker.parse::<kb_judge::Checker>() {
-        errs.push(e);
+    if program && meta.profile {
+        errs.push("the complexity profiler is not available for program problems yet".into());
     }
     if meta.judge.time_limit_ms == 0 || meta.judge.memory_mb == 0 {
         errs.push("judge limits must be positive".into());
@@ -349,26 +372,39 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
         }
     }
 
-    // Each param with its type, when it parses (a bad type is reported above).
-    let params: Vec<(&str, Option<kb_judge::Type>)> = meta
-        .signature
-        .params
-        .iter()
-        .map(|p| (p.name.as_str(), p.ty.parse().ok()))
-        .collect();
-    let returns: Option<kb_judge::Type> = meta.signature.returns.parse().ok();
-    let public = check_tests(
-        &dir.join("tests/public"),
-        &params,
-        returns.as_ref(),
-        &mut errs,
-    );
-    let hidden = check_tests(
-        &dir.join("tests/hidden"),
-        &params,
-        returns.as_ref(),
-        &mut errs,
-    );
+    let (public, hidden) = if program {
+        let public = check_program_tests(&dir.join("tests/public"), &mut errs);
+        let hidden = check_program_tests(&dir.join("tests/hidden"), &mut errs);
+        check_program_statements(dir, &public, &mut errs);
+        (public.len(), hidden.len())
+    } else {
+        // Each param with its type, when it parses (a bad type is reported above).
+        let empty = Signature {
+            name: String::new(),
+            params: Vec::new(),
+            returns: String::new(),
+        };
+        let sig = meta.signature.as_ref().unwrap_or(&empty);
+        let params: Vec<(&str, Option<kb_judge::Type>)> = sig
+            .params
+            .iter()
+            .map(|p| (p.name.as_str(), p.ty.parse().ok()))
+            .collect();
+        let returns: Option<kb_judge::Type> = sig.returns.parse().ok();
+        let public = check_tests(
+            &dir.join("tests/public"),
+            &params,
+            returns.as_ref(),
+            &mut errs,
+        );
+        let hidden = check_tests(
+            &dir.join("tests/hidden"),
+            &params,
+            returns.as_ref(),
+            &mut errs,
+        );
+        (public, hidden)
+    };
     if public == 0 {
         errs.push("needs at least one public test".into());
     }
@@ -387,10 +423,178 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
             errs.push(format!("missing reference solution {}", f.display()));
         }
     }
-    if errs.is_empty() {
+    // A program problem's references are whole programs: no declaration line to match.
+    if errs.is_empty() && !program {
         check_reference_signatures(dir, &mut errs);
     }
     (Some(meta.difficulty), errs)
+}
+
+/// A program problem's tests (ADR 0028), in file order: `{"stdin": text, "stdout":
+/// text}`, no NUL characters, and every integer token within ±(2⁵³ − 1) (the numbers a
+/// JavaScript solution parses with `Number`). Returns the (stdin, stdout) pairs.
+fn check_program_tests(dir: &Path, errs: &mut Vec<String>) -> Vec<(String, String)> {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    let mut files: Vec<std::path::PathBuf> = entries
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.extension().and_then(|s| s.to_str()) == Some("json"))
+        .collect();
+    files.sort_by_key(|p| {
+        let stem = p.file_stem().and_then(|s| s.to_str()).unwrap_or_default();
+        (stem.parse::<u64>().unwrap_or(u64::MAX), stem.to_string())
+    });
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct ProgramTest {
+        stdin: String,
+        stdout: String,
+    }
+    let mut out = Vec::new();
+    for p in files {
+        let t: ProgramTest = match fs::read_to_string(&p)
+            .map_err(|e| e.to_string())
+            .and_then(|s| serde_json::from_str(&s).map_err(|e| e.to_string()))
+        {
+            Ok(t) => t,
+            Err(e) => {
+                errs.push(format!(
+                    "{}: {e} (a program test is {{\"stdin\", \"stdout\"}})",
+                    p.display()
+                ));
+                continue;
+            }
+        };
+        for (what, text) in [("stdin", &t.stdin), ("stdout", &t.stdout)] {
+            if text.contains('\0') {
+                errs.push(format!("{}: {what} contains a NUL character", p.display()));
+            }
+            if let Some(tok) = unsafe_integer_token(text) {
+                errs.push(format!(
+                    "{}: {what} has {tok}, outside ±(2⁵³ − 1), where JavaScript loses precision",
+                    p.display()
+                ));
+            }
+        }
+        out.push((t.stdin, t.stdout));
+    }
+    out
+}
+
+/// The first whitespace-separated integer token beyond ±(2⁵³ − 1), if any.
+fn unsafe_integer_token(text: &str) -> Option<&str> {
+    text.split_ascii_whitespace().find(|tok| {
+        let digits = tok.strip_prefix(['-', '+']).unwrap_or(tok);
+        if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+            return false; // not an integer token
+        }
+        let value = digits.trim_start_matches('0');
+        // Over 16 digits is always beyond 2⁵³ − 1 (16 digits); otherwise compare.
+        value.len() > 16
+            || value
+                .parse::<u64>()
+                .is_ok_and(|n| n > MAX_SAFE_INTEGER as u64)
+    })
+}
+
+/// A program problem's statements (ADR 0028): the input and output format headings, and
+/// examples equal to the public tests. Each `### Example N` (Spanish `### Ejemplo N`)
+/// holds two code fences, the input and the output, equal to public test N's stdin and
+/// stdout up to the final newline.
+fn check_program_statements(dir: &Path, public: &[(String, String)], errs: &mut Vec<String>) {
+    for (file, example, headings) in [
+        (
+            "statement.md",
+            "Example",
+            ["## Input format", "## Output format"],
+        ),
+        (
+            "statement.es.md",
+            "Ejemplo",
+            ["## Formato de entrada", "## Formato de salida"],
+        ),
+    ] {
+        let Ok(text) = fs::read_to_string(dir.join(file)) else {
+            continue; // reported as missing above
+        };
+        let text = text.replace("\r\n", "\n");
+        for h in headings {
+            if !text.lines().any(|l| l.trim_end() == h) {
+                errs.push(format!("{file}: missing the {h:?} heading"));
+            }
+        }
+        let examples = program_examples(&text, example);
+        if examples.is_empty() {
+            errs.push(format!("{file}: no \"### {example} N\" sections"));
+        }
+        for (n, fences) in &examples {
+            let Some((stdin, stdout)) = public.get(n.wrapping_sub(1)) else {
+                errs.push(format!("{file}: {example} {n} has no public test {n}"));
+                continue;
+            };
+            let same = |a: &str, b: &str| {
+                a.replace("\r\n", "\n").trim_end_matches('\n')
+                    == b.replace("\r\n", "\n").trim_end_matches('\n')
+            };
+            match fences.as_slice() {
+                [input, output, ..] => {
+                    if !same(input, stdin) {
+                        errs.push(format!(
+                            "{file}: {example} {n}'s input differs from public test {n}'s stdin"
+                        ));
+                    }
+                    if !same(output, stdout) {
+                        errs.push(format!(
+                            "{file}: {example} {n}'s output differs from public test {n}'s stdout"
+                        ));
+                    }
+                }
+                _ => errs.push(format!(
+                    "{file}: {example} {n} needs an input fence and an output fence"
+                )),
+            }
+        }
+    }
+}
+
+/// `### <word> N` sections and the code fences in each, in order.
+fn program_examples(text: &str, word: &str) -> Vec<(usize, Vec<String>)> {
+    let mut out: Vec<(usize, Vec<String>)> = Vec::new();
+    let mut fence: Option<String> = None;
+    for line in text.lines() {
+        if let Some(body) = fence.as_mut() {
+            if line.trim_start().starts_with("```") {
+                if let Some((_, fences)) = out.last_mut() {
+                    fences.push(std::mem::take(body));
+                }
+                fence = None;
+            } else {
+                body.push_str(line);
+                body.push('\n');
+            }
+            continue;
+        }
+        if line.trim_start().starts_with("```") {
+            fence = Some(String::new());
+            continue;
+        }
+        if line.starts_with('#') {
+            let n = line
+                .strip_prefix("### ")
+                .and_then(|h| h.strip_prefix(word))
+                .and_then(|h| h.trim().parse::<usize>().ok());
+            match n {
+                Some(n) => out.push((n, Vec::new())),
+                // Another heading ends the example; later fences are not part of it.
+                None if !out.is_empty() => out.push((usize::MAX, Vec::new())),
+                None => {}
+            }
+        }
+    }
+    out.retain(|(n, _)| *n != usize::MAX);
+    out
 }
 
 /// Every reference solution must declare the function exactly as its generated stub

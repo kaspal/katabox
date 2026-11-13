@@ -123,6 +123,11 @@ pub fn judge_with_progress(
     env: &JudgeEnv,
     on_event: &mut dyn FnMut(JudgeEvent),
 ) -> Result<Report, JudgeError> {
+    // A program problem runs the user's program once per test and reports each test as
+    // it finishes (ADR 0028).
+    if problem.mode == crate::problem::ProblemMode::Program {
+        return crate::program::judge_program(problem, tests, language, source, env, on_event);
+    }
     let report = judge_inner(problem, tests, language, source, env, on_event)?;
     let total = u32::try_from(report.tests.len()).unwrap_or(u32::MAX);
     for (i, t) in report.tests.iter().enumerate() {
@@ -163,7 +168,8 @@ fn judge_inner(
     let (binary, compile) = if def.compile_limits.is_some() {
         on_event(JudgeEvent::Compiling);
         let function = problem.signature.function_name(language);
-        match compile_cached(&def, toolchain, &files, &function, env)? {
+        let command = def.compile_command(toolchain)?;
+        match compile_cached(&def, command, toolchain, &files, &function, env)? {
             Compiled::Binary(path, info) => (Some(path), Some(info)),
             Compiled::Failed(message, info) => {
                 return Ok(compile_failure(tests, message, info));
@@ -226,21 +232,21 @@ fn judge_inner(
     Ok(report)
 }
 
-enum Compiled {
+pub(crate) enum Compiled {
     Binary(PathBuf, CompileInfo),
     Failed(Message, CompileInfo),
 }
 
 /// Compile the workspace in the sandbox, or reuse the binary compiled from the same
 /// inputs. The cache key covers the compiler, its arguments, the harness and the source.
-fn compile_cached(
+pub(crate) fn compile_cached(
     def: &LanguageDef,
+    (compiler, args): (PathBuf, Vec<String>),
     toolchain: &Path,
     files: &[(String, String)],
     function: &str,
     env: &JudgeEnv,
 ) -> Result<Compiled, JudgeError> {
-    let (compiler, args) = def.compile_command(toolchain)?;
     let limits = def
         .compile_limits
         .ok_or_else(|| JudgeError::Internal(format!("{} has no compile limits", def.language)))?;
@@ -306,7 +312,9 @@ fn compile_cached(
     if outcome.exit_code != 0 || !built.is_file() {
         let mut out = String::from_utf8_lossy(&outcome.stderr).into_owned();
         out.push_str(&String::from_utf8_lossy(&outcome.stdout));
-        let code = if out.contains(&format!("cannot find function `{function}`")) {
+        let code = if !function.is_empty()
+            && out.contains(&format!("cannot find function `{function}`"))
+        {
             MessageCode::FunctionNotFound
         } else {
             MessageCode::CompileError
@@ -373,7 +381,7 @@ fn evict(dir: &Path, keep: usize) {
     }
 }
 
-fn compile_failure(tests: &[TestCase], message: Message, info: CompileInfo) -> Report {
+pub(crate) fn compile_failure(tests: &[TestCase], message: Message, info: CompileInfo) -> Report {
     Report {
         verdict: Verdict::CompilationError,
         tests: Vec::new(),
@@ -549,6 +557,7 @@ fn assemble(
             actual: t.actual.clone(),
             message: t.result.message.clone(),
             stdout: t.stdout.clone(),
+            stderr: t.stderr.clone(),
         });
     report
 }
@@ -584,14 +593,7 @@ fn stop_reason(
         }
         Termination::Exited => {}
     }
-    let oom = [
-        "heap out of memory",
-        "Fatal process out of memory",
-        "MemoryError",
-        "Allowed memory size",
-        "memory allocation of",
-    ];
-    if facts.memory_limit_hit || oom.iter().any(|s| facts.stderr.contains(s)) {
+    if facts.memory_limit_hit || looks_out_of_memory(&facts.stderr) {
         return Some((
             Verdict::MemoryLimitExceeded,
             Message::new(MessageCode::MemoryLimit, "memory limit exceeded"),
@@ -611,6 +613,19 @@ fn stop_reason(
             ),
         ),
     ))
+}
+
+/// Whether stderr shows the runtime ran out of memory (each runtime's own message).
+pub(crate) fn looks_out_of_memory(stderr: &str) -> bool {
+    [
+        "heap out of memory",
+        "Fatal process out of memory",
+        "MemoryError",
+        "Allowed memory size",
+        "memory allocation of",
+    ]
+    .iter()
+    .any(|s| stderr.contains(s))
 }
 
 fn outcome(
@@ -633,6 +648,7 @@ fn outcome(
         },
         actual,
         stdout,
+        stderr: None,
     }
 }
 
@@ -651,13 +667,14 @@ fn internal(mut report: Report, tests: &[TestCase], message: Message) -> Report 
             },
             actual: None,
             stdout: String::new(),
+            stderr: None,
         });
     }
     report
 }
 
 /// The last part of stderr, without known runtime noise, as "\n<text>".
-fn stderr_tail(stderr: &str) -> String {
+pub(crate) fn stderr_tail(stderr: &str) -> String {
     const MAX: usize = 2048;
     // python-build-standalone cannot resolve its own folder in the sandbox (ADR 0006).
     let kept: Vec<&str> = stderr
@@ -700,7 +717,7 @@ impl WorkDir {
         Ok(WorkDir { path, id: n })
     }
 
-    fn id(&self) -> u64 {
+    pub(crate) fn id(&self) -> u64 {
         self.id
     }
 
@@ -732,7 +749,7 @@ impl WorkDir {
     }
 
     /// Strip this folder's absolute path from messages so tracebacks read `solution.ts:3`.
-    fn clean_messages(&self, report: &mut Report) {
+    pub(crate) fn clean_messages(&self, report: &mut Report) {
         let prefixes = self.prefixes();
         let messages = report
             .compile_output

@@ -174,6 +174,7 @@ async fn stored_submissions_come_back_redacted() {
         },
         actual: Some(json!([0, 1])),
         stdout: "printed".into(),
+        stderr: None,
     };
     let report = Report {
         verdict: Verdict::Accepted,

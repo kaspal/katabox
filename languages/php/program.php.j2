@@ -1,0 +1,12 @@
+<?php
+// Program problem: this file is the whole program. Read the input from stdin and write
+// the answer to stdout; the judge compares stdout with the expected output.
+//
+// stream_get_contents(STDIN) reads all of stdin at once, which is much faster than
+// reading it line by line on large inputs. Debug output must go to stderr
+// (fwrite(STDERR, ...)): everything on stdout counts as your answer.
+$tokens = preg_split('/\s+/', trim(stream_get_contents(STDIN)));
+// Example: $n = (int) $tokens[0];
+$out = [];
+// Collect the answer lines in $out, then write them once.
+echo implode("\n", $out), "\n";

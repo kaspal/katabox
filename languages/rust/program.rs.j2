@@ -1,0 +1,19 @@
+// Program problem: this file is the whole program. Read the input from stdin and write
+// the answer to stdout; the judge compares stdout with the expected output.
+//
+// read_to_string reads all of stdin at once, and a BufWriter collects the output into
+// one write: both are much faster than line-by-line reads and many println! calls on
+// large inputs. Debug output must go to stderr (eprintln!): everything on stdout counts
+// as your answer.
+use std::io::{self, Read, Write};
+
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let mut tokens = input.split_ascii_whitespace();
+    let mut out = io::BufWriter::new(io::stdout().lock());
+    // Example: let n: usize = tokens.next().unwrap().parse().unwrap();
+    //          writeln!(out, "{n}").unwrap();
+    let _ = tokens.next();
+    writeln!(out).unwrap();
+}

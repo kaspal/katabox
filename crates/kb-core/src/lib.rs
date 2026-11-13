@@ -84,6 +84,37 @@ impl FromStr for Language {
     }
 }
 
+/// How a problem is solved (ADR 0028): a function the harness calls, or a whole program
+/// that reads stdin and writes stdout.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub enum ProblemMode {
+    #[default]
+    Function,
+    Program,
+}
+
+impl ProblemMode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ProblemMode::Function => "function",
+            ProblemMode::Program => "program",
+        }
+    }
+}
+
+impl std::str::FromStr for ProblemMode {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "function" => Ok(ProblemMode::Function),
+            "program" => Ok(ProblemMode::Program),
+            _ => Err(format!("unknown mode {s:?} (expected function | program)")),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
