@@ -1,0 +1,17 @@
+id = "rotated-shelf"
+title = "Rotated Shelf"
+title_es = "La estantería girada"
+difficulty = "medium"
+tags = ["binary-search", "array"]
+pattern = "binary-search"
+rank = 5
+
+[signature]
+name = "findLabel"
+params = [{ name = "shelf", type = "int[]" }, { name = "label", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

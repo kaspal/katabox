@@ -660,3 +660,27 @@ fn content_150_m3_problems_are_debuggable() {
     ];
     assert_debuggable(&problems);
 }
+
+/// Content to 150, milestone 4: arrays, sorting, two pointers, sliding window, stack,
+/// binary search.
+#[test]
+fn content_150_m4_problems_are_debuggable() {
+    let problems: [(&str, &str, Option<Helper>); 15] = [
+        ("orchard-plots", "plot_totals", None),
+        ("stamp-coverage", "busiest_cells", None),
+        ("medal-table", "medal_table", None),
+        ("biggest-number", "biggest_number", None),
+        ("steep-drops", "steep_drops", Some(("<locals>.sort", 3))),
+        ("three-bins", "sort_bins", None),
+        ("biggest-tank", "biggest_tank", None),
+        ("trapped-rain", "trapped_rain", None),
+        ("fresh-playlist", "fresh_stretch", None),
+        ("shopping-walk", "shortest_walk", None),
+        ("folder-path", "clean_path", None),
+        ("billboard", "largest_poster", None),
+        ("highest-peak", "peak_index", None),
+        ("rotated-shelf", "find_label", None),
+        ("seat-map-lookup", "has_ticket", None),
+    ];
+    assert_debuggable(&problems);
+}

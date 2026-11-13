@@ -116,6 +116,7 @@
       "linked-list": "Linked list",
       "math": "Math",
       "matrix": "Matrix",
+      "merge-sort": "Merge sort",
       "minimum-spanning-tree": "Minimum spanning tree",
       "monotonic-queue": "Monotonic queue",
       "monotonic-stack": "Monotonic stack",

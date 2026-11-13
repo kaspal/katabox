@@ -1,0 +1,19 @@
+id = "biggest-tank"
+title = "Biggest Tank"
+title_es = "El depósito más grande"
+difficulty = "medium"
+tags = ["two-pointers", "array", "greedy"]
+pattern = "two-pointers"
+rank = 7
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
+
+[signature]
+name = "biggestTank"
+params = [{ name = "boards", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

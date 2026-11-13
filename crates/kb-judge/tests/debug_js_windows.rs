@@ -601,3 +601,26 @@ fn content_150_m3_problems_are_debuggable_in_typescript() {
         ("merge-bookings", "mergeBookings"),
     ]);
 }
+
+/// Content to 150, milestone 4: arrays, sorting, two pointers, sliding window, stack,
+/// binary search.
+#[test]
+fn content_150_m4_problems_are_debuggable_in_typescript() {
+    assert_debuggable(&[
+        ("orchard-plots", "plotTotals"),
+        ("stamp-coverage", "busiestCells"),
+        ("medal-table", "medalTable"),
+        ("biggest-number", "biggestNumber"),
+        ("steep-drops", "steepDrops"),
+        ("three-bins", "sortBins"),
+        ("biggest-tank", "biggestTank"),
+        ("trapped-rain", "trappedRain"),
+        ("fresh-playlist", "freshStretch"),
+        ("shopping-walk", "shortestWalk"),
+        ("folder-path", "cleanPath"),
+        ("billboard", "largestPoster"),
+        ("highest-peak", "peakIndex"),
+        ("rotated-shelf", "findLabel"),
+        ("seat-map-lookup", "hasTicket"),
+    ]);
+}

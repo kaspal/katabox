@@ -1,0 +1,19 @@
+id = "shopping-walk"
+title = "Shortest Shopping Walk"
+title_es = "El paseo de compras más corto"
+difficulty = "hard"
+tags = ["sliding-window", "hash-map", "string"]
+pattern = "sliding-window"
+rank = 8
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
+
+[signature]
+name = "shortestWalk"
+params = [{ name = "stalls", type = "string" }, { name = "need", type = "string" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,17 @@
+id = "three-bins"
+title = "Three Bins"
+title_es = "Tres contenedores"
+difficulty = "medium"
+tags = ["two-pointers", "array", "sorting"]
+pattern = "two-pointers"
+rank = 5
+
+[signature]
+name = "sortBins"
+params = [{ name = "items", type = "int[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

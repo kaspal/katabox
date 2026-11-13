@@ -1,0 +1,11 @@
+export function cleanPath(path: string): string {
+  const stack: string[] = [];
+  for (const part of path.split("/")) {
+    if (part === "..") {
+      stack.pop();
+    } else if (part !== "" && part !== ".") {
+      stack.push(part);
+    }
+  }
+  return "/" + stack.join("/");
+}

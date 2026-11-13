@@ -1,0 +1,19 @@
+id = "trapped-rain"
+title = "Trapped Rain"
+title_es = "La lluvia atrapada"
+difficulty = "hard"
+tags = ["two-pointers", "array", "prefix-sum"]
+pattern = "two-pointers"
+rank = 9
+profile = true
+profile_sizes = [300, 1000, 3000, 10000, 30000, 100000]
+
+[signature]
+name = "trappedRain"
+params = [{ name = "columns", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

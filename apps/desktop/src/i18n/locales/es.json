@@ -116,6 +116,7 @@
       "linked-list": "Lista enlazada",
       "math": "Matemáticas",
       "matrix": "Matriz",
+      "merge-sort": "Ordenación por mezcla",
       "minimum-spanning-tree": "Árbol de expansión mínima",
       "monotonic-queue": "Cola monótona",
       "monotonic-stack": "Pila monótona",
