@@ -161,16 +161,18 @@ export function WorkspacePage() {
   const dbg = useDebugger(problemId, language, session.docKey);
   const debugLanguages = useDebugLanguages();
   const canDebug = language !== null && (debugLanguages.data ?? []).includes(language);
-  const lastDebugCase = useRef<{ input: CustomInput; label: string } | null>(null);
+  // The last test debugged here (F5 debugs it again). Kept per problem: the page is reused
+  // when another problem opens, and another problem's input would not fit its signature.
+  const lastDebugCase = useRef<{ problem: string; input: CustomInput; label: string } | null>(null);
   const startDebug = useCallback(
     async (input: CustomInput, label: string) => {
       if (!ready || !canDebug || session.code === null) return;
-      lastDebugCase.current = { input, label };
+      lastDebugCase.current = { problem: problemId, input, label };
       setTab("debug");
       await session.flush();
       await dbg.start(session.code, input, label);
     },
-    [ready, canDebug, session, dbg],
+    [ready, canDebug, session, dbg, problemId],
   );
   const debugCase: DebugCase = {
     onDebug: (input, label) => void startDebug(input, label),
@@ -262,9 +264,9 @@ export function WorkspacePage() {
         else if (e.key === "F5" && dbg.active) void dbg.act("continue");
         else if (e.key === "F5") {
           const first = problem.data?.public_tests[0];
+          const last = lastDebugCase.current?.problem === problemId ? lastDebugCase.current : null;
           const target =
-            lastDebugCase.current ??
-            (first ? { input: first.input, label: `${t("results.testKind.public")} ${first.index}` } : null);
+            last ?? (first ? { input: first.input, label: `${t("results.testKind.public")} ${first.index}` } : null);
           if (target) void startDebug(target.input, target.label);
         } else if (e.key === "F10" && e.shiftKey) void dbg.act("step_back");
         else if (e.key === "F10") void dbg.act("step_over");
@@ -289,7 +291,7 @@ export function WorkspacePage() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [run, submit, toggleFocus, focus, setFocus, canDebug, dbg, startDebug, problem.data, t]);
+  }, [run, submit, toggleFocus, focus, setFocus, canDebug, dbg, startDebug, problem.data, problemId, t]);
 
   const changeLanguage = async (next: Language) => {
     if (next === language) return;

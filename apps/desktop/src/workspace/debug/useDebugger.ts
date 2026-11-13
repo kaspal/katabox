@@ -1,7 +1,7 @@
 // The debugger's UI state (ADR 0022). Every action is a replay run in the sandbox, so
 // this hook only keeps what the user sees and asks for: breakpoints (per document),
 // watches, expanded variables, the selected frame and the console history.
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type {
   DebugAction,
@@ -181,6 +181,17 @@ export function useDebugger(problem: string, language: Language | null, docKey: 
     setConsoleLog([]);
     setPrevious(null);
   }, [view]);
+
+  // The workspace page is reused when another problem opens: a session belongs to the
+  // problem it was started on, so it ends there (the editor would stay read-only).
+  const stopRef = useRef(stop);
+  stopRef.current = stop;
+  const sessionProblem = useRef(problem);
+  useEffect(() => {
+    if (sessionProblem.current === problem) return;
+    sessionProblem.current = problem;
+    void stopRef.current();
+  }, [problem]);
 
   return {
     view,
