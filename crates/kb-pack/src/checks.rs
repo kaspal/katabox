@@ -573,7 +573,11 @@ pub fn generate_tests(
         let mut obj = Map::new();
         if problem.mode == kb_core::ProblemMode::Program {
             // A program problem's test file is {"stdin", "stdout"} (ADR 0028).
-            let stdin = t.input.get(kb_judge::problem::STDIN_PARAM).cloned().unwrap_or_default();
+            let stdin = t
+                .input
+                .get(kb_judge::problem::STDIN_PARAM)
+                .cloned()
+                .unwrap_or_default();
             obj.insert("stdin".into(), stdin);
             obj.insert("stdout".into(), out);
         } else {

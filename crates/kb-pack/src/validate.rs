@@ -950,6 +950,124 @@ pub(crate) mod tests {
         );
     }
 
+    #[test]
+    fn program_integer_tokens_stay_within_javascript_safe_range() {
+        assert_eq!(unsafe_integer_token("1 -5 9007199254740991\n"), None);
+        assert_eq!(
+            unsafe_integer_token("3\n9007199254740992"),
+            Some("9007199254740992")
+        );
+        assert_eq!(
+            unsafe_integer_token("-9007199254740993"),
+            Some("-9007199254740993")
+        );
+        assert_eq!(
+            unsafe_integer_token("123456789012345678901234567890"),
+            Some("123456789012345678901234567890")
+        );
+        // Not integers: words, decimals, signs alone, leading zeros of a small number.
+        assert_eq!(
+            unsafe_integer_token("abc 1.5e30 - + 0000000000000000000007"),
+            None
+        );
+    }
+
+    #[test]
+    fn program_examples_are_read_per_section() {
+        let text = "Intro\n\n## Input format\n\nx\n\n### Example 1\n\nInput:\n\n```\n2\n1 2\n```\n\nOutput:\n\n```\n3\n```\n\nNote.\n\n### Example 2\n\n```\n0\n\n```\n\n### Constraints\n\n```\nnot an example\n```\n";
+        let ex = program_examples(text, "Example");
+        assert_eq!(ex.len(), 2);
+        assert_eq!(ex[0], (1, vec!["2\n1 2\n".to_string(), "3\n".to_string()]));
+        assert_eq!(ex[1], (2, vec!["0\n\n".to_string()]));
+    }
+
+    #[test]
+    fn program_problems_are_checked_for_their_shape() {
+        let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems/ticket-tally");
+        let base = std::env::temp_dir().join(format!("kbp-program-{}", std::process::id()));
+        let dir = base.join("ticket-tally");
+        let fresh = || {
+            let _ = fs::remove_dir_all(&base);
+            copy_dir(&src, &dir);
+        };
+        let errors = || validate_problem_meta(&dir).1;
+        fresh();
+        assert_eq!(errors(), Vec::<String>::new(), "the model package is clean");
+
+        // An example that differs from its public test, in one language.
+        let es = fs::read_to_string(dir.join("statement.es.md")).unwrap();
+        fs::write(
+            dir.join("statement.es.md"),
+            es.replacen("3 50 30", "3 50 31", 1),
+        )
+        .unwrap();
+        let e = errors();
+        assert!(
+            e.iter()
+                .any(|m| m.contains("statement.es.md: Ejemplo 1's output differs")),
+            "{e:?}"
+        );
+        assert!(!e.iter().any(|m| m.starts_with("statement.md")), "{e:?}");
+
+        // A missing format heading; a signature; a value checker; a profile.
+        fresh();
+        let en = fs::read_to_string(dir.join("statement.md")).unwrap();
+        fs::write(
+            dir.join("statement.md"),
+            en.replace("## Output format", "## Output"),
+        )
+        .unwrap();
+        let toml = fs::read_to_string(dir.join("problem.toml")).unwrap();
+        fs::write(
+            dir.join("problem.toml"),
+            toml.replace("checker = \"tokens\"", "checker = \"exact\"")
+                .replace(
+                    "mode = \"program\"",
+                    "mode = \"program\"\nprofile = true\nprofile_sizes = [1, 2, 3, 4, 5, 6]",
+                ),
+        )
+        .unwrap();
+        let e = errors();
+        for want in [
+            "missing the \"## Output format\" heading",
+            "needs a text checker",
+            "profiler is not available",
+        ] {
+            assert!(e.iter().any(|m| m.contains(want)), "{want}: {e:?}");
+        }
+        fresh();
+        let toml = fs::read_to_string(dir.join("problem.toml")).unwrap();
+        fs::write(
+            dir.join("problem.toml"),
+            toml.replace(
+                "[judge]",
+                "[signature]\nname = \"f\"\nparams = []\nreturns = \"int\"\n\n[judge]",
+            ),
+        )
+        .unwrap();
+        assert!(errors().iter().any(|m| m.contains("has no [signature]")));
+
+        // A test with a token beyond 2^53, and a function-shaped test.
+        fresh();
+        fs::write(
+            dir.join("tests/hidden/1.json"),
+            r#"{"stdin": "1\n1\n9007199254740993\n", "stdout": "1 9007199254740993 9007199254740993\n"}"#,
+        )
+        .unwrap();
+        fs::write(
+            dir.join("tests/hidden/2.json"),
+            r#"{"input": {"stdin": "1"}, "output": "1"}"#,
+        )
+        .unwrap();
+        let e = errors();
+        assert!(
+            e.iter().any(|m| m.contains("9007199254740993, outside")),
+            "{e:?}"
+        );
+        assert!(e.iter().any(|m| m.contains("a program test is")), "{e:?}");
+        fs::remove_dir_all(&base).unwrap();
+    }
+
     pub(crate) fn copy_dir(from: &Path, to: &Path) {
         fs::create_dir_all(to).unwrap();
         for e in fs::read_dir(from).unwrap().flatten() {
