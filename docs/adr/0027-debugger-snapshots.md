@@ -130,6 +130,35 @@ SnapObject = {kind:"list"|"set", type, items, len} | {kind:"map", type, entries:
 ### Nothing else changes
 There is no change to kb-runner, the sandbox, its limits, the CSP or the capabilities.
 
+### The Visualize tab (UI)
+- **Placement:** a tab next to Variables in the Debug panel, plus an "Open larger" dialog
+  with its own step controls and zoom. While the tab is open, `visualize` is sent with
+  every stop; closing the tab sends one inspect without it.
+- **Drawing:** hand-written SVG in `workspace/debug/visualize/`. A pure `model.ts` detects
+  the shapes, `layout.ts` places the nodes (an in-order tree, a circle for graphs) and
+  `diff.ts` finds the changes. There is no new dependency.
+- **Shapes:** arrays, sets, grids (lists of equal lists of scalars), linked lists (a
+  cycle is drawn once, with an arc back), trees, and maps (as a table). A graph (an
+  adjacency list, a 0/1 matrix or a dict of lists) or a heap (an array as a tree) is
+  drawn only when the user picks it.
+- **Graph limit:** at most 50 nodes, with "showing first N". Duplicate edges are merged
+  with a count, two-way edges are drawn as one line with two arrowheads, and self-loops
+  are kept.
+- **Pointers:** int locals with the usual names (`i`, `j`, `lo`, `hi`, `left`, `right`,
+  `mid`, …) point into every drawn array they fit, from 0 to `len` ("end"). Grid
+  pointers come from (`r`, `c`), (`row`, `col`) and (`i`, `j`). Nodes are labelled with
+  the other variables that point at them.
+- **Per-problem choice:** the setting `workspace.visualize.<problem>` (importable) holds
+  the variables, the view per variable, and pointer overrides, which work both ways. The
+  default is the problem's parameters.
+- **Changes since the previous step:** each change is marked with a dashed outline and a
+  "•", never by colour alone. Nodes from the input are compared by their `input` number
+  across every drawing of the previous step, so a node that moves from `back` to `prev`
+  in a reversal is still marked. Other nodes are compared by position within their own
+  drawing.
+- **Tokens:** `--viz-node`, `--viz-edge`, `--viz-pointer` and `--viz-changed` in light
+  and dark, covered by the contrast tests.
+
 ## Consequences
 - **The Visualize view gets a picture on every step** for the price of the stop it
   already makes.

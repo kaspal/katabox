@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useSetting } from "@/lib/settings";
 import type { Debugger } from "@/workspace/debug/useDebugger";
 import { DebugToolbar } from "@/workspace/debug/DebugPanel";
-import { diffModels, NO_CHANGES } from "@/workspace/debug/visualize/diff";
+import { diffModels, NO_CHANGES, nodeIndex } from "@/workspace/debug/visualize/diff";
 import {
   DEFAULT_SETTINGS,
   chosenNames,
@@ -19,6 +19,7 @@ import {
   modelsOf,
   parseSettings,
   settingKey,
+  type Model,
   type ViewAs,
   type VizSettings,
 } from "@/workspace/debug/visualize/model";
@@ -51,11 +52,14 @@ function Canvas({
   const { t } = useTranslation();
   const snap = stop.snapshot;
   const models = useMemo(() => (snap ? modelsOf(snap, names, stop.locals, settings) : []), [snap, names, stop.locals, settings]);
-  const before = useMemo(() => {
+  const [before, known] = useMemo(() => {
     const prev = previous?.snapshot;
-    if (!prev) return new Map();
-    return new Map(modelsOf(prev, names, previous.locals, settings).map((m) => [m.name, m]));
-  }, [previous, names, settings]);
+    if (!prev) return [new Map<string, Model>(), undefined];
+    // Every root of the previous step (not only the chosen ones): a node may move between
+    // drawings, and its old place is wherever it was reachable from.
+    const all = modelsOf(prev, (prev.roots ?? []).map((r) => r.name), previous.locals, settings);
+    return [new Map(all.map((m) => [m.name, m])), nodeIndex(all)];
+  }, [previous, settings]);
   if (!snap) return null;
   if (snap.error) {
     const key = snap.error === "too_large" ? "debug.visualize.error.too_large" : "debug.visualize.error.other";
@@ -67,7 +71,7 @@ function Canvas({
     <div className="space-y-2" data-testid="viz-canvas">
       {models.length === 0 && names.length === 0 && <p className="text-sm text-muted-foreground">{t("debug.visualize.empty")}</p>}
       {models.map((m) => (
-        <ModelCard key={m.name} m={m} changes={previous ? diffModels(before.get(m.name), m) : NO_CHANGES} zoom={zoom} large={large} />
+        <ModelCard key={m.name} m={m} changes={previous ? diffModels(before.get(m.name), m, known) : NO_CHANGES} zoom={zoom} large={large} />
       ))}
       {missing.map((n) => (
         <p key={n} className="text-xs text-muted-foreground">

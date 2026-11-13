@@ -10,6 +10,7 @@ import {
   NODE_R,
   layoutGraph,
   layoutTree,
+  nodeWidth,
   rowCellWidth,
 } from "@/workspace/debug/visualize/layout";
 import {
@@ -238,7 +239,9 @@ export function LinkedListView({ m, changes, zoom }: Props<LinkedModel>) {
   const deepest = Math.max(0, ...m.nodes.map((n) => n.labels.length));
   const tail = m.cycleTo === null ? (m.more ? "…" : "null") : "";
   const width = MARGIN + m.nodes.length * step + (tail ? 40 : 0) + MARGIN;
-  const loop = m.cycleTo !== null ? 30 : 0;
+  // Room below the boxes for the cycle's curve (its lowest point is 3/4 of this) and,
+  // under it, its label.
+  const loop = m.cycleTo !== null ? 46 : 0;
   const height = top + CELL_H + 8 + loop + deepest * 16 + 10;
   const values = m.nodes.map((n) => n.text);
   const label = t("debug.visualize.aria.linked", {
@@ -297,7 +300,7 @@ export function LinkedListView({ m, changes, zoom }: Props<LinkedModel>) {
           />
           <text
             x={(cx(m.nodes.length - 1) + cx(m.cycleTo)) / 2}
-            y={top + CELL_H + loop - 4}
+            y={top + CELL_H + loop - 1}
             textAnchor="middle"
             className="fill-muted-foreground text-[10px]"
           >
@@ -339,16 +342,18 @@ export function TreeView({ m, changes, zoom }: Props<TreeModel>) {
         const { x, y } = points[i];
         return (
           <g key={n.key} data-node={n.key} data-changed={changed ? "" : undefined}>
-            <circle
-              cx={x}
-              cy={y}
-              r={NODE_R}
+            <rect
+              x={x - nodeWidth(n.text) / 2}
+              y={y - NODE_R}
+              width={nodeWidth(n.text)}
+              height={NODE_R * 2}
+              rx={NODE_R}
               className={cn("fill-viz-node", changed ? "stroke-viz-changed" : "stroke-viz-edge")}
               strokeWidth={changed ? 2.5 : 1}
               strokeDasharray={changed ? "5 3" : undefined}
             />
             <text x={x} y={y + 4} textAnchor="middle" className="fill-foreground">
-              {clip(n.text, 4)}
+              {clip(n.text, Math.max(4, Math.floor((nodeWidth(n.text) - 8) / 7.5)))}
               <title>{n.text}</title>
             </text>
             {m.heap && (
@@ -356,7 +361,7 @@ export function TreeView({ m, changes, zoom }: Props<TreeModel>) {
                 {i}
               </text>
             )}
-            {changed && <Dot x={x + NODE_R} y={y - NODE_R + 2} />}
+            {changed && <Dot x={x + nodeWidth(n.text) / 2} y={y - NODE_R + 2} />}
             {n.labels.map((l, k) => (
               <text
                 key={l}

@@ -760,7 +760,7 @@
       "choose": "Variables to draw",
       "show": "Draw {{name}}",
       "pointer": "Use {{name}} as a pointer",
-      "pointers": "Pointers",
+      "pointers": "Pointer",
       "viewAs": "Draw {{name}} as",
       "as": {
         "auto": "Auto",

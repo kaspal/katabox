@@ -760,7 +760,7 @@
       "choose": "Variables para dibujar",
       "show": "Dibujar {{name}}",
       "pointer": "Usar {{name}} como puntero",
-      "pointers": "Punteros",
+      "pointers": "Puntero",
       "viewAs": "Dibujar {{name}} como",
       "as": {
         "auto": "Automático",

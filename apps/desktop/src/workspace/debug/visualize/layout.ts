@@ -19,8 +19,16 @@ export function rowCellWidth(texts: string[]): number {
 
 export type Point = { x: number; y: number };
 
-/** A tidy binary tree: x by in-order position, y by depth. Never two nodes on one spot. */
+/** A tree node's width: a circle for short values, a pill for longer ones (up to 96 px). */
+export function nodeWidth(text: string): number {
+  return Math.max(NODE_R * 2, Math.min(96, 14 + text.length * 7.5));
+}
+
+/** A tidy binary tree: x by in-order position, y by depth. Never two nodes on one spot;
+ * the spacing grows with the widest node. */
 export function layoutTree(m: TreeModel): { points: Point[]; width: number; height: number } {
+  const widest = m.nodes.reduce((w, n) => Math.max(w, nodeWidth(n.text)), NODE_R * 2);
+  const dx = Math.max(TREE_DX, widest + 10);
   const order: number[] = [];
   // Iterative in-order walk from the root (node 0).
   const stack: number[] = [];
@@ -39,12 +47,12 @@ export function layoutTree(m: TreeModel): { points: Point[]; width: number; heig
   }
   const points: Point[] = m.nodes.map(() => ({ x: 0, y: 0 }));
   order.forEach((n, i) => {
-    points[n] = { x: MARGIN + NODE_R + i * TREE_DX, y: MARGIN + NODE_R + m.nodes[n].depth * TREE_DY };
+    points[n] = { x: MARGIN + widest / 2 + i * dx, y: MARGIN + NODE_R + m.nodes[n].depth * TREE_DY };
   });
   const depth = m.nodes.reduce((d, n) => Math.max(d, n.depth), 0);
   return {
     points,
-    width: MARGIN * 2 + NODE_R * 2 + Math.max(order.length - 1, 0) * TREE_DX,
+    width: MARGIN * 2 + widest + Math.max(order.length - 1, 0) * dx,
     height: MARGIN * 2 + NODE_R * 2 + depth * TREE_DY + 16,
   };
 }

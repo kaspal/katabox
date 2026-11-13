@@ -1,7 +1,7 @@
 // What changed since the previous step (ADR 0027): a changed cell, a moved pointer, a
 // relinked node, a map key added or changed. Nodes are matched by their key: the input
 // number when the harness built them, else their position (nodes the solution creates).
-import type { Model } from "@/workspace/debug/visualize/model";
+import type { LinkedModel, Model, TreeModel } from "@/workspace/debug/visualize/model";
 
 export type Changes = {
   /** Array/set cells by index, grid cells as "r,c", map entries by key. */
@@ -28,8 +28,36 @@ export function hasChanges(c: Changes): boolean {
   return c.cells.size + c.nodes.size + c.pointers.size + c.edges.size + c.removed.length > 0;
 }
 
-/** Changes from `prev` (the same variable at the previous step) to `cur`. */
-export function diffModels(prev: Model | undefined, cur: Model): Changes {
+/** Every node of some models: its value and links by key, and which node each label is on. */
+export type NodeIndex = { nodes: Map<string, string>; labels: Map<string, string> };
+
+function stateOf(m: LinkedModel | TreeModel, i: number): string {
+  const n = m.nodes[i];
+  if (m.kind === "linked") return `${n.text}|next=${(n as LinkedModel["nodes"][number]).next}`;
+  const t = n as TreeModel["nodes"][number];
+  const key = (j: number | null) => (j === null ? null : m.nodes[j].key);
+  return `${t.text}|l=${key(t.left)}|r=${key(t.right)}`;
+}
+
+/** The nodes of the previous step's drawings. Only input-numbered nodes are comparable
+ * across drawings; `positional` adds the others (for the same drawing). */
+export function nodeIndex(models: Model[], positional = false): NodeIndex {
+  const out: NodeIndex = { nodes: new Map(), labels: new Map() };
+  for (const m of models) {
+    if (m.kind !== "linked" && m.kind !== "tree") continue;
+    m.nodes.forEach((n, i) => {
+      if (positional || n.key.startsWith("i")) out.nodes.set(n.key, stateOf(m, i));
+      for (const l of n.labels) out.labels.set(l, n.key);
+    });
+  }
+  return out;
+}
+
+/** Changes from `prev` (the same variable at the previous step) to `cur`. `known` holds
+ * the previous step's nodes from every drawing, so a node that moved from one list to
+ * another (a reversal's `back` to `prev`) is still compared by its input number. */
+export function diffModels(prev: Model | undefined, cur: Model, known?: NodeIndex): Changes {
+  if (cur.kind === "linked" || cur.kind === "tree") return diffNodes(prev, cur, known);
   if (!prev || prev.kind !== cur.kind) return NO_CHANGES;
   const out: Changes = { cells: new Set(), nodes: new Set(), pointers: new Set(), edges: new Set(), removed: [] };
   switch (cur.kind) {
@@ -69,38 +97,6 @@ export function diffModels(prev: Model | undefined, cur: Model): Changes {
       if (p.entries.length === p.len) for (const k of before.keys()) if (!now.has(k)) out.removed.push(k);
       break;
     }
-    case "linked": {
-      const p = prev as typeof cur;
-      const before = new Map(p.nodes.map((n) => [n.key, n]));
-      const labelAt = new Map<string, string>();
-      for (const n of p.nodes) for (const l of n.labels) labelAt.set(l, n.key);
-      for (const n of cur.nodes) {
-        const b = before.get(n.key);
-        if (!b || b.text !== n.text || b.next !== n.next) out.nodes.add(n.key);
-        for (const l of n.labels) if (labelAt.get(l) !== n.key) out.pointers.add(l);
-      }
-      break;
-    }
-    case "tree": {
-      const p = prev as typeof cur;
-      const keyOf = (m: typeof cur, i: number | null) => (i === null ? null : m.nodes[i].key);
-      const before = new Map(p.nodes.map((n) => [n.key, n]));
-      const labelAt = new Map<string, string>();
-      for (const n of p.nodes) for (const l of n.labels) labelAt.set(l, n.key);
-      for (const n of cur.nodes) {
-        const b = before.get(n.key);
-        if (
-          !b ||
-          b.text !== n.text ||
-          keyOf(p, b.left) !== keyOf(cur, n.left) ||
-          keyOf(p, b.right) !== keyOf(cur, n.right)
-        ) {
-          out.nodes.add(n.key);
-        }
-        for (const l of n.labels) if (labelAt.get(l) !== n.key) out.pointers.add(l);
-      }
-      break;
-    }
     case "graph": {
       const p = prev as typeof cur;
       const name = (m: typeof cur, i: number) => m.nodes[i];
@@ -117,5 +113,18 @@ export function diffModels(prev: Model | undefined, cur: Model): Changes {
       break;
     }
   }
+  return out;
+}
+
+function diffNodes(prev: Model | undefined, cur: LinkedModel | TreeModel, known?: NodeIndex): Changes {
+  const local = prev && prev.kind === cur.kind ? nodeIndex([prev], true) : null;
+  if (!local && !known) return NO_CHANGES;
+  const out: Changes = { cells: new Set(), nodes: new Set(), pointers: new Set(), edges: new Set(), removed: [] };
+  cur.nodes.forEach((n, i) => {
+    const before = (n.key.startsWith("i") ? known?.nodes.get(n.key) : undefined) ?? local?.nodes.get(n.key);
+    // New here, or its value or a link changed.
+    if (before !== stateOf(cur, i)) out.nodes.add(n.key);
+    for (const l of n.labels) if ((known?.labels.get(l) ?? local?.labels.get(l)) !== n.key) out.pointers.add(l);
+  });
   return out;
 }

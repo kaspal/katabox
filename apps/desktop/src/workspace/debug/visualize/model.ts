@@ -86,7 +86,7 @@ export function valueText(snap: DebugSnapshot, v: SnapValue, depth = 0): string 
     xs.slice(0, 4).map((x) => valueText(snap, x, depth + 1)).join(", ") + (len > 4 ? ", …" : "");
   switch (o.kind) {
     case "list":
-      return `[${join(o.items, o.len)}]`;
+      return o.type === "tuple" ? `(${join(o.items, o.len)}${o.len === 1 ? "," : ""})` : `[${join(o.items, o.len)}]`;
     case "set":
       return `{${join(o.items, o.len)}}`;
     case "map":

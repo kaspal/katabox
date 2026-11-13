@@ -10,7 +10,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 
 | Path | What it is |
 | --- | --- |
-| `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI (ADR 0012: `app/` shell, router, palette; `pages/`; `workspace/` editor, problem and results panes (ADR 0013), `workspace/debug/` debugger panels (ADR 0022); `components/ui/` shadcn; `lib/api.ts` is the only door to the generated `bindings.ts`; `i18n/locales/`; `styles/tokens.css`; `smoke/` is a temporary dev-only screen), `src-tauri/` = thin Rust shell (commands and wiring only; ADR 0011; `windows/` installer hooks, `icons/katabox.svg` the icon source; ADR 0021) |
+| `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI (ADR 0012: `app/` shell, router, palette; `pages/`; `workspace/` editor, problem and results panes (ADR 0013), `workspace/debug/` debugger panels (ADR 0022), `workspace/debug/visualize/` the Visualize tab (ADR 0027); `components/ui/` shadcn; `lib/api.ts` is the only door to the generated `bindings.ts`; `i18n/locales/`; `styles/tokens.css`; `smoke/` is a temporary dev-only screen), `src-tauri/` = thin Rust shell (commands and wiring only; ADR 0011; `windows/` installer hooks, `icons/katabox.svg` the icon source; ADR 0021) |
 | `crates/kb-app` | App service behind the Tauri commands: state, sandbox root, Run/Submit, typed `AppError` (ADR 0011); `practice.rs`: reviews, daily problem, streak, pattern map, next problem, lists (ADR 0019); `interview.rs`, `transfer.rs` (ADR 0020); `debug.rs`: debugger sessions and navigation (ADR 0022) |
 | `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult, the judge Report). No I/O |
 | `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009); per-language time limits and the machine calibration benchmark (ADR 0017); `debug.rs`: replay debugger runs (ADR 0022); `profile.rs` + `complexity.rs`: complexity profiler runs and fit (ADR 0024) |
@@ -41,6 +41,7 @@ cargo test -p kb-judge --release --test complexity_windows -- --nocapture  # pro
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
 cargo test -p kb-judge --test debug_windows -- --nocapture  # debugger e2e in the sandbox (prints the replay timings; debug_js_windows for JS/TS)
+cargo test -p kb-judge --release --test visualize_windows -- --nocapture  # visualizer snapshots, Python + TS: shapes, identity, caps, no user code, cost per stop (ADR 0027)
 cargo test -p kb-judge --test nodes_windows -- --nocapture  # ListNode / TreeNode round trips and cycle guards in every language (Windows; ADR 0025)
 cargo test -p kb-judge --test calibration_windows -- --nocapture  # calibration benchmark (prints this machine's rounds; re-measure the reference times when it or a runtime pin changes)
 cargo test -p kb-bridge          # language servers: fake-server lifecycle; real basedpyright, typescript-language-server, rust-analyzer on Windows (needs the .ps1 fetch)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DebugSnapshot, SnapObject, SnapValue, VarInfo } from "@/bindings";
-import { diffModels, hasChanges } from "@/workspace/debug/visualize/diff";
+import { diffModels, hasChanges, nodeIndex } from "@/workspace/debug/visualize/diff";
 import { layoutGraph, layoutTree } from "@/workspace/debug/visualize/layout";
 import {
   DEFAULT_SETTINGS,
@@ -8,6 +8,7 @@ import {
   chosenNames,
   isPointer,
   modelFor,
+  modelsOf,
   parseSettings,
   shownOf,
   type GraphModel,
@@ -204,6 +205,21 @@ describe("Visualizer changes since the previous step (ADR 0027)", () => {
     rev[0] = { ...rev[0], next: none } as SnapObject;
     const reversed = model(snapshot(rev, { head: ref(1) }), "head");
     expect([...diffModels(after, reversed).nodes]).toContain("i1");
+  });
+
+  it("compares input nodes across drawings: a node moved from `back` to `prev` is marked", () => {
+    // Before: back = 6 → 9 (inputs 3, 4), prev = None. After one reversal step: prev = 6
+    // (now ending the list), back = 9.
+    const node = (v: number, next: SnapValue, input: number): SnapObject => ({ kind: "list_node", val: int(v), next, input });
+    const before = snapshot([node(6, ref(1), 3), node(9, none, 4)], { back: ref(0), prev: none });
+    const after = snapshot([node(6, none, 3), node(9, none, 4)], { prev: ref(0), back: ref(1) });
+    const prevModels = modelsOf(before, ["back", "prev"], [], DEFAULT_SETTINGS);
+    const known = nodeIndex(prevModels);
+    const [prevCard, backCard] = modelsOf(after, ["prev", "back"], [], DEFAULT_SETTINGS);
+    // prev was not a list a step ago, yet node 6 (input 3) is compared: its link changed.
+    expect([...diffModels(prevModels[1], prevCard, known).nodes]).toEqual(["i3"]);
+    // 9 kept its value and link.
+    expect([...diffModels(prevModels[0], backCard, known).nodes]).toEqual([]);
   });
 
   it("marks tree nodes whose children changed", () => {
