@@ -70,6 +70,6 @@ A field one column wide: rows 1 to 3 give 3 - 1 + 4 = 6.
 
 ### Constraints
 
-- 1 ≤ R, C ≤ 8·10⁴
-- R · C ≤ 8·10⁴
+- 1 ≤ R, C ≤ 10⁵
+- R · C ≤ 10⁵
 - -1000 ≤ score ≤ 1000

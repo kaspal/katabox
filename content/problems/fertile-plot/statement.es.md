@@ -70,6 +70,6 @@ Un campo de una sola columna: las filas 1 a 3 suman 3 - 1 + 4 = 6.
 
 ### Restricciones
 
-- 1 ≤ R, C ≤ 8·10⁴
-- R · C ≤ 8·10⁴
+- 1 ≤ R, C ≤ 10⁵
+- R · C ≤ 10⁵
 - -1000 ≤ puntuación ≤ 1000

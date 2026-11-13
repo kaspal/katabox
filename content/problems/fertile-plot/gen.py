@@ -5,15 +5,15 @@ import random
 def generate(seed, size):
     rng = random.Random(seed)
     if size == "max":
-        # About 8·10⁴ cells (about 210 KB); trying every rectangle is ~1.6-2.2·10⁹ steps.
+        # About 10⁵ cells (about 260 KB); trying every rectangle is ~2.5·10⁹ steps.
         if seed % 3 == 0:
-            # A near-square field: the reference's worst case, ~1.1·10⁷ Kadane steps.
-            rows, cols = (280, 285) if seed % 2 else (285, 280)
+            # A near-square field: the reference's worst case, ~1.6·10⁷ Kadane steps.
+            rows, cols = (315, 317) if seed % 2 else (317, 315)
         else:
-            # A long thin field (wide on odd seeds, tall on even ones): ~4·10⁵ Kadane steps
+            # A long thin field (wide on odd seeds, tall on even ones): ~5·10⁵ Kadane steps
             # when the short side is in the outer loops.
             short = rng.choice([8, 10, 16, 20])
-            long_side = 80_000 // short
+            long_side = 100_000 // short
             rows, cols = (short, long_side) if seed % 2 else (long_side, short)
 
         def score():

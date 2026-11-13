@@ -1,10 +1,10 @@
 id = "tide-lows"
 title = "Tide Lows"
 title_es = "Mareas bajas"
-difficulty = "hard"
+difficulty = "medium"
 tags = ["sparse-table", "array"]
 pattern = "range-queries"
-rank = 9
+rank = 8
 mode = "program"
 
 [judge]

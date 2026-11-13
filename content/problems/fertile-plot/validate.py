@@ -18,10 +18,10 @@ def validate(text):
     if head is None:
         return "the first line is R C"
     rows, cols = head
-    if not (1 <= rows <= 80_000 and 1 <= cols <= 80_000):
-        return "1 ≤ R, C ≤ 8·10⁴"
-    if rows * cols > 80_000:
-        return "R · C ≤ 8·10⁴"
+    if not (1 <= rows <= 100_000 and 1 <= cols <= 100_000):
+        return "1 ≤ R, C ≤ 10⁵"
+    if rows * cols > 100_000:
+        return "R · C ≤ 10⁵"
     if len(lines) != 1 + rows:
         return "R lines of scores after the first line"
     for i in range(rows):
