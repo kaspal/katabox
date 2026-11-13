@@ -111,6 +111,7 @@
       "greedy": "Voraz",
       "hash-map": "Mapa hash",
       "heap": "Montículo",
+      "input-parsing": "Lectura de entrada",
       "interval-dp": "DP por intervalos",
       "intervals": "Intervalos",
       "kmp": "KMP",

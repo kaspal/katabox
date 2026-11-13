@@ -44,6 +44,9 @@ pub struct JudgeEnv {
     /// multiplied by it, clamped to [`limits::MIN_SCALE`], [`limits::MAX_SCALE`]. 1.0 is
     /// the reference machine (and the default).
     pub time_scale: f64,
+    /// Keep a program's whole stdout in reports (ADR 0028), instead of the 64 KB kept for
+    /// storage: kb-pack writes expected outputs and compares solutions from it.
+    pub full_program_output: bool,
     toolchains: Vec<(Language, PathBuf)>,
 }
 
@@ -55,6 +58,7 @@ impl JudgeEnv {
             cache_dir: sandbox_root.join("cache"),
             sandbox_root,
             time_scale: 1.0,
+            full_program_output: false,
             toolchains: Vec::new(),
         }
     }

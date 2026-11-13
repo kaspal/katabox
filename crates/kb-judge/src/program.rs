@@ -303,7 +303,11 @@ pub(crate) fn judge_program(
         let ran = outcome.termination == Termination::Exited;
         // Stored and shown with LF line ends (Windows programs often write CRLF; the
         // checker ignores the difference too).
-        let shown_stdout = stored_text(&normalize_text(&stdout));
+        let shown_stdout = if env.full_program_output {
+            normalize_text(&stdout)
+        } else {
+            stored_text(&normalize_text(&stdout))
+        };
         let test = TestOutcome {
             result: TestResult {
                 index: tc.index,

@@ -111,6 +111,7 @@
       "greedy": "Greedy",
       "hash-map": "Hash map",
       "heap": "Heap",
+      "input-parsing": "Input parsing",
       "interval-dp": "Interval DP",
       "intervals": "Intervals",
       "kmp": "KMP",

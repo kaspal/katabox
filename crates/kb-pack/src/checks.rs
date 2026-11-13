@@ -117,9 +117,12 @@ pub struct Finding {
 
 /// The sandbox environment for a root (made absolute).
 pub fn env_for(root: &Path) -> Result<JudgeEnv, String> {
-    std::path::absolute(root)
+    let mut env = std::path::absolute(root)
         .map(JudgeEnv::dev)
-        .map_err(|e| format!("{}: {e}", root.display()))
+        .map_err(|e| format!("{}: {e}", root.display()))?;
+    // Expected outputs and stress comparisons need a program's whole stdout (ADR 0028).
+    env.full_program_output = true;
+    Ok(env)
 }
 
 /// Run every sandbox check on one problem folder.
@@ -568,8 +571,15 @@ pub fn generate_tests(
             return Err(format!("{} exists; pick another --from", path.display()));
         }
         let mut obj = Map::new();
-        obj.insert("input".into(), Value::Object(t.input.clone()));
-        obj.insert("output".into(), out);
+        if problem.mode == kb_core::ProblemMode::Program {
+            // A program problem's test file is {"stdin", "stdout"} (ADR 0028).
+            let stdin = t.input.get(kb_judge::problem::STDIN_PARAM).cloned().unwrap_or_default();
+            obj.insert("stdin".into(), stdin);
+            obj.insert("stdout".into(), out);
+        } else {
+            obj.insert("input".into(), Value::Object(t.input.clone()));
+            obj.insert("output".into(), out);
+        }
         let text = serde_json::to_string(&Value::Object(obj)).map_err(|e| e.to_string())?;
         fs::write(&path, text + "\n").map_err(|e| e.to_string())?;
         written.push(path);
