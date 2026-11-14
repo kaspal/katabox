@@ -1,0 +1,28 @@
+id = "fast-power"
+subject = "math-geometry"
+order = 3
+title = "Fast modular power"
+title_es = "Potencia modular rápida"
+tags = ["math", "modular-arithmetic"]
+problems = ["fast-power"]
+presets = ["big-exponent", "random", "power-of-two"]
+default = [7, 1000, 13]
+
+[complexity]
+best = "O(log exp)"
+average = "O(log exp)"
+worst = "O(log exp)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 3
+min = 0
+max = 9999
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = power_mod(a[0], a[1], a[2])"
+typescript = "a = powerMod(a[0], a[1], a[2])"

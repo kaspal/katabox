@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input: a = 17, m = 101. What is the output?",
+    "prompt_es": "Entrada por defecto: a = 17, m = 101. ¿Cuál es la salida?",
+    "options": [
+      { "en": "[-1]", "es": "[-1]" },
+      { "en": "[16]", "es": "[16]" },
+      { "en": "[6]", "es": "[6]" }
+    ],
+    "answer": 2,
+    "explain_en": "The divisions end with remainder 1 and coefficient 6, and 17 · 6 = 102 leaves remainder 1 when divided by 101.",
+    "explain_es": "Las divisiones terminan con resto 1 y coeficiente 6, y 17 · 6 = 102 deja resto 1 al dividir entre 101."
+  },
+  {
+    "prompt_en": "\"Shares a factor\" preset: a = 12, m = 30. Why is the output [-1]?",
+    "prompt_es": "Ajuste \"comparten un factor\": a = 12, m = 30. ¿Por qué la salida es [-1]?",
+    "options": [
+      { "en": "Because gcd(12, 30) = 6, and every 12 · x - 30 · y is a multiple of 6, never 1", "es": "Porque gcd(12, 30) = 6, y todo 12 · x - 30 · y es múltiplo de 6, nunca 1" },
+      { "en": "Because 30 is not prime", "es": "Porque 30 no es primo" },
+      { "en": "Because 12 is smaller than 30", "es": "Porque 12 es menor que 30" }
+    ],
+    "answer": 0,
+    "explain_en": "An inverse exists exactly when the gcd is 1. A modulus that is not prime is fine: 7 has an inverse mod 30.",
+    "explain_es": "Un inverso existe exactamente cuando el mcd es 1. Un módulo que no es primo no es problema: el 7 tiene inverso módulo 30."
+  },
+  {
+    "prompt_en": "Which other way gives the inverse of 17 mod 101?",
+    "prompt_es": "¿Qué otra forma da el inverso de 17 módulo 101?",
+    "options": [
+      { "en": "101 / 17, rounded down", "es": "101 / 17, redondeado hacia abajo" },
+      { "en": "17^99 mod 101, since 101 is prime (Fermat's little theorem)", "es": "17^99 mod 101, porque 101 es primo (pequeño teorema de Fermat)" },
+      { "en": "17^101 mod 101", "es": "17^101 mod 101" }
+    ],
+    "answer": 1,
+    "explain_en": "For a prime m, a^(m - 2) mod m is the inverse; here m - 2 = 99. 17^101 mod 101 is just 17 again.",
+    "explain_es": "Con un m primo, a^(m - 2) mod m es el inverso; aquí m - 2 = 99. 17^101 mod 101 vuelve a ser 17."
+  }
+]

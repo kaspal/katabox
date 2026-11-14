@@ -1000,7 +1000,15 @@
         "letters_read": "letters read",
         "fail_links_followed": "failure links followed",
         "rounds": "rounds",
-        "doublings": "doublings"
+        "doublings": "doublings",
+        "divisions": "divisions",
+        "multiplications": "multiplications",
+        "squarings": "squarings",
+        "crossings": "crossings",
+        "newly_crossed": "newly crossed",
+        "turns_checked": "turns checked",
+        "dropped": "dropped",
+        "orientation_tests": "orientation tests"
       },
       "rows": {
         "prefix": "Prefix sums",
@@ -1059,7 +1067,11 @@
         "with_bars": "Text with bars",
         "radius": "Radius",
         "rank": "Rank",
-        "suffixes": "Suffixes, sorted (start: suffix)"
+        "suffixes": "Suffixes, sorted (start: suffix)",
+        "euclid_steps": "a, b → b, a mod b",
+        "power_steps": "One row per bit of the exponent",
+        "extended_euclid": "Remainders and coefficients",
+        "pascal": "Row n, entry k: C(n, k)"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -1100,7 +1112,8 @@
       "summary_grid": "A {{rows}} by {{cols}} grid: {{map}}.",
       "summary_timeline": "Intervals: {{bars}}. Result: {{output}}.",
       "summary_board": "A {{rows}} by {{cols}} board: {{cells}}.",
-      "summary_strings": "{{rows}}."
+      "summary_strings": "{{rows}}.",
+      "summary_plane": "Points: {{points}}."
     },
     "roles": {
       "idle": "Not yet placed",
@@ -1252,7 +1265,16 @@
       "palindrome_here": "Palindrome here",
       "rightmost_palindrome": "Rightmost palindrome",
       "failure_target": "Failure link target",
-      "left_behind": "Left behind"
+      "left_behind": "Left behind",
+      "current_prime": "Current prime",
+      "crossed_now": "Crossed now",
+      "prime": "Prime",
+      "crossed": "Crossed out",
+      "on_the_hull": "On the hull so far",
+      "clockwise_turn": "A right turn (dropped)",
+      "tested_against": "Tested against",
+      "they_meet": "They meet",
+      "apart": "Apart"
     },
     "controls": {
       "label": "Playback",
@@ -1305,7 +1327,7 @@
         "small-ranges": "Small ranges",
         "tag-then-split": "Tag, then split",
         "overlapping-adds": "Overlapping adds",
-        "power-of-two": "Eight slots",
+        "power-of-two": "A power of two",
         "odd-positions": "Odd positions",
         "deep-path": "A deep path",
         "two-branches": "Two branches",
@@ -1390,7 +1412,17 @@
         "nested-mirrors": "Nested mirrors",
         "even-length": "Even length",
         "repeated-syllables": "Repeated syllables",
-        "no-overlap": "No overlap"
+        "no-overlap": "No overlap",
+        "big-factor": "A big common factor",
+        "fibonacci-pair": "Neighbouring Fibonacci numbers",
+        "big-exponent": "A big exponent",
+        "prime-modulus": "A prime modulus",
+        "shares-a-factor": "Shares a factor",
+        "a-few-inside": "A few inside",
+        "square": "A square",
+        "crossing": "Crossing",
+        "end-on-the-line": "An end on the other line",
+        "side-by-side": "Side by side"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1449,7 +1481,12 @@
           "matrix_symmetric": "The distance from {{i}} to {{j}} must equal the way back.",
           "sudoku_size": "A Sudoku here is 4 × 4 or 9 × 9.",
           "sudoku_digit": "Use digits 1 to {{max}} and . for an empty cell.",
-          "sudoku_clash": "The givens already repeat {{digit}} in a row, column or box."
+          "sudoku_clash": "The givens already repeat {{digit}} in a row, column or box.",
+          "whole_number": "Use whole numbers.",
+          "power_range": "Use a base up to 999 and a modulus from 2 to 999.",
+          "point_pair": "Write each point as x y (\"{{item}}\").",
+          "point_count": "Use {{min}} to {{max}} points.",
+          "coordinate_range": "Coordinates go from 0 to {{max}}."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1481,7 +1518,13 @@
         "map": "Map (rows split by /; . open, # blocked)",
         "distances": "Distances (one row per city, rows split by commas)",
         "intervals": "Intervals (start end, …)",
-        "word": "Word"
+        "word": "Word",
+        "base": "Base",
+        "exponent": "Exponent",
+        "modulus": "Modulus",
+        "number": "Number",
+        "points": "Points (x y, …)",
+        "segments": "Endpoints P1, P2, P3, P4 (x y, …)"
       }
     },
     "tabs": {
@@ -1576,7 +1619,13 @@
       "string-matching": "String matching",
       "palindrome": "Palindrome",
       "suffix-array": "Suffix array",
-      "sorting": "Sorting"
+      "sorting": "Sorting",
+      "math": "Math",
+      "number-theory": "Number theory",
+      "modular-arithmetic": "Modular arithmetic",
+      "combinatorics": "Combinatorics",
+      "geometry": "Geometry",
+      "convex-hull": "Convex hull"
     },
     "narration": {
       "bubble-sort": {
@@ -2496,6 +2545,53 @@
         "sort": "Sort by the first {{two}} letters (rank of the first {{k}}, then of the next {{k}}): {{distinct}} different rank(s).",
         "double": "Ranks still tie: double the length to {{k}}.",
         "done": "All {{n}} suffixes are ordered after {{rounds}} round(s)."
+      },
+      "euclid-gcd": {
+        "ready": "Greatest common divisor of {{a}} and {{b}}: replace (a, b) by (b, a mod b) until b is 0.",
+        "divide": "{{a}} mod {{b}} = {{rest}}: any divisor of both also divides the rest.",
+        "done": "b is 0: the GCD is {{gcd}}, found in {{steps}} division(s)."
+      },
+      "fast-power": {
+        "ready": "{{base}}^{{exp}} mod {{mod}}: square the base once per bit of the exponent, multiply it in where the bit is 1.",
+        "multiply": "This bit is 1: result × {{base}} = {{result}}.",
+        "square": "Square the base for the next bit: {{base}}.",
+        "done": "{{base}}^{{exp}} mod {{mod}} = {{result}}, with {{multiplications}} multiplication(s) instead of {{exp}}."
+      },
+      "modular-inverse": {
+        "ready": "Find x with {{a}} · x ≡ 1 (mod {{m}}) by the extended Euclidean algorithm.",
+        "divide": "Quotient {{q}}: the next remainder is {{r}}, with coefficient {{x}}.",
+        "done": "The remainder reached 1: {{a}} · {{inv}} ≡ 1 (mod {{m}}).",
+        "none": "{{a}} and {{m}} share the factor {{g}}: there is no inverse."
+      },
+      "pascal-ncr": {
+        "ready": "Build Pascal's triangle down to row {{n}}: each entry is the sum of the two above it.",
+        "row": "Row {{i}} starts and ends with 1.",
+        "add": "C({{n}}, {{k}}) = C({{n}}−1, {{k}}−1) + C({{n}}−1, {{k}}) = {{value}}.",
+        "done": "Row {{n}} holds C({{n}}, k) for every k; together they sum to {{sum}}."
+      },
+      "sieve-eratosthenes": {
+        "ready": "Find the primes up to {{n}}: cross out the multiples of each prime.",
+        "prime": "{{p}} is still open, so it is prime: cross out its multiples from {{start}} (smaller ones are already gone).",
+        "cross": "Cross out {{m}} (a multiple of {{p}}).",
+        "again": "{{m}} was already crossed out by a smaller prime.",
+        "done": "{{count}} primes up to {{n}}, after {{crossed}} crossings."
+      },
+      "convex-hull": {
+        "ready": "Wrap the {{n}} points in the smallest convex fence.",
+        "sorted": "Sort the {{n}} distinct points left to right; build the lower chain first.",
+        "drop": "A right turn (or a straight line) at ({{x}}, {{y}}): it is inside, drop it.",
+        "keep": "Add ({{x}}, {{y}}) to the chain.",
+        "upper": "Lower chain done. Now the upper chain, right to left.",
+        "done": "The hull has {{n}} corner(s)."
+      },
+      "segment-intersection": {
+        "ready": "Do segments P1P2 and P3P4 meet? Check on which side of each segment the other's ends lie.",
+        "side_left": "{{point}} is to the left of {{segment}}.",
+        "side_right": "{{point}} is to the right of {{segment}}.",
+        "side_on": "{{point}} is on the line through {{segment}}.",
+        "cross": "Each segment's ends lie on opposite sides of the other: they cross.",
+        "touch": "{{point}} lies on the other segment: they touch.",
+        "apart": "No crossing and no touching: the segments are apart."
       }
     },
     "compare": {

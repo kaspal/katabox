@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input: a = 336, b = 252. What pair comes after the first division?",
+    "prompt_es": "Entrada por defecto: a = 336, b = 252. ¿Qué par queda tras la primera división?",
+    "options": [
+      { "en": "(84, 252)", "es": "(84, 252)" },
+      { "en": "(252, 84)", "es": "(252, 84)" },
+      { "en": "(252, 1)", "es": "(252, 1)" }
+    ],
+    "answer": 1,
+    "explain_en": "336 mod 252 = 84, and the pair (a, b) becomes (b, a mod b) = (252, 84). The next division leaves (84, 0), so the output is [84, 2].",
+    "explain_es": "336 mod 252 = 84, y el par (a, b) pasa a ser (b, a mod b) = (252, 84). La siguiente división deja (84, 0), así que la salida es [84, 2]."
+  },
+  {
+    "prompt_en": "Why does replacing (a, b) by (b, a mod b) keep the same gcd?",
+    "prompt_es": "¿Por qué cambiar (a, b) por (b, a mod b) conserva el mismo mcd?",
+    "options": [
+      { "en": "Because a mod b is always a prime", "es": "Porque a mod b siempre es primo" },
+      { "en": "Because b always divides a", "es": "Porque b siempre divide a a" },
+      { "en": "Because a = q · b + r, so both pairs have exactly the same common divisors", "es": "Porque a = q · b + r, así que los dos pares tienen exactamente los mismos divisores comunes" }
+    ],
+    "answer": 2,
+    "explain_en": "A divisor of a and b divides r = a - q · b, and a divisor of b and r divides a = q · b + r. The set of common divisors, and so its largest member, does not change.",
+    "explain_es": "Un divisor de a y b divide a r = a - q · b, y un divisor de b y r divide a a = q · b + r. El conjunto de divisores comunes, y por tanto su mayor elemento, no cambia."
+  },
+  {
+    "prompt_en": "Which kind of pair makes Euclid's algorithm take the most divisions for its size?",
+    "prompt_es": "¿Qué tipo de par hace que el algoritmo de Euclides necesite más divisiones para su tamaño?",
+    "options": [
+      { "en": "Neighbouring Fibonacci numbers, like 610 and 377 (13 divisions)", "es": "Números de Fibonacci vecinos, como 610 y 377 (13 divisiones)" },
+      { "en": "Two equal numbers", "es": "Dos números iguales" },
+      { "en": "A number and one of its divisors", "es": "Un número y uno de sus divisores" }
+    ],
+    "answer": 0,
+    "explain_en": "Their quotients are almost all 1, so each division shrinks the pair as little as possible. Equal numbers or a divisor finish in one division.",
+    "explain_es": "Sus cocientes valen casi todos 1, así que cada división encoge el par lo menos posible. Dos números iguales o un divisor terminan en una división."
+  }
+]

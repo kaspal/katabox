@@ -1,0 +1,28 @@
+id = "pascal-ncr"
+subject = "math-geometry"
+order = 5
+title = "Pascal's triangle and C(n, k)"
+title_es = "Triángulo de Pascal y C(n, k)"
+tags = ["math", "combinatorics", "dynamic-programming"]
+problems = ["team-picks", "blocked-walks"]
+presets = ["random"]
+default = [6]
+
+[complexity]
+best = "O(n²)"
+average = "O(n²)"
+worst = "O(n²)"
+space = "O(n²), or O(n) for one row"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 1
+min = 1
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = pascal_row(a[0])"
+typescript = "a = pascalRow(a[0])"

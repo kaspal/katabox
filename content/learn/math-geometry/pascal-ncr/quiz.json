@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input: n = 6. Which two entries of row 5 add up to C(6, 2)?",
+    "prompt_es": "Entrada por defecto: n = 6. ¿Qué dos valores de la fila 5 suman C(6, 2)?",
+    "options": [
+      { "en": "C(5, 2) + C(5, 3) = 10 + 10", "es": "C(5, 2) + C(5, 3) = 10 + 10" },
+      { "en": "C(5, 0) + C(5, 1) = 1 + 5", "es": "C(5, 0) + C(5, 1) = 1 + 5" },
+      { "en": "C(5, 1) + C(5, 2) = 5 + 10", "es": "C(5, 1) + C(5, 2) = 5 + 10" }
+    ],
+    "answer": 2,
+    "explain_en": "C(n, k) = C(n - 1, k - 1) + C(n - 1, k), so C(6, 2) = C(5, 1) + C(5, 2) = 15. The first option gives C(6, 3) = 20.",
+    "explain_es": "C(n, k) = C(n - 1, k - 1) + C(n - 1, k), así que C(6, 2) = C(5, 1) + C(5, 2) = 15. La primera opción da C(6, 3) = 20."
+  },
+  {
+    "prompt_en": "Row 6 is [1, 6, 15, 20, 15, 6, 1]. Why does it add up to 64?",
+    "prompt_es": "La fila 6 es [1, 6, 15, 20, 15, 6, 1]. ¿Por qué suma 64?",
+    "options": [
+      { "en": "Every subset of 6 items has some size k, and there are 2⁶ = 64 subsets", "es": "Todo subconjunto de 6 elementos tiene algún tamaño k, y hay 2⁶ = 64 subconjuntos" },
+      { "en": "Because 64 = 6 · 10 + 4", "es": "Porque 64 = 6 · 10 + 4" },
+      { "en": "It is a coincidence of row 6", "es": "Es una casualidad de la fila 6" }
+    ],
+    "answer": 0,
+    "explain_en": "Each item is in or out, giving 2⁶ subsets, and the row counts them grouped by size. Every row n adds up to 2ⁿ.",
+    "explain_es": "Cada elemento está dentro o fuera, lo que da 2⁶ subconjuntos, y la fila los cuenta agrupados por tamaño. Cada fila n suma 2ⁿ."
+  },
+  {
+    "prompt_en": "Why is the triangle often better than n! / (k! · (n - k)!)?",
+    "prompt_es": "¿Por qué el triángulo suele ser mejor que n! / (k! · (n - k)!)?",
+    "options": [
+      { "en": "It is faster for a single value with huge n", "es": "Es más rápido para un solo valor con un n enorme" },
+      { "en": "It only adds, so no number grows beyond the answer, while n! overflows 64 bits at n = 21", "es": "Solo suma, así que ningún número supera la respuesta, mientras que n! desborda los 64 bits en n = 21" },
+      { "en": "The formula gives wrong values", "es": "La fórmula da valores erróneos" }
+    ],
+    "answer": 1,
+    "explain_en": "The formula is correct, but its factorials are far larger than the result. For a single value with huge n, factorials modulo a prime are the faster route.",
+    "explain_es": "La fórmula es correcta, pero sus factoriales son mucho mayores que el resultado. Para un solo valor con un n enorme, los factoriales módulo un primo son el camino más rápido."
+  }
+]

@@ -1000,7 +1000,15 @@
         "letters_read": "letras leídas",
         "fail_links_followed": "enlaces de fallo seguidos",
         "rounds": "rondas",
-        "doublings": "duplicaciones"
+        "doublings": "duplicaciones",
+        "divisions": "divisiones",
+        "multiplications": "multiplicaciones",
+        "squarings": "cuadrados",
+        "crossings": "tachados",
+        "newly_crossed": "tachados nuevos",
+        "turns_checked": "giros comprobados",
+        "dropped": "descartados",
+        "orientation_tests": "pruebas de orientación"
       },
       "rows": {
         "prefix": "Sumas prefijas",
@@ -1059,7 +1067,11 @@
         "with_bars": "Texto con barras",
         "radius": "Radio",
         "rank": "Rango",
-        "suffixes": "Sufijos ordenados (inicio: sufijo)"
+        "suffixes": "Sufijos ordenados (inicio: sufijo)",
+        "euclid_steps": "a, b → b, a mod b",
+        "power_steps": "Una fila por bit del exponente",
+        "extended_euclid": "Restos y coeficientes",
+        "pascal": "Fila n, entrada k: C(n, k)"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -1100,7 +1112,8 @@
       "summary_grid": "Una cuadrícula de {{rows}} por {{cols}}: {{map}}.",
       "summary_timeline": "Intervalos: {{bars}}. Resultado: {{output}}.",
       "summary_board": "Un tablero de {{rows}} por {{cols}}: {{cells}}.",
-      "summary_strings": "{{rows}}."
+      "summary_strings": "{{rows}}.",
+      "summary_plane": "Puntos: {{points}}."
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -1252,7 +1265,16 @@
       "palindrome_here": "Palíndromo aquí",
       "rightmost_palindrome": "Palíndromo más a la derecha",
       "failure_target": "Destino del enlace de fallo",
-      "left_behind": "Dejado atrás"
+      "left_behind": "Dejado atrás",
+      "current_prime": "Primo actual",
+      "crossed_now": "Tachado ahora",
+      "prime": "Primo",
+      "crossed": "Tachado",
+      "on_the_hull": "En la envolvente por ahora",
+      "clockwise_turn": "Un giro a la derecha (descartado)",
+      "tested_against": "Comprobado contra",
+      "they_meet": "Se tocan",
+      "apart": "Separados"
     },
     "controls": {
       "label": "Reproducción",
@@ -1305,7 +1327,7 @@
         "small-ranges": "Rangos pequeños",
         "tag-then-split": "Marcar y luego dividir",
         "overlapping-adds": "Sumas solapadas",
-        "power-of-two": "Ocho casillas",
+        "power-of-two": "Una potencia de dos",
         "odd-positions": "Posiciones impares",
         "deep-path": "Un camino profundo",
         "two-branches": "Dos ramas",
@@ -1390,7 +1412,17 @@
         "nested-mirrors": "Espejos anidados",
         "even-length": "Longitud par",
         "repeated-syllables": "Sílabas repetidas",
-        "no-overlap": "Sin solapes"
+        "no-overlap": "Sin solapes",
+        "big-factor": "Un gran factor común",
+        "fibonacci-pair": "Fibonacci vecinos",
+        "big-exponent": "Un exponente grande",
+        "prime-modulus": "Un módulo primo",
+        "shares-a-factor": "Comparten un factor",
+        "a-few-inside": "Unos pocos dentro",
+        "square": "Un cuadrado",
+        "crossing": "Se cruzan",
+        "end-on-the-line": "Un extremo sobre la otra recta",
+        "side-by-side": "Uno al lado del otro"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1449,7 +1481,12 @@
           "matrix_symmetric": "La distancia de {{i}} a {{j}} debe ser igual a la de vuelta.",
           "sudoku_size": "Aquí un sudoku es de 4 × 4 o de 9 × 9.",
           "sudoku_digit": "Usa dígitos del 1 al {{max}} y . para una celda vacía.",
-          "sudoku_clash": "Los datos ya repiten el {{digit}} en una fila, columna o caja."
+          "sudoku_clash": "Los datos ya repiten el {{digit}} en una fila, columna o caja.",
+          "whole_number": "Usa números enteros.",
+          "power_range": "Usa una base de hasta 999 y un módulo de 2 a 999.",
+          "point_pair": "Escribe cada punto como x y (\"{{item}}\").",
+          "point_count": "Usa de {{min}} a {{max}} puntos.",
+          "coordinate_range": "Las coordenadas van de 0 a {{max}}."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1481,7 +1518,13 @@
         "map": "Mapa (filas separadas por /; . libre, # bloqueada)",
         "distances": "Distancias (una fila por ciudad, filas separadas por comas)",
         "intervals": "Intervalos (inicio fin, …)",
-        "word": "Palabra"
+        "word": "Palabra",
+        "base": "Base",
+        "exponent": "Exponente",
+        "modulus": "Módulo",
+        "number": "Número",
+        "points": "Puntos (x y, …)",
+        "segments": "Extremos P1, P2, P3, P4 (x y, …)"
       }
     },
     "tabs": {
@@ -1576,7 +1619,13 @@
       "string-matching": "Búsqueda de patrones",
       "palindrome": "Palíndromo",
       "suffix-array": "Arreglo de sufijos",
-      "sorting": "Ordenación"
+      "sorting": "Ordenación",
+      "math": "Matemáticas",
+      "number-theory": "Teoría de números",
+      "modular-arithmetic": "Aritmética modular",
+      "combinatorics": "Combinatoria",
+      "geometry": "Geometría",
+      "convex-hull": "Envolvente convexa"
     },
     "narration": {
       "bubble-sort": {
@@ -2496,6 +2545,53 @@
         "sort": "Ordena por las primeras {{two}} letras (rango de las primeras {{k}} y luego de las {{k}} siguientes): {{distinct}} rango(s) distinto(s).",
         "double": "Aún hay empates: duplica la longitud a {{k}}.",
         "done": "Los {{n}} sufijos quedan ordenados tras {{rounds}} ronda(s)."
+      },
+      "euclid-gcd": {
+        "ready": "Máximo común divisor de {{a}} y {{b}}: cambia (a, b) por (b, a mod b) hasta que b sea 0.",
+        "divide": "{{a}} mod {{b}} = {{rest}}: todo divisor de ambos divide también al resto.",
+        "done": "b vale 0: el MCD es {{gcd}}, hallado en {{steps}} división(es)."
+      },
+      "fast-power": {
+        "ready": "{{base}}^{{exp}} mod {{mod}}: eleva la base al cuadrado una vez por bit del exponente y multiplícala donde el bit es 1.",
+        "multiply": "Este bit es 1: resultado × {{base}} = {{result}}.",
+        "square": "Eleva la base al cuadrado para el siguiente bit: {{base}}.",
+        "done": "{{base}}^{{exp}} mod {{mod}} = {{result}}, con {{multiplications}} multiplicación(es) en lugar de {{exp}}."
+      },
+      "modular-inverse": {
+        "ready": "Busca x con {{a}} · x ≡ 1 (mod {{m}}) mediante el algoritmo de Euclides extendido.",
+        "divide": "Cociente {{q}}: el siguiente resto es {{r}}, con coeficiente {{x}}.",
+        "done": "El resto llegó a 1: {{a}} · {{inv}} ≡ 1 (mod {{m}}).",
+        "none": "{{a}} y {{m}} comparten el factor {{g}}: no hay inverso."
+      },
+      "pascal-ncr": {
+        "ready": "Construye el triángulo de Pascal hasta la fila {{n}}: cada entrada es la suma de las dos de encima.",
+        "row": "La fila {{i}} empieza y acaba en 1.",
+        "add": "C({{n}}, {{k}}) = C({{n}}−1, {{k}}−1) + C({{n}}−1, {{k}}) = {{value}}.",
+        "done": "La fila {{n}} contiene C({{n}}, k) para cada k; juntas suman {{sum}}."
+      },
+      "sieve-eratosthenes": {
+        "ready": "Encuentra los primos hasta {{n}}: tacha los múltiplos de cada primo.",
+        "prime": "{{p}} sigue sin tachar, así que es primo: tacha sus múltiplos desde {{start}} (los menores ya están tachados).",
+        "cross": "Tacha {{m}} (múltiplo de {{p}}).",
+        "again": "{{m}} ya lo tachó un primo menor.",
+        "done": "{{count}} primos hasta {{n}}, tras {{crossed}} tachados."
+      },
+      "convex-hull": {
+        "ready": "Rodea los {{n}} puntos con la valla convexa más pequeña.",
+        "sorted": "Ordena los {{n}} puntos distintos de izquierda a derecha; primero la cadena inferior.",
+        "drop": "Un giro a la derecha (o una recta) en ({{x}}, {{y}}): queda dentro, descártalo.",
+        "keep": "Añade ({{x}}, {{y}}) a la cadena.",
+        "upper": "Cadena inferior terminada. Ahora la superior, de derecha a izquierda.",
+        "done": "La envolvente tiene {{n}} esquina(s)."
+      },
+      "segment-intersection": {
+        "ready": "¿Se tocan los segmentos P1P2 y P3P4? Mira a qué lado de cada segmento quedan los extremos del otro.",
+        "side_left": "{{point}} está a la izquierda de {{segment}}.",
+        "side_right": "{{point}} está a la derecha de {{segment}}.",
+        "side_on": "{{point}} está sobre la recta de {{segment}}.",
+        "cross": "Los extremos de cada segmento quedan a lados opuestos del otro: se cruzan.",
+        "touch": "{{point}} está sobre el otro segmento: se tocan.",
+        "apart": "Ni se cruzan ni se tocan: los segmentos están separados."
       }
     },
     "compare": {

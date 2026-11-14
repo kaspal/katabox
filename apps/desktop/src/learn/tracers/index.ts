@@ -72,6 +72,13 @@ import { rabinKarp } from "./rabin-karp";
 import { manacher } from "./manacher";
 import { ahoCorasick } from "./aho-corasick";
 import { suffixArray } from "./suffix-array";
+import { euclidGcd } from "./euclid-gcd";
+import { fastPower } from "./fast-power";
+import { modularInverse } from "./modular-inverse";
+import { pascalNcr } from "./pascal-ncr";
+import { sieveEratosthenes } from "./sieve-eratosthenes";
+import { convexHull } from "./convex-hull";
+import { segmentIntersection } from "./segment-intersection";
 import { dynamicArrayOps } from "./dynamic-array-ops";
 import { stack } from "./stack";
 import { queueRingBuffer } from "./queue-ring-buffer";
@@ -217,4 +224,11 @@ export const TRACERS: Record<string, TracerDef> = {
   manacher,
   "aho-corasick": ahoCorasick,
   "suffix-array": suffixArray,
+  "euclid-gcd": euclidGcd,
+  "sieve-eratosthenes": sieveEratosthenes,
+  "fast-power": fastPower,
+  "modular-inverse": modularInverse,
+  "pascal-ncr": pascalNcr,
+  "convex-hull": convexHull,
+  "segment-intersection": segmentIntersection,
 };

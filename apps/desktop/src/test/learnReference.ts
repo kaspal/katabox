@@ -1222,6 +1222,82 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
     const [text] = words(input) as [string];
     return [...Array(text.length).keys()].sort((a, b) => (text.slice(a) < text.slice(b) ? -1 : 1));
   },
+  // Math and geometry.
+  "euclid-gcd": ([a, b]) => {
+    // The divisor by trial; the step count from the recursive definition.
+    let g = 1;
+    for (let d = 1; d <= Math.min(a!, b!); d++) if (a! % d === 0 && b! % d === 0) g = d;
+    const steps = (x: number, y: number): number => (y === 0 ? 0 : 1 + steps(y, x % y));
+    return [g, steps(a!, b!)];
+  },
+  "sieve-eratosthenes": ([n]) => {
+    const primes: number[] = [];
+    for (let k = 2; k <= n!; k++) {
+      let prime = true;
+      for (let d = 2; d * d <= k; d++) if (k % d === 0) prime = false;
+      if (prime) primes.push(k);
+    }
+    return [primes.length, ...primes];
+  },
+  "fast-power": ([base, exp, mod]) => {
+    let r = 1 % mod!;
+    for (let k = 0; k < exp!; k++) r = (r * base!) % mod!;
+    return [r];
+  },
+  "modular-inverse": ([a, m]) => {
+    for (let x = 0; x < m!; x++) if ((a! * x) % m! === 1 % m!) return [x];
+    return [-1];
+  },
+  "pascal-ncr": ([n]) => {
+    const row = [1];
+    for (let k = 1; k <= n!; k++) row.push(Math.round((row[k - 1]! * (n! - k + 1)) / k));
+    return row;
+  },
+  "convex-hull": (input) => {
+    // Gift wrapping: from the lowest-leftmost point, the next corner has every other
+    // point to its left (or strictly between, on the edge).
+    const key = (p: readonly number[]) => `${p[0]},${p[1]}`;
+    const pts = [...new Map(Array.from({ length: input.length / 2 }, (_, k) => [input[2 * k]!, input[2 * k + 1]!] as const).map((p) => [key(p), p])).values()].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    if (pts.length <= 2) return pts.flat();
+    const cr = (o: readonly number[], a: readonly number[], b: readonly number[]) => (a[0]! - o[0]!) * (b[1]! - o[1]!) - (a[1]! - o[1]!) * (b[0]! - o[0]!);
+    const between = (p: readonly number[], q: readonly number[], r: readonly number[]) =>
+      Math.min(p[0]!, q[0]!) <= r[0]! && r[0]! <= Math.max(p[0]!, q[0]!) && Math.min(p[1]!, q[1]!) <= r[1]! && r[1]! <= Math.max(p[1]!, q[1]!);
+    const hull: (readonly number[])[] = [pts[0]!];
+    for (;;) {
+      const p = hull[hull.length - 1]!;
+      const q = pts.find((c) => key(c) !== key(p) && pts.every((r) => key(r) === key(p) || key(r) === key(c) || cr(p, c, r) > 0 || (cr(p, c, r) === 0 && between(p, c, r))));
+      if (!q || key(q) === key(hull[0]!)) break;
+      hull.push(q);
+    }
+    return hull.flat();
+  },
+  "segment-intersection": ([x1, y1, x2, y2, x3, y3, x4, y4]) => {
+    // Signs from the cross product; the answer from the two lines' parameters, exactly.
+    const cr = (ax: number, ay: number, bx: number, by: number, cx: number, cy: number) => Math.sign((bx - ax) * (cy - ay) - (by - ay) * (cx - ax)) || 0;
+    const signs = [cr(x3!, y3!, x4!, y4!, x1!, y1!), cr(x3!, y3!, x4!, y4!, x2!, y2!), cr(x1!, y1!, x2!, y2!, x3!, y3!), cr(x1!, y1!, x2!, y2!, x4!, y4!)];
+    const [dx1, dy1, dx2, dy2] = [x2! - x1!, y2! - y1!, x4! - x3!, y4! - y3!];
+    const den = dx1 * dy2 - dy1 * dx2;
+    let meet: boolean;
+    // A segment that is a single point meets the other one only by lying on it.
+    const onSeg = (px: number, py: number, ax: number, ay: number, bx: number, by: number) =>
+      cr(ax, ay, bx, by, px, py) === 0 && Math.min(ax, bx) <= px && px <= Math.max(ax, bx) && Math.min(ay, by) <= py && py <= Math.max(ay, by);
+    if (dx1 === 0 && dy1 === 0) meet = onSeg(x1!, y1!, x3!, y3!, x4!, y4!);
+    else if (dx2 === 0 && dy2 === 0) meet = onSeg(x3!, y3!, x1!, y1!, x2!, y2!);
+    else if (den !== 0) {
+      // P1 + t·d1 = P3 + u·d2 with t = tn / den, u = un / den.
+      const tn = (x3! - x1!) * dy2 - (y3! - y1!) * dx2;
+      const un = (x3! - x1!) * dy1 - (y3! - y1!) * dx1;
+      const within = (v: number) => (den > 0 ? v >= 0 && v <= den : v <= 0 && v >= den);
+      meet = within(tn) && within(un);
+    } else if ((x3! - x1!) * dy1 - (y3! - y1!) * dx1 !== 0) meet = false;
+    else {
+      // Collinear: project on the longer axis and compare intervals.
+      const axis = dx1 !== 0 || dx2 !== 0 ? 0 : 1;
+      const [a1, a2, b1, b2] = axis === 0 ? [x1!, x2!, x3!, x4!] : [y1!, y2!, y3!, y4!];
+      meet = Math.max(Math.min(a1, a2), Math.min(b1, b2)) <= Math.min(Math.max(a1, a2), Math.max(b1, b2));
+    }
+    return [meet ? 1 : 0, ...signs];
+  },
   "bubble-sort": sorted,
   "insertion-sort": sorted,
   "quick-sort": sorted,
@@ -1317,6 +1393,48 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  "euclid-gcd": {
+    input: [6, 4],
+    markers: [null, "divide", "divide", null],
+    py: [null, 4, 4, null],
+    ts: [null, 4, 4, null],
+  },
+  "sieve-eratosthenes": {
+    input: [9],
+    markers: [null, "prime", "cross", "cross", "cross", "prime", "cross", null],
+    py: [null, 7, 9, 9, 9, 7, 9, null],
+    ts: [null, 7, 9, 9, 9, 7, 9, null],
+  },
+  "fast-power": {
+    input: [2, 5, 7],
+    markers: [null, "multiply", "square", "square", "multiply", "square", null],
+    py: [null, 6, 7, 7, 6, 7, null],
+    ts: [null, 6, 8, 8, 6, 8, null],
+  },
+  "modular-inverse": {
+    input: [3, 7],
+    markers: [null, "divide", "divide", "divide", null],
+    py: [null, 6, 6, 6, null],
+    ts: [null, 6, 6, 6, null],
+  },
+  "pascal-ncr": {
+    input: [3],
+    markers: [null, null, null, "add", null, "add", "add", null],
+    py: [null, null, null, 6, null, 6, 6, null],
+    ts: [null, null, null, 6, null, 6, 6, null],
+  },
+  "convex-hull": {
+    input: [0, 0, 2, 0, 1, 1],
+    markers: [null, null, "keep", "keep", "drop", "keep", null, "keep-upper", "keep-upper", "keep-upper", null],
+    py: [null, null, 13, 13, 12, 13, null, 17, 17, 17, null],
+    ts: [null, null, 15, 15, 13, 15, null, 21, 21, 21, null],
+  },
+  "segment-intersection": {
+    input: [0, 0, 4, 4, 0, 4, 4, 0],
+    markers: [null, "side", "side", "side", "side", "cross"],
+    py: [null, 14, 14, 14, 14, 16],
+    ts: [null, 13, 13, 13, 13, 16],
+  },
   subsets: {
     input: [1],
     markers: [null, "record", "choose", "record", "undo", null],
@@ -1965,6 +2083,10 @@ export const GOLDEN: Record<string, Golden> = {
 export const WORST: Record<string, number[]> = {
   "big-o-growth": [16],
   "towers-of-hanoi": [5],
+  "sieve-eratosthenes": [120],
+  "fast-power": [999, 9999, 997],
+  "pascal-ncr": [12],
+  "convex-hull": [0, 0, 20, 0, 20, 20, 0, 20, 10, 10, 5, 5, 15, 15, 10, 0, 0, 10, 20, 10, 10, 20, 3, 17],
   "n-queens": [6],
   sudoku: [9, 0, 5, 2, 0, 4, 8, 0, 7, 9, 1, 9, 7, 0, 0, 5, 0, 0, 0, 0, 0, 3, 7, 1, 9, 6, 0, 5, 0, 0, 0, 0, 7, 0, 2, 0, 0, 2, 6, 8, 9, 3, 0, 0, 0, 0, 0, 1, 5, 8, 2, 6, 0, 9, 4, 0, 0, 0, 6, 0, 0, 0, 0, 2, 5, 7, 0, 0, 0, 2, 9, 1, 0, 0, 0, 4, 0, 9, 0, 5, 0, 7],
   "combination-sum": [12, 2, 3, 4, 5],

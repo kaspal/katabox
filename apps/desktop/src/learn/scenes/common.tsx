@@ -211,6 +211,10 @@ export function sceneSummary(t: TFunction, step: Step): string {
     const line = step.decision.current == null ? null : step.decision.lines[step.decision.current];
     if (line) parts.push(t("learn.stage.fallback_row", { label: t("learn.stage.rows.decisions"), values: line.text }) + ".");
   }
+  if (step.plane) {
+    const points = step.plane.points.map((p) => `${p.label ?? p.id} (${p.x}, ${p.y})`).join(", ");
+    parts.push(t("learn.stage.summary_plane", { points }));
+  }
   if (step.bitArray) parts.push(t("learn.stage.summary_bits_array", { bits: step.bitArray.bits.join("") }));
   if (step.table) {
     const rows = step.table.rows.map((r) => `${r.key}: ${r.value}`).join(", ") || "—";

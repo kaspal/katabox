@@ -1,0 +1,28 @@
+id = "sieve-eratosthenes"
+subject = "math-geometry"
+order = 2
+title = "Sieve of Eratosthenes"
+title_es = "Criba de Eratóstenes"
+tags = ["math", "number-theory"]
+problems = ["prime-lockers"]
+presets = ["random"]
+default = [60]
+
+[complexity]
+best = "O(n log log n)"
+average = "O(n log log n)"
+worst = "O(n log log n)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 1
+min = 2
+max = 120
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = sieve(a[0])"
+typescript = "a = sieve(a[0])"

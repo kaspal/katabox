@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "What does cross(o, a, b) > 0 mean?",
+    "prompt_es": "¿Qué significa cross(o, a, b) > 0?",
+    "options": [
+      { "en": "Going o → a → b turns right (clockwise)", "es": "Ir de o a a y luego a b gira a la derecha (horario)" },
+      { "en": "The three points are on one line", "es": "Los tres puntos están en una misma recta" },
+      { "en": "Going o → a → b turns left (counter-clockwise)", "es": "Ir de o a a y luego a b gira a la izquierda (antihorario)" }
+    ],
+    "answer": 2,
+    "explain_en": "Positive is a left turn, negative a right turn, and zero means collinear. The chains keep only strict left turns.",
+    "explain_es": "Positivo es un giro a la izquierda, negativo a la derecha y cero significa alineados. Las cadenas solo conservan giros estrictos a la izquierda."
+  },
+  {
+    "prompt_en": "Default input: the lower chain is (2, 3), (9, 1). Point (11, 16) is added. What happens when (12, 9) arrives?",
+    "prompt_es": "Entrada por defecto: la cadena inferior es (2, 3), (9, 1). Se añade el punto (11, 16). ¿Qué pasa cuando llega (12, 9)?",
+    "options": [
+      { "en": "(11, 16) is dropped: (9, 1), (11, 16), (12, 9) is a right turn", "es": "Se descarta (11, 16): (9, 1), (11, 16), (12, 9) es un giro a la derecha" },
+      { "en": "(9, 1) is dropped", "es": "Se descarta (9, 1)" },
+      { "en": "Nothing is dropped and the chain grows to four points", "es": "No se descarta nada y la cadena crece a cuatro puntos" }
+    ],
+    "answer": 0,
+    "explain_en": "cross((9, 1), (11, 16), (12, 9)) = 2 · 8 - 15 · 3 = -29 ≤ 0. Then (2, 3), (9, 1), (12, 9) is a left turn, so (9, 1) stays.",
+    "explain_es": "cross((9, 1), (11, 16), (12, 9)) = 2 · 8 - 15 · 3 = -29 ≤ 0. Después, (2, 3), (9, 1), (12, 9) es un giro a la izquierda, así que (9, 1) se queda."
+  },
+  {
+    "prompt_en": "\"A square\" preset: corners (4, 4), (16, 4), (16, 16), (4, 16) plus (10, 4), (4, 10) and (10, 10). What is the output?",
+    "prompt_es": "Ajuste \"un cuadrado\": esquinas (4, 4), (16, 4), (16, 16), (4, 16) más (10, 4), (4, 10) y (10, 10). ¿Cuál es la salida?",
+    "options": [
+      { "en": "All seven points", "es": "Los siete puntos" },
+      { "en": "Only the four corners, because points on an edge give cross = 0 and are dropped", "es": "Solo las cuatro esquinas, porque los puntos sobre un lado dan cross = 0 y se descartan" },
+      { "en": "The four corners plus (10, 4) and (4, 10)", "es": "Las cuatro esquinas más (10, 4) y (4, 10)" }
+    ],
+    "answer": 1,
+    "explain_en": "(10, 10) is inside, and (10, 4) and (4, 10) lie on edges. The rule cross ≤ 0 drops collinear points, so the output is [4, 4, 16, 4, 16, 16, 4, 16].",
+    "explain_es": "(10, 10) está dentro, y (10, 4) y (4, 10) están sobre lados. La regla cross ≤ 0 descarta los puntos alineados, así que la salida es [4, 4, 16, 4, 16, 16, 4, 16]."
+  }
+]

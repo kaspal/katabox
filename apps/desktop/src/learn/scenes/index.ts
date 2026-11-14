@@ -16,6 +16,7 @@ import { HanoiScene } from "./HanoiScene";
 import { BitArrayScene, HashScene } from "./HashScene";
 import { HeapScene } from "./HeapScene";
 import { ListScene } from "./ListScene";
+import { PlaneScene } from "./PlaneScene";
 import { MonoStackScene } from "./MonoStackScene";
 import { RecursionScene } from "./RecursionScene";
 import { SlotsScene } from "./SlotsScene";
@@ -46,4 +47,5 @@ export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
   decision: DecisionScene,
   board: BoardScene,
   string: StringScene,
+  plane: PlaneScene,
 };

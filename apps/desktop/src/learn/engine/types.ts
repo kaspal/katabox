@@ -133,6 +133,8 @@ export type SceneData = {
   board?: BoardData;
   /** Strings (Phase 9). */
   strings?: StringData;
+  /** The plane (Phase 10). */
+  plane?: PlaneData;
   /** Extra dashed links on a forest (Aho-Corasick failure links), by node id. */
   links?: { from: number; to: number }[];
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
@@ -243,6 +245,17 @@ export type BoardData = {
 export type StringRow = { label: RowLabel; kind: "letters" | "numbers"; offset: number; cells: (string | number | null)[]; roles?: Record<number, Role> };
 export type StringData = { rows: StringRow[]; lines?: { text: string; note?: string; role?: Role }[]; linesLabel?: RowLabel };
 
+/** The plane (Phase 10): points, segments, a polygon (the hull) and a turn being tested. */
+export type PlaneData = {
+  max: number;
+  points: { id: number; x: number; y: number; role?: Role; label?: string }[];
+  segments: { a: [number, number]; b: [number, number]; role?: Role }[];
+  polygon?: [number, number][];
+  closed?: boolean;
+  turn?: [number, number][];
+  turnRole?: Role;
+};
+
 export type ForestNode = {
   id: number;
   parent: number | null;
@@ -308,7 +321,8 @@ export type SceneKind =
   | "timeline"
   | "decision"
   | "board"
-  | "string";
+  | "string"
+  | "plane";
 
 /** How a topic's input is shaped. Inputs are always one flat list of integers (the DB and
  * the sample driver see only that):
