@@ -1,0 +1,28 @@
+id = "heap-sort"
+subject = "sorting"
+order = 8
+title = "Heap Sort"
+title_es = "Ordenación por montículo (Heap Sort)"
+tags = ["comparison-sort", "heap"]
+problems = ["nearest-stalls", "checkout-merge"]
+presets = ["random", "nearly-sorted", "reversed", "few-unique"]
+default = [38, 27, 43, 3, 9, 82, 10, 55, 21, 64]
+
+[complexity]
+best = "O(n log n)"
+average = "O(n log n)"
+worst = "O(n log n)"
+space = "O(1)"
+stable = false
+in_place = true
+
+[input]
+min_len = 2
+max_len = 16
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "heap_sort(a)"
+typescript = "heapSort(a)"

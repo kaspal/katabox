@@ -24,7 +24,7 @@ Quick sort picks one value, the **pivot**, and **partitions** the range: every v
 ## Pitfalls
 
 - **Sorted or reversed input.** With the last value as pivot, already sorted input (and reversed input) makes every partition lopsided: one side is empty and the other holds everything else, so the work grows to `n²/2` comparisons. Try the "Reversed" input and watch the comparison count climb. Picking a random pivot, or the median of the first, middle and last values, fixes it.
-- **Many equal values.** Lomuto sends every value equal to the pivot to the same side, so an array with few distinct values also degrades towards `n²`. Try the "Few unique" input. A three-way partition fixes it (see "Quick Sort: Hoare and 3-way", coming soon).
+- **Many equal values.** Lomuto sends every value equal to the pivot to the same side, so an array with few distinct values also degrades towards `n²`. Try the "Few unique" input. A three-way partition fixes it (see [Quick Sort: Hoare and 3-way](learn:sorting/quick-sort-3way)).
 - **Off-by-one ranges.** The recursive calls are `lo .. p - 1` and `p + 1 .. hi`: the pivot itself is never included again.
 
 ## When to use it
@@ -35,4 +35,4 @@ Quick sort is the usual general-purpose sort for arrays in memory: it works in p
 
 - [Insertion Sort](learn:sorting/insertion-sort): the usual choice for the short ranges at the bottom of the recursion.
 - [Bubble Sort](learn:sorting/bubble-sort): a simple `O(n²)` sort to compare against.
-- Quick Sort: Hoare and 3-way (coming soon).
+- [Quick Sort: Hoare and 3-way](learn:sorting/quick-sort-3way): Hoare's partition and a three-way partition for duplicates.

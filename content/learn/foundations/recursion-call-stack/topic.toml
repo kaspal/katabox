@@ -1,0 +1,28 @@
+id = "recursion-call-stack"
+subject = "foundations"
+order = 2
+title = "Recursion and the call stack"
+title_es = "Recursión y pila de llamadas"
+tags = ["recursion", "divide-and-conquer"]
+problems = ["fast-power", "outfit-picker"]
+presets = ["random", "few-unique"]
+default = [38, 27, 43, 3, 9, 82]
+
+[complexity]
+best = "O(n)"
+average = "O(n)"
+worst = "O(n)"
+space = "O(log n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 8
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = [total(a, 0, len(a) - 1)]"
+typescript = "a = [total(a, 0, a.length - 1)]"

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Target 27 in [9, 10, 27, 27, 27, 38, 43, 55, 64]. The lower bound's first middle is position 4, holding 27. What happens?",
+    "prompt_es": "Objetivo 27 en [9, 10, 27, 27, 27, 38, 43, 55, 64]. El primer centro de la cota inferior es la posición 4, con 27. ¿Qué pasa?",
+    "options": [
+      { "en": "It returns 4: the target is found", "es": "Devuelve 4: ha encontrado el objetivo" },
+      { "en": "hi = 4: position 4 may be the answer, keep it", "es": "hi = 4: la posición 4 puede ser la respuesta, se conserva" },
+      { "en": "lo = 5: the answer is to the right", "es": "lo = 5: la respuesta está a la derecha" }
+    ],
+    "answer": 1,
+    "explain_en": "27 is not < 27, so the first value ≥ 27 is at position 4 or earlier. The search keeps going left and ends at lower bound 2.",
+    "explain_es": "27 no es < 27, así que el primer valor ≥ 27 está en la posición 4 o antes. La búsqueda sigue hacia la izquierda y termina en la cota inferior 2."
+  },
+  {
+    "prompt_en": "Same values. The lower bound is 2 and the upper bound is 5. How many 27s are there?",
+    "prompt_es": "Mismos valores. La cota inferior es 2 y la superior es 5. ¿Cuántos 27 hay?",
+    "options": [
+      { "en": "2", "es": "2" },
+      { "en": "4", "es": "4" },
+      { "en": "3", "es": "3" }
+    ],
+    "answer": 2,
+    "explain_en": "The copies fill positions 2 up to, not including, 5: positions 2, 3 and 4. upper − lower = 5 − 2 = 3.",
+    "explain_es": "Las copias ocupan las posiciones desde 2 hasta 5 sin incluirla: las posiciones 2, 3 y 4. upper − lower = 5 − 2 = 3."
+  },
+  {
+    "prompt_en": "Target 70 in the same 9 values. What are the two bounds?",
+    "prompt_es": "Objetivo 70 en los mismos 9 valores. ¿Cuánto valen las dos cotas?",
+    "options": [
+      { "en": "Both are 9", "es": "Las dos valen 9" },
+      { "en": "Both are -1", "es": "Las dos valen -1" },
+      { "en": "Lower 8, upper 9", "es": "Inferior 8, superior 9" }
+    ],
+    "answer": 0,
+    "explain_en": "Every value is smaller than 70, so no position qualifies and both searches end at n = 9, one past the end. Equal bounds mean zero copies.",
+    "explain_es": "Todos los valores son menores que 70, así que ninguna posición vale y las dos búsquedas terminan en n = 9, una más allá del final. Cotas iguales significan cero copias."
+  }
+]

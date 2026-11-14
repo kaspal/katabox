@@ -125,13 +125,22 @@ export function CodeTab({
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {t("learn.code.variables")}
         </div>
-        <dl className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-1.5" data-testid="variables">
-          {def.vars.map((name) => (
-            <div key={name} className="rounded-md border px-2 py-1.5 font-mono">
-              <dt className="text-[11px] text-muted-foreground">{name}</dt>
-              <dd className="text-[15px] font-medium">{formatVar(step.vars[name], lang, t("learn.code.none"))}</dd>
-            </div>
-          ))}
+        {/* Up to five variables share one row, even at the narrowest panel (values truncate,
+            the full value is in the title); more wrap onto a second row. */}
+        <dl
+          className="grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(def.vars.length, 1), 5)}, minmax(0, 1fr))` }}
+          data-testid="variables"
+        >
+          {def.vars.map((name) => {
+            const value = formatVar(step.vars[name], lang, t("learn.code.none"));
+            return (
+              <div key={name} className="min-w-0 rounded-md border px-1.5 py-1 font-mono" title={`${name} = ${value}`}>
+                <dt className="truncate text-[11px] text-muted-foreground">{name}</dt>
+                <dd className="truncate text-[14px] font-medium">{value}</dd>
+              </div>
+            );
+          })}
         </dl>
       </div>
       <p className="text-xs leading-relaxed text-muted-foreground">{t("learn.code.note")}</p>

@@ -2,7 +2,8 @@
 // line (`@step` markers). The key is drawn lifted above the row; the slot it hovers over
 // is the gap, and each shift slides a bigger value right into the gap.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import { SORT_INPUT } from "../engine/cases";
+import { sortCounters, type NarrationKey, type Step, type TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"insertion-sort">;
 const KEYS = [
@@ -103,10 +104,15 @@ function trace(values: readonly number[]): Step[] {
 export const insertionSort: TracerDef = {
   id: "insertion-sort",
   subject: "sorting",
+  compareGroup: "sort",
   scene: "array",
+  lifts: true,
   markers: MARKERS,
   narrationKeys: KEYS,
-  movesLabel: "shifts",
+  limits: SORT_INPUT,
+  input: { kind: "values" },
+  counters: sortCounters("shifts"),
+  roleLabels: { swap: "shift" },
   legend: ["key", "compare", "swap", "sorted", "out"],
   vars: ["i", "j", "key"],
   trace,

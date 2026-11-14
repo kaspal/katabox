@@ -53,14 +53,15 @@ export function TopicPicker({
                   )}
                 >
                   <span>{s.name}</span>
-                  <span className="text-xs font-normal text-muted-foreground">
+                  <span className="flex-none whitespace-nowrap text-xs font-normal text-muted-foreground">
                     {s.topics.filter((tp) => viewed.includes(tp.id)).length} / {s.topics.length}
                   </span>
                 </Link>
               ) : (
-                <div className="flex min-h-8 items-center justify-between gap-2 px-2 py-1 text-muted-foreground">
+                <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-2 px-2 py-1 text-muted-foreground">
+                  {/* A long one-word name cannot wrap; the label moves to its own line instead. */}
                   <span className="min-w-0">{s.name}</span>
-                  <span className="flex-none whitespace-nowrap text-xs">{t("learn.picker.coming_soon")}</span>
+                  <span className="ml-auto flex-none whitespace-nowrap text-xs">{t("learn.picker.coming_soon")}</span>
                 </div>
               )}
               {open && topics.length > 0 && (

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "First pass (the ones digit) on [329, 57, 614, 8, 275, 140, 92, 463]. Which bucket does 614 go to?",
+    "prompt_es": "Primera pasada (las unidades) sobre [329, 57, 614, 8, 275, 140, 92, 463]. ¿A qué cubeta va el 614?",
+    "options": [
+      { "en": "Bucket 6", "es": "La cubeta 6" },
+      { "en": "Bucket 1", "es": "La cubeta 1" },
+      { "en": "Bucket 4", "es": "La cubeta 4" }
+    ],
+    "answer": 2,
+    "explain_en": "With place = 1, the digit is 614 // 1 % 10 = 4. The 6 and the 1 only matter in later passes.",
+    "explain_es": "Con place = 1, la cifra es 614 // 1 % 10 = 4. El 6 y el 1 solo cuentan en pasadas posteriores."
+  },
+  {
+    "prompt_en": "After the ones pass the array is [140, 92, 463, 614, 275, 57, 8, 329]. Which value is collected first after the tens pass?",
+    "prompt_es": "Tras la pasada de las unidades el arreglo es [140, 92, 463, 614, 275, 57, 8, 329]. ¿Qué valor se recoge primero tras la pasada de las decenas?",
+    "options": [
+      { "en": "8", "es": "8" },
+      { "en": "140", "es": "140" },
+      { "en": "92", "es": "92" }
+    ],
+    "answer": 0,
+    "explain_en": "8 has tens digit 0 and is alone in bucket 0. Next comes 614 (tens digit 1), then 329 (2).",
+    "explain_es": "El 8 tiene un 0 en las decenas y está solo en la cubeta 0. Después viene el 614 (decenas 1) y luego el 329 (2)."
+  },
+  {
+    "prompt_en": "Why does sorting by the ones first and by the hundreds last give a sorted array?",
+    "prompt_es": "¿Por qué ordenar primero por las unidades y al final por las centenas da un arreglo ordenado?",
+    "options": [
+      { "en": "The last pass compares whole values", "es": "La última pasada compara los valores completos" },
+      { "en": "Each pass is stable, so ties on the current digit keep the order of the earlier digits", "es": "Cada pasada es estable, así que los empates en la cifra actual conservan el orden de las cifras anteriores" },
+      { "en": "Each pass sorts the whole array by value", "es": "Cada pasada ordena todo el arreglo por valor" }
+    ],
+    "answer": 1,
+    "explain_en": "In the hundreds pass, 8, 57 and 92 all go to bucket 0, and they arrive already ordered by their tens and ones, so they stay in order.",
+    "explain_es": "En la pasada de las centenas, 8, 57 y 92 van todos a la cubeta 0, y llegan ya ordenados por sus decenas y unidades, así que siguen en orden."
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "After the counting pass on [3, 7, 1, 7, 0, 4, 2, 9, 3, 5], how tall is bucket 7?",
+    "prompt_es": "Tras la pasada de conteo sobre [3, 7, 1, 7, 0, 4, 2, 9, 3, 5], ¿qué altura tiene la cubeta 7?",
+    "options": [
+      { "en": "1", "es": "1" },
+      { "en": "2", "es": "2" },
+      { "en": "7", "es": "7" }
+    ],
+    "answer": 1,
+    "explain_en": "7 appears twice, so its bucket counts 2. The height is how many times the value appears, not the value itself.",
+    "explain_es": "7 aparece dos veces, así que su cubeta cuenta 2. La altura es cuántas veces aparece el valor, no el propio valor."
+  },
+  {
+    "prompt_en": "Buckets 0, 1 and 2 hold one value each. At which position is the first 3 written?",
+    "prompt_es": "Las cubetas 0, 1 y 2 tienen un valor cada una. ¿En qué posición se escribe el primer 3?",
+    "options": [
+      { "en": "Position 3", "es": "La posición 3" },
+      { "en": "Position 2", "es": "La posición 2" },
+      { "en": "Position 4", "es": "La posición 4" }
+    ],
+    "answer": 0,
+    "explain_en": "0, 1 and 2 take positions 0, 1 and 2, so k = 3 when bucket 3 starts handing out its values.",
+    "explain_es": "0, 1 y 2 ocupan las posiciones 0, 1 y 2, así que k = 3 cuando la cubeta 3 empieza a entregar sus valores."
+  },
+  {
+    "prompt_en": "What does the cost of counting sort depend on?",
+    "prompt_es": "¿De qué depende el coste de la ordenación por conteo?",
+    "options": [
+      { "en": "Only on n, the number of values", "es": "Solo de n, el número de valores" },
+      { "en": "On how unsorted the input is", "es": "De lo desordenada que esté la entrada" },
+      { "en": "On n and on k, the number of possible values", "es": "De n y de k, el número de valores posibles" }
+    ],
+    "answer": 2,
+    "explain_en": "Each value is counted and written once (n), and every bucket is visited once (k): O(n + k), whatever the order.",
+    "explain_es": "Cada valor se cuenta y se escribe una vez (n), y cada cubeta se visita una vez (k): O(n + k), sea cual sea el orden."
+  }
+]

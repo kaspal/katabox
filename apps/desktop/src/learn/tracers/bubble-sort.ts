@@ -1,7 +1,8 @@
 // Bubble sort with the early exit. Mirrors content/learn/sorting/bubble-sort/sample.{py,ts}
 // line for line (`@step` markers).
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import { SORT_INPUT } from "../engine/cases";
+import { sortCounters, type NarrationKey, type Step, type TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"bubble-sort">;
 const KEYS = [
@@ -83,10 +84,13 @@ function trace(values: readonly number[]): Step[] {
 export const bubbleSort: TracerDef = {
   id: "bubble-sort",
   subject: "sorting",
+  compareGroup: "sort",
   scene: "bars",
   markers: MARKERS,
   narrationKeys: KEYS,
-  movesLabel: "swaps",
+  limits: SORT_INPUT,
+  input: { kind: "values" },
+  counters: sortCounters("swaps"),
   legend: ["compare", "swap", "sorted", "out"],
   vars: ["end", "j", "swapped"],
   trace,

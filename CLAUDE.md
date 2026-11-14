@@ -39,9 +39,9 @@ cargo run -p kb-pack -- generate content/problems/<id> --size max --seeds 1,2  #
 cargo run --release -p kb-pack -- profile content/problems/<id>  # complexity profile: input hashes + reference times in every language into profile/reference.json (sandbox; committed; ADR 0024)
 cargo run --release -p kb-pack -- profile --inputs  # regenerate the gitignored profile input caches from gen.py and verify their hashes (sandbox; the build packs profiles only from these)
 cargo test -p kb-judge --release --test complexity_windows -- --nocapture  # profiler calibration set (28 known solutions; prints the hit rate, needs ≥ 85%)
-cargo run -p kb-pack -- validate --learn --run  # Learn topics only: structure, then both samples on every case in the sandbox (ADR 0029)
+cargo run -p kb-pack -- validate --learn --run  # Learn topics only: structure, then both samples on every case in the sandbox (ADR 0029); --topics a,b or --subject s limits the sandbox part (unknown ids fail)
 pnpm learn:cases                 # regenerate content/learn/*/*/cases.json from the tracers (Vitest fails when stale)
-cargo test -p kb-pack --test learn_samples_windows -- --nocapture  # Learn samples vs tracers in the sandbox (Windows)
+cargo test -p kb-pack --test learn_samples_windows -- --nocapture  # Learn samples vs tracers in the sandbox (Windows; KB_LEARN_TOPICS=a,b to scope)
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE) and content/learn
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
 cargo test -p kb-judge --test debug_windows -- --nocapture  # debugger e2e in the sandbox (prints the replay timings; debug_js_windows for JS/TS)

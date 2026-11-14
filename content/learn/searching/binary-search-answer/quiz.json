@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "3 days for parcels [7, 2, 9, 4, 6, 8, 3, 5]. What range of capacities does the search start with?",
+    "prompt_es": "3 días para los paquetes [7, 2, 9, 4, 6, 8, 3, 5]. ¿Con qué rango de capacidades empieza la búsqueda?",
+    "options": [
+      { "en": "2 to 9", "es": "De 2 a 9" },
+      { "en": "1 to 44", "es": "De 1 a 44" },
+      { "en": "9 to 44", "es": "De 9 a 44" }
+    ],
+    "answer": 2,
+    "explain_en": "The heaviest parcel, 9, must fit in one day, and the total, 44, ships everything on day one.",
+    "explain_es": "El paquete más pesado, 9, tiene que caber en un día, y el total, 44, lo envía todo el primer día."
+  },
+  {
+    "prompt_en": "Same parcels, 3 days. The search tries capacity 17. What happens?",
+    "prompt_es": "Mismos paquetes, 3 días. La búsqueda prueba la capacidad 17. ¿Qué pasa?",
+    "options": [
+      { "en": "4 days > 3: too small, lo = 18", "es": "4 días > 3: se queda corta, lo = 18" },
+      { "en": "3 days ≤ 3: it fits, hi = 17", "es": "3 días ≤ 3: cabe, hi = 17" },
+      { "en": "2 days ≤ 3: it fits, hi = 17", "es": "2 días ≤ 3: cabe, hi = 17" }
+    ],
+    "answer": 0,
+    "explain_en": "The days fill as [7, 2], [9, 4], [6, 8, 3], [5]: 4 days. So the answer is more than 17. Capacity 18 turns out to be the answer: [7, 2, 9], [4, 6, 8], [3, 5].",
+    "explain_es": "Los días se llenan así: [7, 2], [9, 4], [6, 8, 3], [5]: 4 días. Así que la respuesta es mayor que 17. La capacidad 18 resulta ser la respuesta: [7, 2, 9], [4, 6, 8], [3, 5]."
+  },
+  {
+    "prompt_en": "Why may the search skip every capacity above a size that fits?",
+    "prompt_es": "¿Por qué puede la búsqueda saltarse todas las capacidades por encima de una que cabe?",
+    "options": [
+      { "en": "Because the parcels are sorted", "es": "Porque los paquetes están ordenados" },
+      { "en": "Because a bigger capacity never needs more days", "es": "Porque una capacidad mayor nunca necesita más días" },
+      { "en": "Because days_needed is cheap", "es": "Porque days_needed es barata" }
+    ],
+    "answer": 1,
+    "explain_en": "The check is monotone: once a capacity fits, every bigger one fits too. So the smallest fit is never above a known fit.",
+    "explain_es": "La comprobación es monótona: si una capacidad cabe, todas las mayores también. Así que la menor que cabe nunca está por encima de una que ya cabe."
+  }
+]

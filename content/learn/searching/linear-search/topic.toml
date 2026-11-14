@@ -1,0 +1,28 @@
+id = "linear-search"
+subject = "searching"
+order = 1
+title = "Linear search"
+title_es = "Búsqueda lineal"
+tags = ["linear-scan"]
+problems = []
+presets = ["random", "few-unique"]
+default = [55, 38, 27, 43, 3, 9, 82, 10, 55, 21, 64]
+
+[complexity]
+best = "O(1)"
+average = "O(n)"
+worst = "O(n)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 17
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = [linear_search(a[1:], a[0])]"
+typescript = "a = [linearSearch(a.slice(1), a[0])]"

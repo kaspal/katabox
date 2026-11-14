@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "The array has 10 values. Which position does the build sift down first?",
+    "prompt_es": "El arreglo tiene 10 valores. ¿Qué posición hunde primero la construcción?",
+    "options": [
+      { "en": "Position 0, the root", "es": "La posición 0, la raíz" },
+      { "en": "Position 9, the last value", "es": "La posición 9, el último valor" },
+      { "en": "Position 4, the last parent", "es": "La posición 4, el último padre" }
+    ],
+    "answer": 2,
+    "explain_en": "n // 2 - 1 = 4. Positions 5 to 9 have no children, so they are already heaps of one value.",
+    "explain_es": "n // 2 - 1 = 4. Las posiciones 5 a 9 no tienen hijos, así que ya son montículos de un solo valor."
+  },
+  {
+    "prompt_en": "The root is 38 and its children are 64 and 82. What does sifting down do?",
+    "prompt_es": "La raíz es 38 y sus hijos son 64 y 82. ¿Qué hace el hundimiento?",
+    "options": [
+      { "en": "Swaps 38 with 82, the bigger child", "es": "Intercambia 38 con 82, el hijo mayor" },
+      { "en": "Swaps 38 with 64, the first child", "es": "Intercambia 38 con 64, el primer hijo" },
+      { "en": "Stops: 38 is fine at the root", "es": "Para: 38 está bien en la raíz" }
+    ],
+    "answer": 0,
+    "explain_en": "The parent must end up at least as big as both children, so it swaps with the bigger one. Swapping with 64 would put 64 above 82.",
+    "explain_es": "El padre tiene que quedar al menos tan grande como sus dos hijos, así que se intercambia con el mayor. Intercambiarlo con 64 dejaría 64 por encima de 82."
+  },
+  {
+    "prompt_en": "The heap is built and the root is 82. What does the next step do?",
+    "prompt_es": "El montículo está construido y la raíz es 82. ¿Qué hace el paso siguiente?",
+    "options": [
+      { "en": "Sifts 82 down to the bottom of the heap", "es": "Hunde el 82 hasta el fondo del montículo" },
+      { "en": "Swaps 82 with the last value: position 9 is final", "es": "Intercambia el 82 con el último valor: la posición 9 ya es definitiva" },
+      { "en": "Builds the heap again from position 4", "es": "Vuelve a construir el montículo desde la posición 4" }
+    ],
+    "answer": 1,
+    "explain_en": "The root is the biggest value, so it belongs at the end. The heap shrinks by one and the new root is sifted down.",
+    "explain_es": "La raíz es el mayor valor, así que su sitio es el final. El montículo pierde un elemento y la nueva raíz se hunde."
+  }
+]

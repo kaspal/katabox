@@ -1,0 +1,28 @@
+id = "selection-sort"
+subject = "sorting"
+order = 4
+title = "Selection Sort"
+title_es = "Ordenación por selección"
+tags = ["comparison-sort"]
+problems = ["fun-run-results", "medal-table"]
+presets = ["random", "nearly-sorted", "reversed", "few-unique"]
+default = [38, 27, 43, 3, 9, 82, 10, 55, 21, 64]
+
+[complexity]
+best = "O(n²)"
+average = "O(n²)"
+worst = "O(n²)"
+space = "O(1)"
+stable = false
+in_place = true
+
+[input]
+min_len = 2
+max_len = 16
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "selection_sort(a)"
+typescript = "selectionSort(a)"

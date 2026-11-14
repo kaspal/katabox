@@ -9,6 +9,7 @@ mod validate;
 
 pub use build::{BuildOptions, build};
 pub use checks::{Check, Finding, check_problem, env_for, generate_tests};
+pub use learn::TopicFilter;
 pub use validate::{
     TEST_BUDGET_BYTES, budget_error, run_references, test_size, validate_all, validate_learn_only,
 };

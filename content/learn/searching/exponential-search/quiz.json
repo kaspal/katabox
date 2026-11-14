@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Target 21 in [3, 9, 10, 21, 27, 38, 43, 55, 64, 82, 88, 91]. Which bounds does the doubling probe?",
+    "prompt_es": "Objetivo 21 en [3, 9, 10, 21, 27, 38, 43, 55, 64, 82, 88, 91]. ¿Qué límites prueba la duplicación?",
+    "options": [
+      { "en": "1, 2, 4, 8", "es": "1, 2, 4, 8" },
+      { "en": "1, 2, 4", "es": "1, 2, 4" },
+      { "en": "1, 2, 3", "es": "1, 2, 3" }
+    ],
+    "answer": 1,
+    "explain_en": "a[1] = 9 and a[2] = 10 are smaller than 21, so the bound doubles. a[4] = 27 is not smaller, so the doubling stops at 4.",
+    "explain_es": "a[1] = 9 y a[2] = 10 son menores que 21, así que el límite se duplica. a[4] = 27 no es menor, así que la duplicación para en 4."
+  },
+  {
+    "prompt_en": "The doubling stopped at bound 4. Where does the binary search run?",
+    "prompt_es": "La duplicación ha parado en el límite 4. ¿Dónde se hace la búsqueda binaria?",
+    "options": [
+      { "en": "Positions 0–4", "es": "Las posiciones 0–4" },
+      { "en": "Positions 4–8", "es": "Las posiciones 4–8" },
+      { "en": "Positions 2–4", "es": "Las posiciones 2–4" }
+    ],
+    "answer": 2,
+    "explain_en": "a[2] was already smaller than 21 and a[4] is not, so the range is bound // 2 = 2 to 4. Its middle, position 3, holds 21.",
+    "explain_es": "a[2] ya era menor que 21 y a[4] no, así que el tramo va de bound // 2 = 2 a 4. Su centro, la posición 3, tiene 21."
+  },
+  {
+    "prompt_en": "A sorted list has a billion values and the target is at position 6. What does the cost depend on?",
+    "prompt_es": "Una lista ordenada tiene mil millones de valores y el objetivo está en la posición 6. ¿De qué depende el coste?",
+    "options": [
+      { "en": "The target's position: O(log i)", "es": "De la posición del objetivo: O(log i)" },
+      { "en": "The list's length: O(log n)", "es": "De la longitud de la lista: O(log n)" },
+      { "en": "Both: O(log i · log n)", "es": "De las dos: O(log i · log n)" }
+    ],
+    "answer": 0,
+    "explain_en": "The doubling stops at bound 8, after a few probes, and the binary search covers only 4–8. The billion values beyond are never touched.",
+    "explain_es": "La duplicación para en el límite 8, tras unas pocas pruebas, y la búsqueda binaria solo cubre 4–8. Los mil millones de valores de después no se tocan."
+  }
+]

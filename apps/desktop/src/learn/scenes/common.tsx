@@ -5,14 +5,15 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, type Transition } from "motion/react";
 import { useReducedMotion } from "../engine/media";
 import type { TFunction } from "i18next";
-import type { Pointer, Role, Step } from "../engine/types";
+import { GROWTH_CLASSES } from "../engine/growth";
+import type { Pointer, Role, Step, TracerDef } from "../engine/types";
 
 export type SceneProps = {
   step: Step;
   /** Jump to the new state with no animation (timeline drag, reduced motion). */
   instant: boolean;
-  /** "swaps" or "shifts": how the moving role is named. */
-  movesLabel: "swaps" | "shifts";
+  /** The topic: legend names, counters and input shape. */
+  def: TracerDef;
   /** Upper bound for bar heights (the topic's max value). */
   maxValue: number;
 };
@@ -63,9 +64,8 @@ export function outline(role: Role): { stroke?: string; strokeWidth?: number; st
   return {};
 }
 
-export function roleName(t: TFunction, role: Role, movesLabel: "swaps" | "shifts"): string {
-  if (role === "swap" && movesLabel === "shifts") return t("learn.roles.shift");
-  return t(`learn.roles.${role}`);
+export function roleName(t: TFunction, role: Role, def: Pick<TracerDef, "roleLabels">): string {
+  return t(`learn.roles.${def.roleLabels?.[role] ?? role}`);
 }
 
 /** Position numbers under the scene. */
@@ -125,8 +125,22 @@ export function Pointers({
 
 /** One sentence for the scene's `aria-label`. */
 export function sceneSummary(t: TFunction, step: Step): string {
-  const values = step.items.map((it) => it.value).join(", ");
-  const parts = [t("learn.stage.summary", { values })];
+  const hidden = new Set(step.hidden ?? []);
+  const values = step.items.map((it) => (hidden.has(it.id) ? "_" : it.value)).join(", ");
+  const parts: string[] = [];
+  if (step.items.length > 0) parts.push(t("learn.stage.summary", { values }));
+  if (step.capacity !== undefined) {
+    parts.push(t("learn.stage.summary_capacity", { capacity: step.capacity, size: step.items.length }));
+  }
+  if (step.pegs) {
+    const pegs = step.pegs.map((d, k) => `${k + 1}: ${d.join(" ") || "—"}`).join("; ");
+    parts.push(t("learn.stage.summary_pegs", { pegs }));
+  }
+  if (step.bits) {
+    parts.push(t("learn.stage.summary_bits", { rows: step.bits.map((b) => `${b.label} = ${b.value}`).join("; ") }));
+  }
+  if (step.chart) parts.push(t("learn.stage.summary_growth", { count: step.chart.shown, n: step.chart.n }));
+  if (step.stack?.length) parts.push(t("learn.stage.summary_stack", { top: step.stack[step.stack.length - 1]!.text }));
   const at = (role: Role) =>
     Object.entries(step.roles)
       .filter(([, r]) => r === role)
@@ -150,26 +164,78 @@ export function sceneSummary(t: TFunction, step: Step): string {
 export function SceneFallback({
   t,
   step,
-  movesLabel,
+  def,
 }: {
   t: TFunction;
   step: Step;
-  movesLabel: "swaps" | "shifts";
+  def: Pick<TracerDef, "roleLabels">;
 }) {
+  const list = (xs: readonly { value: number }[]) => xs.map((x) => x.value).join(", ");
   return (
     <div className="sr-only" data-testid="scene-fallback">
-      <p>{t("learn.stage.fallback")}</p>
-      <ol>
-        {step.items.map((it, p) => (
-          <li key={it.id}>
-            {t("learn.stage.fallback_item", {
-              at: p,
-              value: it.value,
-              role: roleName(t, roleAt(step, p), movesLabel),
-            })}
-          </li>
-        ))}
-      </ol>
+      {step.items.length > 0 && (
+        <>
+          <p>{t("learn.stage.fallback")}</p>
+          <ol>
+            {step.items.map((it, p) => (
+              <li key={it.id}>
+                {t("learn.stage.fallback_item", {
+                  at: p,
+                  value: it.value,
+                  role: roleName(t, roleAt(step, p), def),
+                })}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+      {step.aux && (
+        <p>
+          {t("learn.stage.fallback_row", {
+            label: t(`learn.stage.rows.${step.aux.label}`),
+            values: step.aux.cells.map((c) => (c ? c.value : "_")).join(", "),
+          })}
+        </p>
+      )}
+      {step.buckets && (
+        <ul>
+          {step.buckets.map((b) => (
+            <li key={b.label}>{t("learn.stage.fallback_bucket", { label: b.label, values: list(b.items) || "—" })}</li>
+          ))}
+        </ul>
+      )}
+      {step.pegs && (
+        <ul>
+          {step.pegs.map((disks, k) => (
+            <li key={k}>{t("learn.stage.fallback_peg", { peg: k + 1, disks: disks.join(", ") || "—" })}</li>
+          ))}
+        </ul>
+      )}
+      {step.bits && (
+        <ul>
+          {step.bits.map((b, k) => (
+            <li key={k}>
+              {t("learn.stage.fallback_bits", { label: b.label, value: b.value, bits: b.value.toString(2).padStart(8, "0") })}
+            </li>
+          ))}
+        </ul>
+      )}
+      {step.chart && (
+        <ul>
+          {GROWTH_CLASSES.slice(0, step.chart.shown).map((g) => (
+            <li key={g.label}>
+              {t("learn.stage.fallback_growth", { label: g.label, count: g.f(step.chart!.n), n: step.chart!.n })}
+            </li>
+          ))}
+        </ul>
+      )}
+      {step.stack && (
+        <p>
+          {t("learn.stage.fallback_stack", {
+            entries: [...step.stack].reverse().map((e) => e.text).join("; ") || "—",
+          })}
+        </p>
+      )}
     </div>
   );
 }

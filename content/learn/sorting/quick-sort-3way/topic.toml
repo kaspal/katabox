@@ -1,0 +1,28 @@
+id = "quick-sort-3way"
+subject = "sorting"
+order = 7
+title = "Quick Sort: Hoare and 3-way"
+title_es = "Ordenación rápida: Hoare y en tres partes"
+tags = ["comparison-sort", "divide-and-conquer", "duplicates"]
+problems = ["three-bins"]
+presets = ["random", "nearly-sorted", "reversed", "few-unique"]
+default = [27, 43, 27, 9, 82, 27, 55, 9, 64, 43]
+
+[complexity]
+best = "O(n)"
+average = "O(n log n)"
+worst = "O(n²)"
+space = "O(log n)"
+stable = false
+in_place = true
+
+[input]
+min_len = 2
+max_len = 16
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "quick_sort_3way(a, 0, len(a) - 1)"
+typescript = "quickSort3Way(a, 0, a.length - 1)"

@@ -1340,7 +1340,25 @@ async fn learn_commands_read_the_bundled_topics() {
     assert_eq!(catalog.len(), 13, "every subject, with or without topics");
     let sorting = catalog.iter().find(|s| s.id == "sorting").unwrap();
     let ids: Vec<_> = sorting.topics.iter().map(|t| t.id.as_str()).collect();
-    assert_eq!(ids, ["bubble-sort", "insertion-sort", "quick-sort"]);
+    // In topic.toml `order`: the Phase 0 sorts first, then the Phase 1 ones.
+    assert_eq!(
+        ids,
+        [
+            "bubble-sort",
+            "insertion-sort",
+            "quick-sort",
+            "selection-sort",
+            "shell-sort",
+            "merge-sort",
+            "quick-sort-3way",
+            "heap-sort",
+            "counting-sort",
+            "radix-sort",
+            "bucket-sort",
+            "tim-sort",
+            "quickselect",
+        ]
+    );
     assert!(
         catalog.iter().any(|s| s.topics.is_empty()),
         "coming-soon subjects"

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Limit 20 on [4, 9, 2, 7, 1, 8, 3, 5, 12, 2]. The window 4, 9, 2 sums to 15, then takes in 7. What happens?",
+    "prompt_es": "Límite 20 sobre [4, 9, 2, 7, 1, 8, 3, 5, 12, 2]. La ventana 4, 9, 2 suma 15 y entonces incorpora 7. ¿Qué pasa?",
+    "options": [
+      { "en": "22 > 20: drop 4 from the left, the sum is 18", "es": "22 > 20: sale 4 por la izquierda, la suma es 18" },
+      { "en": "22 > 20: drop 7 again, the sum is 15", "es": "22 > 20: vuelve a salir 7, la suma es 15" },
+      { "en": "22 > 20: empty the window and restart at 7", "es": "22 > 20: se vacía la ventana y se empieza de nuevo en 7" }
+    ],
+    "answer": 0,
+    "explain_en": "Only the left edge shrinks the window. Dropping 4 gives 18 ≤ 20, so the window 9, 2, 7 fits again.",
+    "explain_es": "Solo el borde izquierdo encoge la ventana. Al salir 4 queda 18 ≤ 20, así que la ventana 9, 2, 7 vuelve a caber."
+  },
+  {
+    "prompt_en": "Same input. What does the sample return?",
+    "prompt_es": "Misma entrada. ¿Qué devuelve el ejemplo?",
+    "options": [
+      { "en": "[3, 0]", "es": "[3, 0]" },
+      { "en": "[4, 1]", "es": "[4, 1]" },
+      { "en": "[4, 3]", "es": "[4, 3]" }
+    ],
+    "answer": 1,
+    "explain_en": "9 + 2 + 7 + 1 = 19 is the first run of 4 values that fits, starting at position 1. Later runs of 4 (2, 7, 1, 8 and others) tie but do not beat it, and no run of 5 fits.",
+    "explain_es": "9 + 2 + 7 + 1 = 19 es el primer tramo de 4 valores que cabe, y empieza en la posición 1. Los tramos de 4 posteriores (2, 7, 1, 8 y otros) empatan pero no lo superan, y ningún tramo de 5 cabe."
+  },
+  {
+    "prompt_en": "The inner while loop can drop several values in one step. Why is the total cost still O(n)?",
+    "prompt_es": "El bucle while interior puede soltar varios valores en un paso. ¿Por qué el coste total sigue siendo O(n)?",
+    "options": [
+      { "en": "Because the values are sorted", "es": "Porque los valores están ordenados" },
+      { "en": "Because the window never holds more than a few values", "es": "Porque la ventana nunca tiene más de unos pocos valores" },
+      { "en": "Because lo only moves forward, at most n times in all", "es": "Porque lo solo avanza, como mucho n veces en total" }
+    ],
+    "answer": 2,
+    "explain_en": "Each value enters the window once and leaves at most once, so the two edges make at most 2n moves together.",
+    "explain_es": "Cada valor entra en la ventana una vez y sale como mucho una vez, así que los dos bordes hacen como mucho 2n movimientos entre los dos."
+  }
+]

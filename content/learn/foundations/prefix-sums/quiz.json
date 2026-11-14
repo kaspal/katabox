@@ -1,0 +1,61 @@
+[
+  {
+    "prompt_en": "p[2] = 1 and p[7] = 14. What is the sum of positions 2..6?",
+    "prompt_es": "p[2] = 1 y p[7] = 14. ¿Cuánto suman las posiciones 2..6?",
+    "options": [
+      {
+        "en": "15",
+        "es": "15"
+      },
+      {
+        "en": "14",
+        "es": "14"
+      },
+      {
+        "en": "13",
+        "es": "13"
+      }
+    ],
+    "answer": 2,
+    "explain_en": "p[7] holds the sum of positions 0..6 and p[2] the sum of positions 0..1. Taking one from the other leaves 2..6: 14 − 1 = 13.",
+    "explain_es": "p[7] guarda la suma de las posiciones 0..6 y p[2] la de las posiciones 0..1. Al restarlas quedan las 2..6: 14 − 1 = 13."
+  },
+  {
+    "prompt_en": "p[3] = 8 and a[3] = 4. What does the next step write?",
+    "prompt_es": "p[3] = 8 y a[3] = 4. ¿Qué escribe el paso siguiente?",
+    "options": [
+      {
+        "en": "p[4] = 12",
+        "es": "p[4] = 12"
+      },
+      {
+        "en": "p[3] = 12",
+        "es": "p[3] = 12"
+      },
+      {
+        "en": "p[4] = 4",
+        "es": "p[4] = 4"
+      }
+    ],
+    "answer": 0,
+    "explain_en": "p[i + 1] = p[i] + a[i]: p[4] = 8 + 4 = 12. The prefix row is one cell ahead of the array.",
+    "explain_es": "p[i + 1] = p[i] + a[i]: p[4] = 8 + 4 = 12. La fila de prefijos va una celda por delante del arreglo."
+  },
+  {
+    "prompt_en": "The row p is built. One value a[i] changes. What does it cost to keep p correct?",
+    "prompt_es": "La fila p ya está construida. Cambia un valor a[i]. ¿Cuánto cuesta mantener p correcta?",
+    "options": [
+      {
+        "en": "O(1): fix p[i + 1]",
+        "es": "O(1): corregir p[i + 1]"
+      },
+      {
+        "en": "O(n): every prefix after i changes",
+        "es": "O(n): cambian todos los prefijos posteriores a i"
+      }
+    ],
+    "answer": 1,
+    "explain_en": "Every p[j] with j > i includes a[i], so all of them shift. If values change often, a Fenwick tree makes both updates and queries O(log n).",
+    "explain_es": "Cada p[j] con j > i incluye a[i], así que todos cambian. Si los valores cambian a menudo, un árbol de Fenwick deja tanto los cambios como las consultas en O(log n)."
+  }
+]

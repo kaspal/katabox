@@ -1,0 +1,28 @@
+id = "radix-sort"
+subject = "sorting"
+order = 10
+title = "Radix Sort"
+title_es = "Ordenación por residuos (Radix Sort)"
+tags = ["non-comparison-sort"]
+problems = []
+presets = ["random", "few-unique", "reversed"]
+default = [329, 57, 614, 8, 275, 140, 92, 463]
+
+[complexity]
+best = "O(d · (n + 10))"
+average = "O(d · (n + 10))"
+worst = "O(d · (n + 10))"
+space = "O(n + 10)"
+stable = true
+in_place = false
+
+[input]
+min_len = 2
+max_len = 12
+min = 1
+max = 999
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "radix_sort(a)"
+typescript = "radixSort(a)"

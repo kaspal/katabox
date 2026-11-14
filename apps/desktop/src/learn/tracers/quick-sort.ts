@@ -1,7 +1,8 @@
 // Quick sort, Lomuto partition with the last value as pivot. Mirrors
 // content/learn/sorting/quick-sort/sample.{py,ts} line for line (`@step` markers).
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Step, TracerDef } from "../engine/types";
+import { SORT_INPUT } from "../engine/cases";
+import { sortCounters, type NarrationKey, type Pointer, type Step, type TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"quick-sort">;
 const KEYS = [
@@ -144,10 +145,13 @@ function trace(values: readonly number[]): Step[] {
 export const quickSort: TracerDef = {
   id: "quick-sort",
   subject: "sorting",
+  compareGroup: "sort",
   scene: "bars",
   markers: MARKERS,
   narrationKeys: KEYS,
-  movesLabel: "swaps",
+  limits: SORT_INPUT,
+  input: { kind: "values" },
+  counters: sortCounters("swaps"),
   legend: ["pivot", "compare", "swap", "sorted", "out"],
   vars: ["lo", "hi", "pivot", "i", "j"],
   trace,

@@ -1,0 +1,28 @@
+id = "big-o-growth"
+subject = "foundations"
+order = 1
+title = "Big-O growth curves"
+title_es = "Curvas de crecimiento Big-O"
+tags = ["growth-rates"]
+problems = []
+presets = ["random"]
+default = [10]
+
+[complexity]
+best = "O(2ⁿ)"
+average = "O(2ⁿ)"
+worst = "O(2ⁿ)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 1
+min = 1
+max = 16
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = count_steps(a[0])"
+typescript = "a = countSteps(a[0])"

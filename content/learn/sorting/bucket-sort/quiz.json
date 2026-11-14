@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Five buckets of 20. Which bucket does 64 fall into?",
+    "prompt_es": "Cinco cubetas de 20. ¿En qué cubeta cae el 64?",
+    "options": [
+      { "en": "40–59", "es": "40–59" },
+      { "en": "60–79", "es": "60–79" },
+      { "en": "80–99", "es": "80–99" }
+    ],
+    "answer": 1,
+    "explain_en": "64 * 5 // 100 = 3, the fourth bucket, which covers 60–79.",
+    "explain_es": "64 * 5 // 100 = 3, la cuarta cubeta, que cubre 60–79."
+  },
+  {
+    "prompt_en": "After scattering [38, 27, 43, 3, 9, 82, 10, 55, 21, 64, 71, 16], how many values does the 20–39 bucket hold?",
+    "prompt_es": "Tras repartir [38, 27, 43, 3, 9, 82, 10, 55, 21, 64, 71, 16], ¿cuántos valores tiene la cubeta 20–39?",
+    "options": [
+      { "en": "2", "es": "2" },
+      { "en": "4", "es": "4" },
+      { "en": "3", "es": "3" }
+    ],
+    "answer": 2,
+    "explain_en": "38, 27 and 21 fall in 20–39, in that arrival order. Sorting the bucket turns them into 21, 27, 38.",
+    "explain_es": "38, 27 y 21 caen en 20–39, en ese orden de llegada. Al ordenar la cubeta quedan 21, 27, 38."
+  },
+  {
+    "prompt_en": "Every value falls into the same bucket. What happens to the cost?",
+    "prompt_es": "Todos los valores caen en la misma cubeta. ¿Qué pasa con el coste?",
+    "options": [
+      { "en": "It becomes the cost of sorting that one bucket", "es": "Pasa a ser el coste de ordenar esa única cubeta" },
+      { "en": "It stays O(n + k)", "es": "Sigue siendo O(n + k)" },
+      { "en": "The sort fails", "es": "La ordenación falla" }
+    ],
+    "answer": 0,
+    "explain_en": "Scattering gained nothing: one bucket holds all n values, so the total is whatever its sort costs, O(n²) with insertion sort.",
+    "explain_es": "Repartir no ha servido de nada: una cubeta tiene los n valores, así que el total es lo que cueste ordenarla, O(n²) con inserción."
+  }
+]

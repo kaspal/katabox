@@ -199,7 +199,12 @@ describe("Learn topic page", () => {
     const theory = await screen.findByTestId("theory");
     const link = within(theory).getAllByRole("link", { name: "Insertion Sort" })[0]!;
     expect(link).toHaveAttribute("href", "/learn/sorting/insertion-sort");
-    expect(theory.textContent).toContain("Quick Sort: Hoare and 3-way (coming soon)");
+    // Phase 1 added the Hoare / 3-way topic, so the old "coming soon" mention is a link now.
+    expect(within(theory).getAllByRole("link", { name: /Hoare and 3-way/ })[0]).toHaveAttribute(
+      "href",
+      "/learn/sorting/quick-sort-3way",
+    );
+    expect(theory.textContent).not.toContain("Hoare and 3-way (coming soon)");
   });
 
   it("the Practice tab has the quiz and the linked problems", async () => {
@@ -217,7 +222,41 @@ describe("Learn topic page", () => {
       "/problems/two-sum",
       "/problems/valid-brackets",
     ]);
-    expect(screen.getByRole("button", { name: "Compare with…" })).toBeDisabled();
+  });
+
+  it("compares two sorts side by side on one input, with one player, and never counts as viewing", async () => {
+    const { user } = await openQuickSort();
+    await user.click(screen.getByRole("button", { name: "Compare with…" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Bubble Sort" }));
+    const cmp = await screen.findByTestId("compare");
+    expect(within(cmp).getByRole("heading", { level: 3, name: "Quick Sort" })).toBeInTheDocument();
+    expect(within(cmp).getByRole("heading", { level: 3, name: "Bubble Sort" })).toBeInTheDocument();
+    expect(within(cmp).getAllByTestId("narration")).toHaveLength(2);
+    expect(screen.queryByTestId("stage")).toBeNull();
+
+    // One timeline for both: as long as the longer run; the shorter one waits, finished.
+    const timeline = within(cmp).getByRole("slider", { name: "Timeline" });
+    const last = Number(timeline.getAttribute("max"));
+    expect(within(cmp).queryAllByTestId("compare-finished")).toHaveLength(0);
+    fireEvent.change(timeline, { target: { value: String(last) } });
+    expect(within(cmp).getAllByTestId("compare-finished")).toHaveLength(2);
+    // Step back from the end: the longer run is no longer finished, the shorter still is.
+    await user.click(within(cmp).getByRole("button", { name: "Step back" }));
+    await user.click(within(cmp).getByRole("button", { name: "Step forward" }));
+    expect(within(cmp).getAllByTestId("compare-finished")).toHaveLength(2);
+    const viewedCalls = vi.mocked(fake().api.setSetting).mock.calls.filter(([k]) => k === "learn.viewed");
+    expect(viewedCalls).toHaveLength(0);
+
+    // Both panes run on the same input.
+    const values = (k: number) =>
+      [...within(screen.getByTestId(`compare-pane-${k}`)).getByTestId("scene-fallback").querySelectorAll("li")].map(
+        (li) => li.textContent,
+      ).length;
+    expect(values(0)).toBe(values(1));
+
+    await user.click(within(cmp).getByTestId("compare-exit"));
+    expect(screen.queryByTestId("compare")).toBeNull();
+    expect(screen.getByTestId("stage")).toBeInTheDocument();
   });
 
   it("insertion sort lifts the key above the gap", async () => {

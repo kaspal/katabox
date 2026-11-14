@@ -170,8 +170,10 @@ describe.each([
       }
     }
     expect(contrast(t.foreground, t["viz-code-line"])).toBeGreaterThanOrEqual(4.5);
-    // Compared and moving bars are told apart by outline too, but keep the hues apart.
-    expect(contrast(t["viz-compare"], t["viz-swap"])).toBeGreaterThan(1.3);
+    // Compared and moving bars are told apart by outline too, but keep them apart in
+    // lightness as well as hue (amber vs rose), and moving apart from the pivot's indigo.
+    expect(contrast(t["viz-compare"], t["viz-swap"])).toBeGreaterThan(1.6);
+    expect(contrast(t["viz-swap"], t["viz-sorted"])).toBeGreaterThan(1.3);
   });
 
   it("the focus ring and inputs stand out (≥ 3:1)", () => {

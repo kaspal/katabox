@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Pass 0 on [38, 27, 43, 3, 9, 82, 10, 55, 21, 64]. Which value is swapped into position 0?",
+    "prompt_es": "Pasada 0 sobre [38, 27, 43, 3, 9, 82, 10, 55, 21, 64]. ¿Qué valor se intercambia a la posición 0?",
+    "options": [
+      { "en": "27", "es": "27" },
+      { "en": "3", "es": "3" },
+      { "en": "9", "es": "9" }
+    ],
+    "answer": 1,
+    "explain_en": "The scan first remembers 27, then 3. Nothing after 3 is smaller, so 3 swaps with 38 at the end of the pass.",
+    "explain_es": "El recorrido recuerda primero el 27 y luego el 3. Nada de lo que viene después es menor que 3, así que el 3 se intercambia con el 38 al final de la pasada."
+  },
+  {
+    "prompt_en": "How many comparisons does selection sort make on 10 values that are already sorted?",
+    "prompt_es": "¿Cuántas comparaciones hace la ordenación por selección con 10 valores que ya están ordenados?",
+    "options": [
+      { "en": "9", "es": "9" },
+      { "en": "90", "es": "90" },
+      { "en": "45", "es": "45" }
+    ],
+    "answer": 2,
+    "explain_en": "Each pass compares against every value to its right: 9 + 8 + … + 1 = 45. The order of the input never changes that.",
+    "explain_es": "Cada pasada compara con todos los valores de su derecha: 9 + 8 + … + 1 = 45. El orden de la entrada nunca cambia eso."
+  },
+  {
+    "prompt_en": "At the end of a pass, smallest is still i. What does the swap do?",
+    "prompt_es": "Al final de una pasada, smallest sigue siendo i. ¿Qué hace el intercambio?",
+    "options": [
+      { "en": "Nothing: a[i] is already the smallest and stays put", "es": "Nada: a[i] ya es el menor y se queda donde está" },
+      { "en": "It moves a[i] to the end of the array", "es": "Mueve a[i] al final del arreglo" },
+      { "en": "It starts the pass again", "es": "Vuelve a empezar la pasada" }
+    ],
+    "answer": 0,
+    "explain_en": "No later value was smaller, so a[i] swaps with itself and position i is final.",
+    "explain_es": "Ningún valor posterior era menor, así que a[i] se intercambia consigo mismo y la posición i ya es definitiva."
+  }
+]

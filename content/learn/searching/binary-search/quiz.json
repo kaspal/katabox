@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Target 55 in [3, 9, 10, 21, 27, 38, 43, 55, 64, 82]. The first middle is position 4, holding 27. What changes?",
+    "prompt_es": "Objetivo 55 en [3, 9, 10, 21, 27, 38, 43, 55, 64, 82]. El primer centro es la posición 4, con 27. ¿Qué cambia?",
+    "options": [
+      { "en": "hi = 3", "es": "hi = 3" },
+      { "en": "lo = 4", "es": "lo = 4" },
+      { "en": "lo = 5", "es": "lo = 5" }
+    ],
+    "answer": 2,
+    "explain_en": "27 < 55, so the target can only be to the right of position 4. Position 4 is already checked, so lo = mid + 1 = 5.",
+    "explain_es": "27 < 55, así que el objetivo solo puede estar a la derecha de la posición 4. La posición 4 ya está comprobada, así que lo = mid + 1 = 5."
+  },
+  {
+    "prompt_en": "Now lo = 5 and hi = 9. Which position is checked next, and what happens?",
+    "prompt_es": "Ahora lo = 5 y hi = 9. ¿Qué posición se comprueba después y qué pasa?",
+    "options": [
+      { "en": "Position 7: it holds 55, found", "es": "La posición 7: tiene 55, encontrado" },
+      { "en": "Position 6: 43 < 55, go right", "es": "La posición 6: 43 < 55, a la derecha" },
+      { "en": "Position 8: 64 > 55, go left", "es": "La posición 8: 64 > 55, a la izquierda" }
+    ],
+    "answer": 0,
+    "explain_en": "mid = (5 + 9) // 2 = 7, and a[7] = 55. Two checks were enough for ten values.",
+    "explain_es": "mid = (5 + 9) // 2 = 7, y a[7] = 55. Han bastado dos comprobaciones para diez valores."
+  },
+  {
+    "prompt_en": "About how many checks does binary search need, at most, on 1,000,000 sorted values?",
+    "prompt_es": "¿Cuántas comprobaciones necesita, como mucho, la búsqueda binaria sobre 1.000.000 de valores ordenados?",
+    "options": [
+      { "en": "About 1,000", "es": "Unas 1.000" },
+      { "en": "About 20", "es": "Unas 20" },
+      { "en": "About 500,000", "es": "Unas 500.000" }
+    ],
+    "answer": 1,
+    "explain_en": "Each check halves the range, and 2²⁰ is just over a million, so about 20 halvings leave a single value.",
+    "explain_es": "Cada comprobación parte el tramo por la mitad, y 2²⁰ pasa justo del millón, así que unas 20 divisiones dejan un solo valor."
+  }
+]

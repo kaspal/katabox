@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Target 40 in [3, 8, 12, 15, 21, 25, 29, 33, 41]. The first sum is 3 + 41 = 44. What moves?",
+    "prompt_es": "Objetivo 40 en [3, 8, 12, 15, 21, 25, 29, 33, 41]. La primera suma es 3 + 41 = 44. ¿Qué se mueve?",
+    "options": [
+      { "en": "i moves right", "es": "i avanza a la derecha" },
+      { "en": "j moves left", "es": "j retrocede a la izquierda" },
+      { "en": "Both pointers move", "es": "Se mueven los dos punteros" }
+    ],
+    "answer": 1,
+    "explain_en": "44 > 40: too big. Even with 3, the smallest partner, 41 overshoots, so 41 can be in no pair and j moves left.",
+    "explain_es": "44 > 40: se pasa. Incluso con 3, la menor pareja, 41 se pasa, así que 41 no puede estar en ningún par y j retrocede."
+  },
+  {
+    "prompt_en": "Same values. Now i = 2 and j = 5: 12 + 25 = 37. What comes next?",
+    "prompt_es": "Mismos valores. Ahora i = 2 y j = 5: 12 + 25 = 37. ¿Qué viene después?",
+    "options": [
+      { "en": "j moves left: 12 + 21 = 33", "es": "j retrocede: 12 + 21 = 33" },
+      { "en": "The pointers meet: no pair", "es": "Los punteros se encuentran: no hay par" },
+      { "en": "i moves right: 15 + 25 = 40, found [3, 5]", "es": "i avanza: 15 + 25 = 40, encontrado [3, 5]" }
+    ],
+    "answer": 2,
+    "explain_en": "37 < 40: too small, so i moves right to 15, and 15 + 25 is exactly 40. The search took 6 sums in all.",
+    "explain_es": "37 < 40: se queda corta, así que i avanza a 15, y 15 + 25 da justo 40. La búsqueda ha hecho 6 sumas en total."
+  },
+  {
+    "prompt_en": "At most how many sums does the method compute on n sorted values?",
+    "prompt_es": "¿Cuántas sumas calcula como mucho el método sobre n valores ordenados?",
+    "options": [
+      { "en": "n − 1", "es": "n − 1" },
+      { "en": "n · (n − 1) / 2", "es": "n · (n − 1) / 2" },
+      { "en": "log n", "es": "log n" }
+    ],
+    "answer": 0,
+    "explain_en": "Each sum either ends the search or moves one pointer one place closer to the other, and they start n − 1 places apart.",
+    "explain_es": "Cada suma o termina la búsqueda o acerca un puntero un lugar al otro, y empiezan a n − 1 lugares de distancia."
+  }
+]

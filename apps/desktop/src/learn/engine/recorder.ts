@@ -1,8 +1,8 @@
 // A small helper tracers share: it owns the items, the counters and the sorted set, and
 // records a snapshot per step.
-import type { Item, Narration, Pointer, Role, Step, VarValue } from "./types";
+import type { Item, Narration, Pointer, Role, SceneData, Step, VarValue } from "./types";
 
-export type Frame = {
+export type Frame = SceneData & {
   roles?: Record<number, Role>;
   lifted?: number | null;
   pointers?: Pointer[];
@@ -50,7 +50,9 @@ export class Recorder {
       else if (f.range && (p < f.range[0] || p > f.range[1])) roles[p] = "out";
     });
     Object.assign(roles, f.roles);
+    const { roles: _r, lifted: _l, pointers: _p, range: _g, narration: _n, marker: _m, vars: _v, ...scene } = f;
     this.steps.push({
+      ...scene,
       items: this.items.map((it) => ({ ...it })),
       roles,
       lifted: f.lifted ?? null,

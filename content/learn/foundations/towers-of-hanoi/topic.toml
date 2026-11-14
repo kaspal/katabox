@@ -1,0 +1,28 @@
+id = "towers-of-hanoi"
+subject = "foundations"
+order = 3
+title = "Towers of Hanoi"
+title_es = "Torres de Hanói"
+tags = ["recursion"]
+problems = []
+presets = ["random"]
+default = [3]
+
+[complexity]
+best = "O(2ⁿ)"
+average = "O(2ⁿ)"
+worst = "O(2ⁿ)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 1
+min = 1
+max = 5
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = [peg for move in solve(a[0]) for peg in move]"
+typescript = "a = solve(a[0]).flat()"

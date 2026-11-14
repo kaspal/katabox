@@ -166,6 +166,48 @@ Date: 2026-11-14 · Status: accepted (maintainer sign-off on the section, `motio
   need them.
 - **Reused:** code highlighting uses the app's Lezer highlighter (styles/syntax.css).
 
+### Phase 1 additions (Foundations, Sorting, Searching, compare mode)
+- **Steps carry optional scene data:**
+  - extra rows: `aux` (prefix sums, a merge buffer, a resized array's storage);
+  - `buckets`, `stack`, `tree` (positions fixed from the final tree), `pegs`, `bits`;
+  - `chart`, `capacity`, `window`, merge `runs`, `heap` size.
+- **`hidden` ids keep a value's identity across rows:** a value in a merge buffer or a
+  bucket is drawn only there, and its main-row slot shows empty. `items` stays a
+  permutation, so the final row is still the sorted input.
+- **`result` on the last step is what the sample returns** when that isn't the final row
+  (an index, counts, a list of moves). `cases.json` output comes from it, so it is always
+  the tracer's own answer. Vitest also compares every output with an independent
+  reference (`src/test/learnReference.ts`): brute force or closed forms, never the
+  tracer's code.
+- **Input kinds**, in the TypeScript tracer definition, not in content.db (no schema
+  change):
+  - `values`;
+  - `target`: `[target, ...values]`;
+  - `sorted-target`: the same, with the values ascending;
+  - `count`: `[n]`.
+
+  The flat list keeps the DB, the presets and the sample driver unchanged. The Stage
+  adds a Target or n field, and refuses unsorted values or a target out of range with an
+  inline error (never by silently fixing the input).
+- **The driver's call may set `a` to the sample's result**, e.g.
+  `a = [binary_search(a[1:], a[0])]`. TypeScript's driver declares `let a`.
+- **`sorts` in topic.toml:**
+  - it defaults to true in `sorting`;
+  - it switches the "output is the sorted input" check;
+  - quickselect sets it false.
+- **Scoped sandbox runs:**
+  - `kb-pack validate --learn --run --topics a,b` or `--subject s` (an unknown id
+    fails);
+  - `KB_LEARN_TOPICS=a,b` scopes `learn_samples_windows`.
+- **Compare mode:**
+  - **Who can be compared:** topics of one subject with the same `compareGroup` (`sort`:
+    values to sort; `find`: a value to look for), on an input that fits both.
+  - **The view:** two panes with their own legend, counters and narration, under one
+    player and one input row. The player is as long as the longer run, and the shorter
+    run holds its last step, marked "Finished".
+  - **Not viewing:** compare mode never marks a topic viewed or saves the Continue
+    position, and it adds no setting.
+
 ## Consequences
 - **A new topic needs four things:**
   - a package in `content/learn`;

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "On [38, 27, 43, 3, 9, 82, 10, 55, 21, 64], the stack holds positions 0 and 1 (38 and 27) when 43 arrives. What happens?",
+    "prompt_es": "Sobre [38, 27, 43, 3, 9, 82, 10, 55, 21, 64], la pila tiene las posiciones 0 y 1 (38 y 27) cuando llega 43. ¿Qué pasa?",
+    "options": [
+      { "en": "Only 27 is popped; 38 waits", "es": "Solo sale 27; 38 sigue esperando" },
+      { "en": "43 is pushed on top; nothing is popped", "es": "43 entra en la cima; no sale nada" },
+      { "en": "Both are popped and get 43; then position 2 is pushed", "es": "Salen los dos y reciben 43; después entra la posición 2" }
+    ],
+    "answer": 2,
+    "explain_en": "27 < 43, so position 1 gets 43 and is popped. The new top, 38, is also smaller, so position 0 gets 43 too. The stack is empty, and 43 is pushed.",
+    "explain_es": "27 < 43, así que la posición 1 recibe 43 y sale. La nueva cima, 38, también es menor, así que la posición 0 también recibe 43. La pila queda vacía y entra 43."
+  },
+  {
+    "prompt_en": "Same input. Which values are still on the stack at the end, with answer -1?",
+    "prompt_es": "Misma entrada. ¿Qué valores siguen en la pila al final, con respuesta -1?",
+    "options": [
+      { "en": "82 and 64", "es": "82 y 64" },
+      { "en": "Only 64", "es": "Solo 64" },
+      { "en": "82, 55 and 64", "es": "82, 55 y 64" }
+    ],
+    "answer": 0,
+    "explain_en": "Nothing to the right of 82 is bigger, and 64 is last. 55 was popped by 64. The result is [43, 43, 82, 9, 82, -1, 55, 64, 64, -1].",
+    "explain_es": "Nada a la derecha de 82 es mayor, y 64 es el último. 55 lo sacó 64. El resultado es [43, 43, 82, 9, 82, -1, 55, 64, 64, -1]."
+  },
+  {
+    "prompt_en": "One new value can pop many positions at once. What is the total cost on n values?",
+    "prompt_es": "Un valor nuevo puede sacar muchas posiciones de golpe. ¿Cuál es el coste total sobre n valores?",
+    "options": [
+      { "en": "O(n²) in the worst case", "es": "O(n²) en el peor caso" },
+      { "en": "O(n): each position is pushed once and popped at most once", "es": "O(n): cada posición entra una vez y sale como mucho una vez" },
+      { "en": "O(n log n), like sorting", "es": "O(n log n), como ordenar" }
+    ],
+    "answer": 1,
+    "explain_en": "There are exactly n pushes, so there can be at most n pops over the whole pass, however they are grouped.",
+    "explain_es": "Hay exactamente n entradas, así que puede haber como mucho n salidas en toda la pasada, se agrupen como se agrupen."
+  }
+]

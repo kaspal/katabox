@@ -1,0 +1,61 @@
+[
+  {
+    "prompt_en": "size = 4 and capacity = 4. What happens when 18 is appended?",
+    "prompt_es": "size = 4 y capacity = 4. ¿Qué pasa al añadir 18?",
+    "options": [
+      {
+        "en": "18 is written at position 4 straight away",
+        "es": "18 se escribe enseguida en la posición 4"
+      },
+      {
+        "en": "Capacity becomes 5 and 4 values are copied",
+        "es": "La capacidad pasa a 5 y se copian 4 valores"
+      },
+      {
+        "en": "Capacity becomes 8, 4 values are copied, then 18 is written",
+        "es": "La capacidad pasa a 8, se copian 4 valores y luego se escribe 18"
+      }
+    ],
+    "answer": 2,
+    "explain_en": "The storage is full, so it doubles to 8 and the 4 values are copied across before 18 goes into position 4. The next three appends will need no copies.",
+    "explain_es": "El almacenamiento está lleno, así que se dobla a 8 y se copian los 4 valores antes de que 18 entre en la posición 4. Las tres inserciones siguientes no necesitarán copias."
+  },
+  {
+    "prompt_en": "7 values are appended, starting from capacity 1. How many copies in all?",
+    "prompt_es": "Se añaden 7 valores empezando con capacidad 1. ¿Cuántas copias hay en total?",
+    "options": [
+      {
+        "en": "7",
+        "es": "7"
+      },
+      {
+        "en": "21",
+        "es": "21"
+      },
+      {
+        "en": "3",
+        "es": "3"
+      }
+    ],
+    "answer": 0,
+    "explain_en": "Resizes happen at sizes 1, 2 and 4: 1 + 2 + 4 = 7 copies. With 7 writes that is 14 writes for 7 appends, 2 per append.",
+    "explain_es": "Hay redimensiones con tamaño 1, 2 y 4: 1 + 2 + 4 = 7 copias. Con 7 escrituras son 14 escrituras para 7 inserciones, 2 por inserción."
+  },
+  {
+    "prompt_en": "What if the array grew by one slot each time it was full, instead of doubling?",
+    "prompt_es": "¿Y si el arreglo creciera un hueco cada vez que se llena, en lugar de doblarse?",
+    "options": [
+      {
+        "en": "Appends would still be O(1) amortised",
+        "es": "Las inserciones seguirían siendo O(1) amortizado"
+      },
+      {
+        "en": "Every append would copy everything: O(n²) in total",
+        "es": "Cada inserción lo copiaría todo: O(n²) en total"
+      }
+    ],
+    "answer": 1,
+    "explain_en": "Each append would be a resize, copying 1 + 2 + … + (n − 1) values. Only growth by a factor spreads the copies thinly enough.",
+    "explain_es": "Cada inserción sería una redimensión, con 1 + 2 + … + (n − 1) valores copiados. Solo crecer por un factor reparte las copias lo bastante."
+  }
+]

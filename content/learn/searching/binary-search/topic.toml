@@ -1,0 +1,28 @@
+id = "binary-search"
+subject = "searching"
+order = 2
+title = "Binary search"
+title_es = "Búsqueda binaria"
+tags = ["binary-search", "sorted-input"]
+problems = ["rotated-shelf", "seat-map-lookup", "highest-peak"]
+presets = ["random", "few-unique"]
+default = [55, 3, 9, 10, 21, 27, 38, 43, 55, 64, 82]
+
+[complexity]
+best = "O(1)"
+average = "O(log n)"
+worst = "O(log n)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 17
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = [binary_search(a[1:], a[0])]"
+typescript = "a = [binarySearch(a.slice(1), a[0])]"
