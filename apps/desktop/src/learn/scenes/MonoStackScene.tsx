@@ -12,7 +12,7 @@ export function MonoStackScene(props: SceneProps) {
   const { t } = useTranslation();
   const tr = useTransitions(props.instant);
   const entries = props.step.stack ?? [];
-  const depth = Math.max(4, props.step.items.length);
+  const depth = Math.max(2, props.step.stackDepth ?? props.step.items.length);
   const height = stackHeight(depth);
   return (
     <div className="flex w-full items-start gap-4" data-testid="monostack-scene">

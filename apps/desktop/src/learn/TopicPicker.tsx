@@ -53,7 +53,7 @@ export function TopicPicker({
                   )}
                 >
                   <span>{s.name}</span>
-                  <span className="text-xs font-normal text-muted-foreground">
+                  <span className="flex-none whitespace-nowrap text-xs font-normal text-muted-foreground">
                     {s.topics.filter((tp) => viewed.includes(tp.id)).length} / {s.topics.length}
                   </span>
                 </Link>

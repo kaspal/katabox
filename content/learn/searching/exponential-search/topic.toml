@@ -1,0 +1,28 @@
+id = "exponential-search"
+subject = "searching"
+order = 5
+title = "Exponential search"
+title_es = "Búsqueda exponencial"
+tags = ["binary-search", "sorted-input"]
+problems = []
+presets = ["random", "few-unique"]
+default = [21, 3, 9, 10, 21, 27, 38, 43, 55, 64, 82, 88, 91]
+
+[complexity]
+best = "O(1)"
+average = "O(log i)"
+worst = "O(log n)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 17
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = [exponential_search(a[1:], a[0])]"
+typescript = "a = [exponentialSearch(a.slice(1), a[0])]"

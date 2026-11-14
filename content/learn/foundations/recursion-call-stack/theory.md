@@ -36,4 +36,4 @@ Recursion fits problems that split into smaller copies of themselves: ranges cut
 - [Quick Sort](learn:sorting/quick-sort): split a range and recurse on both sides.
 - [Big-O growth curves](learn:foundations/big-o-growth): where `log n` comes from.
 - [Merge Sort](learn:sorting/merge-sort): the same halving split, merging instead of adding.
-- Binary search (coming soon): halving, but only one side is visited.
+- [Binary search](learn:searching/binary-search): halving, but only one side is visited.

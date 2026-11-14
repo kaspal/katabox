@@ -35,4 +35,4 @@ Para encontrar el k-ésimo menor valor no hace falta ordenarlo todo. La selecci�
 
 - [Ordenación rápida](learn:sorting/quick-sort): la misma partición, recurriendo en los dos lados.
 - [Ordenación rápida: Hoare y en tres partes](learn:sorting/quick-sort-3way): otras particiones que también sirven aquí.
-- Búsqueda binaria (próximamente): también descarta un lado en cada paso.
+- [Búsqueda binaria](learn:searching/binary-search): también descarta un lado en cada paso.

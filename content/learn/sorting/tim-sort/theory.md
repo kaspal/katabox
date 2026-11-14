@@ -43,4 +43,4 @@ You rarely write Tim sort yourself: it is what your language's library sort alre
 
 - [Insertion Sort](learn:sorting/insertion-sort): builds the runs.
 - [Merge Sort](learn:sorting/merge-sort): the same `merge`.
-- Binary search (coming soon): what galloping uses.
+- [Binary search](learn:searching/binary-search): what galloping uses.

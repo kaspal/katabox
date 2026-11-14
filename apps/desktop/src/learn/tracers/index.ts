@@ -10,6 +10,14 @@ import { prefixSums } from "./prefix-sums";
 import { quickSort } from "./quick-sort";
 import { recursionCallStack } from "./recursion-call-stack";
 import { towersOfHanoi } from "./towers-of-hanoi";
+import { linearSearch } from "./linear-search";
+import { binarySearch } from "./binary-search";
+import { lowerUpperBound } from "./lower-upper-bound";
+import { binarySearchAnswer } from "./binary-search-answer";
+import { exponentialSearch } from "./exponential-search";
+import { twoPointers } from "./two-pointers";
+import { slidingWindow } from "./sliding-window";
+import { monotonicStack } from "./monotonic-stack";
 import { selectionSort } from "./selection-sort";
 import { shellSort } from "./shell-sort";
 import { mergeSort } from "./merge-sort";
@@ -41,4 +49,12 @@ export const TRACERS: Record<string, TracerDef> = {
   "bucket-sort": bucketSort,
   "tim-sort": timSort,
   "quickselect": quickselect,
+  "linear-search": linearSearch,
+  "binary-search": binarySearch,
+  "lower-upper-bound": lowerUpperBound,
+  "binary-search-answer": binarySearchAnswer,
+  "exponential-search": exponentialSearch,
+  "two-pointers": twoPointers,
+  "sliding-window": slidingWindow,
+  "monotonic-stack": monotonicStack,
 };

@@ -36,4 +36,4 @@ La recursión encaja con problemas que se dividen en copias más pequeñas de s�
 - [Ordenación rápida](learn:sorting/quick-sort): divide un tramo y recurre en los dos lados.
 - [Curvas de crecimiento Big-O](learn:foundations/big-o-growth): de dónde sale `log n`.
 - [Ordenación por mezcla](learn:sorting/merge-sort): la misma división por la mitad, mezclando en lugar de sumar.
-- Búsqueda binaria (próximamente): dividir por la mitad, pero visitando solo un lado.
+- [Búsqueda binaria](learn:searching/binary-search): dividir por la mitad, pero visitando solo un lado.

@@ -35,4 +35,4 @@ Use it for a median, a percentile, or the k-th largest score. For a single query
 
 - [Quick Sort](learn:sorting/quick-sort): the same partition, recursing into both sides.
 - [Quick Sort: Hoare and 3-way](learn:sorting/quick-sort-3way): other partitions that work here too.
-- Binary search (coming soon): it also throws away one side at every step.
+- [Binary search](learn:searching/binary-search): it also throws away one side at every step.

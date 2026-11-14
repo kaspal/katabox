@@ -45,6 +45,76 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
   "bucket-sort": sorted,
   "tim-sort": sorted,
   quickselect: ([k, ...values]) => [sorted(values)[k! - 1]!],
+  "linear-search": ([t, ...a]) => [a.indexOf(t!)],
+  "binary-search": ([t, ...a]) => {
+    let lo = 0;
+    let hi = a.length - 1;
+    while (lo <= hi) {
+      const m = (lo + hi) >> 1;
+      if (a[m] === t) return [m];
+      if (a[m]! < t!) lo = m + 1;
+      else hi = m - 1;
+    }
+    return [-1];
+  },
+  "lower-upper-bound": ([t, ...a]) => [a.filter((v) => v < t!).length, a.filter((v) => v <= t!).length],
+  "binary-search-answer": ([days, ...w]) => {
+    // The first capacity that fits, by trying every one in turn.
+    const need = (c: number) => {
+      let d = 1;
+      let load = 0;
+      for (const x of w) {
+        if (load + x > c) {
+          d++;
+          load = 0;
+        }
+        load += x;
+      }
+      return d;
+    };
+    for (let c = Math.max(...w); ; c++) if (need(c) <= days!) return [c];
+  },
+  "exponential-search": ([t, ...a]) => {
+    if (a[0] === t) return [0];
+    let bound = 1;
+    while (bound < a.length && a[bound]! < t!) bound *= 2;
+    for (let lo = bound >> 1, hi = Math.min(bound, a.length - 1); lo <= hi; ) {
+      const m = (lo + hi) >> 1;
+      if (a[m] === t) return [m];
+      if (a[m]! < t!) lo = m + 1;
+      else hi = m - 1;
+    }
+    return [-1];
+  },
+  "two-pointers": ([t, ...a]) => {
+    for (let i = 0, j = a.length - 1; i < j; ) {
+      const s = a[i]! + a[j]!;
+      if (s === t) return [i, j];
+      if (s < t!) i++;
+      else j--;
+    }
+    return [-1, -1];
+  },
+  "sliding-window": ([limit, ...a]) => {
+    // Every window, by brute force: for each end, the longest window that fits; ties keep
+    // the earlier window, as the sample does (it only takes strictly longer ones).
+    let best = 0;
+    let start = 0;
+    for (let hi = 0; hi < a.length; hi++) {
+      for (let lo = 0; lo <= hi; lo++) {
+        const sum = a.slice(lo, hi + 1).reduce((x, y) => x + y, 0);
+        if (sum <= limit!) {
+          if (hi - lo + 1 > best) {
+            best = hi - lo + 1;
+            start = lo;
+          }
+          break;
+        }
+      }
+    }
+    return [best, start];
+  },
+  "monotonic-stack": (a) => a.map((v, i) => a.slice(i + 1).find((x) => x > v) ?? -1),
 };
 
 /** Hand-checked golden runs: the input, then the marker behind each step and its line in
@@ -57,6 +127,54 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  "linear-search": {
+    input: [5, 3, 5, 1],
+    markers: [null, "check", "check", "found"],
+    py: [null, 3, 3, 4],
+    ts: [null, 3, 3, 4],
+  },
+  "binary-search": {
+    input: [5, 1, 3, 5, 7],
+    markers: [null, "mid", "compare", "mid", "found"],
+    py: [null, 4, 7, 4, 6],
+    ts: [null, 5, 9, 5, 7],
+  },
+  "lower-upper-bound": {
+    input: [3, 1, 3, 3, 5],
+    markers: [null, "lower", "lower", "lower", "lower-done", "upper", "upper", "upper-done", null],
+    py: [null, 5, 5, 5, 9, 16, 16, 20, null],
+    ts: [null, 6, 6, 6, 12, 20, 20, 26, null],
+  },
+  "binary-search-answer": {
+    input: [2, 3, 1, 2],
+    markers: [null, "try", "check", "try", "check", "answer"],
+    py: [null, 14, 15, 14, 15, 19],
+    ts: [null, 18, 19, 18, 19, 25],
+  },
+  "exponential-search": {
+    input: [5, 1, 3, 5, 7, 9],
+    markers: [null, "first", "double", "double", "range", "mid", "compare", "mid", "found"],
+    py: [null, 2, 5, 5, 7, 9, 12, 9, 11],
+    ts: [null, 2, 4, 4, 7, 10, 14, 10, 12],
+  },
+  "two-pointers": {
+    input: [10, 1, 3, 5, 7],
+    markers: [null, "sum", "move", "sum", "found"],
+    py: [null, 4, 7, 4, 6],
+    ts: [null, 5, 9, 5, 7],
+  },
+  "sliding-window": {
+    input: [6, 4, 3, 2],
+    markers: [null, "grow", "check", "grow", "shrink", "check", "grow", "check", null],
+    py: [null, 5, 9, 5, 7, 9, 5, 9, null],
+    ts: [null, 7, 12, 7, 9, 12, 7, 12, null],
+  },
+  "monotonic-stack": {
+    input: [2, 1, 3],
+    markers: [null, "push", "compare", "push", "compare", "pop", "compare", "pop", "push", null],
+    py: [null, 7, 5, 7, 5, 6, 5, 6, 7, null],
+    ts: [null, 8, 5, 8, 5, 6, 5, 6, 8, null],
+  },
   "selection-sort": {
     input: [3, 1, 2],
     markers: [null, "start", "compare", "new-min", "compare", "swap", "start", "compare", "new-min", "swap", null],

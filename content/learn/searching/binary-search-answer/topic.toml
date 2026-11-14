@@ -1,0 +1,28 @@
+id = "binary-search-answer"
+subject = "searching"
+order = 4
+title = "Binary search on the answer"
+title_es = "Búsqueda binaria sobre la respuesta"
+tags = ["search-on-answer", "binary-search"]
+problems = ["print-shop-speed", "ribbon-cutter"]
+presets = ["random", "few-unique"]
+default = [3, 7, 2, 9, 4, 6, 8, 3, 5]
+
+[complexity]
+best = "O(n log S)"
+average = "O(n log S)"
+worst = "O(n log S)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 13
+min = 1
+max = 20
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = [min_capacity(a[1:], a[0])]"
+typescript = "a = [minCapacity(a.slice(1), a[0])]"

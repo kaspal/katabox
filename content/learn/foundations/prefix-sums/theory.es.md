@@ -33,4 +33,4 @@ Usa sumas prefijas siempre que un arreglo no cambie y necesites muchas sumas de 
 - [Curvas de crecimiento Big-O](learn:foundations/big-o-growth): `q` consultas cuestan `O(n + q)` en lugar de `O(n · q)`.
 - [Manipulación de bits: lo básico](learn:foundations/bit-manipulation): los prefijos con XOR funcionan igual.
 - Árbol de Fenwick (próximamente): sumas prefijas que además admiten cambios.
-- Ventana deslizante (próximamente).
+- [Ventana deslizante](learn:searching/sliding-window): un tramo que se mueve y cuya suma se mantiene al día.

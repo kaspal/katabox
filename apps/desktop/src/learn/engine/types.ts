@@ -99,6 +99,8 @@ export type SceneData = {
   hidden?: number[];
   /** Buckets scene: the most values any bucket holds during the trace (fixed height). */
   bucketDepth?: number;
+  /** Stack scenes: the deepest the stack gets during the trace (fixed height). */
+  stackDepth?: number;
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
    * not the final row). cases.json `output` comes from here, so it is the tracer's own. */
   result?: number[];

@@ -43,4 +43,4 @@ Rara vez escribirás Tim sort tú mismo: es lo que ya hace la ordenación de la 
 
 - [Ordenación por inserción](learn:sorting/insertion-sort): construye los tramos.
 - [Ordenación por mezcla](learn:sorting/merge-sort): el mismo `merge`.
-- Búsqueda binaria (próximamente): la que usa el galope.
+- [Búsqueda binaria](learn:searching/binary-search): la que usa el galope.

@@ -1,0 +1,28 @@
+id = "lower-upper-bound"
+subject = "searching"
+order = 3
+title = "Lower and upper bound"
+title_es = "Cota inferior y superior"
+tags = ["binary-search", "sorted-input"]
+problems = ["shelf-codes", "score-ranks"]
+presets = ["few-unique", "random"]
+default = [27, 9, 10, 27, 27, 27, 38, 43, 55, 64]
+
+[complexity]
+best = "O(log n)"
+average = "O(log n)"
+worst = "O(log n)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 17
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = [lower_bound(a[1:], a[0]), upper_bound(a[1:], a[0])]"
+typescript = "a = [lowerBound(a.slice(1), a[0]), upperBound(a.slice(1), a[0])]"

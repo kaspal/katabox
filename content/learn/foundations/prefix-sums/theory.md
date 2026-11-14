@@ -33,4 +33,4 @@ Use prefix sums whenever an array stays fixed and you need many range sums: tota
 - [Big-O growth curves](learn:foundations/big-o-growth): `q` queries cost `O(n + q)` instead of `O(n · q)`.
 - [Bit manipulation basics](learn:foundations/bit-manipulation): XOR prefixes work the same way.
 - Fenwick tree (coming soon): prefix sums that also allow updates.
-- Sliding window (coming soon).
+- [Sliding window](learn:searching/sliding-window): a moving range whose sum is kept up to date instead.

@@ -1,0 +1,28 @@
+id = "two-pointers"
+subject = "searching"
+order = 6
+title = "Two pointers"
+title_es = "Dos punteros"
+tags = ["two-pointers", "sorted-input"]
+problems = ["budget-pair", "gift-trio", "ferry-trips"]
+presets = ["random", "few-unique"]
+default = [40, 3, 8, 12, 15, 21, 25, 29, 33, 41]
+
+[complexity]
+best = "O(1)"
+average = "O(n)"
+worst = "O(n)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 17
+min = 1
+max = 60
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = pair_with_sum(a[1:], a[0])"
+typescript = "a = pairWithSum(a.slice(1), a[0])"

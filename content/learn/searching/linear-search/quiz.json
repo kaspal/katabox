@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Target 55 in [38, 27, 43, 3, 9, 82, 10, 55, 21, 64]. How many values does the search check?",
+    "prompt_es": "Objetivo 55 en [38, 27, 43, 3, 9, 82, 10, 55, 21, 64]. ¿Cuántos valores comprueba la búsqueda?",
+    "options": [
+      { "en": "7", "es": "7" },
+      { "en": "10", "es": "10" },
+      { "en": "8", "es": "8" }
+    ],
+    "answer": 2,
+    "explain_en": "55 sits at position 7, so positions 0 to 7 are checked: 8 values. The search stops there and never looks at 21 or 64.",
+    "explain_es": "55 está en la posición 7, así que se comprueban las posiciones 0 a 7: 8 valores. La búsqueda para ahí y nunca mira 21 ni 64."
+  },
+  {
+    "prompt_en": "The target appears at positions 2 and 6. What does the sample return?",
+    "prompt_es": "El objetivo aparece en las posiciones 2 y 6. ¿Qué devuelve el ejemplo?",
+    "options": [
+      { "en": "2", "es": "2" },
+      { "en": "6", "es": "6" },
+      { "en": "-1", "es": "-1" }
+    ],
+    "answer": 0,
+    "explain_en": "It returns as soon as a value matches, so the first copy, at position 2, wins.",
+    "explain_es": "Devuelve en cuanto un valor coincide, así que gana la primera copia, la de la posición 2."
+  },
+  {
+    "prompt_en": "The target is not in an array of n values. How many checks are made?",
+    "prompt_es": "El objetivo no está en un arreglo de n valores. ¿Cuántas comprobaciones se hacen?",
+    "options": [
+      { "en": "About n / 2", "es": "Unas n / 2" },
+      { "en": "All n", "es": "Las n" },
+      { "en": "About log n", "es": "Unas log n" }
+    ],
+    "answer": 1,
+    "explain_en": "Without order, no check rules out any other value, so the search can only say -1 after looking at every position.",
+    "explain_es": "Sin orden, ninguna comprobación descarta otros valores, así que la búsqueda solo puede decir -1 después de mirar todas las posiciones."
+  }
+]
