@@ -215,6 +215,17 @@ impl App {
         self.ensure_interview_language(&start.problem, start.language)
             .await?;
         let problem = self.problem(&start.problem).await?;
+        if problem.mode == kb_core::ProblemMode::Program
+            && !kb_judge::debug::program_supported(start.language)
+        {
+            return Err(AppError::new(
+                AppErrorCode::DebugUnsupported,
+                format!(
+                    "program problems cannot be debugged in {} yet",
+                    start.language
+                ),
+            ));
+        }
         kb_judge::check_input(&start.input, &problem.signature)
             .map_err(|e| AppError::new(AppErrorCode::InvalidInput, e))?;
         let env = self.env();

@@ -1,0 +1,13 @@
+id = "meter-readings"
+title = "Meter Readings"
+title_es = "Lecturas del caudalímetro"
+difficulty = "easy"
+tags = ["input-parsing", "array"]
+pattern = "fundamentals"
+rank = 8
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

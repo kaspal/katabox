@@ -93,6 +93,23 @@ These shapes stand in for structures that have no type:
 - **Backtracking:** return a count or one canonical answer with an exact tie rule
   (`outfit-picker`, `postage-stamps`), so outputs stay small and checkable with `exact`.
 
+## Program problems (ADR 0028)
+
+A **program problem** is solved by a whole program that reads standard input and writes standard output (HackerRank style), instead of a function the harness calls. It lives in a normal pattern; the UI shows a "Program · stdin/stdout" badge.
+
+- `problem.toml`: `mode = "program"` (top level), **no `[signature]`**, and a text checker:
+  - `checker = "tokens"` (the default choice): whitespace-separated tokens must be equal, so spacing and blank lines do not matter;
+  - `checker = "tokens-float:1e-6"`: the same, numeric tokens within that absolute or relative tolerance;
+  - `checker = "lines"`: lines must be equal after trailing spaces and tabs are removed; trailing empty lines do not count.
+  CRLF is the same as LF for every text checker. `time_limit_ms` is the base for **each test's run** (each test starts the program again).
+- Tests: `tests/{public,hidden}/*.json` as `{"stdin": "...", "stdout": "..."}`. Keep 3-5 public (the examples) and 15-20 hidden: every test pays the runtime's start-up.
+- Statements: `## Input format` and `## Output format` sections (Spanish: `## Formato de entrada`, `## Formato de salida`), then `### Example N` (`### Ejemplo N`) sections, each with **two code fences**: the input, then the output. kb-pack checks that example N equals public test N (up to the final newline), in both languages.
+- Every integer token in stdin and stdout stays within ±(2⁵³ − 1) (kb-pack checks it): a TypeScript solution reads numbers with `Number`. Modular answers use p = 1 000 003 so products stay exact.
+- Scripts: `gen.py`'s `generate(seed, size)` returns the stdin **text**; `validate.py`'s `validate(text)` gets the text and returns the broken constraint or `None`. `brute.py`, `naive.py`, `naive.rs` and the references are programs.
+- References read all of stdin at once (`sys.stdin.buffer.read()`, `readFileSync(0)`, `stream_get_contents(STDIN)`, `read_to_string`) and write the output once (Rust: a `BufWriter`). Standard library only.
+- `validate --run` judges speed by the **slowest test's** CPU (each test is its own run). The complexity profiler is not available for program problems yet (`profile = true` is refused).
+- The model package is `content/problems/ticket-tally/`.
+
 ## Time limit (ADR 0017)
 
 `[judge] time_limit_ms` is the **base limit**: CPU time for the whole batch of tests in

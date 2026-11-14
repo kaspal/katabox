@@ -1,7 +1,7 @@
 // Semantic badges (ADR 0012): color is always paired with an icon and a text label.
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, CircleDashed, CircleDot } from "lucide-react";
-import type { Difficulty, ProblemStatus } from "@/bindings";
+import { CheckCircle2, CircleDashed, CircleDot, SquareTerminal } from "lucide-react";
+import type { Difficulty, ProblemMode, ProblemStatus } from "@/bindings";
 import { cn } from "@/lib/utils";
 
 const DIFFICULTY = {
@@ -43,6 +43,31 @@ export function DifficultyLabel({
     <span className={cn("inline-flex items-center gap-1 font-medium", d.className, className)}>
       <DifficultyBars filled={d.bars} />
       {t(`difficulty.${difficulty}`)}
+    </span>
+  );
+}
+
+/** "Program · stdin/stdout" for a program problem (ADR 0028); nothing for a function. An
+ * icon and text, no colour of its own. `compact` shows the short word. */
+export function ModeLabel({
+  mode,
+  compact,
+  className,
+}: {
+  mode: ProblemMode;
+  compact?: boolean;
+  className?: string;
+}) {
+  const { t } = useTranslation();
+  if (mode !== "program") return null;
+  return (
+    <span
+      className={cn("inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground", className)}
+      data-testid="mode-label"
+      title={t("mode.badge")}
+    >
+      <SquareTerminal aria-hidden className="size-3.5" />
+      {compact ? t("mode.program") : t("mode.badge")}
     </span>
   );
 }

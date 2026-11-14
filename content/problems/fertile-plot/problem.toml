@@ -1,0 +1,13 @@
+id = "fertile-plot"
+title = "Fertile Plot"
+title_es = "La parcela fértil"
+difficulty = "hard"
+tags = ["dynamic-programming", "matrix", "prefix-sum"]
+pattern = "dynamic-programming"
+rank = 9
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

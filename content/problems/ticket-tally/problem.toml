@@ -1,0 +1,13 @@
+id = "ticket-tally"
+title = "Ticket Tally"
+title_es = "Recuento de billetes"
+difficulty = "easy"
+tags = ["input-parsing", "array"]
+pattern = "fundamentals"
+rank = 7
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

@@ -117,9 +117,12 @@ pub struct Finding {
 
 /// The sandbox environment for a root (made absolute).
 pub fn env_for(root: &Path) -> Result<JudgeEnv, String> {
-    std::path::absolute(root)
+    let mut env = std::path::absolute(root)
         .map(JudgeEnv::dev)
-        .map_err(|e| format!("{}: {e}", root.display()))
+        .map_err(|e| format!("{}: {e}", root.display()))?;
+    // Expected outputs and stress comparisons need a program's whole stdout (ADR 0028).
+    env.full_program_output = true;
+    Ok(env)
 }
 
 /// Run every sandbox check on one problem folder.
@@ -205,15 +208,16 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
             }
         };
         match kb_judge::judge(&problem, &problem.tests, lang, &src, env) {
-            Ok(r) if r.verdict.is_accepted() && r.cpu_us <= budget_us => {
+            Ok(r) if r.verdict.is_accepted() && limited_cpu(&problem, &r) <= budget_us => {
                 add(
                     Check::Reference(lang),
                     true,
                     format!(
-                        "AC {}/{} tests, {} ms CPU of {} ms allowed ({SPEED_SHARE}% of {cap_ms} ms); tests {} ms",
+                        "AC {}/{} tests, {} ms CPU{} of {} ms allowed ({SPEED_SHARE}% of {cap_ms} ms); tests {} ms",
                         r.total_tests,
                         r.total_tests,
-                        ms(r.cpu_us),
+                        ms(limited_cpu(&problem, &r)),
+                        per_test(&problem),
                         ms(budget_us),
                         ms(r.time_us)
                     ),
@@ -223,8 +227,9 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                 Check::Reference(lang),
                 false,
                 format!(
-                    "too slow: {} ms CPU, over {SPEED_SHARE}% of the {cap_ms} ms {} budget ({} ms); tests {} ms",
-                    ms(r.cpu_us),
+                    "too slow: {} ms CPU{}, over {SPEED_SHARE}% of the {cap_ms} ms {} budget ({} ms); tests {} ms",
+                    ms(limited_cpu(&problem, &r)),
+                    per_test(&problem),
                     lang.id(),
                     ms(budget_us),
                     ms(r.time_us)
@@ -287,7 +292,7 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                             naive_margin(&name, None, cap)
                         }
                         Ok(r) if r.verdict.is_accepted() => {
-                            naive_margin(&name, Some(ms(r.cpu_us)), cap)
+                            naive_margin(&name, Some(ms(limited_cpu(&problem, &r))), cap)
                         }
                         Ok(r) => (
                             false,
@@ -347,6 +352,24 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
 }
 
 /// Microseconds as whole milliseconds, for messages.
+/// The CPU the time limit measures: the whole run for a function problem, the slowest
+/// test's run for a program problem (one run per test; ADR 0028).
+fn limited_cpu(problem: &kb_judge::Problem, r: &kb_judge::Report) -> u64 {
+    if problem.mode == kb_core::ProblemMode::Program {
+        r.tests.iter().map(|t| t.result.time_us).max().unwrap_or(0)
+    } else {
+        r.cpu_us
+    }
+}
+
+fn per_test(problem: &kb_judge::Problem) -> &'static str {
+    if problem.mode == kb_core::ProblemMode::Program {
+        " (slowest test)"
+    } else {
+        ""
+    }
+}
+
 fn ms(us: u64) -> u64 {
     us / 1000
 }
@@ -548,8 +571,19 @@ pub fn generate_tests(
             return Err(format!("{} exists; pick another --from", path.display()));
         }
         let mut obj = Map::new();
-        obj.insert("input".into(), Value::Object(t.input.clone()));
-        obj.insert("output".into(), out);
+        if problem.mode == kb_core::ProblemMode::Program {
+            // A program problem's test file is {"stdin", "stdout"} (ADR 0028).
+            let stdin = t
+                .input
+                .get(kb_judge::problem::STDIN_PARAM)
+                .cloned()
+                .unwrap_or_default();
+            obj.insert("stdin".into(), stdin);
+            obj.insert("stdout".into(), out);
+        } else {
+            obj.insert("input".into(), Value::Object(t.input.clone()));
+            obj.insert("output".into(), out);
+        }
         let text = serde_json::to_string(&Value::Object(obj)).map_err(|e| e.to_string())?;
         fs::write(&path, text + "\n").map_err(|e| e.to_string())?;
         written.push(path);

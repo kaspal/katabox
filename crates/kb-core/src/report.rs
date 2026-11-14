@@ -24,10 +24,15 @@ pub struct TestCase {
 pub struct TestOutcome {
     #[serde(flatten)]
     pub result: TestResult,
-    /// What the function returned, when it returned.
+    /// What the function returned, when it returned. For a program problem (ADR 0028):
+    /// its stdout as a JSON string (capped for storage).
     pub actual: Option<Value>,
-    /// The user's prints during this test (stdout and stderr, capped).
+    /// The user's prints during this test (stdout and stderr, capped). For a program
+    /// problem: its stdout, the same text as `actual` (capped).
     pub stdout: String,
+    /// A program problem's stderr, kept apart from its answer (capped; ADR 0028).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stderr: Option<String>,
 }
 
 /// Details of the first test that did not pass. For hidden tests this is the only one
@@ -43,6 +48,9 @@ pub struct Failure {
     pub actual: Option<Value>,
     pub message: Option<Message>,
     pub stdout: String,
+    /// A program problem's stderr (ADR 0028).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stderr: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -88,6 +96,7 @@ impl Report {
             if t.result.kind == TestKind::Hidden {
                 t.actual = None;
                 t.stdout.clear();
+                t.stderr = None;
             }
         }
     }
@@ -137,6 +146,7 @@ mod tests {
                 },
                 actual: Some(json!([1])),
                 stdout: "p".into(),
+                stderr: None,
             }],
             total_tests: 2,
             first_failure: Some(Failure {
@@ -148,6 +158,7 @@ mod tests {
                 actual: Some(json!([1])),
                 message: None,
                 stdout: String::new(),
+                stderr: None,
             }),
             compile_output: None,
             time_us: 5,
@@ -199,6 +210,7 @@ mod tests {
             },
             actual: Some(json!(1)),
             stdout: "x".into(),
+            stderr: Some("e".into()),
         };
         let mut r = Report {
             verdict: Verdict::Accepted,
@@ -216,6 +228,8 @@ mod tests {
         assert_eq!(r.tests[0].stdout, "x");
         assert_eq!(r.tests[1].actual, None);
         assert_eq!(r.tests[1].stdout, "");
+        assert_eq!(r.tests[1].stderr, None);
+        assert_eq!(r.tests[0].stderr.as_deref(), Some("e"));
         assert_eq!(r.tests[1].result.verdict, Verdict::Accepted);
     }
 

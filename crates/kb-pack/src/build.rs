@@ -94,7 +94,16 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         } else {
             None
         },
-        signature: serde_json::to_value(&meta.signature).map_err(|e| at(e.to_string()))?,
+        mode: meta.mode,
+        // A program problem stores its synthetic signature (ADR 0028).
+        signature: match &meta.signature {
+            Some(sig) => serde_json::to_value(sig).map_err(|e| at(e.to_string()))?,
+            None => serde_json::json!({
+                "name": "main",
+                "params": [{"name": kb_judge::problem::STDIN_PARAM, "type": "string"}],
+                "returns": "string",
+            }),
+        },
         checker: meta.judge.checker,
         time_limit_ms: meta.judge.time_limit_ms,
         memory_mb: meta.judge.memory_mb,

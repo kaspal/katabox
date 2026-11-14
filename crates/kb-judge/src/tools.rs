@@ -127,15 +127,20 @@ def load(name):
     return module
 
 request = json.loads(sys.stdin.read())
+
+def as_input(inp, call):
+    # A program problem's generator returns the stdin text (ADR 0028).
+    if isinstance(inp, str):
+        return {"stdin": inp}
+    if not isinstance(inp, dict):
+        raise TypeError(f"{call} returned {type(inp).__name__}, not a dict (or the stdin text)")
+    return inp
 "#;
 
 const GEN_DRIVER: &str = r#"gen = load("gen")
 out = []
 for seed in request["seeds"]:
-    inp = gen.generate(seed, request["size"])
-    if not isinstance(inp, dict):
-        raise TypeError(f"generate({seed}, ...) returned {type(inp).__name__}, not a dict")
-    out.append(inp)
+    out.append(as_input(gen.generate(seed, request["size"]), f"generate({seed}, ...)"))
 sys.stdout.write(json.dumps(out, allow_nan=False))
 sys.stdout.flush()
 "#;
@@ -143,10 +148,7 @@ sys.stdout.flush()
 const SIZED_DRIVER: &str = r#"gen = load("gen")
 out = []
 for n in request["sizes"]:
-    inp = gen.generate(request["seed"], n)
-    if not isinstance(inp, dict):
-        raise TypeError(f"generate(seed, {n}) returned {type(inp).__name__}, not a dict")
-    out.append(inp)
+    out.append(as_input(gen.generate(request["seed"], n), f"generate(seed, {n})"))
 sys.stdout.write(json.dumps(out, allow_nan=False))
 sys.stdout.flush()
 "#;
@@ -154,6 +156,9 @@ sys.stdout.flush()
 const VALIDATE_DRIVER: &str = r#"validate = load("validate")
 out = []
 for inp in request["inputs"]:
+    # A program problem's validator gets the stdin text (ADR 0028).
+    if list(inp) == ["stdin"] and isinstance(inp["stdin"], str):
+        inp = inp["stdin"]
     msg = validate.validate(inp)
     if msg is not None and not isinstance(msg, str):
         raise TypeError(f"validate(...) returned {type(msg).__name__}, not str or None")

@@ -3,10 +3,10 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useTranslation } from "react-i18next";
 import { ArrowDown, ArrowUp, Search, X } from "lucide-react";
-import type { Difficulty, ProblemSummary, StatusFilter } from "@/bindings";
+import type { Difficulty, ProblemMode, ProblemSummary, StatusFilter } from "@/bindings";
 import { Page } from "@/components/Page";
 import { ErrorNotice } from "@/components/ErrorNotice";
-import { DifficultyLabel, StatusIcon, usePatternLabel, useTagLabel } from "@/components/Semantic";
+import { DifficultyLabel, ModeLabel, StatusIcon, usePatternLabel, useTagLabel } from "@/components/Semantic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -77,6 +77,7 @@ export function Library() {
     status: search.status ?? null,
     pattern: search.pattern ?? null,
     tag: search.tag ?? null,
+    mode: search.mode ?? null,
     query: search.q ?? null,
   });
 
@@ -109,7 +110,7 @@ export function Library() {
   }, []);
 
   const hasFilters = Boolean(
-    search.q || search.difficulty || search.status || search.pattern || search.tag,
+    search.q || search.difficulty || search.status || search.pattern || search.tag || search.mode,
   );
   const clear = () => {
     setQuery("");
@@ -178,6 +179,21 @@ export function Library() {
           {(["easy", "medium", "hard"] as const).map((d) => (
             <ToggleGroupItem key={d} value={d} aria-label={t(`difficulty.${d}`)}>
               <DifficultyLabel difficulty={d} />
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="sm"
+          aria-label={t("mode.label")}
+          value={search.mode ?? ""}
+          onValueChange={(v) => setSearch({ mode: (v || undefined) as ProblemMode | undefined })}
+          data-testid="mode-filter"
+        >
+          {(["function", "program"] as const).map((m) => (
+            <ToggleGroupItem key={m} value={m} aria-label={t(`mode.${m}`)}>
+              {t(`mode.${m}`)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -417,8 +433,9 @@ function ProblemGrid({
                     <div role="gridcell">
                       <StatusIcon status={p.status} />
                     </div>
-                    <div role="gridcell" className="truncate font-medium">
-                      {p.title}
+                    <div role="gridcell" className="flex min-w-0 items-center gap-2 font-medium">
+                      <span className="truncate">{p.title}</span>
+                      <ModeLabel mode={p.mode} compact />
                     </div>
                     <div role="gridcell">
                       <DifficultyLabel difficulty={p.difficulty} />

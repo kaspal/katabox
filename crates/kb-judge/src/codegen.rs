@@ -18,6 +18,13 @@ pub fn starter_code(lang: Language, sig: &Signature) -> Result<String, JudgeErro
     render(def.stub_template, template_context(&def, sig))
 }
 
+/// Starter code for a program problem (ADR 0028): a whole program that reads all of
+/// stdin with the language's fast idiom and writes its answer to stdout once.
+pub fn program_starter(lang: Language) -> Result<String, JudgeError> {
+    let def = definition(lang)?;
+    render(def.program_template, context! {})
+}
+
 /// The function's declaration line in the starter code (`def two_sum(...) -> ...:`), which
 /// every reference solution must contain; the node definitions above it do not count.
 pub fn signature_line(lang: Language, sig: &Signature) -> Result<String, JudgeError> {
@@ -63,19 +70,22 @@ pub(crate) fn workspace_files(
 }
 
 /// Files for a debugger replay run (ADR 0022): the debug harness and the solution.
+/// `program`: the solution is a whole program (ADR 0028), traced from its first line.
 pub(crate) fn debug_files(
     def: &LanguageDef,
     sig: &Signature,
     source: &str,
+    program: bool,
 ) -> Result<Vec<(String, String)>, JudgeError> {
     let (_, template) = def
         .debug
         .as_ref()
         .ok_or(JudgeError::Unsupported(def.language))?;
+    let ctx = template_context(def, sig);
     let mut files = vec![
         (
             def.main_file(),
-            render(template, template_context(def, sig))?,
+            render(template, context! { program => program, ..ctx })?,
         ),
         (def.solution_file(), source.to_string()),
     ];
@@ -162,7 +172,7 @@ mod tests {
     #[test]
     fn typescript_debug_files() {
         let def = crate::languages::definition(Language::TypeScript).unwrap();
-        let files = debug_files(&def, &two_sum(), "export function twoSum() {}").unwrap();
+        let files = debug_files(&def, &two_sum(), "export function twoSum() {}", false).unwrap();
         let names: Vec<&str> = files.iter().map(|(n, _)| n.as_str()).collect();
         assert_eq!(names, ["main.ts", "solution.ts", "package.json"]);
         let harness = &files[0].1;

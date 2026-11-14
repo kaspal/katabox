@@ -1,0 +1,13 @@
+id = "signal-decodes"
+title = "Signal Decodes"
+title_es = "Lecturas de una señal"
+difficulty = "medium"
+tags = ["dynamic-programming", "string", "modular-arithmetic"]
+pattern = "dynamic-programming"
+rank = 5
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

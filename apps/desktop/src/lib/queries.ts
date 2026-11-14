@@ -11,6 +11,7 @@ export const EMPTY_FILTER: ProblemFilter = {
   pattern: null,
   status: null,
   query: null,
+  mode: null,
   lang: null,
 };
 

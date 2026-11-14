@@ -1,0 +1,1 @@
+{"stdin": "3\nwren, owl; jay: wren?\nowl\n", "stdout": "owl 2\nwren 2\njay 1\n"}

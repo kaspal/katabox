@@ -23,6 +23,7 @@ const ALL_PROBLEMS = {
   difficulty: null,
   tag: null,
   pattern: null,
+  mode: null,
   status: null,
   query: null,
   lang: null,

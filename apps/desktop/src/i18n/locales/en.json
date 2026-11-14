@@ -41,6 +41,12 @@
     "medium": "Medium",
     "hard": "Hard"
   },
+  "mode": {
+    "label": "Problem type",
+    "function": "Function",
+    "program": "Program",
+    "badge": "Program · stdin/stdout"
+  },
   "status": {
     "label": "Status",
     "any": "Any status",
@@ -92,6 +98,7 @@
       "bit-manipulation": "Bit manipulation",
       "bitmask": "Bitmask",
       "bridges": "Bridges",
+      "chinese-remainder": "Chinese remainder theorem",
       "combinatorics": "Combinatorics",
       "convex-hull": "Convex hull",
       "counting": "Counting",
@@ -111,6 +118,7 @@
       "greedy": "Greedy",
       "hash-map": "Hash map",
       "heap": "Heap",
+      "input-parsing": "Input parsing",
       "interval-dp": "Interval DP",
       "intervals": "Intervals",
       "kmp": "KMP",
@@ -136,6 +144,7 @@
       "simulation": "Simulation",
       "sliding-window": "Sliding window",
       "sorting": "Sorting",
+      "sparse-table": "Sparse table",
       "stack": "Stack",
       "string": "String",
       "string-matching": "String matching",
@@ -472,6 +481,16 @@
       "invalid": "Custom input {{index}} is not valid: {{message}}",
       "needsPython": "Custom inputs are checked against the problem's constraints only when Python is installed.",
       "installPython": "Install Python"
+    },
+    "program": {
+      "input": "Input (stdin)",
+      "expected": "Expected output",
+      "actual": "Your output",
+      "stderr": "Error output (stderr)",
+      "output": "Output",
+      "firstDiff": "first difference",
+      "missing": "(the output ends here)",
+      "timeNote": "Times include each run's start-up."
     }
   },
   "lsp": {
@@ -802,7 +821,8 @@
       },
       "changedCount_one": "{{count}} change",
       "changedCount_other": "{{count}} changes"
-    }
+    },
+    "programUnsupported": "Program problems can be debugged in Python for now."
   },
   "complexity": {
     "button": "Complexity",

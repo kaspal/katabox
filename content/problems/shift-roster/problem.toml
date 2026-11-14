@@ -1,0 +1,13 @@
+id = "shift-roster"
+title = "Shift Roster"
+title_es = "Registro de turnos"
+difficulty = "easy"
+tags = ["input-parsing", "array"]
+pattern = "fundamentals"
+rank = 8
+mode = "program"
+
+[judge]
+checker = "lines"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

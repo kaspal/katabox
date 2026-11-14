@@ -1213,6 +1213,7 @@ pub(crate) mod tests {
             },
             actual: Some(json!([0, 1])),
             stdout: String::new(),
+            stderr: None,
         };
         Report {
             verdict,
@@ -1227,6 +1228,7 @@ pub(crate) mod tests {
                 actual: Some(json!([1, 2])),
                 message: Some(Message::new(MessageCode::OutputMismatch, "x")),
                 stdout: String::new(),
+                stderr: None,
             }),
             compile_output: None,
             time_us: 240,

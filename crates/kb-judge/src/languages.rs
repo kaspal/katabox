@@ -23,6 +23,8 @@ pub struct LanguageDef {
     /// The language's time limit factor and startup allowance (ADR 0017).
     pub time: TimeDef,
     pub stub_template: &'static str,
+    /// The starter of a program problem (ADR 0028): a whole program reading stdin.
+    pub program_template: &'static str,
     pub harness_template: &'static str,
     /// The node types' JSON conversion code (ADR 0025), inserted into the harnesses of
     /// signatures that use `ListNode` or `TreeNode`.
@@ -135,6 +137,12 @@ pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
         ),
         Language::JavaScript => return Err(JudgeError::Unsupported(lang)),
     };
+    let program_template = match lang {
+        Language::Python => lang_file!("python", "program.py.j2"),
+        Language::TypeScript => lang_file!("typescript", "program.ts.j2"),
+        Language::Php => lang_file!("php", "program.php.j2"),
+        _ => lang_file!("rust", "program.rs.j2"),
+    };
     let json_code = match lang {
         Language::Rust => lang_file!("rust", "json.rs"),
         _ => "",
@@ -166,6 +174,7 @@ pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
         compile_limits: t.compile_limits,
         time: t.time,
         stub_template,
+        program_template,
         harness_template,
         nodes_code,
         json_code,
@@ -195,7 +204,15 @@ impl LanguageDef {
 
     /// Compiler (resolved inside `toolchain`) and arguments.
     pub fn compile_command(&self, toolchain: &Path) -> Result<(PathBuf, Vec<String>), JudgeError> {
-        self.expand(&self.compile, toolchain, 0, None)
+        self.expand(&self.compile, toolchain, 0, None, &self.main_file())
+    }
+
+    /// The compiler for a program problem (ADR 0028): the user's file is the program.
+    pub fn program_compile_command(
+        &self,
+        toolchain: &Path,
+    ) -> Result<(PathBuf, Vec<String>), JudgeError> {
+        self.expand(&self.compile, toolchain, 0, None, &self.solution_file())
     }
 
     /// Program and arguments for a debugger replay run (ADR 0022), if the language has one.
@@ -208,7 +225,7 @@ impl LanguageDef {
             .debug
             .as_ref()
             .ok_or(JudgeError::Unsupported(self.language))?;
-        self.expand(line, toolchain, memory_mb, None)
+        self.expand(line, toolchain, memory_mb, None, &self.main_file())
     }
 
     /// Program and arguments for one batch run. `binary` is the compiled program for
@@ -219,7 +236,24 @@ impl LanguageDef {
         memory_mb: u32,
         binary: Option<&Path>,
     ) -> Result<(PathBuf, Vec<String>), JudgeError> {
-        self.expand(&self.run, toolchain, memory_mb, binary)
+        self.expand(&self.run, toolchain, memory_mb, binary, &self.main_file())
+    }
+
+    /// Program and arguments for one test of a program problem (ADR 0028): the same run
+    /// line, started on the user's file instead of the harness.
+    pub fn program_command(
+        &self,
+        toolchain: &Path,
+        memory_mb: u32,
+        binary: Option<&Path>,
+    ) -> Result<(PathBuf, Vec<String>), JudgeError> {
+        self.expand(
+            &self.run,
+            toolchain,
+            memory_mb,
+            binary,
+            &self.solution_file(),
+        )
     }
 
     fn expand(
@@ -228,13 +262,13 @@ impl LanguageDef {
         toolchain: &Path,
         memory_mb: u32,
         binary: Option<&Path>,
+        main: &str,
     ) -> Result<(PathBuf, Vec<String>), JudgeError> {
-        let main = self.main_file();
         let out = self.binary_file();
         let tc = toolchain.to_string_lossy();
         // Split first, then substitute, so paths with spaces stay one argument.
         let mut words = line.split_whitespace().map(|w| {
-            w.replace("{main}", &main)
+            w.replace("{main}", main)
                 .replace("{binary}", &out)
                 .replace("{memory_mb}", &memory_mb.to_string())
                 .replace("{toolchain}", &tc)
@@ -256,7 +290,7 @@ impl LanguageDef {
 
 /// `python` -> `<toolchain>/python.exe` (or `bin/python.exe`, as for rustc) on Windows,
 /// `<toolchain>/bin/python` (or `bin/python3`) on Linux.
-fn resolve_program(toolchain: &Path, name: &str) -> Result<PathBuf, JudgeError> {
+pub(crate) fn resolve_program(toolchain: &Path, name: &str) -> Result<PathBuf, JudgeError> {
     let candidates: Vec<PathBuf> = if cfg!(windows) {
         vec![
             toolchain.join(format!("{name}.exe")),

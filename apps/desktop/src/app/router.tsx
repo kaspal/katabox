@@ -8,7 +8,7 @@ import {
   lazyRouteComponent,
   type RouterHistory,
 } from "@tanstack/react-router";
-import type { Difficulty, Language, StatusFilter } from "@/bindings";
+import type { Difficulty, Language, ProblemMode, StatusFilter } from "@/bindings";
 import { Shell } from "@/app/Shell";
 import { Home } from "@/pages/Home";
 import { Library } from "@/pages/Library";
@@ -26,6 +26,8 @@ export type LibrarySearch = {
   status?: StatusFilter;
   pattern?: string;
   tag?: string;
+  /** Function or program problems only (ADR 0028). */
+  mode?: ProblemMode;
   sort?: SortKey;
   desc?: boolean;
   /** The Lists tab (ADR 0019), and the open list. */
@@ -45,6 +47,7 @@ export function parseLibrarySearch(s: Record<string, unknown>): LibrarySearch {
     status: oneOf(s.status, ["todo", "attempted", "solved"] as const),
     pattern: text(s.pattern),
     tag: text(s.tag),
+    mode: oneOf(s.mode, ["function", "program"] as const),
     sort: oneOf(s.sort, SORT_KEYS),
     desc: s.desc === true || s.desc === "true" ? true : undefined,
     view: oneOf(s.view, ["lists"] as const),

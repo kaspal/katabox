@@ -1,0 +1,13 @@
+id = "tide-lows"
+title = "Tide Lows"
+title_es = "Mareas bajas"
+difficulty = "medium"
+tags = ["sparse-table", "array"]
+pattern = "range-queries"
+rank = 8
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

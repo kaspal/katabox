@@ -1,0 +1,13 @@
+// Program problem: this file is the whole program. Read the input from stdin and write
+// the answer to stdout; the judge compares stdout with the expected output.
+//
+// readFileSync(0) reads all of stdin at once, which is much faster than reading it line
+// by line on large inputs. Debug output must go to stderr (console.error): everything on
+// stdout counts as your answer.
+import { readFileSync } from "node:fs";
+
+const tokens = readFileSync(0, "utf8").split(/\s+/).filter((t) => t.length > 0);
+// Example: const n = Number(tokens[0]);
+const out: string[] = [];
+// Collect the answer lines in `out`, then write them once.
+process.stdout.write(out.join("\n") + "\n");

@@ -1,0 +1,5 @@
+Una línea sale en el minuto `t` exactamente cuando `t ≡ r (mod m)`. Avanzar minuto a minuto, o incluso salida a salida de la línea con el periodo más largo, puede costar aquí miles de millones de pasos: el mcm llega a 9·10¹⁵ y un periodo es como mucho 10⁶. ¿Se pueden sustituir dos congruencias por una sola del mismo tipo?
+---
+Supón que las líneas vistas hasta ahora salen todas en `t ≡ x (mod M)`, es decir, `t = x + M·k`. Una línea nueva exige `M·k ≡ r − x (mod m)`. Con `g = mcd(M, m)`, esto solo tiene solución si `g` divide a `r − x`; entonces `k` queda fijado módulo `m / g` mediante un inverso modular, que te da el algoritmo de Euclides extendido. No supongas que los `m` son coprimos.
+---
+Combina las líneas de una en una, guardando `(x, M)` con `0 ≤ x < M` y empezando en `(0, 1)`. Para cada línea: `g = mcd(M, m)`; si `g` no divide a `r − x`, la respuesta es `-1`. Si no, con `m' = m / g`, toma `k = ((r − x)/g mod m') · inverso(M/g mod m', m') mod m'`, y después `x ← x + M·k` y `M ← M·m'` (el mcm). La `x` final es la respuesta. El producto dentro de `k` no pasa de 10¹², y `M·k` no pasa del mcm ≤ 9·10¹⁵.

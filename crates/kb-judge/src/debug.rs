@@ -121,6 +121,11 @@ pub fn supported(lang: Language) -> bool {
     definition(lang).is_ok_and(|d| d.debug.is_some())
 }
 
+/// Whether `lang` can debug a program problem (ADR 0028): Python only for now.
+pub fn program_supported(lang: Language) -> bool {
+    lang == Language::Python
+}
+
 /// Record every step of one test (`input` is checked against the signature by the caller).
 pub fn trace(
     problem: &Problem,
@@ -200,8 +205,14 @@ fn run(
     if def.debug.is_none() {
         return Err(JudgeError::Unsupported(language));
     }
+    // A program problem (ADR 0028) is traced as a whole program, in Python only for now:
+    // TypeScript's module evaluation is asynchronous to the inspector (deferred).
+    let is_program = problem.mode == kb_core::ProblemMode::Program;
+    if is_program && !program_supported(language) {
+        return Err(JudgeError::Unsupported(language));
+    }
     let toolchain = env.toolchain(language)?;
-    let files = debug_files(&def, &problem.signature, source)?;
+    let files = debug_files(&def, &problem.signature, source, is_program)?;
     let (program, args) = def.debug_command(toolchain, problem.memory_mb)?;
 
     let mut limits = Limits::default_for(language);
@@ -214,6 +225,14 @@ fn run(
     let work = WorkDir::create(&env.runs_dir)?;
     for (name, contents) in &files {
         std::fs::write(work.path.join(name), contents)?;
+    }
+    if is_program {
+        // The harness puts this file on fd 0 for the program.
+        let stdin = request["input"][crate::problem::STDIN_PARAM]
+            .as_str()
+            .unwrap_or_default()
+            .to_string();
+        std::fs::write(work.path.join("stdin.txt"), stdin)?;
     }
     let nonce = new_nonce();
     request["nonce"] = Value::String(nonce.clone());

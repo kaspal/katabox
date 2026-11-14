@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use kb_core::{Difficulty, Language, LanguageLimit, TestCase, TestKind};
+use kb_core::{Difficulty, Language, LanguageLimit, ProblemMode, TestCase, TestKind};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions, SqliteRow};
@@ -16,7 +16,7 @@ use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 4;
+pub const CONTENT_SCHEMA_VERSION: i64 = 5;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -64,6 +64,8 @@ pub struct PackProblem {
     pub tags: Vec<String>,
     pub pattern: String,
     pub rank: u8,
+    /// A function or a whole program (ADR 0028).
+    pub mode: ProblemMode,
     /// The complexity profiler's data, for problems with `profile = true` (ADR 0024).
     pub profile: Option<ProfileData>,
     /// `{"name": ..., "params": [{"name": ..., "type": ...}], "returns": ...}`.
@@ -118,6 +120,8 @@ pub struct ProblemFilter {
     pub difficulty: Option<Difficulty>,
     pub tag: Option<String>,
     pub pattern: Option<String>,
+    /// Function or program problems only (ADR 0028).
+    pub mode: Option<ProblemMode>,
     /// Applied by [`crate::Store::list_problems`] (status lives in user.db);
     /// [`ContentDb::list_problems`] ignores it.
     pub status: Option<StatusFilter>,
@@ -155,6 +159,7 @@ pub struct ProblemSummary {
     pub difficulty: Difficulty,
     pub pattern: String,
     pub rank: u8,
+    pub mode: ProblemMode,
     pub tags: Vec<String>,
     /// Filled by [`crate::Store::list_problems`]; `None` from [`ContentDb`] alone.
     pub status: Option<ProblemStatus>,
@@ -184,8 +189,14 @@ pub struct ProblemView {
     pub pattern: String,
     pub rank: u8,
     pub tags: Vec<String>,
+    /// A function or a whole program (ADR 0028).
+    pub mode: ProblemMode,
     pub signature: Value,
-    /// The base time limit, set for Rust; each language scales it (ADR 0017).
+    /// How output is compared (`exact`, `tokens`, `lines`, ...): the UI's output diff
+    /// follows it.
+    pub checker: String,
+    /// The base time limit, set for Rust; each language scales it (ADR 0017). For a
+    /// program problem it applies to each test's run (ADR 0028).
     pub time_limit_ms: u32,
     pub memory_mb: u32,
     pub public_tests: Vec<PublicTest>,
@@ -204,6 +215,7 @@ pub struct ProblemView {
 #[derive(Debug, Clone, PartialEq)]
 pub struct JudgeData {
     pub id: String,
+    pub mode: ProblemMode,
     pub signature: Value,
     pub checker: String,
     pub time_limit_ms: u32,
@@ -274,7 +286,7 @@ impl ContentDb {
         // Text with no words (only punctuation or spaces) does not filter.
         let fts = filter.query.as_deref().and_then(fts_query);
         let rows = sqlx::query(
-            "SELECT p.id, p.difficulty, p.pattern, p.rank,
+            "SELECT p.id, p.difficulty, p.pattern, p.rank, p.mode,
                     COALESCE(tl.title, te.title) AS title,
                     (SELECT json_group_array(tag) FROM
                         (SELECT tag FROM problem_tags t WHERE t.problem_id = p.id ORDER BY tag)
@@ -288,6 +300,7 @@ impl ContentDb {
                     (SELECT 1 FROM problem_tags t WHERE t.problem_id = p.id AND t.tag = ?4))
                AND (?5 IS NULL OR p.id IN
                     (SELECT problem_id FROM problem_fts WHERE problem_fts MATCH ?5))
+               AND (?6 IS NULL OR p.mode = ?6)
              ORDER BY p.rank, p.id",
         )
         .bind(lang.code())
@@ -295,6 +308,7 @@ impl ContentDb {
         .bind(filter.pattern.as_deref())
         .bind(filter.tag.as_deref())
         .bind(fts)
+        .bind(filter.mode.map(ProblemMode::as_str))
         .fetch_all(&self.pool)
         .await?;
         rows.iter()
@@ -305,6 +319,7 @@ impl ContentDb {
                     difficulty: parse_difficulty(&r.try_get::<String, _>("difficulty")?)?,
                     pattern: r.try_get("pattern")?,
                     rank: rank(r)?,
+                    mode: parse_mode(&r.try_get::<String, _>("mode")?)?,
                     tags: serde_json::from_str(&r.try_get::<String, _>("tags")?)?,
                     status: None,
                 })
@@ -373,7 +388,9 @@ impl ContentDb {
             pattern: p.try_get("pattern")?,
             rank: rank(&p)?,
             tags,
+            mode: parse_mode(&p.try_get::<String, _>("mode")?)?,
             signature: serde_json::from_str(&p.try_get::<String, _>("signature")?)?,
+            checker: p.try_get("checker")?,
             time_limit_ms: p.try_get("time_limit_ms")?,
             memory_mb: p.try_get("memory_mb")?,
             public_tests,
@@ -407,7 +424,7 @@ impl ContentDb {
     /// Settings and all tests for judging `id` (public first, then hidden).
     pub async fn judge_data(&self, id: &str) -> Result<JudgeData> {
         let p = sqlx::query(
-            "SELECT signature, checker, time_limit_ms, memory_mb, validator FROM problems WHERE id = ?",
+            "SELECT mode, signature, checker, time_limit_ms, memory_mb, validator FROM problems WHERE id = ?",
         )
         .bind(id)
         .fetch_optional(&self.pool)
@@ -432,6 +449,7 @@ impl ContentDb {
         .collect::<Result<Vec<_>>>()?;
         Ok(JudgeData {
             id: id.to_string(),
+            mode: parse_mode(&p.try_get::<String, _>("mode")?)?,
             signature: serde_json::from_str(&p.try_get::<String, _>("signature")?)?,
             checker: p.try_get("checker")?,
             time_limit_ms: p.try_get("time_limit_ms")?,
@@ -610,16 +628,21 @@ async fn write_pack(path: &Path, meta: &PackMeta, problems: &[PackProblem]) -> R
     Ok(())
 }
 
+fn parse_mode(s: &str) -> Result<ProblemMode> {
+    s.parse().map_err(StoreError::Corrupt)
+}
+
 async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<()> {
     sqlx::query(
-        "INSERT INTO problems (id, difficulty, pattern, rank, signature, checker,
+        "INSERT INTO problems (id, difficulty, pattern, rank, mode, signature, checker,
                                time_limit_ms, memory_mb, profile, validator)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&p.id)
     .bind(difficulty_code(p.difficulty))
     .bind(&p.pattern)
     .bind(i64::from(p.rank))
+    .bind(p.mode.as_str())
     .bind(serde_json::to_string(&p.signature)?)
     .bind(&p.checker)
     .bind(p.time_limit_ms)
@@ -830,6 +853,12 @@ pub(crate) mod tests {
             tags: vec!["sorting".into(), "array".into()],
             pattern: "sorting".into(),
             rank,
+            // gap-b stands for a program problem (ADR 0028); the store keeps the mode only.
+            mode: if id == "gap-b" {
+                ProblemMode::Program
+            } else {
+                ProblemMode::Function
+            },
             profile: (id == "gap-a").then(|| ProfileData {
                 inputs: vec![
                     (10, json!({"nums": [1, 2]}).as_object().unwrap().clone()),
@@ -938,7 +967,7 @@ pub(crate) mod tests {
                 .await
                 .unwrap();
         assert_eq!(kinds, ["blob/blob"]);
-        assert_eq!(CONTENT_SCHEMA_VERSION, 4);
+        assert_eq!(CONTENT_SCHEMA_VERSION, 5);
         // Profile data round-trips (ADR 0024); gap-b has none.
         let mut want = packed.profile.clone().unwrap();
         want.reference.sort_by_key(|(l, _)| l.id());
@@ -1024,6 +1053,43 @@ pub(crate) mod tests {
             })
             .await,
             ["gap-b"]
+        );
+        // Function or program problems only (ADR 0028).
+        assert_eq!(
+            ids(ProblemFilter {
+                mode: Some(ProblemMode::Program),
+                ..f()
+            })
+            .await,
+            ["gap-b"]
+        );
+        assert_eq!(
+            ids(ProblemFilter {
+                mode: Some(ProblemMode::Function),
+                ..f()
+            })
+            .await,
+            ["gap-a"]
+        );
+        let listed = db.list_problems(&f()).await.unwrap();
+        assert_eq!(
+            listed
+                .iter()
+                .map(|p| (p.id.as_str(), p.mode))
+                .collect::<Vec<_>>(),
+            [
+                ("gap-a", ProblemMode::Function),
+                ("gap-b", ProblemMode::Program)
+            ]
+        );
+        let b = db.get_problem("gap-b", UiLang::En).await.unwrap();
+        assert_eq!(
+            (b.mode, b.checker.as_str()),
+            (ProblemMode::Program, "exact")
+        );
+        assert_eq!(
+            db.judge_data("gap-b").await.unwrap().mode,
+            ProblemMode::Program
         );
         assert_eq!(
             ids(ProblemFilter {

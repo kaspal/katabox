@@ -83,3 +83,5 @@ fragile build dependency. Committed JSON is clearly the better option.
 - **Provenance:** `kb-pack validate --run` could regenerate each generated test from a
   recorded seed and compare it with the committed file.
 - **A zstd dictionary** trained on test data, if many small tests ever dominate.
+
+**Follow-up:** program problems (ADR 0028) store a test as `{"stdin": text}` and its stdout text in the same blobs; the 512 KB budget applies unchanged.

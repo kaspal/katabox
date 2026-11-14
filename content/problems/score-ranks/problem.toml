@@ -1,0 +1,13 @@
+id = "score-ranks"
+title = "Score Ranks"
+title_es = "Puestos por puntuación"
+difficulty = "medium"
+tags = ["sorting", "binary-search", "hash-map"]
+pattern = "sorting"
+rank = 5
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

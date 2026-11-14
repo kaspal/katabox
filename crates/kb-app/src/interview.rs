@@ -371,6 +371,7 @@ mod tests {
             difficulty: d,
             pattern: "x".into(),
             rank: 1,
+            mode: kb_core::ProblemMode::Function,
             tags: vec![],
             status: solved.then_some(ProblemStatus::Solved),
         }

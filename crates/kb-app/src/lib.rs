@@ -498,6 +498,10 @@ impl App {
     /// The starter code for `problem` in `language`.
     pub async fn get_stub(&self, problem: &str, language: Language) -> Result<String> {
         let p = self.problem(problem).await?;
+        // A program problem starts from a whole program reading stdin (ADR 0028).
+        if p.mode == kb_core::ProblemMode::Program {
+            return Ok(kb_judge::program_starter(language)?);
+        }
         Ok(kb_judge::starter_code(language, &p.signature)?)
     }
 
@@ -505,6 +509,7 @@ impl App {
         let d = self.store.content.judge_data(id).await?;
         Ok(Problem::from_parts(
             &d.id,
+            d.mode,
             &d.signature,
             &d.checker,
             d.time_limit_ms,
@@ -727,6 +732,19 @@ impl App {
             // checker compared it with null, so the verdict itself is meaningless).
             let outcome = report.tests.get(i);
             match outcome {
+                // A program's output kept in the report is cut at 64 KB (ADR 0028): too
+                // long to be a custom test's expected output.
+                Some(o)
+                    if o.actual
+                        .as_ref()
+                        .and_then(Value::as_str)
+                        .is_some_and(kb_judge::program::was_truncated) =>
+                {
+                    return Err(invalid(
+                        i,
+                        "the expected output is too long for a custom test (over 64 KB)".into(),
+                    ));
+                }
                 Some(o)
                     if matches!(o.result.verdict, Verdict::Accepted | Verdict::WrongAnswer)
                         && o.actual.is_some() =>

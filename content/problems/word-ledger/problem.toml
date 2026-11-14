@@ -1,0 +1,13 @@
+id = "word-ledger"
+title = "Word Ledger"
+title_es = "Libro de palabras"
+difficulty = "easy"
+tags = ["input-parsing", "hash-map", "sorting"]
+pattern = "arrays-hashing"
+rank = 5
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256
