@@ -836,7 +836,7 @@ mod tests {
         assert!(t.contains("function f(a: number[]) {}\n"));
         assert!(t.contains("\nf(a);\n"));
         assert!(!t.contains("{{"));
-        // `node --check` strips types only from a .ts file that starts like an ES module.
+        // The driver's import stays first (once needed by `node --check`; ADR 0029).
         let first_code = t.lines().find(|l| !l.starts_with("//")).unwrap();
         assert!(first_code.starts_with("import "), "{first_code}");
     }

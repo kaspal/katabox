@@ -234,6 +234,59 @@ fn syntax_and_compile_errors_are_compilation_errors() {
     }
 }
 
+/// The TypeScript syntax check treats the file as the run does: types stripped, an ES
+/// module (the editor's JavaScript mode saves plain JS into the same `.ts` file).
+#[test]
+fn typescript_check_matches_the_run() {
+    let p = problem("tokens", vec![test(1, "", "6")]);
+    let ts = Language::TypeScript;
+    let accepted = [
+        // Annotations and no leading import: once a false compilation error.
+        "function total(a: number[]): number {\n  return a.reduce((s: number, x: number) => s + x, 0);\n}\nconst xs: number[] = [1, 2, 3];\nconsole.log(total(xs));\n",
+        "interface P { x: number }\ntype Q = P | null;\nconst p: Q = { x: 6 };\nconsole.log(p!.x as number);\n",
+        // Plain JavaScript (the JS editor mode): no imports, then an import and top-level await.
+        "function total(a) {\n  return a.reduce((s, x) => s + x, 0);\n}\nconsole.log(total([1, 2, 3]));\n",
+        "import { readFileSync } from \"node:fs\";\nconst n = await Promise.resolve(6);\nconsole.log(readFileSync(0, \"utf8\") + n);\n",
+    ];
+    for src in accepted {
+        let r = run(ts, src, &p);
+        assert_eq!(r.verdict, Verdict::Accepted, "{src}\n{r:#?}");
+    }
+    // CommonJS-looking code passes the check and fails at run time, as the run does
+    // (an ES module has no `require`).
+    let r = run(
+        ts,
+        "const fs = require(\"node:fs\");\nconst n: number = 6;\nconsole.log(n);\n",
+        &p,
+    );
+    assert_eq!(r.verdict, Verdict::RuntimeError, "{r:#?}");
+    // Real syntax errors stay compilation errors, with the file and line.
+    let errors = [
+        (
+            "const a = 1;\nfunction f(a: number[] {\n}\n",
+            "solution.ts:2",
+        ),
+        (
+            "const x = 1;\nconst y = 2;\nconst x = 3;\n",
+            "solution.ts:3",
+        ),
+        ("enum Color { Red }\nconsole.log(Color.Red);\n", "enum"),
+        ("const n = 1;\nreturn n;\n", "solution.ts:2"),
+    ];
+    for (src, needle) in errors {
+        let r = run(ts, src, &p);
+        assert_eq!(r.verdict, Verdict::CompilationError, "{src}\n{r:#?}");
+        let m = r.compile_output.unwrap();
+        assert_eq!(m.code, MessageCode::SyntaxError, "{src}");
+        assert!(m.text.contains(needle), "{src}: {}", m.text);
+        assert!(
+            !m.text.contains("judge-"),
+            "work folder stripped: {}",
+            m.text
+        );
+    }
+}
+
 #[test]
 fn utf8_round_trips_through_stdin_and_stdout() {
     let text = "Café con ñandú\nAÑO 2026 — «hola»\n";

@@ -1,6 +1,6 @@
 // KataBox Learn sample check (ADR 0029): kb-pack wraps sample.ts in this; never shown
-// in the app. The import comes first: `node --check` only strips types from a .ts file
-// that starts like an ES module.
+// in the app. The import comes first (once needed by the old `node --check` syntax
+// check; ADR 0029).
 import { readFileSync as kbReadFileSync } from "node:fs";
 
 {{sample}}

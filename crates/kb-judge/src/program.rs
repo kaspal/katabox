@@ -77,6 +77,28 @@ fn strip_text(text: &str, work: &WorkDir) -> String {
     out
 }
 
+/// The TypeScript syntax check (`node -e`, `FILE` replaced by the quoted file name). The
+/// run treats `solution.ts` as an ES module (the `package.json` above) and strips its
+/// types (strip-only mode, so `enum` and other non-erasable syntax are errors), so the
+/// check does the same: `stripTypeScriptTypes`, then `SourceTextModule`, which only
+/// parses (nothing is linked or evaluated). A strip error is printed with the file name
+/// and without Node's internal frames; a module parse error is rethrown so Node prints
+/// it with the source line and caret.
+const TS_CHECK: &str = r#"const { readFileSync } = require("node:fs");
+const { stripTypeScriptTypes } = require("node:module");
+const { SourceTextModule } = require("node:vm");
+const file = FILE;
+let js;
+try {
+  js = stripTypeScriptTypes(readFileSync(file, "utf8"), { mode: "strip" });
+} catch (e) {
+  const text = String((e && e.stack) || e).split("\n").filter((l) => !l.startsWith("    at ")).join("\n");
+  process.stderr.write((text.startsWith(":") ? file : "") + text + "\n");
+  process.exit(1);
+}
+new SourceTextModule(js, { identifier: file });
+"#;
+
 /// Program and arguments that check the file's syntax without running it.
 fn syntax_check(
     def: &LanguageDef,
@@ -94,8 +116,18 @@ fn syntax_check(
             Some((resolve_program(toolchain, "python")?, args))
         }
         Language::TypeScript => {
-            let mut args = words(&["--preserve-symlinks", "--preserve-symlinks-main", "--check"]);
-            args.push(file);
+            // Not `node --check`: it parses a `.ts` file as CommonJS without stripping
+            // types, so annotations are false syntax errors. TS_CHECK treats the file as
+            // the run does: Node's own type stripping, then an ES-module parse.
+            let mut args = words(&[
+                "--preserve-symlinks",
+                "--preserve-symlinks-main",
+                "--no-warnings",
+                "--experimental-vm-modules",
+                "--stack-trace-limit=1",
+                "-e",
+            ]);
+            args.push(TS_CHECK.replace("FILE", &format!("{file:?}")));
             Some((resolve_program(toolchain, "node")?, args))
         }
         Language::Php => {
