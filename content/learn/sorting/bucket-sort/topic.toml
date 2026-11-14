@@ -1,0 +1,28 @@
+id = "bucket-sort"
+subject = "sorting"
+order = 11
+title = "Bucket Sort"
+title_es = "Ordenación por cubetas"
+tags = ["non-comparison-sort"]
+problems = []
+presets = ["random", "few-unique", "reversed"]
+default = [38, 27, 43, 3, 9, 82, 10, 55, 21, 64, 71, 16]
+
+[complexity]
+best = "O(n + k)"
+average = "O(n + k) for spread-out values"
+worst = "O(n log n) all in one bucket"
+space = "O(n + k)"
+stable = true
+in_place = false
+
+[input]
+min_len = 2
+max_len = 16
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "bucket_sort(a)"
+typescript = "bucketSort(a)"

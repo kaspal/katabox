@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "The first call sorts positions 0–9. Where does it split?",
+    "prompt_es": "La primera llamada ordena las posiciones 0–9. ¿Dónde divide?",
+    "options": [
+      { "en": "At 5: 0–5 and 6–9", "es": "En 5: 0–5 y 6–9" },
+      { "en": "At 4: 0–4 and 5–9", "es": "En 4: 0–4 y 5–9" },
+      { "en": "At 9: 0–8 and 9 alone", "es": "En 9: 0–8 y el 9 solo" }
+    ],
+    "answer": 1,
+    "explain_en": "mid = (0 + 9) // 2 = 4, so the halves are 0–4 and 5–9. With an odd count, the left half gets the extra value.",
+    "explain_es": "mid = (0 + 9) // 2 = 4, así que las mitades son 0–4 y 5–9. Con un número impar de valores, la mitad izquierda se lleva el que sobra."
+  },
+  {
+    "prompt_en": "During a merge, the left head is 27 and the right head is also 27. Which one is written next?",
+    "prompt_es": "Durante una mezcla, la cabeza izquierda es 27 y la derecha también es 27. ¿Cuál se escribe primero?",
+    "options": [
+      { "en": "The right one", "es": "La derecha" },
+      { "en": "Either: it makes no difference", "es": "Cualquiera: da igual" },
+      { "en": "The left one", "es": "La izquierda" }
+    ],
+    "answer": 2,
+    "explain_en": "The test is buffer[i] <= buffer[j], so the left head wins ties. Equal values keep their original order: the sort is stable.",
+    "explain_es": "La comprobación es buffer[i] <= buffer[j], así que la cabeza izquierda gana los empates. Los valores iguales conservan su orden original: la ordenación es estable."
+  },
+  {
+    "prompt_en": "How much extra memory does this merge sort need?",
+    "prompt_es": "¿Cuánta memoria extra necesita esta ordenación por mezcla?",
+    "options": [
+      { "en": "O(n): the buffer, plus a small stack", "es": "O(n): el búfer, más una pila pequeña" },
+      { "en": "O(1): it works in place", "es": "O(1): trabaja en el sitio" },
+      { "en": "O(n²): a buffer per comparison", "es": "O(n²): un búfer por comparación" }
+    ],
+    "answer": 0,
+    "explain_en": "Each merge copies its range into a buffer of up to n values; the recursion adds O(log n) of stack.",
+    "explain_es": "Cada mezcla copia su tramo a un búfer de hasta n valores; la recursión añade O(log n) de pila."
+  }
+]

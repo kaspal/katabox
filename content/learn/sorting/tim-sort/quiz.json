@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "The array has 10 values and RUN = 4. Which runs does insertion sort make?",
+    "prompt_es": "El arreglo tiene 10 valores y RUN = 4. ¿Qué tramos crea la ordenación por inserción?",
+    "options": [
+      { "en": "0–4 and 5–9", "es": "0–4 y 5–9" },
+      { "en": "0–3, 4–7 and 8–9", "es": "0–3, 4–7 y 8–9" },
+      { "en": "Ten runs of one value", "es": "Diez tramos de un valor" }
+    ],
+    "answer": 1,
+    "explain_en": "Blocks start at 0, 4 and 8. The last one is cut short by the end of the array, so it holds only 2 values.",
+    "explain_es": "Los bloques empiezan en 0, 4 y 8. El último lo corta el final del arreglo, así que solo tiene 2 valores."
+  },
+  {
+    "prompt_en": "The width-4 pass merges 0–3 with 4–7. What happens to the run 8–9?",
+    "prompt_es": "La pasada de ancho 4 mezcla 0–3 con 4–7. ¿Qué pasa con el tramo 8–9?",
+    "options": [
+      { "en": "It is merged with 4–7", "es": "Se mezcla con 4–7" },
+      { "en": "It is sorted again by insertion sort", "es": "Se vuelve a ordenar por inserción" },
+      { "en": "It waits, and the width-8 pass merges it with 0–7", "es": "Espera, y la pasada de ancho 8 lo mezcla con 0–7" }
+    ],
+    "answer": 2,
+    "explain_en": "The next pair would start at lo = 8, but the loop needs lo < n - width = 6. With width 8, lo = 0 merges 0–7 with 8–9.",
+    "explain_es": "La siguiente pareja empezaría en lo = 8, pero el bucle exige lo < n - width = 6. Con ancho 8, lo = 0 mezcla 0–7 con 8–9."
+  },
+  {
+    "prompt_en": "Which of these does real Tim sort do that this simplified version does not?",
+    "prompt_es": "¿Cuál de estas cosas hace el Tim sort real y esta versión simplificada no?",
+    "options": [
+      { "en": "Find runs that are already in order", "es": "Buscar tramos que ya están en orden" },
+      { "en": "Merge runs through a buffer", "es": "Mezclar tramos a través de un búfer" },
+      { "en": "Use insertion sort on short runs", "es": "Usar la ordenación por inserción en tramos cortos" }
+    ],
+    "answer": 0,
+    "explain_en": "This version cuts fixed blocks of 4. Real Tim sort looks for natural runs, which is why it handles sorted input in O(n).",
+    "explain_es": "Esta versión corta bloques fijos de 4. El Tim sort real busca tramos naturales, y por eso trata una entrada ordenada en O(n)."
+  }
+]

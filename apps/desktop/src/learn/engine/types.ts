@@ -158,6 +158,9 @@ export type TracerDef = {
   /** The subject folder in content/learn. */
   subject: string;
   scene: SceneKind;
+  /** Topics in the same subject and group can be compared on one input: "sort" (values
+   * to sort), "find" (a value to look for). */
+  compareGroup?: "sort" | "find";
   /** The array scene keeps room above the row for a lifted key (insertion-style sorts). */
   lifts?: boolean;
   /** The topic.toml `[input]` limits (Vitest checks they match). */

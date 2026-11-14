@@ -35,5 +35,5 @@ Recursion fits problems that split into smaller copies of themselves: ranges cut
 - [Towers of Hanoi](learn:foundations/towers-of-hanoi): recursion where each call makes two smaller ones, with `2ⁿ − 1` moves.
 - [Quick Sort](learn:sorting/quick-sort): split a range and recurse on both sides.
 - [Big-O growth curves](learn:foundations/big-o-growth): where `log n` comes from.
-- Merge Sort (coming soon): the same halving split, merging instead of adding.
+- [Merge Sort](learn:sorting/merge-sort): the same halving split, merging instead of adding.
 - Binary search (coming soon): halving, but only one side is visited.

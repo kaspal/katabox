@@ -9,6 +9,7 @@ import type { SceneProps } from "./common";
 import { GrowthScene } from "./GrowthScene";
 import { HanoiScene } from "./HanoiScene";
 import { HeapScene } from "./HeapScene";
+import { MonoStackScene } from "./MonoStackScene";
 import { RecursionScene } from "./RecursionScene";
 
 export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
@@ -21,5 +22,5 @@ export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
   buckets: BucketsScene,
   merge: ArrayScene,
   heap: HeapScene,
-  monostack: ArrayScene,
+  monostack: MonoStackScene,
 };

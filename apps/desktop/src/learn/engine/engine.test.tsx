@@ -4,6 +4,7 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleSource } from "@/test/fakeLearn";
 import { TRACERS } from "../tracers";
+import { comparePartners, paneStep } from "./compare";
 import { checkInput, parseCustom, preset, presetInput, PRESETS, rng } from "./inputs";
 import type { TracerDef } from "./types";
 import { playerKeyAction } from "./keys";
@@ -297,5 +298,28 @@ describe("progress settings", () => {
     });
     expect(parseLast({ subject: "sorting", topic: "quick-sort", step: -1, total: 4 })).toBeUndefined();
     expect(parseLast("quick-sort")).toBeUndefined();
+  });
+});
+
+describe("compare partners", () => {
+  const all = Object.values(TRACERS);
+  it("pairs topics of one subject and group whose limits take the current input", () => {
+    const ids = (id: string, input: number[]) => comparePartners(TRACERS[id]!, all, input).map((d) => d.id);
+    const forQuick = ids("quick-sort", [38, 27, 43, 3]);
+    expect(forQuick).toContain("bubble-sort");
+    expect(forQuick).toContain("merge-sort");
+    expect(forQuick).not.toContain("quick-sort");
+    expect(forQuick).not.toContain("quickselect"); // its input means k first
+    expect(forQuick).not.toContain("counting-sort"); // 38 is outside 0..9
+    // Counting sort with a 0: the 1..99 sorts cannot take it.
+    expect(ids("counting-sort", [3, 0, 2])).toEqual([]);
+    expect(ids("counting-sort", [3, 1, 2])).toContain("bubble-sort");
+    expect(comparePartners(TRACERS["prefix-sums"]!, all, [1, 2])).toEqual([]);
+  });
+
+  it("the shorter run holds its last step, marked finished", () => {
+    const steps = TRACERS["bubble-sort"]!.trace([2, 1]);
+    expect(paneStep(steps, 0)).toEqual({ step: steps[0], finished: false });
+    expect(paneStep(steps, steps.length + 5)).toEqual({ step: steps.at(-1), finished: true });
   });
 });

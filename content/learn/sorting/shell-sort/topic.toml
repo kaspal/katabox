@@ -1,0 +1,28 @@
+id = "shell-sort"
+subject = "sorting"
+order = 5
+title = "Shell Sort"
+title_es = "Ordenación de Shell"
+tags = ["comparison-sort", "gap-sequence"]
+problems = []
+presets = ["random", "nearly-sorted", "reversed", "few-unique"]
+default = [38, 27, 43, 3, 9, 82, 10, 55, 21, 64]
+
+[complexity]
+best = "O(n log n)"
+average = "depends on the gaps"
+worst = "O(n²) with Shell's gaps"
+space = "O(1)"
+stable = false
+in_place = true
+
+[input]
+min_len = 2
+max_len = 16
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "shell_sort(a)"
+typescript = "shellSort(a)"

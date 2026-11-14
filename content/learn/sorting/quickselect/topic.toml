@@ -1,0 +1,29 @@
+id = "quickselect"
+subject = "sorting"
+order = 13
+title = "Quickselect"
+title_es = "Selección rápida (Quickselect)"
+tags = ["selection", "divide-and-conquer"]
+problems = ["nearest-stalls"]
+presets = ["random", "nearly-sorted", "reversed", "few-unique"]
+default = [4, 38, 27, 43, 3, 9, 82, 10, 55, 21]
+sorts = false
+
+[complexity]
+best = "O(n)"
+average = "O(n)"
+worst = "O(n²)"
+space = "O(1)"
+stable = false
+in_place = true
+
+[input]
+min_len = 2
+max_len = 17
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = [quickselect(a[1:], a[0])]"
+typescript = "a = [quickselect(a.slice(1), a[0])]"

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "The array has 10 values. Which gaps does the sample use?",
+    "prompt_es": "El arreglo tiene 10 valores. ¿Qué saltos usa el ejemplo?",
+    "options": [
+      { "en": "4, 2, 1", "es": "4, 2, 1" },
+      { "en": "5, 2, 1", "es": "5, 2, 1" },
+      { "en": "9, 3, 1", "es": "9, 3, 1" }
+    ],
+    "answer": 1,
+    "explain_en": "The gap starts at 10 // 2 = 5 and is halved with whole-number division: 5, 2, 1.",
+    "explain_es": "El salto empieza en 10 // 2 = 5 y se divide a la mitad con división entera: 5, 2, 1."
+  },
+  {
+    "prompt_en": "Gap 5 on [38, 27, 43, 3, 9, 82, 10, 55, 21, 64]: the key is 10, at position 6. What happens?",
+    "prompt_es": "Salto 5 sobre [38, 27, 43, 3, 9, 82, 10, 55, 21, 64]: la clave es 10, en la posición 6. ¿Qué pasa?",
+    "options": [
+      { "en": "10 stays where it is", "es": "10 se queda donde está" },
+      { "en": "10 swaps with its neighbour 82", "es": "10 se intercambia con su vecino 82" },
+      { "en": "27 jumps from position 1 to 6, and 10 drops into position 1", "es": "27 salta de la posición 1 a la 6 y el 10 cae en la posición 1" }
+    ],
+    "answer": 2,
+    "explain_en": "The value 5 places left of 10 is 27, which is bigger, so it jumps right. There is nothing 5 places left of position 1, so the key stops there.",
+    "explain_es": "El valor que está 5 posiciones a la izquierda del 10 es 27, que es mayor, así que salta a la derecha. No hay nada 5 posiciones a la izquierda de la posición 1, así que la clave se queda ahí."
+  },
+  {
+    "prompt_en": "What is the last pass, with gap 1?",
+    "prompt_es": "¿Qué es la última pasada, con salto 1?",
+    "options": [
+      { "en": "Plain insertion sort on a nearly sorted array", "es": "Una ordenación por inserción normal sobre un arreglo casi ordenado" },
+      { "en": "A merge of the chains from the earlier passes", "es": "Una mezcla de las cadenas de las pasadas anteriores" },
+      { "en": "A check that never moves anything", "es": "Una comprobación que nunca mueve nada" }
+    ],
+    "answer": 0,
+    "explain_en": "With gap 1 the loop is exactly insertion sort. The earlier passes moved values close to their places, so it has few shifts left to do.",
+    "explain_es": "Con salto 1 el bucle es exactamente la ordenación por inserción. Las pasadas anteriores acercaron los valores a su sitio, así que le quedan pocos desplazamientos."
+  }
+]

@@ -84,6 +84,7 @@ function trace(values: readonly number[]): Step[] {
 export const bubbleSort: TracerDef = {
   id: "bubble-sort",
   subject: "sorting",
+  compareGroup: "sort",
   scene: "bars",
   markers: MARKERS,
   narrationKeys: KEYS,

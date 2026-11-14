@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "k = 4. At which position must the pivot land to be the answer?",
+    "prompt_es": "k = 4. ¿En qué posición tiene que caer el pivote para ser la respuesta?",
+    "options": [
+      { "en": "Position 4", "es": "La posición 4" },
+      { "en": "Position 3", "es": "La posición 3" },
+      { "en": "Anywhere in the left half", "es": "En cualquier lugar de la mitad izquierda" }
+    ],
+    "answer": 1,
+    "explain_en": "k counts from 1 and positions from 0, so the 4th smallest value belongs at position k − 1 = 3.",
+    "explain_es": "k cuenta desde 1 y las posiciones desde 0, así que el 4.º menor va en la posición k − 1 = 3."
+  },
+  {
+    "prompt_en": "k = 4 on [38, 27, 43, 3, 9, 82, 10, 55, 21]. The first pivot, 21, lands at position 3. What happens next?",
+    "prompt_es": "k = 4 sobre [38, 27, 43, 3, 9, 82, 10, 55, 21]. El primer pivote, 21, cae en la posición 3. ¿Qué pasa después?",
+    "options": [
+      { "en": "Search only the right side", "es": "Busca solo en el lado derecho" },
+      { "en": "Search only the left side", "es": "Busca solo en el lado izquierdo" },
+      { "en": "Return 21: it is the answer", "es": "Devuelve 21: es la respuesta" }
+    ],
+    "answer": 2,
+    "explain_en": "Only 3, 9 and 10 are smaller than 21, so it lands at position 3 = k − 1. One partition was enough.",
+    "explain_es": "Solo 3, 9 y 10 son menores que 21, así que cae en la posición 3 = k − 1. Ha bastado una partición."
+  },
+  {
+    "prompt_en": "The pivot lands at position 6 and k − 1 = 2. What does quickselect do next?",
+    "prompt_es": "El pivote cae en la posición 6 y k − 1 = 2. ¿Qué hace la selección rápida a continuación?",
+    "options": [
+      { "en": "Partitions only lo..5", "es": "Particiona solo lo..5" },
+      { "en": "Partitions both sides", "es": "Particiona los dos lados" },
+      { "en": "Partitions only 7..hi", "es": "Particiona solo 7..hi" }
+    ],
+    "answer": 0,
+    "explain_en": "Position 2 is left of the pivot, so the answer is among the smaller values: hi = p - 1 = 5, and the right side is never looked at again.",
+    "explain_es": "La posición 2 está a la izquierda del pivote, así que la respuesta está entre los menores: hi = p - 1 = 5, y el lado derecho no se vuelve a mirar."
+  }
+]

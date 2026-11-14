@@ -10,10 +10,18 @@ import { Button } from "@/components/ui/button";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isAppError } from "@/lib/errors";
 import { useLearnCatalog, useLearnTopic } from "@/lib/queries";
 import { useSetting } from "@/lib/settings";
+import { canCompare, comparePartners } from "./engine/compare";
 import { playerKeyAction } from "./engine/keys";
 import { useMedia } from "./engine/media";
 import { useLastTopic, useLearnSpeed, useViewed } from "./engine/progress";
@@ -23,6 +31,7 @@ import { useTrace } from "./engine/useTrace";
 import { CodeTab, type SampleLang } from "./panels/CodeTab";
 import { PracticeTab } from "./panels/PracticeTab";
 import { TheoryTab } from "./panels/TheoryTab";
+import { CompareView } from "./CompareView";
 import { Stage } from "./Stage";
 import { TopicPicker } from "./TopicPicker";
 import { TRACERS } from "./tracers";
@@ -64,6 +73,7 @@ export function TopicPage() {
       key={topic}
       data={view.data}
       def={def}
+      titles={Object.fromEntries((catalog.data ?? []).flatMap((s) => s.topics.map((x) => [x.id, x.title])))}
       picker={
         <TopicPicker subjects={catalog.data ?? []} current={{ subject, topic }} viewed={viewed} />
       }
@@ -75,11 +85,14 @@ export function TopicPage() {
 function TopicView({
   data,
   def,
+  titles,
   picker,
   onViewed,
 }: {
   data: LearnTopicView;
   def: TracerDef;
+  /** Topic titles by id (compare mode names both topics). */
+  titles: Record<string, string>;
   picker: React.ReactNode;
   onViewed: () => void;
 }) {
@@ -94,6 +107,10 @@ function TopicView({
   const [speed, setSpeed] = useLearnSpeed();
   const [last, setLast] = useLastTopic();
   const trace = useTrace(def, topic.default_input);
+  const [compare, setCompare] = useState<TracerDef | null>(null);
+  const compareRef = useRef(compare);
+  compareRef.current = compare;
+  const partners = comparePartners(def, Object.values(TRACERS), trace.values);
   const maxValue = topic.input.max;
 
   // Resume where Continue left off, only for the default input.
@@ -124,6 +141,7 @@ function TopicView({
   playerRef.current = player;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (compareRef.current) return; // compare mode drives its own player
       const action = playerKeyAction(e);
       if (!action) return;
       e.preventDefault();
@@ -172,18 +190,40 @@ function TopicView({
         </ul>
       </div>
       <div className="flex gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {/* A disabled button cannot show a tooltip; the wrapper can. */}
-            <span tabIndex={0} className="rounded-md">
-              <Button variant="outline" disabled aria-describedby="compare-soon" className="pointer-events-none">
+        {canCompare(def, Object.values(TRACERS)) ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" data-testid="compare-button">
                 <GitCompare aria-hidden className="size-4" />
                 {t("learn.topic.compare")}
               </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent id="compare-soon">{t("learn.topic.compare_soon")}</TooltipContent>
-        </Tooltip>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{t("learn.compare.pick")}</DropdownMenuLabel>
+              {partners.length === 0 && (
+                <DropdownMenuItem disabled>{t("learn.compare.none_fit")}</DropdownMenuItem>
+              )}
+              {partners.map((p) => (
+                <DropdownMenuItem key={p.id} onSelect={() => setCompare(p)} data-partner={p.id}>
+                  {titles[p.id] ?? p.id}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {/* A disabled button cannot show a tooltip; the wrapper can. */}
+              <span tabIndex={0} className="rounded-md">
+                <Button variant="outline" disabled aria-describedby="compare-none" className="pointer-events-none">
+                  <GitCompare aria-hidden className="size-4" />
+                  {t("learn.topic.compare")}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent id="compare-none">{t("learn.compare.none")}</TooltipContent>
+          </Tooltip>
+        )}
         <Button onClick={() => setTab("practice")} disabled={problems.length === 0}>
           {t("learn.topic.practice", { count: problems.length })}
         </Button>
@@ -191,7 +231,20 @@ function TopicView({
     </div>
   );
 
-  const stage = (
+  const stage = compare ? (
+    <CompareView
+      key={compare.id}
+      a={def}
+      b={compare}
+      titles={[topic.title, titles[compare.id] ?? compare.id]}
+      initial={trace.values}
+      input={topic.input}
+      presets={topic.presets}
+      speed={speed}
+      onSpeed={(s) => setSpeed(s)}
+      onExit={() => setCompare(null)}
+    />
+  ) : (
     <Stage
       def={def}
       step={step}

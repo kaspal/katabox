@@ -35,6 +35,16 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
   "bubble-sort": sorted,
   "insertion-sort": sorted,
   "quick-sort": sorted,
+  "selection-sort": sorted,
+  "shell-sort": sorted,
+  "merge-sort": sorted,
+  "quick-sort-3way": sorted,
+  "heap-sort": sorted,
+  "counting-sort": sorted,
+  "radix-sort": sorted,
+  "bucket-sort": sorted,
+  "tim-sort": sorted,
+  quickselect: ([k, ...values]) => [sorted(values)[k! - 1]!],
 };
 
 /** Hand-checked golden runs: the input, then the marker behind each step and its line in
@@ -47,6 +57,66 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  "selection-sort": {
+    input: [3, 1, 2],
+    markers: [null, "start", "compare", "new-min", "compare", "swap", "start", "compare", "new-min", "swap", null],
+    py: [null, 4, 6, 7, 6, 8, 4, 6, 7, 8, null],
+    ts: [null, 4, 6, 7, 6, 10, 4, 6, 7, 10, null],
+  },
+  "shell-sort": {
+    input: [3, 1, 2],
+    markers: [null, "gap", "take", "compare", "shift", "insert", "take", "compare", "shift", "compare", "insert", null],
+    py: [null, 3, 5, 7, 8, 10, 5, 7, 8, 7, 10, null],
+    ts: [null, 3, 5, 7, 8, 11, 5, 7, 8, 7, 11, null],
+  },
+  "merge-sort": {
+    input: [3, 1, 2],
+    markers: [null, "split", "split", "base", "base", "copy", "pick", "take-right", "pick", "take-left", "base", "copy", "pick", "take-left", "pick", "take-right", "pick", "take-left", null],
+    py: [null, 4, 4, 2, 2, 11, 14, 18, 14, 15, 2, 11, 14, 15, 14, 18, 14, 15, null],
+    ts: [null, 3, 3, 2, 2, 10, 14, 18, 14, 15, 2, 10, 14, 15, 14, 18, 14, 15, null],
+  },
+  "quick-sort-3way": {
+    input: [3, 1, 2],
+    markers: [null, "pivot", "compare", "less", "compare", "less", "pivot", "compare", "greater", "base", null],
+    py: [null, 4, 7, 8, 7, 8, 4, 7, 12, 2, null],
+    ts: [null, 3, 8, 9, 8, 9, 3, 8, 13, 2, null],
+  },
+  "heap-sort": {
+    input: [3, 1, 2],
+    markers: [null, "build", "pick", "compare", null, "extract", "pick", "compare", "extract", null],
+    py: [null, 4, 13, 15, null, 6, 13, 15, 6, null],
+    ts: [null, 4, 15, 18, null, 7, 15, 18, 7, null],
+  },
+  "counting-sort": {
+    input: [3, 1, 2],
+    markers: [null, "count", "count", "count", "write", "write", "write", null],
+    py: [null, 4, 4, 4, 8, 8, 8, null],
+    ts: [null, 4, 4, 4, 9, 9, 9, null],
+  },
+  "radix-sort": {
+    input: [3, 1, 2],
+    markers: [null, "pass", "distribute", "distribute", "distribute", "collect", "collect", "collect", null],
+    py: [null, 3, 6, 6, 6, 10, 10, 10, null],
+    ts: [null, 2, 5, 5, 5, 10, 10, 10, null],
+  },
+  "bucket-sort": {
+    input: [3, 1, 2],
+    markers: [null, "scatter", "scatter", "scatter", "sort", "gather", "gather", "gather", "sort", "sort", "sort", "sort", null],
+    py: [null, 4, 4, 4, 7, 9, 9, 9, 7, 7, 7, 7, null],
+    ts: [null, 4, 4, 4, 8, 10, 10, 10, 8, 8, 8, 8, null],
+  },
+  "tim-sort": {
+    input: [3, 1, 2],
+    markers: [null, "run", "take", "compare", "shift", "insert", "take", "compare", "shift", "compare", "insert", null],
+    py: [null, 7, 19, 21, 22, 24, 19, 21, 22, 21, 24, null],
+    ts: [null, 6, 19, 21, 22, 25, 19, 21, 22, 21, 25, null],
+  },
+  quickselect: {
+    input: [1, 3, 1, 2],
+    markers: [null, "pivot", "compare", "compare", "swap", "place", "side", "pivot", "place", "found", null],
+    py: [null, 14, 17, 17, 18, 20, 7, 14, 20, 5, null],
+    ts: [null, 16, 19, 19, 20, 24, 7, 16, 24, 6, null],
+  },
   "big-o-growth": {
     input: [2],
     markers: [null, "constant", "log", "log", "log", "linear", "nlogn", "quadratic", "exponential", null],

@@ -10,6 +10,16 @@ import { prefixSums } from "./prefix-sums";
 import { quickSort } from "./quick-sort";
 import { recursionCallStack } from "./recursion-call-stack";
 import { towersOfHanoi } from "./towers-of-hanoi";
+import { selectionSort } from "./selection-sort";
+import { shellSort } from "./shell-sort";
+import { mergeSort } from "./merge-sort";
+import { quickSort3Way } from "./quick-sort-3way";
+import { heapSort } from "./heap-sort";
+import { countingSort } from "./counting-sort";
+import { radixSort } from "./radix-sort";
+import { bucketSort } from "./bucket-sort";
+import { timSort } from "./tim-sort";
+import { quickselect } from "./quickselect";
 
 export const TRACERS: Record<string, TracerDef> = {
   "big-o-growth": bigOGrowth,
@@ -21,4 +31,14 @@ export const TRACERS: Record<string, TracerDef> = {
   "bubble-sort": bubbleSort,
   "insertion-sort": insertionSort,
   "quick-sort": quickSort,
+  "selection-sort": selectionSort,
+  "shell-sort": shellSort,
+  "merge-sort": mergeSort,
+  "quick-sort-3way": quickSort3Way,
+  "heap-sort": heapSort,
+  "counting-sort": countingSort,
+  "radix-sort": radixSort,
+  "bucket-sort": bucketSort,
+  "tim-sort": timSort,
+  "quickselect": quickselect,
 };

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "The pivot is 27, a[i] = 64 and a[gt] = 9. What happens next?",
+    "prompt_es": "El pivote es 27, a[i] = 64 y a[gt] = 9. ¿Qué pasa a continuación?",
+    "options": [
+      { "en": "64 swaps with a[lt], and lt and i move on", "es": "64 se intercambia con a[lt], y lt e i avanzan" },
+      { "en": "i moves on and 64 stays", "es": "i avanza y 64 se queda" },
+      { "en": "64 swaps with 9 and gt moves back; i stays to check the 9", "es": "64 se intercambia con 9 y gt retrocede; i se queda para revisar el 9" }
+    ],
+    "answer": 2,
+    "explain_en": "64 is bigger than the pivot, so it goes to the front of the bigger part. The 9 that arrives at i has not been checked yet, so i does not move.",
+    "explain_es": "64 es mayor que el pivote, así que va al principio de la parte de los mayores. El 9 que llega a i aún no se ha revisado, así que i no se mueve."
+  },
+  {
+    "prompt_en": "The default input [27, 43, 27, 9, 82, 27, 55, 9, 64, 43] has three 27s. Where are they after the first partition?",
+    "prompt_es": "La entrada por defecto [27, 43, 27, 9, 82, 27, 55, 9, 64, 43] tiene tres 27. ¿Dónde quedan tras la primera partición?",
+    "options": [
+      { "en": "Together at positions 2–4, after the two 9s", "es": "Juntos en las posiciones 2–4, después de los dos 9" },
+      { "en": "At positions 0–2", "es": "En las posiciones 0–2" },
+      { "en": "Spread over both sides, to be sorted later", "es": "Repartidos entre los dos lados, para ordenarlos después" }
+    ],
+    "answer": 0,
+    "explain_en": "The two 9s are smaller, so they fill positions 0–1; the three 27s form the equal block 2–4, which is finished. Only 0–1 and 5–9 are sorted again.",
+    "explain_es": "Los dos 9 son menores, así que ocupan las posiciones 0–1; los tres 27 forman el bloque de iguales 2–4, que ya está terminado. Solo se vuelven a ordenar 0–1 y 5–9."
+  },
+  {
+    "prompt_en": "Which partition scheme does not always leave the pivot in its final place?",
+    "prompt_es": "¿Qué esquema de partición no deja siempre el pivote en su lugar definitivo?",
+    "options": [
+      { "en": "Lomuto", "es": "Lomuto" },
+      { "en": "Hoare", "es": "Hoare" },
+      { "en": "3-way", "es": "En tres partes" }
+    ],
+    "answer": 1,
+    "explain_en": "Hoare splits the range where its two indices cross, and the pivot can end up anywhere inside one side; both sides are sorted again.",
+    "explain_es": "Hoare divide el tramo donde se cruzan sus dos índices, y el pivote puede acabar en cualquier lugar dentro de un lado; los dos lados se vuelven a ordenar."
+  }
+]

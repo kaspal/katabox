@@ -898,7 +898,6 @@
       "practice_one": "Practice: {{count}} problem",
       "practice_other": "Practice: {{count}} problems",
       "compare": "Compare with…",
-      "compare_soon": "Coming soon: compare two algorithms side by side.",
       "average": "{{cost}} average",
       "stable": "Stable",
       "not_stable": "Not stable",
@@ -933,12 +932,23 @@
         "queries": "queries",
         "appends": "appends",
         "copies": "copies",
-        "per_append": "writes per append"
+        "per_append": "writes per append",
+        "counted": "values counted",
+        "distributed": "values distributed",
+        "scattered": "values scattered",
+        "comparisons_max": "comparisons (at most)",
+        "probes": "values checked",
+        "capacities_tried": "capacities tried",
+        "sums": "sums checked",
+        "edge_moves": "edge moves",
+        "pushes": "pushes",
+        "pops": "pops"
       },
       "rows": {
         "prefix": "Prefix sums",
         "buffer": "Merge buffer",
-        "storage": "New storage"
+        "storage": "New storage",
+        "answer": "Next greater"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -959,7 +969,8 @@
       "summary_capacity": "Storage for {{capacity}} values, {{size}} in use.",
       "fallback_growth": "{{label}}: {{count}} steps at n = {{n}}",
       "left_run": "left",
-      "right_run": "right"
+      "right_run": "right",
+      "stack": "Stack"
     },
     "roles": {
       "idle": "Not yet placed",
@@ -976,7 +987,25 @@
       "moving": "Moving",
       "result": "Result",
       "reading": "Reading",
-      "writing": "Writing"
+      "writing": "Writing",
+      "minimum": "Smallest so far",
+      "equal_pivot": "Equal to the pivot",
+      "parent": "Parent",
+      "bucket": "Bucket in use",
+      "answer": "Answer",
+      "found": "Found",
+      "ruled_out": "Ruled out",
+      "mid": "Middle",
+      "ruled_out_half": "Checked, half dropped",
+      "lower_bound": "Lower bound",
+      "target_copies": "Copies of the target",
+      "odd_day": "Odd day",
+      "even_day": "Even day",
+      "entering": "Entering the window",
+      "leaving": "Leaving the window",
+      "current": "Current value",
+      "stack_top": "Top of the stack",
+      "answered": "Answered"
     },
     "controls": {
       "label": "Playback",
@@ -1051,7 +1080,20 @@
       "bitwise": "Bitwise operations",
       "prefix-sum": "Prefix sums",
       "precomputation": "Precomputation",
-      "amortised-analysis": "Amortised analysis"
+      "amortised-analysis": "Amortised analysis",
+      "gap-sequence": "Gap sequence",
+      "duplicates": "Many duplicates",
+      "heap": "Heap",
+      "non-comparison-sort": "Non-comparison sort",
+      "hybrid": "Hybrid",
+      "selection": "Selection",
+      "linear-scan": "Linear scan",
+      "binary-search": "Binary search",
+      "search-on-answer": "Search on the answer",
+      "two-pointers": "Two pointers",
+      "sliding-window": "Sliding window",
+      "monotonic-stack": "Monotonic stack",
+      "sorted-input": "Sorted input"
     },
     "narration": {
       "bubble-sort": {
@@ -1136,7 +1178,192 @@
         "copy": "Copy a[{{i}}] = {{value}} into the new storage ({{copies}} copies so far).",
         "write": "Write {{v}} at position {{at}}: size {{size}}, capacity {{capacity}}.",
         "done": "{{n}} appends cost {{copies}} copies in all: about {{cost}} writes per append. Doubling keeps that below 3, however many values arrive."
+      },
+      "selection-sort": {
+        "ready": "Each pass finds the smallest value left and swaps it to the front of the unsorted part.",
+        "start": "Pass {{i}}: assume a[{{i}}] = {{value}} is the smallest so far.",
+        "compare_smaller": "Is {{value}} smaller than {{min}}? Yes: remember it as the new smallest.",
+        "compare_not": "Is {{value}} smaller than {{min}}? No: keep {{min}}.",
+        "new_min": "The smallest so far is now {{value}}, at position {{at}}.",
+        "swap": "Swap the smallest value, {{value}}, into position {{i}}: it is in its final place.",
+        "stay": "{{value}} is already at position {{i}}: the swap changes nothing.",
+        "done": "Sorted: {{comparisons}} comparisons and {{moves}} swaps for {{n}} values. The comparisons never depend on the order."
+      },
+      "shell-sort": {
+        "ready": "Insertion sort over values a gap apart, with the gap halving each pass: far moves first, fine moves last ({{n}} values).",
+        "gap": "Gap {{gap}}: sort every chain of values {{gap}} apart.",
+        "take": "Lift {{key}} out of position {{i}} as the key.",
+        "compare_bigger": "Is {{value}}, {{gap}} places to the left, bigger than {{key}}? Yes: it jumps right.",
+        "compare_stop": "Is {{value}}, {{gap}} places to the left, bigger than {{key}}? No: the key stops here.",
+        "shift": "Move {{value}} from position {{from}} to {{to}}; the gap moves left.",
+        "insert": "Drop the key {{key}} into position {{at}}.",
+        "done": "Sorted: {{comparisons}} comparisons and {{moves}} shifts for {{n}} values."
+      },
+      "merge-sort": {
+        "ready": "Split the {{n}} values in halves until each part holds one value, then merge sorted halves back together.",
+        "base": "Position {{lo}} alone is already sorted.",
+        "split": "Split {{lo}}–{{hi}} at {{mid}}: sort {{lo}}–{{mid}}, then {{next}}–{{hi}}.",
+        "copy": "Both halves of {{lo}}–{{hi}} are sorted. Copy them into the buffer to merge them.",
+        "pick_left": "Left head {{left}} ≤ right head {{right}}: the left one goes next (left first on ties keeps the sort stable).",
+        "pick_right": "Right head {{right}} < left head {{left}}: the right one goes next.",
+        "left_only": "The right half is used up: the left head {{left}} goes next.",
+        "right_only": "The left half is used up: the right head {{right}} goes next.",
+        "take": "Write {{value}} to position {{k}}.",
+        "done": "Sorted: {{comparisons}} comparisons and {{writes}} writes for {{n}} values."
+      },
+      "quick-sort-3way": {
+        "ready": "Quick sort with three parts: smaller than the pivot, equal to it, bigger. Equal values are finished in one pass.",
+        "base": "Position {{lo}} alone is sorted.",
+        "pivot": "Sort {{lo}}–{{hi}}: the pivot is the first value, {{pivot}}.",
+        "compare_less": "{{value}} < {{pivot}}: it belongs to the smaller part.",
+        "compare_greater": "{{value}} > {{pivot}}: it belongs to the bigger part.",
+        "compare_equal": "{{value}} = {{pivot}}: it joins the equal block.",
+        "less": "Swap {{value}} to position {{lt}}, at the end of the smaller part; lt and i move on.",
+        "greater": "Swap {{value}} to position {{gt}}, at the front of the bigger part; gt moves back and i stays to check what came in.",
+        "equal": "{{value}} stays in the equal block; i moves on.",
+        "done": "Sorted: {{comparisons}} comparisons and {{moves}} swaps for {{n}} values."
+      },
+      "heap-sort": {
+        "ready": "Arrange the {{n}} values as a max-heap (every parent ≥ its children), then take the biggest out again and again.",
+        "build": "Sift down the parent at position {{start}} ({{value}}), so the subtree below it is a heap.",
+        "pick": "The bigger child is {{child}}, at position {{at}}.",
+        "pick_only": "There is one child: {{child}}, at position {{at}}.",
+        "compare_stop": "Parent {{parent}} ≥ child {{child}}: this part is a heap; stop.",
+        "compare_swap": "Parent {{parent}} < child {{child}}: they swap.",
+        "swap": "{{up}} moves up and {{down}} moves down; keep sifting from its new place.",
+        "heap_ready": "The heap is built: the biggest value, {{max}}, is at the root.",
+        "extract": "Swap the root {{max}} to position {{end}}, its final place; the heap shrinks by one.",
+        "done": "Sorted: {{comparisons}} comparisons and {{moves}} swaps for {{n}} values."
+      },
+      "counting-sort": {
+        "ready": "{{n}} whole numbers from 0 to {{max}}: one bucket per value, so no value is compared with another.",
+        "count": "{{v}} goes into bucket {{v}}, which now holds {{count}}.",
+        "write": "Bucket {{v}} hands out a {{v}}: write it at position {{k}} ({{left}} left in the bucket).",
+        "done": "Sorted with {{n}} counts and {{n}} writes, over {{buckets}} buckets."
+      },
+      "radix-sort": {
+        "ready": "Sort {{n}} values up to {{max}} one digit at a time, from the ones up, with ten buckets per pass.",
+        "pass": "New pass: sort by the digit worth {{place}}.",
+        "distribute": "{{v}} has digit {{digit}} in the {{place}}s place: it goes to bucket {{digit}}.",
+        "collect": "Take {{v}} out of bucket {{digit}} and write it at position {{k}}. Buckets keep their arrival order.",
+        "done": "Sorted after {{passes}} passes over {{n}} values, without comparing two values."
+      },
+      "bucket-sort": {
+        "ready": "Scatter {{n}} values into {{count}} buckets by range, sort each bucket, and read the buckets in order.",
+        "scatter": "{{v}} falls in the range {{range}}: into that bucket.",
+        "sort": "Sort bucket {{range}}: {{size}} value(s), a quick job.",
+        "sort_empty": "Bucket {{range}} is empty: nothing to sort.",
+        "gather": "Write {{v}} at position {{k}}.",
+        "done": "Sorted: {{n}} values through {{count}} buckets."
+      },
+      "tim-sort": {
+        "ready": "A simplified Tim sort: insertion sort makes runs of {{run}}, then runs are merged in pairs ({{n}} values).",
+        "run": "Sort the run {{lo}}–{{hi}} with insertion sort.",
+        "take": "Lift {{key}} out of position {{i}} as the key.",
+        "compare_bigger": "Is {{value}} bigger than the key {{key}}? Yes: it shifts right.",
+        "compare_stop": "Is {{value}} bigger than the key {{key}}? No: the key goes right after it.",
+        "shift": "Shift {{value}} right into position {{to}}.",
+        "insert": "Drop the key {{key}} into position {{at}}.",
+        "merge": "Merge the sorted runs {{lo}}–{{mid}} and the run after it, up to {{hi}} (width {{width}}).",
+        "copy": "Copy {{lo}}–{{hi}} into the buffer.",
+        "pick_left": "Left head {{left}} ≤ right head {{right}}: the left one goes next.",
+        "pick_right": "Right head {{right}} < left head {{left}}: the right one goes next.",
+        "left_only": "The right run is used up: {{left}} goes next.",
+        "right_only": "The left run is used up: {{right}} goes next.",
+        "take_value": "Write {{value}} to position {{k}}.",
+        "done": "Sorted: {{comparisons}} comparisons and {{writes}} writes for {{n}} values."
+      },
+      "quickselect": {
+        "ready": "Find the {{k}}-th smallest of {{n}} values: it is the value that would land at position k − 1 if the array were sorted.",
+        "pivot": "Partition {{lo}}–{{hi}} around the last value, {{pivot}}.",
+        "compare_smaller": "Is {{value}} smaller than the pivot {{pivot}}? Yes: it joins the smaller part.",
+        "compare_not": "Is {{value}} smaller than the pivot {{pivot}}? No: it stays.",
+        "swap": "Swap {{value}} to position {{i}}, the end of the smaller part.",
+        "swap_self": "{{value}} is already at position {{i}}: the smaller part grows by one.",
+        "place": "The pivot {{pivot}} goes to position {{i}}, its final place.",
+        "found": "The pivot landed at position {{p}} = k − 1: it is the answer, {{value}}.",
+        "go_right": "The pivot is at {{p}}, left of {{want}}: search only the right side.",
+        "go_left": "The pivot is at {{p}}, right of {{want}}: search only the left side.",
+        "done": "The {{k}}-th smallest value is {{value}}, found with {{comparisons}} comparisons and only part of the array sorted."
+      },
+      "linear-search": {
+        "ready": "Look for {{target}} among {{n}} values, one position at a time.",
+        "check_no": "a[{{i}}] = {{value}}: not {{target}}, move on.",
+        "check_yes": "a[{{i}}] = {{value}}: that is the target.",
+        "found": "Found {{target}} at position {{i}} after {{checks}} checks.",
+        "missing": "{{target}} is not here: all {{checks}} values checked."
+      },
+      "binary-search": {
+        "ready": "Look for {{target}} in {{n}} sorted values by halving the range each time.",
+        "mid": "Range {{lo}}–{{hi}}: the middle is position {{mid}}, holding {{value}}.",
+        "found": "{{target}} is at position {{mid}}: found after {{checks}} checks.",
+        "go_right": "{{value}} < {{target}}: the target can only be to the right. Now lo = {{lo}}.",
+        "go_left": "{{value}} > {{target}}: the target can only be to the left. Now hi = {{hi}}.",
+        "missing": "The range is empty: {{target}} is not here ({{checks}} checks)."
+      },
+      "lower-upper-bound": {
+        "ready": "Find where {{target}} starts and ends among {{n}} sorted values, with two binary searches.",
+        "lower_right": "a[{{mid}}] = {{value}} < {{target}}: the first value ≥ {{target}} is further right.",
+        "lower_left": "a[{{mid}}] = {{value}} ≥ {{target}}: position {{mid}} may be the answer; keep the left half including it.",
+        "lower_done": "Lower bound = {{lower}}: the first position whose value is ≥ {{target}} ({{n}} if none).",
+        "upper_right": "a[{{mid}}] = {{value}} ≤ {{target}}: the first value > {{target}} is further right.",
+        "upper_left": "a[{{mid}}] = {{value}} > {{target}}: position {{mid}} may be the answer; keep the left half including it.",
+        "upper_done": "Upper bound = {{upper}}: the first position whose value is > {{target}} ({{n}} if none).",
+        "done": "{{target}} appears {{count}} time(s): positions {{lower}} up to, not including, {{upper}}."
+      },
+      "binary-search-answer": {
+        "ready": "Ship {{n}} parcels in order within {{days}} days. The smallest daily capacity is between {{lo}} (the heaviest parcel) and {{hi}} (all of them).",
+        "try": "Try the middle capacity, ({{lo}} + {{hi}}) / 2 = {{mid}}.",
+        "fits": "With capacity {{mid}} it takes {{need}} day(s) ≤ {{days}}: it fits, so the answer is {{mid}} or less.",
+        "too_small": "With capacity {{mid}} it takes {{need}} days > {{days}}: too small, so the answer is more than {{mid}}.",
+        "answer": "The smallest capacity is {{capacity}}: {{need}} day(s), after {{tries}} tries."
+      },
+      "exponential-search": {
+        "ready": "Look for {{target}} in {{n}} sorted values: first find a range by doubling, then binary search inside it.",
+        "first_yes": "a[0] is {{target}}: found at once.",
+        "first_no": "a[0] = {{value}} is not {{target}}: start doubling from 1.",
+        "double": "a[{{bound}}] = {{value}} < {{target}}: the target is further on; double to {{next}}.",
+        "stop": "a[{{bound}}] = {{value}} ≥ {{target}}: the target is before this bound.",
+        "range": "The target can only be in {{lo}}–{{hi}}: binary search there.",
+        "mid": "The middle is position {{mid}}, holding {{value}}.",
+        "found": "{{target}} is at position {{mid}}: found after {{checks}} checks.",
+        "go_right": "{{value}} < {{target}}: go right.",
+        "go_left": "{{value}} > {{target}}: go left.",
+        "missing": "{{target}} is not here ({{checks}} checks)."
+      },
+      "two-pointers": {
+        "ready": "Find two values that add up to {{target}} among {{n}} sorted values: one pointer at each end.",
+        "sum": "{{a}} + {{b}} = {{total}}, target {{target}}.",
+        "found": "Positions {{i}} and {{j}} add up to {{total}}: found.",
+        "move_i": "{{total}} < {{target}}: too small. {{value}} cannot be in any pair that fits, so i moves right.",
+        "move_j": "{{total}} > {{target}}: too big. {{value}} cannot be in any pair that fits, so j moves left.",
+        "missing": "The pointers met: no pair adds up to {{target}} ({{checks}} sums)."
+      },
+      "sliding-window": {
+        "ready": "Find the longest run of values with a sum of at most {{limit}}, among {{n}} positive values.",
+        "grow": "Take in {{value}}: the window sum is {{total}} (limit {{limit}}).",
+        "shrink": "Over the limit: drop {{value}} from the left; the sum is {{total}}.",
+        "best": "The window {{lo}}–{{hi}} has {{length}} values: the best so far.",
+        "not_best": "The window has {{length}} values; the best is still {{best}}.",
+        "done": "The longest run has {{best}} values, starting at position {{start}}. The edges moved {{moves}} times for {{n}} values."
+      },
+      "monotonic-stack": {
+        "ready": "For each of the {{n}} values, find the next value to its right that is bigger (−1 if none).",
+        "compare_pop": "The top of the stack, {{top}} at position {{at}}, is smaller than {{value}}: {{value}} is its answer.",
+        "compare_stop": "The top of the stack, {{top}}, is not smaller than {{value}}: stop popping.",
+        "pop": "Pop position {{at}}: the next greater value after {{value}} is {{answer}}.",
+        "push": "Push position {{at}} ({{value}}): it waits for a bigger value. The stack holds {{size}}.",
+        "done": "Done: {{pops}} values got an answer; {{left}} still on the stack have none (−1)."
       }
+    },
+    "compare": {
+      "pick": "Compare with",
+      "none_fit": "No other topic takes this input",
+      "none": "No other topic in this subject takes the same input.",
+      "label": "{{a}} compared with {{b}}",
+      "heading": "Side by side on the same input",
+      "exit": "Exit compare",
+      "finished": "Finished"
     }
   }
 }

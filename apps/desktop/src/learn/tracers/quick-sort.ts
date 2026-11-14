@@ -145,6 +145,7 @@ function trace(values: readonly number[]): Step[] {
 export const quickSort: TracerDef = {
   id: "quick-sort",
   subject: "sorting",
+  compareGroup: "sort",
   scene: "bars",
   markers: MARKERS,
   narrationKeys: KEYS,

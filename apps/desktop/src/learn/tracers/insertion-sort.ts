@@ -104,6 +104,7 @@ function trace(values: readonly number[]): Step[] {
 export const insertionSort: TracerDef = {
   id: "insertion-sort",
   subject: "sorting",
+  compareGroup: "sort",
   scene: "array",
   lifts: true,
   markers: MARKERS,

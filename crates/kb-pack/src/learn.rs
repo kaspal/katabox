@@ -814,12 +814,13 @@ mod tests {
         for f in FILES.iter().chain(["cases.json"].iter()) {
             fs::copy(src.join(f), topic.join(f)).unwrap();
         }
-        // Theory links to the other two sorting topics; keep the copy self-contained.
+        // Theory links to other sorting topics; keep the copy self-contained.
         for f in ["theory.md", "theory.es.md"] {
             let text = fs::read_to_string(topic.join(f)).unwrap();
             let text = text
                 .replace("(learn:sorting/insertion-sort)", "")
-                .replace("(learn:sorting/bubble-sort)", "");
+                .replace("(learn:sorting/bubble-sort)", "")
+                .replace("(learn:sorting/quick-sort-3way)", "");
             fs::write(topic.join(f), text).unwrap();
         }
         let ok = read_learn(&learn, &repo().join("content/problems"));

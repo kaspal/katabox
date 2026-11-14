@@ -66,7 +66,10 @@ describe.each(Object.values(TRACERS))("$id tracer", (def) => {
   it("the hardest inputs stay well under the step cap", () => {
     const worst =
       WORST[def.id] ??
-      (def.input.kind === "values" ? Array.from({ length: def.limits.max_len }, (_, k) => def.limits.max - k) : null);
+      (def.input.kind === "values"
+        ? // Descending from the top of the range, wrapping inside it for short ranges.
+          Array.from({ length: def.limits.max_len }, (_, k) => def.limits.max - (k % (def.limits.max - def.limits.min + 1)))
+        : null);
     if (worst) expect(def.trace(worst).length).toBeLessThan(MAX_STEPS / 2);
   });
 

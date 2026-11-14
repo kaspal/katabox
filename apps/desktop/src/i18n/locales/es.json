@@ -898,7 +898,6 @@
       "practice_one": "Practicar: {{count}} problema",
       "practice_other": "Practicar: {{count}} problemas",
       "compare": "Comparar con…",
-      "compare_soon": "Próximamente: compara dos algoritmos lado a lado.",
       "average": "{{cost}} en promedio",
       "stable": "Estable",
       "not_stable": "No estable",
@@ -933,12 +932,23 @@
         "queries": "consultas",
         "appends": "inserciones",
         "copies": "copias",
-        "per_append": "escrituras por inserción"
+        "per_append": "escrituras por inserción",
+        "counted": "valores contados",
+        "distributed": "valores repartidos",
+        "scattered": "valores repartidos",
+        "comparisons_max": "comparaciones (como máximo)",
+        "probes": "valores revisados",
+        "capacities_tried": "capacidades probadas",
+        "sums": "sumas revisadas",
+        "edge_moves": "movimientos de los bordes",
+        "pushes": "apilados",
+        "pops": "desapilados"
       },
       "rows": {
         "prefix": "Sumas prefijas",
         "buffer": "Búfer de mezcla",
-        "storage": "Almacenamiento nuevo"
+        "storage": "Almacenamiento nuevo",
+        "answer": "Siguiente mayor"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -959,7 +969,8 @@
       "summary_capacity": "Almacenamiento para {{capacity}} valores, {{size}} en uso.",
       "fallback_growth": "{{label}}: {{count}} pasos con n = {{n}}",
       "left_run": "izquierda",
-      "right_run": "derecha"
+      "right_run": "derecha",
+      "stack": "Pila"
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -976,7 +987,25 @@
       "moving": "Moviéndose",
       "result": "Resultado",
       "reading": "Leyendo",
-      "writing": "Escribiendo"
+      "writing": "Escribiendo",
+      "minimum": "El menor hasta ahora",
+      "equal_pivot": "Igual al pivote",
+      "parent": "Padre",
+      "bucket": "Cubeta en uso",
+      "answer": "Respuesta",
+      "found": "Encontrado",
+      "ruled_out": "Descartado",
+      "mid": "Centro",
+      "ruled_out_half": "Revisado, mitad descartada",
+      "lower_bound": "Cota inferior",
+      "target_copies": "Copias del objetivo",
+      "odd_day": "Día impar",
+      "even_day": "Día par",
+      "entering": "Entra en la ventana",
+      "leaving": "Sale de la ventana",
+      "current": "Valor actual",
+      "stack_top": "Cima de la pila",
+      "answered": "Respondido"
     },
     "controls": {
       "label": "Reproducción",
@@ -1051,7 +1080,20 @@
       "bitwise": "Operaciones de bits",
       "prefix-sum": "Sumas prefijas",
       "precomputation": "Precálculo",
-      "amortised-analysis": "Análisis amortizado"
+      "amortised-analysis": "Análisis amortizado",
+      "gap-sequence": "Secuencia de saltos",
+      "duplicates": "Muchos repetidos",
+      "heap": "Montículo",
+      "non-comparison-sort": "Ordenación sin comparaciones",
+      "hybrid": "Híbrido",
+      "selection": "Selección",
+      "linear-scan": "Recorrido lineal",
+      "binary-search": "Búsqueda binaria",
+      "search-on-answer": "Búsqueda sobre la respuesta",
+      "two-pointers": "Dos punteros",
+      "sliding-window": "Ventana deslizante",
+      "monotonic-stack": "Pila monótona",
+      "sorted-input": "Entrada ordenada"
     },
     "narration": {
       "bubble-sort": {
@@ -1136,7 +1178,192 @@
         "copy": "Copia a[{{i}}] = {{value}} al almacenamiento nuevo ({{copies}} copias hasta ahora).",
         "write": "Escribe {{v}} en la posición {{at}}: size {{size}}, capacidad {{capacity}}.",
         "done": "{{n}} inserciones costaron {{copies}} copias en total: unas {{cost}} escrituras por inserción. Doblar la capacidad lo mantiene por debajo de 3, lleguen los valores que lleguen."
+      },
+      "selection-sort": {
+        "ready": "Cada pasada busca el menor valor que queda y lo intercambia al principio de la parte sin ordenar.",
+        "start": "Pasada {{i}}: suponemos que a[{{i}}] = {{value}} es el menor hasta ahora.",
+        "compare_smaller": "¿Es {{value}} menor que {{min}}? Sí: pasa a ser el nuevo menor.",
+        "compare_not": "¿Es {{value}} menor que {{min}}? No: seguimos con {{min}}.",
+        "new_min": "Ahora el menor es {{value}}, en la posición {{at}}.",
+        "swap": "Intercambia el menor, {{value}}, a la posición {{i}}: ya está en su lugar definitivo.",
+        "stay": "{{value}} ya está en la posición {{i}}: el intercambio no cambia nada.",
+        "done": "Ordenado: {{comparisons}} comparaciones y {{moves}} intercambios para {{n}} valores. Las comparaciones no dependen del orden."
+      },
+      "shell-sort": {
+        "ready": "Ordenación por inserción entre valores separados por un salto que se reduce a la mitad en cada pasada: primero movimientos largos y al final los finos ({{n}} valores).",
+        "gap": "Salto {{gap}}: ordena cada cadena de valores separados por {{gap}}.",
+        "take": "Levanta {{key}} de la posición {{i}} como clave.",
+        "compare_bigger": "¿Es {{value}}, {{gap}} posiciones a la izquierda, mayor que {{key}}? Sí: salta a la derecha.",
+        "compare_stop": "¿Es {{value}}, {{gap}} posiciones a la izquierda, mayor que {{key}}? No: la clave se queda aquí.",
+        "shift": "Mueve {{value}} de la posición {{from}} a la {{to}}; el hueco pasa a la izquierda.",
+        "insert": "Deja la clave {{key}} en la posición {{at}}.",
+        "done": "Ordenado: {{comparisons}} comparaciones y {{moves}} desplazamientos para {{n}} valores."
+      },
+      "merge-sort": {
+        "ready": "Divide los {{n}} valores en mitades hasta que cada parte tenga un solo valor y luego mezcla las mitades ordenadas.",
+        "base": "La posición {{lo}} sola ya está ordenada.",
+        "split": "Divide {{lo}}–{{hi}} en {{mid}}: ordena {{lo}}–{{mid}} y luego {{next}}–{{hi}}.",
+        "copy": "Las dos mitades de {{lo}}–{{hi}} están ordenadas. Cópialas al búfer para mezclarlas.",
+        "pick_left": "Cabeza izquierda {{left}} ≤ cabeza derecha {{right}}: va la izquierda (ante un empate gana la izquierda, y así la ordenación es estable).",
+        "pick_right": "Cabeza derecha {{right}} < cabeza izquierda {{left}}: va la derecha.",
+        "left_only": "La mitad derecha se acabó: va la cabeza izquierda {{left}}.",
+        "right_only": "La mitad izquierda se acabó: va la cabeza derecha {{right}}.",
+        "take": "Escribe {{value}} en la posición {{k}}.",
+        "done": "Ordenado: {{comparisons}} comparaciones y {{writes}} escrituras para {{n}} valores."
+      },
+      "quick-sort-3way": {
+        "ready": "Quick sort con tres partes: menores que el pivote, iguales y mayores. Los iguales quedan terminados en una sola pasada.",
+        "base": "La posición {{lo}} sola está ordenada.",
+        "pivot": "Ordena {{lo}}–{{hi}}: el pivote es el primer valor, {{pivot}}.",
+        "compare_less": "{{value}} < {{pivot}}: va a la parte de los menores.",
+        "compare_greater": "{{value}} > {{pivot}}: va a la parte de los mayores.",
+        "compare_equal": "{{value}} = {{pivot}}: se une al bloque de iguales.",
+        "less": "Intercambia {{value}} a la posición {{lt}}, al final de los menores; lt e i avanzan.",
+        "greater": "Intercambia {{value}} a la posición {{gt}}, al principio de los mayores; gt retrocede e i se queda para revisar lo que ha llegado.",
+        "equal": "{{value}} se queda en el bloque de iguales; i avanza.",
+        "done": "Ordenado: {{comparisons}} comparaciones y {{moves}} intercambios para {{n}} valores."
+      },
+      "heap-sort": {
+        "ready": "Organiza los {{n}} valores como un montículo de máximos (cada padre ≥ sus hijos) y saca el mayor una y otra vez.",
+        "build": "Hunde el padre de la posición {{start}} ({{value}}) para que el subárbol que hay debajo sea un montículo.",
+        "pick": "El hijo mayor es {{child}}, en la posición {{at}}.",
+        "pick_only": "Solo hay un hijo: {{child}}, en la posición {{at}}.",
+        "compare_stop": "Padre {{parent}} ≥ hijo {{child}}: esta parte ya es un montículo; para.",
+        "compare_swap": "Padre {{parent}} < hijo {{child}}: se intercambian.",
+        "swap": "{{up}} sube y {{down}} baja; sigue hundiéndolo desde su nuevo sitio.",
+        "heap_ready": "El montículo está construido: el mayor, {{max}}, está en la raíz.",
+        "extract": "Intercambia la raíz {{max}} a la posición {{end}}, su lugar definitivo; el montículo pierde un elemento.",
+        "done": "Ordenado: {{comparisons}} comparaciones y {{moves}} intercambios para {{n}} valores."
+      },
+      "counting-sort": {
+        "ready": "{{n}} números enteros de 0 a {{max}}: una cubeta por valor, así que nunca se comparan dos valores.",
+        "count": "{{v}} entra en la cubeta {{v}}, que ya tiene {{count}}.",
+        "write": "La cubeta {{v}} entrega un {{v}}: escríbelo en la posición {{k}} (quedan {{left}} en la cubeta).",
+        "done": "Ordenado con {{n}} recuentos y {{n}} escrituras, usando {{buckets}} cubetas."
+      },
+      "radix-sort": {
+        "ready": "Ordena {{n}} valores de hasta {{max}} cifra a cifra, empezando por las unidades, con diez cubetas por pasada.",
+        "pass": "Nueva pasada: ordena por la cifra que vale {{place}}.",
+        "distribute": "{{v}} tiene un {{digit}} en la posición de las {{place}}: va a la cubeta {{digit}}.",
+        "collect": "Saca {{v}} de la cubeta {{digit}} y escríbelo en la posición {{k}}. Las cubetas respetan el orden de llegada.",
+        "done": "Ordenado tras {{passes}} pasadas sobre {{n}} valores, sin comparar nunca dos valores."
+      },
+      "bucket-sort": {
+        "ready": "Reparte {{n}} valores en {{count}} cubetas por tramos, ordena cada cubeta y lee las cubetas en orden.",
+        "scatter": "{{v}} cae en el tramo {{range}}: a esa cubeta.",
+        "sort": "Ordena la cubeta {{range}}: {{size}} valor(es), poco trabajo.",
+        "sort_empty": "La cubeta {{range}} está vacía: nada que ordenar.",
+        "gather": "Escribe {{v}} en la posición {{k}}.",
+        "done": "Ordenado: {{n}} valores a través de {{count}} cubetas."
+      },
+      "tim-sort": {
+        "ready": "Un Tim sort simplificado: la ordenación por inserción crea tramos de {{run}} y luego se mezclan por parejas ({{n}} valores).",
+        "run": "Ordena el tramo {{lo}}–{{hi}} por inserción.",
+        "take": "Levanta {{key}} de la posición {{i}} como clave.",
+        "compare_bigger": "¿Es {{value}} mayor que la clave {{key}}? Sí: se desplaza a la derecha.",
+        "compare_stop": "¿Es {{value}} mayor que la clave {{key}}? No: la clave va justo después.",
+        "shift": "Desplaza {{value}} a la derecha, a la posición {{to}}.",
+        "insert": "Deja la clave {{key}} en la posición {{at}}.",
+        "merge": "Mezcla el tramo ordenado {{lo}}–{{mid}} con el siguiente, hasta {{hi}} (ancho {{width}}).",
+        "copy": "Copia {{lo}}–{{hi}} al búfer.",
+        "pick_left": "Cabeza izquierda {{left}} ≤ cabeza derecha {{right}}: va la izquierda.",
+        "pick_right": "Cabeza derecha {{right}} < cabeza izquierda {{left}}: va la derecha.",
+        "left_only": "El tramo derecho se acabó: va {{left}}.",
+        "right_only": "El tramo izquierdo se acabó: va {{right}}.",
+        "take_value": "Escribe {{value}} en la posición {{k}}.",
+        "done": "Ordenado: {{comparisons}} comparaciones y {{writes}} escrituras para {{n}} valores."
+      },
+      "quickselect": {
+        "ready": "Busca el {{k}}.º menor de {{n}} valores: el que caería en la posición k − 1 si el arreglo estuviera ordenado.",
+        "pivot": "Particiona {{lo}}–{{hi}} alrededor del último valor, {{pivot}}.",
+        "compare_smaller": "¿Es {{value}} menor que el pivote {{pivot}}? Sí: se une a la parte de los menores.",
+        "compare_not": "¿Es {{value}} menor que el pivote {{pivot}}? No: se queda.",
+        "swap": "Intercambia {{value}} a la posición {{i}}, al final de los menores.",
+        "swap_self": "{{value}} ya está en la posición {{i}}: la parte de los menores crece en uno.",
+        "place": "El pivote {{pivot}} va a la posición {{i}}, su lugar definitivo.",
+        "found": "El pivote cayó en la posición {{p}} = k − 1: es la respuesta, {{value}}.",
+        "go_right": "El pivote está en {{p}}, a la izquierda de {{want}}: busca solo en el lado derecho.",
+        "go_left": "El pivote está en {{p}}, a la derecha de {{want}}: busca solo en el lado izquierdo.",
+        "done": "El {{k}}.º menor es {{value}}, encontrado con {{comparisons}} comparaciones y solo parte del arreglo ordenada."
+      },
+      "linear-search": {
+        "ready": "Busca {{target}} entre {{n}} valores, posición a posición.",
+        "check_no": "a[{{i}}] = {{value}}: no es {{target}}, sigue.",
+        "check_yes": "a[{{i}}] = {{value}}: es el objetivo.",
+        "found": "{{target}} está en la posición {{i}}, tras {{checks}} comprobaciones.",
+        "missing": "{{target}} no está: se revisaron los {{checks}} valores."
+      },
+      "binary-search": {
+        "ready": "Busca {{target}} en {{n}} valores ordenados partiendo el tramo por la mitad cada vez.",
+        "mid": "Tramo {{lo}}–{{hi}}: el centro es la posición {{mid}}, con {{value}}.",
+        "found": "{{target}} está en la posición {{mid}}: encontrado tras {{checks}} comprobaciones.",
+        "go_right": "{{value}} < {{target}}: el objetivo solo puede estar a la derecha. Ahora lo = {{lo}}.",
+        "go_left": "{{value}} > {{target}}: el objetivo solo puede estar a la izquierda. Ahora hi = {{hi}}.",
+        "missing": "El tramo quedó vacío: {{target}} no está ({{checks}} comprobaciones)."
+      },
+      "lower-upper-bound": {
+        "ready": "Encuentra dónde empieza y dónde acaba {{target}} entre {{n}} valores ordenados, con dos búsquedas binarias.",
+        "lower_right": "a[{{mid}}] = {{value}} < {{target}}: el primer valor ≥ {{target}} está más a la derecha.",
+        "lower_left": "a[{{mid}}] = {{value}} ≥ {{target}}: la posición {{mid}} puede ser la respuesta; quédate con la mitad izquierda, incluida.",
+        "lower_done": "Cota inferior = {{lower}}: la primera posición con un valor ≥ {{target}} ({{n}} si no hay ninguna).",
+        "upper_right": "a[{{mid}}] = {{value}} ≤ {{target}}: el primer valor > {{target}} está más a la derecha.",
+        "upper_left": "a[{{mid}}] = {{value}} > {{target}}: la posición {{mid}} puede ser la respuesta; quédate con la mitad izquierda, incluida.",
+        "upper_done": "Cota superior = {{upper}}: la primera posición con un valor > {{target}} ({{n}} si no hay ninguna).",
+        "done": "{{target}} aparece {{count}} vez/veces: de la posición {{lower}} hasta {{upper}}, sin incluirla."
+      },
+      "binary-search-answer": {
+        "ready": "Envía {{n}} paquetes en orden en {{days}} días como mucho. La capacidad diaria mínima está entre {{lo}} (el paquete más pesado) y {{hi}} (todos juntos).",
+        "try": "Prueba la capacidad del centro, ({{lo}} + {{hi}}) / 2 = {{mid}}.",
+        "fits": "Con capacidad {{mid}} hacen falta {{need}} día(s) ≤ {{days}}: cabe, así que la respuesta es {{mid}} o menos.",
+        "too_small": "Con capacidad {{mid}} hacen falta {{need}} días > {{days}}: no basta, así que la respuesta es mayor que {{mid}}.",
+        "answer": "La capacidad mínima es {{capacity}}: {{need}} día(s), tras {{tries}} pruebas."
+      },
+      "exponential-search": {
+        "ready": "Busca {{target}} en {{n}} valores ordenados: primero acota un tramo doblando y luego busca en él por bisección.",
+        "first_yes": "a[0] es {{target}}: encontrado a la primera.",
+        "first_no": "a[0] = {{value}} no es {{target}}: empieza a doblar desde 1.",
+        "double": "a[{{bound}}] = {{value}} < {{target}}: el objetivo está más allá; dobla a {{next}}.",
+        "stop": "a[{{bound}}] = {{value}} ≥ {{target}}: el objetivo está antes de esta cota.",
+        "range": "El objetivo solo puede estar en {{lo}}–{{hi}}: búsqueda binaria ahí.",
+        "mid": "El centro es la posición {{mid}}, con {{value}}.",
+        "found": "{{target}} está en la posición {{mid}}: encontrado tras {{checks}} comprobaciones.",
+        "go_right": "{{value}} < {{target}}: a la derecha.",
+        "go_left": "{{value}} > {{target}}: a la izquierda.",
+        "missing": "{{target}} no está ({{checks}} comprobaciones)."
+      },
+      "two-pointers": {
+        "ready": "Encuentra dos valores que sumen {{target}} entre {{n}} valores ordenados: un puntero en cada extremo.",
+        "sum": "{{a}} + {{b}} = {{total}}, objetivo {{target}}.",
+        "found": "Las posiciones {{i}} y {{j}} suman {{total}}: encontrado.",
+        "move_i": "{{total}} < {{target}}: se queda corto. {{value}} no puede formar ninguna pareja válida, así que i avanza.",
+        "move_j": "{{total}} > {{target}}: se pasa. {{value}} no puede formar ninguna pareja válida, así que j retrocede.",
+        "missing": "Los punteros se cruzaron: ninguna pareja suma {{target}} ({{checks}} sumas)."
+      },
+      "sliding-window": {
+        "ready": "Encuentra el tramo más largo con una suma de {{limit}} como mucho, entre {{n}} valores positivos.",
+        "grow": "Entra {{value}}: la suma de la ventana es {{total}} (límite {{limit}}).",
+        "shrink": "Se pasa del límite: sale {{value}} por la izquierda; la suma es {{total}}.",
+        "best": "La ventana {{lo}}–{{hi}} tiene {{length}} valores: la mejor hasta ahora.",
+        "not_best": "La ventana tiene {{length}} valores; la mejor sigue siendo {{best}}.",
+        "done": "El tramo más largo tiene {{best}} valores y empieza en la posición {{start}}. Los bordes se movieron {{moves}} veces para {{n}} valores."
+      },
+      "monotonic-stack": {
+        "ready": "Para cada uno de los {{n}} valores, busca el siguiente valor mayor a su derecha (−1 si no hay).",
+        "compare_pop": "La cima de la pila, {{top}} en la posición {{at}}, es menor que {{value}}: {{value}} es su respuesta.",
+        "compare_stop": "La cima de la pila, {{top}}, no es menor que {{value}}: deja de desapilar.",
+        "pop": "Desapila la posición {{at}}: el siguiente mayor después de {{value}} es {{answer}}.",
+        "push": "Apila la posición {{at}} ({{value}}): espera a un valor mayor. La pila tiene {{size}}.",
+        "done": "Hecho: {{pops}} valores tienen respuesta; los {{left}} que quedan en la pila no tienen (−1)."
       }
+    },
+    "compare": {
+      "pick": "Comparar con",
+      "none_fit": "Ningún otro tema acepta esta entrada",
+      "none": "Ningún otro tema de esta materia acepta la misma entrada.",
+      "label": "{{a}} comparado con {{b}}",
+      "heading": "Lado a lado con la misma entrada",
+      "exit": "Salir de la comparación",
+      "finished": "Terminado"
     }
   }
 }
