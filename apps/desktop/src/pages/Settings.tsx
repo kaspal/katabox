@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Gauge, Loader2, Monitor, Moon, Sun, Upload } from "lucide-react";
@@ -23,9 +23,21 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { UI_LANGS, type UiLangCode } from "@/i18n";
 import { THEMES, usePrefs, type ThemePref } from "@/lib/prefs";
 import { api } from "@/lib/api";
+import { copyText, diagnosticsText, recentErrors } from "@/lib/diagnostics";
 import { queryKeys, useAppInfo, useCalibration } from "@/lib/queries";
 import { usePracticePrefs } from "@/lib/practice";
-import { FONT_SIZES, KEYMAPS, useEditorPrefs, type KeymapPref } from "@/lib/settings";
+import {
+  EDITOR_THEMES,
+  FONT_SIZES,
+  KEYMAPS,
+  TAB_WIDTHS,
+  useEditorPrefs,
+  type EditorTheme,
+  type KeymapPref,
+} from "@/lib/settings";
+
+// CodeMirror lives in the lazy workspace chunk; the preview loads it only here.
+const EditorPreview = lazy(() => import("@/workspace/editor/EditorPreview"));
 
 const THEME_ICON: Record<ThemePref, typeof Sun> = { system: Monitor, light: Sun, dark: Moon };
 
@@ -40,6 +52,71 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 /** Settings → About → Third-party notices: the bundled THIRD_PARTY_NOTICES.txt, read by
  * Rust (ADR 0021). Development builds have none. */
+/** Copy diagnostics: shows exactly what will be copied (versions, flags and recent
+ * error codes; no code, paths or personal data), then copies it. */
+function DiagnosticsButton() {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
+  const diag = useQuery({
+    queryKey: ["diagnostics"],
+    queryFn: async () => diagnosticsText(await api.diagnostics(), recentErrors()),
+    enabled: open,
+    staleTime: 0,
+    gcTime: 0,
+  });
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          setCopied("idle");
+          setOpen(true);
+        }}
+      >
+        {t("settings.diagnostics.button")}
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-2xl" data-testid="diagnostics">
+          <DialogHeader>
+            <DialogTitle>{t("settings.diagnostics.title")}</DialogTitle>
+            <DialogDescription>{t("settings.diagnostics.intro")}</DialogDescription>
+          </DialogHeader>
+          {diag.isPending ? (
+            <Skeleton className="h-48 w-full" />
+          ) : diag.error ? (
+            <ErrorNotice error={diag.error} onRetry={() => void diag.refetch()} />
+          ) : (
+            <pre
+              className="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-md border bg-muted p-3 font-mono text-xs"
+              data-testid="diagnostics-text"
+            >
+              {diag.data}
+            </pre>
+          )}
+          <div className="flex items-center justify-end gap-3">
+            <span role="status" className="text-sm text-muted-foreground">
+              {copied === "done"
+                ? t("settings.diagnostics.copied")
+                : copied === "failed"
+                  ? t("settings.diagnostics.copyFailed")
+                  : ""}
+            </span>
+            <Button
+              size="sm"
+              disabled={!diag.data}
+              onClick={async () => setCopied((await copyText(diag.data ?? "")) ? "done" : "failed")}
+            >
+              {t("settings.diagnostics.copy")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function NoticesButton() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -257,6 +334,7 @@ function PracticeSection() {
       <dl className="space-y-3">
         {toggle(t("practice.settings.daily"), prefs.daily, prefs.setDaily)}
         {toggle(t("practice.settings.review"), prefs.review, prefs.setReview)}
+        {toggle(t("practice.settings.learnReview"), prefs.learnReview, prefs.setLearnReview)}
       </dl>
     </Section>
   );
@@ -417,7 +495,41 @@ export function Settings() {
                 </SelectContent>
               </Select>
             </Row>
+            <Row label={t("settings.tabWidth")}>
+              <Select value={String(editor.tabWidth)} onValueChange={(v) => editor.setTabWidth(Number(v))}>
+                <SelectTrigger size="sm" className="w-44" aria-label={t("settings.tabWidth")}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TAB_WIDTHS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n === 0 ? t("settings.tabWidthLanguage") : t("settings.tabWidthSpaces", { count: n })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Row>
+            <Row label={t("settings.editorTheme")}>
+              <Select value={editor.theme} onValueChange={(v) => editor.setTheme(v as EditorTheme)}>
+                <SelectTrigger size="sm" className="w-44" aria-label={t("settings.editorTheme")}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EDITOR_THEMES.map((id) => (
+                    <SelectItem key={id} value={id}>
+                      {t(`settings.editorThemes.${id}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Row>
           </dl>
+          <div className="mt-4 space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground">{t("settings.preview")}</p>
+            <Suspense fallback={<Skeleton className="h-56 w-full" />}>
+              <EditorPreview />
+            </Suspense>
+          </div>
         </Section>
 
         <PracticeSection />
@@ -464,6 +576,9 @@ export function Settings() {
               </Row>
               <Row label={t("settings.notices")}>
                 <NoticesButton />
+              </Row>
+              <Row label={t("settings.diagnostics.label")}>
+                <DiagnosticsButton />
               </Row>
             </dl>
           )}

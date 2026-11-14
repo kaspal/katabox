@@ -13,6 +13,8 @@ export type VizSettings = {
   as: Record<string, ViewAs>;
   /** Overrides of the pointer defaults, both ways. */
   pointers: Record<string, boolean>;
+  /** The larger view stays open across steps and runs until the user closes it. */
+  large?: boolean;
 };
 
 export const DEFAULT_SETTINGS: VizSettings = { show: null, as: {}, pointers: {} };
@@ -46,7 +48,7 @@ export function parseSettings(v: JsonValue | null): VizSettings | undefined {
   if (typeof v.pointers === "object" && v.pointers !== null && !Array.isArray(v.pointers)) {
     for (const [k, x] of Object.entries(v.pointers)) if (typeof x === "boolean") pointers[k] = x;
   }
-  return { show, as, pointers };
+  return { show, as, pointers, ...(v.large === true ? { large: true } : {}) };
 }
 
 /** The variables to ask the debugger for. */
@@ -119,7 +121,9 @@ export type LinkedModel = { kind: "linked"; name: string; nodes: ListNodeBox[]; 
 export type TreeModel = { kind: "tree"; name: string; nodes: TreeNodeBox[]; more: boolean; heap: boolean };
 export type MapModel = { kind: "map"; name: string; type: string; entries: { key: string; value: string }[]; len: number };
 export type SetModel = { kind: "set"; name: string; cells: Cell[]; len: number };
-export type GraphEdge = { a: number; b: number; count: number; both: boolean };
+/** `weight`: the label of a weighted edge (`[neighbour, weight]`); `a / b` when the two
+ * directions differ. */
+export type GraphEdge = { a: number; b: number; count: number; both: boolean; weight?: string };
 export type GraphModel = { kind: "graph"; name: string; nodes: string[]; edges: GraphEdge[]; total: number };
 export type ScalarModel = { kind: "scalar"; name: string; text: string };
 export type Model =
@@ -253,7 +257,14 @@ function graphModel(name: string, snap: DebugSnapshot, o: SnapObject): GraphMode
     }
     return i;
   };
-  const raw: [number, number][] = [];
+  const raw: [number, number, string | undefined][] = [];
+  /** A `[neighbour, weight]` pair (a list or tuple of two or more), else null. */
+  const pair = (x: SnapValue): { to: SnapValue; weight: string } | null => {
+    if (x.t !== "ref") return null;
+    const l = objectOf(snap, x);
+    if (!l || l.kind !== "list" || l.items.length < 2) return null;
+    return { to: l.items[0], weight: valueText(snap, l.items[1]) };
+  };
   if (o.kind === "list") {
     const rows = o.items.map((r) => objectOf(snap, r));
     if (rows.some((r) => r === null || r.kind !== "list")) return null;
@@ -264,13 +275,14 @@ function graphModel(name: string, snap: DebugSnapshot, o: SnapObject): GraphMode
     lists.forEach((row, i) => {
       row.items.forEach((x, j) => {
         if (matrix) {
-          if (intOf(x) !== 0) raw.push([i, j]);
+          if (intOf(x) !== 0) raw.push([i, j, undefined]);
           return;
         }
         // An adjacency list: a neighbour, or [neighbour, weight].
-        const first = x.t === "ref" ? (objectOf(snap, x) as Extract<SnapObject, { kind: "list" }> | null)?.items?.[0] : x;
+        const p = pair(x);
+        const first = p ? p.to : x.t === "ref" ? (objectOf(snap, x) as Extract<SnapObject, { kind: "list" }> | null)?.items?.[0] : x;
         const to = first ? intOf(first) : null;
-        if (to !== null) raw.push([i, node(String(to))]);
+        if (to !== null) raw.push([i, node(String(to)), p?.weight]);
       });
     });
   } else if (o.kind === "map") {
@@ -278,7 +290,10 @@ function graphModel(name: string, snap: DebugSnapshot, o: SnapObject): GraphMode
       const from = node(valueText(snap, k));
       const list = objectOf(snap, x);
       if (!list || (list.kind !== "list" && list.kind !== "set")) return null;
-      for (const y of list.items) raw.push([from, node(valueText(snap, y))]);
+      for (const y of list.items) {
+        const p = pair(y);
+        raw.push(p ? [from, node(valueText(snap, p.to)), p.weight] : [from, node(valueText(snap, y)), undefined]);
+      }
     }
   } else {
     return null;
@@ -287,14 +302,20 @@ function graphModel(name: string, snap: DebugSnapshot, o: SnapObject): GraphMode
   const keep = Math.min(total, MAX_GRAPH_NODES);
   // One edge per pair of nodes: a count for duplicates, both directions merged.
   const byPair = new Map<string, GraphEdge>();
-  for (const [x, y] of raw) {
+  for (const [x, y, w] of raw) {
     if (x >= keep || y >= keep) continue;
     const [a, b] = x <= y ? [x, y] : [y, x];
     const key = `${a}-${b}`;
     const e = byPair.get(key);
-    if (!e) byPair.set(key, { a: x, b: y, count: 1, both: false });
+    if (!e) byPair.set(key, { a: x, b: y, count: 1, both: false, ...(w !== undefined ? { weight: w } : {}) });
     else if (e.a === x && e.b === y) e.count++;
-    else e.both = true;
+    else {
+      e.both = true;
+      // An undirected graph lists each weighted edge twice; show a weight once, or
+      // both when the directions differ.
+      if (w !== undefined && e.weight !== undefined && w !== e.weight) e.weight = `${e.weight} / ${w}`;
+      else if (w !== undefined && e.weight === undefined) e.weight = w;
+    }
   }
   return { kind: "graph", name, nodes: labels.slice(0, keep), edges: [...byPair.values()], total };
 }

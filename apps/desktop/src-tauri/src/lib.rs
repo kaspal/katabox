@@ -47,6 +47,39 @@ async fn app_info(state: State<'_, AppState>) -> Res<AppInfo> {
     state.app()?.app_info().await
 }
 
+/// The Learn topics of each practice pattern (Library and Progress link to them).
+#[tauri::command]
+#[specta::specta]
+async fn learn_by_pattern(
+    state: State<'_, AppState>,
+    ui_lang: UiLang,
+) -> Res<Vec<kb_app::PatternTopics>> {
+    state.app()?.learn_by_pattern(ui_lang).await
+}
+
+/// Home's "Review a topic": a viewed topic (`learn.viewed`, in order) with an unsolved
+/// linked problem.
+#[tauri::command]
+#[specta::specta]
+async fn topic_to_review(
+    state: State<'_, AppState>,
+    viewed: Vec<String>,
+    ui_lang: UiLang,
+) -> Res<Option<kb_app::TopicReview>> {
+    state.app()?.topic_to_review(&viewed, ui_lang).await
+}
+
+/// What "Copy diagnostics" shows: versions and flags, never paths or user data.
+#[tauri::command]
+#[specta::specta]
+async fn diagnostics(state: State<'_, AppState>) -> Res<kb_app::Diagnostics> {
+    let mut d = state.app()?.diagnostics().await?;
+    if cfg!(feature = "updater") {
+        d.features.push("updater".into());
+    }
+    Ok(d)
+}
+
 #[tauri::command]
 #[specta::specta]
 async fn list_problems(
@@ -728,6 +761,7 @@ async fn uninstall_language(state: State<'_, AppState>, language: Language) -> R
 fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::<tauri::Wry>::new().commands(tauri_specta::collect_commands![
         app_info,
+        diagnostics,
         third_party_notices,
         activity,
         solved_breakdown,
@@ -737,6 +771,8 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         get_problem,
         learn_catalog,
         learn_paths,
+        learn_by_pattern,
+        topic_to_review,
         learn_topic,
         search_learn,
         editorial,

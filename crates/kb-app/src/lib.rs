@@ -13,8 +13,10 @@
 
 mod calibration;
 pub mod debug;
+pub mod diagnostics;
 mod error;
 pub mod interview;
+pub mod learn_links;
 pub mod practice;
 pub mod profile;
 mod root;
@@ -59,7 +61,9 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 
 pub use calibration::{CALIBRATION_SETTING, CalibrationInfo};
+pub use diagnostics::{Diagnostics, RuntimeDiag};
 pub use error::{AppError, AppErrorCode};
+pub use learn_links::{PatternTopics, TopicReview};
 pub use root::{RootSource, SANDBOX_ROOT_ENV, SANDBOX_ROOT_SETTING};
 
 pub type Result<T, E = AppError> = std::result::Result<T, E>;

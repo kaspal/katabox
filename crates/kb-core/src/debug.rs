@@ -238,6 +238,9 @@ pub enum SnapObject {
         type_name: String,
         items: Vec<SnapValue>,
         len: u32,
+        /// A typed number array (Python `array.array`, a JavaScript typed array).
+        #[serde(default)]
+        typed: bool,
     },
     Map {
         #[serde(rename = "type")]

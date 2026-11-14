@@ -1386,3 +1386,51 @@ async fn learn_commands_read_the_bundled_topics() {
     let found = a.search_learn("pivote", UiLang::En).await.unwrap();
     assert_eq!(found[0].id, "quick-sort");
 }
+
+#[tokio::test]
+async fn diagnostics_name_versions_but_no_paths_or_user() {
+    let p = paths("diagnostics");
+    let app = App::open(&p).await.unwrap();
+    let d = app.diagnostics().await.unwrap();
+    assert_eq!(d.app_version, env!("CARGO_PKG_VERSION"));
+    assert_eq!(d.os, std::env::consts::OS);
+    assert!(d.content_pack.starts_with("test "), "{}", d.content_pack);
+    assert_eq!(d.runtimes.len(), kb_judge::languages::SUPPORTED.len());
+    if kb_toolchain::Platform::current().is_some() {
+        let py = d
+            .runtimes
+            .iter()
+            .find(|r| r.language == kb_core::Language::Python)
+            .unwrap();
+        assert!(
+            py.version
+                .as_deref()
+                .is_some_and(|v| v.starts_with("python-")),
+            "{py:?}"
+        );
+    }
+    let text = serde_json::to_string(&d).unwrap();
+    let mut private: Vec<String> = vec![
+        p.user_db.parent().unwrap().display().to_string(),
+        app.sandbox_root().display().to_string(),
+    ];
+    for var in ["USERNAME", "USER", "USERPROFILE", "HOME"] {
+        if let Ok(v) = std::env::var(var)
+            && v.len() > 2
+        {
+            private.push(v);
+        }
+    }
+    for needle in private {
+        assert!(
+            !text.contains(&needle),
+            "diagnostics contain {needle:?}: {text}"
+        );
+        let escaped = serde_json::to_string(&needle).unwrap();
+        assert!(
+            !text.contains(escaped.trim_matches('"')),
+            "diagnostics contain {needle:?}"
+        );
+    }
+    assert!(!text.contains(":\\") && !text.contains("/home/"), "{text}");
+}

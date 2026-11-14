@@ -56,3 +56,54 @@ describe("Settings: judge speed (ADR 0017)", () => {
     await waitFor(() => expect(within(s).getByRole("button", { name: "Recalibrate" })).toBeEnabled());
   });
 });
+
+describe("Settings: editor preferences", () => {
+  useFakeApi();
+
+  it("sets the colour theme and tab width, saved and shown in the live preview", async () => {
+    const fake = setFakeApi();
+    const { user } = renderApp("/settings");
+    const preview = await screen.findByTestId("editor-preview", undefined, { timeout: 5000 });
+    const host = () => preview.querySelector("[data-testid=code-editor]") as HTMLElement;
+    expect(host().className).not.toContain("cm-theme-");
+
+    await user.click(screen.getByRole("combobox", { name: "Colour theme" }));
+    await user.click(await screen.findByRole("option", { name: "Paper" }));
+    await waitFor(() => expect(host().className).toContain("cm-theme-paper"));
+    expect(fake.api.setSetting).toHaveBeenCalledWith("editor.theme", "paper");
+
+    await user.click(screen.getByRole("combobox", { name: "Tab width" }));
+    await user.click(await screen.findByRole("option", { name: "8 spaces" }));
+    expect(fake.api.setSetting).toHaveBeenCalledWith("editor.tab_width", 8);
+  });
+
+  it("offers the Emacs keymap", async () => {
+    const fake = setFakeApi();
+    const { user } = renderApp("/settings");
+    await user.click(await screen.findByRole("radio", { name: "Emacs" }));
+    expect(fake.api.setSetting).toHaveBeenCalledWith("editor.keymap", "emacs");
+  });
+});
+
+describe("Settings: Copy diagnostics", () => {
+  useFakeApi();
+
+  it("shows exactly what will be copied, with no paths, and copies it", async () => {
+    const { recordError, clearRecentErrors } = await import("@/lib/diagnostics");
+    clearRecentErrors();
+    recordError("toolchain_missing");
+    recordError("C:\\Users\\someone\\secret"); // not a code: kept as "unknown"
+    const { user } = renderApp("/settings");
+    await user.click(await screen.findByRole("button", { name: "Copy diagnostics…" }));
+    const text = (await screen.findByTestId("diagnostics-text")).textContent ?? "";
+    expect(text).toContain("app: 0.1.0");
+    expect(text).toContain("python: installed (python-3.14), language server available");
+    expect(text).toContain("toolchain_missing");
+    expect(text).toContain("unknown");
+    expect(text).not.toMatch(/Users|someone|secret|[A-Z]:\\/);
+    await user.click(screen.getByRole("button", { name: "Copy" }));
+    // user-event's clipboard stub stands in for the system clipboard.
+    expect(await navigator.clipboard.readText()).toBe(text);
+    expect(await screen.findByText("Copied.")).toBeInTheDocument();
+  });
+});

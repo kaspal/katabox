@@ -72,6 +72,10 @@ const S = {
   isProxy: utilTypes.isProxy,
   isMap: utilTypes.isMap,
   isSet: utilTypes.isSet,
+  // Typed arrays (Int32Array, ...) are drawn as lists, marked `typed`. Their length is a
+  // getter on the shared prototype; their elements are own data properties.
+  isTypedArray: utilTypes.isTypedArray,
+  typedLength: Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Int8Array.prototype), "length")!.get!,
   objectProto: Object.prototype,
   mapEntries: Map.prototype.entries,
   mapSize: Object.getOwnPropertyDescriptor(Map.prototype, "size")!.get!,
@@ -224,7 +228,7 @@ function snapshot(names: unknown[], localNames: string[], globalNames: string[],
     if (typeof v !== "object" || v === null || S.isProxy(v)) return opaque(v);
     let node: ReturnType<typeof snapNode> = null;
     const plain = S.getProto(v) === S.objectProto || S.getProto(v) === null;
-    if (!S.isArray(v) && !S.isMap(v) && !S.isSet(v) && !plain) {
+    if (!S.isArray(v) && !S.isMap(v) && !S.isSet(v) && !S.isTypedArray(v) && !plain) {
       node = snapNode(v);
       if (node === null) return opaque(v);
     }
@@ -258,7 +262,7 @@ function snapshot(names: unknown[], localNames: string[], globalNames: string[],
       for (let i = 0; i < links.length; i++) o[links[i]] = valueOf(node[1][links[i]], depth + 1);
       const n = S.apply(S.mapGet, INPUT_IDS, [v]);
       if (n !== undefined) o.input = n;
-    } else if (S.isMap(v) || (!S.isArray(v) && !S.isSet(v))) {
+    } else if (S.isMap(v) || (!S.isArray(v) && !S.isSet(v) && !S.isTypedArray(v))) {
       const entries: unknown[] = [];
       const add = (k: unknown, x: unknown): boolean => {
         if (entries.length >= SNAP_MAX_ITEMS || budget <= 1 || full()) {
@@ -315,7 +319,12 @@ function snapshot(names: unknown[], localNames: string[], globalNames: string[],
         }
       } else {
         o.kind = "list";
-        len = snapOwn(v as object, "length").value as number;
+        if (S.isTypedArray(v)) {
+          o.typed = true;
+          len = S.apply(S.typedLength, v, []) as number;
+        } else {
+          len = snapOwn(v as object, "length").value as number;
+        }
         for (let i = 0; i < len; i++) {
           // An index may be an accessor: never call its getter.
           const d = S.getDesc(v as object, `${i}`);

@@ -67,7 +67,7 @@ export function CompareView({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const { fontSize, ligatures } = useEditorPrefs();
+  const { fontSize, ligatures, tabWidth, theme: editorTheme } = useEditorPrefs();
   const solution = useAcceptedSolution(problem, language);
   const name = t(`languages.${language}`);
   return (
@@ -98,6 +98,8 @@ export function CompareView({
             lang={language}
             readOnly
             fontSize={fontSize}
+            tabWidth={tabWidth}
+            colorTheme={editorTheme}
             ligatures={ligatures}
             ariaLabel={t("practice.crossLang.accepted", { language: name })}
           />

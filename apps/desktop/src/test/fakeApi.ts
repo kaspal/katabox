@@ -384,6 +384,21 @@ export function createFakeApi(
   const api: Api = {
     appInfo: vi.fn(async () => appInfoFor(installed)),
     thirdPartyNotices: vi.fn(async () => opts.notices ?? null),
+    diagnostics: vi.fn(async () => ({
+      app_version: "0.1.0",
+      os: "windows",
+      arch: "x86_64",
+      dev_data: false,
+      content_pack: "katabox-content 1.0.0",
+      user_schema_version: 4,
+      sandbox_root_source: "app_data" as const,
+      time_scale: 1.1,
+      runtimes: [
+        { language: "python" as const, installed: true, version: "python-3.14", language_server: true },
+        { language: "rust" as const, installed: false, version: "rust-1.99", language_server: false },
+      ],
+      features: [],
+    })),
     activity: vi.fn(async (sinceMs: number) => (opts.activity ?? []).filter((r) => r.at >= sinceMs)),
     solvedBreakdown: vi.fn(async () => breakdown()),
     reviewSummary: vi.fn(
@@ -409,6 +424,26 @@ export function createFakeApi(
       ).map((p) => ({ ...p, title: p.title[lang] }));
     }),
     learnCatalog: vi.fn(async (lang: "en" | "es") => fakeCatalog(lang)),
+    learnByPattern: vi.fn(async (lang: "en" | "es") => {
+      const topics = fakeCatalog(lang).flatMap((s) => s.topics);
+      const patterns = new Map(PROBLEMS.map((p) => [p.id, p.pattern]));
+      const by = new Map<string, typeof topics>();
+      for (const topic of topics) {
+        for (const pattern of new Set(topic.problems.map((id) => patterns.get(id)).filter((x): x is string => !!x))) {
+          by.set(pattern, [...(by.get(pattern) ?? []), topic]);
+        }
+      }
+      return [...by].map(([pattern, ts]) => ({ pattern, topics: ts }));
+    }),
+    topicToReview: vi.fn(async (viewed: string[], lang: "en" | "es") => {
+      const topics = fakeCatalog(lang).flatMap((s) => s.topics);
+      for (const id of [...viewed].reverse()) {
+        const topic = topics.find((x) => x.id === id);
+        const problem = topic && PROBLEMS.find((p) => topic.problems.includes(p.id) && p.status !== "solved");
+        if (topic && problem) return { topic, problem: { ...problem, title: problem.title[lang] } };
+      }
+      return null;
+    }),
     learnPaths: vi.fn(async (lang: "en" | "es") => [
       {
         id: "start-here",

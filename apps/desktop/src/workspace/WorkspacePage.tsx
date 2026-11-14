@@ -84,7 +84,7 @@ export function WorkspacePage() {
   const reviewActions = useReviewActions();
   const problem = useProblem(problemId);
   const info = useAppInfo();
-  const { keymap, fontSize, ligatures } = useEditorPrefs();
+  const { keymap, fontSize, ligatures, tabWidth, theme: editorTheme } = useEditorPrefs();
   const [lastLanguage, setLastLanguage] = useSetting<Language>("editor.language", "python", parseLanguage, {
     mirror: true,
   });
@@ -563,6 +563,8 @@ export function WorkspacePage() {
                       keymap={keymap}
                       fontSize={fontSize}
                       ligatures={ligatures}
+                      tabWidth={tabWidth}
+                      colorTheme={editorTheme}
                       lspExtension={basicCompletion ? phpBasicCompletion : server.extension}
                       debugExtension={debugEditor}
                       readOnly={dbg.active}

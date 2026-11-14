@@ -172,3 +172,92 @@
   --syntax-operator: #a9b3c6;
   --syntax-invalid: #ff8a80;
 }
+
+/* Editor colour themes (editor.theme; features-content M1). Scoped to the editor host:
+   each overrides the editor surface, its gutter text and the syntax colours, for light
+   and dark. `katabox` is the default and needs no block. Contrast is tested in
+   lib/static.test.ts. */
+.cm-theme-high-ink {
+  --card: #ffffff;
+  --muted-foreground: #4a5260;
+  --foreground: #0b0c0f;
+  --syntax-keyword: #5a1fb8;
+  --syntax-string: #0a5c1f;
+  --syntax-number: #8a3a00;
+  --syntax-comment: #4a5260;
+  --syntax-function: #0047a3;
+  --syntax-type: #704600;
+  --syntax-variable: #0b0c0f;
+  --syntax-operator: #2f3b4f;
+  --syntax-invalid: #a3150c;
+}
+.dark .cm-theme-high-ink {
+  --card: #0b0d12;
+  --muted-foreground: #a7b0bf;
+  --foreground: #f4f6fa;
+  --syntax-keyword: #d8a8ff;
+  --syntax-string: #a7e59a;
+  --syntax-number: #ffc27a;
+  --syntax-comment: #a7b0bf;
+  --syntax-function: #9ec0ff;
+  --syntax-type: #f0c75a;
+  --syntax-variable: #f4f6fa;
+  --syntax-operator: #c1c9d8;
+  --syntax-invalid: #ff9a90;
+}
+.cm-theme-paper {
+  --card: #fbf6ea;
+  --muted-foreground: #6b5f4d;
+  --foreground: #2b241a;
+  --syntax-keyword: #7a2f6f;
+  --syntax-string: #3d6b1f;
+  --syntax-number: #9a3d00;
+  --syntax-comment: #6b5f4d;
+  --syntax-function: #1f5a8a;
+  --syntax-type: #7a5200;
+  --syntax-variable: #2b241a;
+  --syntax-operator: #5a4b3a;
+  --syntax-invalid: #a8261b;
+}
+.dark .cm-theme-paper {
+  --card: #1f1b16;
+  --muted-foreground: #b3a58e;
+  --foreground: #efe6d6;
+  --syntax-keyword: #e0a6d6;
+  --syntax-string: #b7d68f;
+  --syntax-number: #f2b47a;
+  --syntax-comment: #b3a58e;
+  --syntax-function: #9cc3e6;
+  --syntax-type: #e6c27a;
+  --syntax-variable: #efe6d6;
+  --syntax-operator: #cbbda6;
+  --syntax-invalid: #ff9b8a;
+}
+.cm-theme-dusk {
+  --card: #f3f2fb;
+  --muted-foreground: #5a5f78;
+  --foreground: #1a1b2e;
+  --syntax-keyword: #5b2bb5;
+  --syntax-string: #1d6b3c;
+  --syntax-number: #8f4300;
+  --syntax-comment: #5a5f78;
+  --syntax-function: #1f4fb0;
+  --syntax-type: #7a4e00;
+  --syntax-variable: #1a1b2e;
+  --syntax-operator: #3f4566;
+  --syntax-invalid: #b0201a;
+}
+.dark .cm-theme-dusk {
+  --card: #1b1d2e;
+  --muted-foreground: #9aa0bd;
+  --foreground: #e9eaf7;
+  --syntax-keyword: #c3a6ff;
+  --syntax-string: #8fd6a8;
+  --syntax-number: #ffb98a;
+  --syntax-comment: #9aa0bd;
+  --syntax-function: #8fb4ff;
+  --syntax-type: #f2cf7a;
+  --syntax-variable: #e9eaf7;
+  --syntax-operator: #b4b9d6;
+  --syntax-invalid: #ff8f88;
+}

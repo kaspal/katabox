@@ -12,9 +12,9 @@ import {
 } from "@codemirror/view";
 import { bracketMatching, indentOnInput } from "@codemirror/language";
 import { forEachDiagnostic } from "@codemirror/lint";
-import type { KeymapPref } from "@/lib/settings";
+import type { EditorTheme, KeymapPref } from "@/lib/settings";
 import { baseExtensions, keymapExtension, themeExtension } from "@/workspace/editor/setup";
-import { loadLanguageExtension, type EditorLang } from "@/workspace/editor/languages";
+import { indentExtension, loadLanguageExtension, type EditorLang } from "@/workspace/editor/languages";
 
 /** Shown in the status line under the editor. */
 export type EditorStatus = { line: number; col: number; errors: number; warnings: number };
@@ -53,6 +53,10 @@ export type CodeEditorProps = {
   debugExtension?: Extension | null;
   /** Font ligatures (off by default). */
   ligatures?: boolean;
+  /** Spaces per indent; 0 or absent keeps the language's own (`editor.tab_width`). */
+  tabWidth?: number;
+  /** Colour theme (`editor.theme`): a `cm-theme-<id>` class on the host. */
+  colorTheme?: EditorTheme;
   /** Cursor position and diagnostics counts, after every change. */
   onStatus?: (status: EditorStatus) => void;
   /** The view, for commands such as Format. */
@@ -69,6 +73,7 @@ export function CodeEditor(props: CodeEditorProps) {
   latest.current = props;
   const compartments = useRef({
     lang: new Compartment(),
+    indent: new Compartment(),
     keymap: new Compartment(),
     theme: new Compartment(),
     readOnly: new Compartment(),
@@ -96,6 +101,7 @@ export function CodeEditor(props: CodeEditorProps) {
       baseExtensions,
       // The grammar loads on demand; see the language effect below.
       c.lang.of([]),
+      c.indent.of(indentExtension(p.lang, p.tabWidth)),
       c.theme.of(themeExtension(p.fontSize ?? 14, p.ligatures)),
       c.lsp.of(p.lspExtension ?? []),
       c.debug.of(p.debugExtension ?? []),
@@ -144,6 +150,7 @@ export function CodeEditor(props: CodeEditorProps) {
     v.dispatch({
       effects: [
         c.keymap.reconfigure(keymapExtension(p.keymap ?? "default")),
+        c.indent.reconfigure(indentExtension(p.lang, p.tabWidth)),
         c.theme.reconfigure(themeExtension(p.fontSize ?? 14, p.ligatures)),
         c.lsp.reconfigure(p.lspExtension ?? []),
         c.debug.reconfigure(p.debugExtension ?? []),
@@ -158,6 +165,8 @@ export function CodeEditor(props: CodeEditorProps) {
   useEffect(reconfigure, [
     props.keymap,
     props.fontSize,
+    props.tabWidth,
+    props.lang,
     props.readOnly,
     props.ligatures,
     props.lspExtension,
@@ -180,7 +189,9 @@ export function CodeEditor(props: CodeEditorProps) {
   return (
     <div
       ref={host}
-      className={props.className ?? "h-full min-h-0 overflow-hidden"}
+      className={`${props.className ?? "h-full min-h-0 overflow-hidden"}${
+        props.colorTheme && props.colorTheme !== "katabox" ? ` cm-theme-${props.colorTheme}` : ""
+      }`}
       data-testid="code-editor"
       data-dockey={props.docKey}
     />

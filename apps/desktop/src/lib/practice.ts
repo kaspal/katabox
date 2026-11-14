@@ -24,7 +24,10 @@ const parseBool = (v: JsonValue | null): boolean | undefined => (typeof v === "b
 export function usePracticePrefs() {
   const [review, setReview] = useSetting<boolean>("practice.review", true, parseBool, { mirror: true });
   const [daily, setDaily] = useSetting<boolean>("practice.daily", true, parseBool, { mirror: true });
-  return { review, setReview, daily, setDaily };
+  const [learnReview, setLearnReview] = useSetting<boolean>("practice.learn_review", true, parseBool, {
+    mirror: true,
+  });
+  return { review, setReview, daily, setDaily, learnReview, setLearnReview };
 }
 
 export function useDailyProblem(enabled = true) {

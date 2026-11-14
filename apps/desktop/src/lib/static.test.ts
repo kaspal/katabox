@@ -119,6 +119,22 @@ const SEMANTIC = [
   "syntax-invalid",
 ];
 
+// Editor colour themes (editor.theme): every syntax colour and the gutter text on the
+// theme's own editor surface, in light and dark.
+const EDITOR_THEMES = ["high-ink", "paper", "dusk"];
+const EDITOR_TEXT = [...SEMANTIC.filter((k) => k.startsWith("syntax-")), "muted-foreground", "foreground"];
+describe.each(
+  EDITOR_THEMES.flatMap((id): [string, Record<string, string>][] => [
+    [`${id} light`, block(`.cm-theme-${id}`)],
+    [`${id} dark`, { ...block(`.cm-theme-${id}`), ...block(`.dark .cm-theme-${id}`) }],
+  ]),
+)("editor theme %s contrast (WCAG AA)", (_, t) => {
+  it.each(EDITOR_TEXT)("%s is ≥ 4.5:1 on the editor surface", (fg) => {
+    expect(t[fg], fg).toBeDefined();
+    expect(contrast(t[fg], t.card), `${fg} on card`).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
 describe.each([
   ["light", block(":root")],
   ["dark", { ...block(":root"), ...block(".dark") }],

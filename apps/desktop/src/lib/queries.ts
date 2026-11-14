@@ -25,6 +25,8 @@ export const queryKeys = {
   learnCatalog: (lang: string) => ["learn_catalog", lang] as const,
   learnTopic: (id: string, lang: string) => ["learn_topic", id, lang] as const,
   learnPaths: (lang: string) => ["learn_paths", lang] as const,
+  learnByPattern: (lang: string) => ["learn_by_pattern", lang] as const,
+  topicToReview: (viewed: string[], lang: string) => ["topic_to_review", viewed, lang] as const,
   learnSearch: (q: string, lang: string) => ["learn_search", q, lang] as const,
 };
 
@@ -76,6 +78,26 @@ export function useLearnCatalog() {
     queryKey: queryKeys.learnCatalog(lang),
     queryFn: () => api.learnCatalog(lang),
     staleTime: Infinity,
+  });
+}
+
+/** Learn topics per practice pattern (content only). */
+export function useLearnByPattern() {
+  const { lang } = usePrefs();
+  return useQuery({
+    queryKey: queryKeys.learnByPattern(lang),
+    queryFn: () => api.learnByPattern(lang),
+    staleTime: Infinity,
+  });
+}
+
+/** Home's "Review a topic": depends on solves, so it refetches like other progress. */
+export function useTopicToReview(viewed: string[], enabled = true) {
+  const { lang } = usePrefs();
+  return useQuery({
+    queryKey: queryKeys.topicToReview(viewed, lang),
+    queryFn: () => api.topicToReview(viewed, lang),
+    enabled,
   });
 }
 

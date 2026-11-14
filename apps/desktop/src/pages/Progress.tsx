@@ -6,6 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import type { ReactNode } from "react";
+import { PatternLearnLinks } from "@/components/PatternLearnLinks";
 import { Page } from "@/components/Page";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { DifficultyLabel, usePatternLabel, useTagLabel } from "@/components/Semantic";
@@ -246,6 +247,7 @@ export function Progress() {
                       value={p.total === 0 ? 0 : (100 * p.solved) / p.total}
                       aria-label={`${patternLabel(p.pattern)}: ${t("practice.patterns.solved", { solved: p.solved, total: p.total })}`}
                     />
+                    <PatternLearnLinks pattern={p.pattern} className="text-xs" />
                     <div className="mt-auto flex items-center justify-between gap-2 text-sm">
                       {done || !p.next ? (
                         <span className="inline-flex items-center gap-1.5 text-verdict-accepted">

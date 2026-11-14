@@ -30,7 +30,12 @@ window.matchMedia = vi.fn((query: string) => ({
   },
   media: query,
   onchange: null,
-  addEventListener: (_: string, cb: () => void) => media.listeners.add(cb),
+  // Only the colour-scheme query ever changes in tests, so only its listeners are kept
+  // (a browser notifies just the listeners of the query that changed; CodeMirror, for
+  // one, listens to "print").
+  addEventListener: (_: string, cb: () => void) => {
+    if (query.includes("prefers-color-scheme")) media.listeners.add(cb);
+  },
   removeEventListener: (_: string, cb: () => void) => media.listeners.delete(cb),
   addListener: () => {},
   removeListener: () => {},
