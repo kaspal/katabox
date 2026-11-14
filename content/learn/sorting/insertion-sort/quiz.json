@@ -1,0 +1,26 @@
+[
+  {
+    "prompt_en": "The sorted part is [3, 27, 38, 43] and the key is 9. Which values shift right?",
+    "prompt_es": "La parte ordenada es [3, 27, 38, 43] y la clave es 9. ¿Qué valores se desplazan a la derecha?",
+    "options": [
+      { "en": "43, 38 and 27", "es": "43, 38 y 27" },
+      { "en": "Only 43", "es": "Solo 43" },
+      { "en": "All four", "es": "Los cuatro" }
+    ],
+    "answer": 0,
+    "explain_en": "Every value bigger than 9 shifts one place right; the loop stops at 3, which is not bigger, and 9 drops in after it.",
+    "explain_es": "Cada valor mayor que 9 se desplaza un lugar a la derecha; el bucle para en 3, que no es mayor, y 9 cae justo después."
+  },
+  {
+    "prompt_en": "The key is 27 and the value left of the gap is also 27. What happens next?",
+    "prompt_es": "La clave es 27 y el valor a la izquierda del hueco también es 27. ¿Qué pasa a continuación?",
+    "options": [
+      { "en": "The 27 on the left shifts right", "es": "El 27 de la izquierda se desplaza a la derecha" },
+      { "en": "The key drops into the gap", "es": "La clave cae en el hueco" },
+      { "en": "The two values swap", "es": "Los dos valores se intercambian" }
+    ],
+    "answer": 1,
+    "explain_en": "Only bigger values shift. Stopping at an equal value keeps the sort stable.",
+    "explain_es": "Solo se desplazan los valores mayores. Parar en un valor igual mantiene la ordenación estable."
+  }
+]

@@ -8,6 +8,7 @@
     "label": "Main navigation",
     "home": "Home",
     "library": "Library",
+    "learn": "Learn",
     "workspace": "Workspace",
     "progress": "Progress",
     "settings": "Settings",
@@ -21,7 +22,9 @@
     "pages": "Go to",
     "problems": "Open problem",
     "theme": "Theme",
-    "language": "Language"
+    "language": "Language",
+    "topics": "Learn topics",
+    "topic": "Learn: {{title}}"
   },
   "theme": {
     "label": "Theme",
@@ -858,6 +861,169 @@
       "you": "Yours",
       "ref": "Reference",
       "notRun": "not run"
+    }
+  },
+  "learn": {
+    "title": "Learn",
+    "home": {
+      "heading": "Learn algorithms by watching them work",
+      "intro": "Each topic has the theory, a tested sample in Python and TypeScript, and an animation you can step through.",
+      "search_label": "Search topics",
+      "search_placeholder": "Search topics: quick sort, pivot, stable…",
+      "results": "Search results",
+      "no_results": "No topic matches “{{q}}”.",
+      "continue": "Continue",
+      "continue_detail": "{{subject}} · step {{step}} of {{total}}",
+      "resume": "Resume",
+      "subjects": "Subjects",
+      "topics_one": "{{count}} topic",
+      "topics_other": "{{count}} topics",
+      "viewed": "{{count}} viewed",
+      "coming_soon": "Coming soon",
+      "progress": "{{viewed}} of {{total}} topics viewed",
+      "loading": "Loading topics…"
+    },
+    "picker": {
+      "label": "Topics",
+      "filter": "Filter topics",
+      "viewed": "Viewed",
+      "coming_soon": "Coming soon",
+      "show": "Show topics",
+      "hide": "Hide topics"
+    },
+    "topic": {
+      "not_found": "Topic not found",
+      "not_found_body": "This topic is not in the catalogue.",
+      "back": "Back to Learn",
+      "practice_one": "Practice: {{count}} problem",
+      "practice_other": "Practice: {{count}} problems",
+      "compare": "Compare with…",
+      "compare_soon": "Coming soon: compare two algorithms side by side.",
+      "average": "{{cost}} average",
+      "stable": "Stable",
+      "not_stable": "Not stable",
+      "in_place": "In place",
+      "not_in_place": "Uses extra space",
+      "resize": "Resize panels"
+    },
+    "stage": {
+      "label": "Animation",
+      "legend": "Legend",
+      "comparisons": "comparisons",
+      "swaps": "swaps",
+      "shifts": "shifts",
+      "writes": "array writes",
+      "summary": "Values in order: {{values}}.",
+      "summary_compare": "Comparing positions {{positions}}.",
+      "summary_move": "Moving positions {{positions}}.",
+      "summary_pivot": "Pivot {{value}} at position {{at}}.",
+      "summary_key": "Key {{value}} lifted above position {{at}}.",
+      "summary_range": "Active range: positions {{lo}} to {{hi}}.",
+      "fallback": "Values by position",
+      "fallback_item": "Position {{at}}: {{value}}, {{role}}",
+      "positions": "Positions",
+      "pointers": "Pointers"
+    },
+    "roles": {
+      "idle": "Not yet placed",
+      "out": "Outside the range",
+      "pivot": "Pivot",
+      "compare": "Comparing",
+      "swap": "Swapping",
+      "shift": "Shifting",
+      "sorted": "In final place",
+      "key": "Key"
+    },
+    "controls": {
+      "label": "Playback",
+      "restart": "Restart",
+      "back": "Step back",
+      "play": "Play",
+      "pause": "Pause",
+      "forward": "Step forward",
+      "timeline": "Timeline",
+      "step": "Step {{step}} of {{total}}",
+      "speed": "Speed",
+      "shortcuts": "Space: play or pause · ← →: step · Home: restart"
+    },
+    "input": {
+      "label": "Input",
+      "presets": {
+        "random": "Random",
+        "nearly-sorted": "Nearly sorted",
+        "reversed": "Reversed",
+        "few-unique": "Few unique"
+      },
+      "custom": "Your own",
+      "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
+      "apply": "Apply",
+      "errors": {
+        "count": "Enter {{min}} to {{max}} numbers.",
+        "nan": "“{{token}}” is not a whole number.",
+        "range": "{{value}} is out of range: use {{min}} to {{max}}.",
+        "steps": "This input needs more than {{max}} steps. Try fewer values."
+      }
+    },
+    "tabs": {
+      "label": "Topic details",
+      "theory": "Theory",
+      "code": "Code",
+      "practice": "Practice"
+    },
+    "code": {
+      "language": "Sample language",
+      "variables": "Variables",
+      "note": "The highlighted line is the one behind the current step. The sample is tested against the animation, so they always agree.",
+      "current": "Current line",
+      "none": "—"
+    },
+    "practice": {
+      "quiz": "Predict the next step",
+      "question": "Question {{n}} of {{total}}",
+      "correct": "Correct",
+      "incorrect": "Not quite",
+      "next": "Next question",
+      "again": "Try again",
+      "problems": "Practice problems",
+      "no_problems": "No linked problems yet."
+    },
+    "tags": {
+      "comparison-sort": "Comparison sort",
+      "adjacent-swaps": "Adjacent swaps",
+      "online": "Online",
+      "divide-and-conquer": "Divide and conquer"
+    },
+    "narration": {
+      "bubble-sort": {
+        "ready": "Ready. Each pass carries the biggest unsorted value to the end. Press Play, or step one move at a time.",
+        "pass": "New pass over positions 0 to {{end}}.",
+        "compare_bigger": "Is {{a}} bigger than {{b}}? Yes, so they swap.",
+        "compare_ok": "Is {{a}} bigger than {{b}}? No, they stay.",
+        "swap": "Swap {{a}} and {{b}}: {{a}} moves one place right.",
+        "settled": "End of the pass: {{value}} is in its final place at position {{end}}.",
+        "no_swaps": "No swaps in this pass, so the array is sorted: stop early.",
+        "done": "Sorted: {{comparisons}} comparisons and {{moves}} swaps for {{n}} values."
+      },
+      "insertion-sort": {
+        "ready": "Ready. The left part grows sorted, one value at a time. Press Play, or step one move at a time.",
+        "take": "Lift {{key}} out of position {{i}} as the key; its place becomes the gap.",
+        "compare_bigger": "Is {{value}} bigger than the key {{key}}? Yes, so it shifts right.",
+        "compare_stop": "Is {{value}} bigger than the key {{key}}? No, so the key goes right after it.",
+        "shift": "Shift {{value}} right into position {{to}}; the gap moves left.",
+        "insert": "Drop the key {{key}} into the gap at position {{at}}.",
+        "done": "Sorted: {{comparisons}} comparisons and {{moves}} shifts for {{n}} values."
+      },
+      "quick-sort": {
+        "ready": "Ready. Press Play, or step through one move at a time.",
+        "base": "The range [{{lo}}..{{lo}}] holds one value, so it is already in place.",
+        "pivot": "Partition [{{lo}}..{{hi}}]. The pivot is the last value: {{pivot}}.",
+        "compare_smaller": "Is {{value}} smaller than {{pivot}}? Yes, it belongs in the left part.",
+        "compare_not": "Is {{value}} smaller than {{pivot}}? No, it stays on the right.",
+        "swap": "Swap {{value}} into position {{i}}. The left part now ends at index {{i}}.",
+        "swap_self": "{{value}} is already at the edge of the left part, so i just moves on.",
+        "place": "Put the pivot {{pivot}} at index {{i}}. Everything to its left is smaller; it is now in its final place.",
+        "done": "Sorted: {{comparisons}} comparisons and {{moves}} swaps for {{n}} values."
+      }
     }
   }
 }

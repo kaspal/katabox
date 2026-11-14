@@ -24,6 +24,10 @@ fn machine_setting(key: &str) -> bool {
     key == kb_store::INSTALL_ID_SETTING || key == CALIBRATION_SETTING || key == SANDBOX_ROOT_SETTING
 }
 
+/// Learn progress travels with an export (ADR 0029); the Learn page layout and speed
+/// stay on this machine.
+const LEARN_SETTINGS: [&str; 2] = ["learn.viewed", "learn.last"];
+
 /// Settings an import may write.
 fn importable_setting(key: &str) -> bool {
     ["editor.", "workspace.", "practice."]
@@ -31,6 +35,13 @@ fn importable_setting(key: &str) -> bool {
         .any(|p| key.starts_with(p) && key.len() <= 64)
         || key == "ui_lang"
         || key == "theme"
+        || LEARN_SETTINGS.contains(&key)
+}
+
+/// Settings an export leaves out: machine-specific ones, and any an import would refuse
+/// (so an export always imports).
+fn unexported_setting(key: &str) -> bool {
+    machine_setting(key) || !importable_setting(key)
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -322,7 +333,7 @@ pub(crate) struct PendingImport {
 impl App {
     /// Write every exportable record to `path` (atomically: a temp file, then rename).
     pub async fn export_to(&self, path: &Path) -> Result<TransferCounts> {
-        let data = self.store.user.export_all(machine_setting).await?;
+        let data = self.store.user.export_all(unexported_setting).await?;
         let c = counts(&data);
         let file = ExportFile {
             format: EXPORT_FORMAT.into(),
@@ -422,10 +433,24 @@ mod tests {
             "practice.daily",
             "ui_lang",
             "theme",
+            "learn.viewed",
+            "learn.last",
         ] {
             assert!(importable_setting(k), "{k}");
+            assert!(!unexported_setting(k), "{k}");
         }
-        assert!(!importable_setting("theme2"));
-        assert!(!importable_setting("anything"));
+        for k in [
+            "theme2",
+            "anything",
+            "learn.layout",
+            "learn.speed",
+            "learn.other",
+        ] {
+            assert!(!importable_setting(k), "{k}");
+            assert!(
+                unexported_setting(k),
+                "{k}: an export never holds what import refuses"
+            );
+        }
     }
 }

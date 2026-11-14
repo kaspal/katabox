@@ -30,7 +30,16 @@ pub fn build(opts: &BuildOptions) -> Result<usize, String> {
         pack_id: opts.pack_id.clone(),
         pack_version: opts.pack_version.clone(),
     };
-    block_on(kb_store::build(&opts.out, &meta, &problems)).map_err(|e| e.to_string())?;
+    // Learn topics (ADR 0029) from content/learn next to the problems, when present.
+    let learn = crate::learn::read_learn(&crate::learn::learn_dir_for(&opts.dir), &opts.dir)
+        .map_err(|e| format!("learn topics: {}", e.join("; ")))?;
+    block_on(kb_store::build_with_learn(
+        &opts.out,
+        &meta,
+        &problems,
+        &learn.pack,
+    ))
+    .map_err(|e| e.to_string())?;
     Ok(problems.len())
 }
 

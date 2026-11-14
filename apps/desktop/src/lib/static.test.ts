@@ -160,6 +160,20 @@ describe.each([
     }
   });
 
+  it("Learn scenes: roles stand out, pointer labels and code read as text (ADR 0029)", () => {
+    for (const role of ["idle", "pivot", "compare", "swap", "sorted", "key"]) {
+      expect(contrast(t[`viz-${role}`], t.card), `viz-${role} on card`).toBeGreaterThanOrEqual(3);
+    }
+    for (const bg of ["card", "viz-range"]) {
+      for (const text of ["foreground", "viz-ptr-pivot", "viz-ptr-i", "viz-ptr-j", "viz-ptr-key"]) {
+        expect(contrast(t[text], t[bg]), `${text} on ${bg}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+    expect(contrast(t.foreground, t["viz-code-line"])).toBeGreaterThanOrEqual(4.5);
+    // Compared and moving bars are told apart by outline too, but keep the hues apart.
+    expect(contrast(t["viz-compare"], t["viz-swap"])).toBeGreaterThan(1.3);
+  });
+
   it("the focus ring and inputs stand out (≥ 3:1)", () => {
     for (const bg of ["background", "card"]) {
       expect(contrast(t.ring, t[bg]), `ring on ${bg}`).toBeGreaterThanOrEqual(3);

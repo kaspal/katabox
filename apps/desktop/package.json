@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "learn:cases": "vitest run src/learn/cases.test.ts -u"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.4",
@@ -43,6 +44,7 @@
     "i18next": "27.1.1",
     "katex": "0.19.1",
     "lucide-react": "1.72.0",
+    "motion": "14.8.0",
     "radix-ui": "1.8.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

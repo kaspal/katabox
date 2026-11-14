@@ -22,6 +22,9 @@ export const queryKeys = {
   problem: (id: string, lang: string) => ["problem", id, lang] as const,
   continueItem: (lang: string) => ["continue", lang] as const,
   calibration: ["calibration"] as const,
+  learnCatalog: (lang: string) => ["learn_catalog", lang] as const,
+  learnTopic: (id: string, lang: string) => ["learn_topic", id, lang] as const,
+  learnSearch: (q: string, lang: string) => ["learn_search", q, lang] as const,
 };
 
 export function useAppInfo() {
@@ -62,5 +65,37 @@ export function useContinue() {
   return useQuery({
     queryKey: queryKeys.continueItem(lang),
     queryFn: () => api.continueItem(lang),
+  });
+}
+
+/** Every Learn subject with its topics (ADR 0029); content only, so it never goes stale. */
+export function useLearnCatalog() {
+  const { lang } = usePrefs();
+  return useQuery({
+    queryKey: queryKeys.learnCatalog(lang),
+    queryFn: () => api.learnCatalog(lang),
+    staleTime: Infinity,
+  });
+}
+
+export function useLearnTopic(id: string) {
+  const { lang } = usePrefs();
+  return useQuery({
+    queryKey: queryKeys.learnTopic(id, lang),
+    queryFn: () => api.learnTopic(id, lang),
+    staleTime: Infinity,
+  });
+}
+
+/** Topics matching `q` (empty text: no query). */
+export function useLearnSearch(q: string) {
+  const { lang } = usePrefs();
+  const text = q.trim();
+  return useQuery({
+    queryKey: queryKeys.learnSearch(text, lang),
+    queryFn: () => api.searchLearn(text, lang),
+    enabled: text !== "",
+    staleTime: Infinity,
+    placeholderData: (previous) => previous,
   });
 }

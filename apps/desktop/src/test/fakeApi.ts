@@ -1,5 +1,6 @@
 // An in-memory backend standing in for `@/lib/api` in component tests.
 import { vi } from "vitest";
+import { fakeCatalog, fakeTopic } from "@/test/fakeLearn";
 import type {
   ActivityRow,
   ReviewSummary,
@@ -406,6 +407,21 @@ export function createFakeApi(
           (!f.query || `${p.title.en} ${p.title.es}`.toLowerCase().includes(f.query.toLowerCase())),
       ).map((p) => ({ ...p, title: p.title[lang] }));
     }),
+    learnCatalog: vi.fn(async (lang: "en" | "es") => fakeCatalog(lang)),
+    learnTopic: vi.fn(async (id: string, lang: "en" | "es") => {
+      const topic = fakeTopic(id, lang);
+      if (!topic) throw { code: "not_found", message: `not found: topic ${id}` };
+      const problems = topic.problems.flatMap((pid) => {
+        const p = PROBLEMS.find((x) => x.id === pid);
+        return p ? [{ ...p, title: p.title[lang] }] : [];
+      });
+      return { topic, problems };
+    }),
+    searchLearn: vi.fn(async (q: string, lang: "en" | "es") =>
+      fakeCatalog(lang)
+        .flatMap((s) => s.topics)
+        .filter((t) => t.title.toLowerCase().includes(q.toLowerCase())),
+    ),
     getProblem: vi.fn(async (id: string, lang: "en" | "es"): Promise<ProblemView> => {
       const p = [...PROBLEMS, PROGRAM_ROW].find((x) => x.id === id);
       if (!p) throw { code: "not_found", message: `not found: problem ${id}` };

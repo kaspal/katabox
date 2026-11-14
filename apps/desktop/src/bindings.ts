@@ -87,6 +87,39 @@ async getProblem(id: string, uiLang: UiLang) : Promise<Result<ProblemView, AppEr
 }
 },
 /**
+ * Every Learn subject with its topics (ADR 0029).
+ */
+async learnCatalog(uiLang: UiLang) : Promise<Result<LearnSubject[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("learn_catalog", { uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * One Learn topic page with its linked problems.
+ */
+async learnTopic(id: string, uiLang: UiLang) : Promise<Result<LearnTopicView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("learn_topic", { id, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Learn topics matching free text in either language.
+ */
+async searchLearn(query: string, uiLang: UiLang) : Promise<Result<LearnTopicSummary[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_learn", { query, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * The editorial and its lock state (unlocked when solved or after 3 failed submits).
  */
 async editorial(problem: string, uiLang: UiLang) : Promise<Result<EditorialState, AppError>> {
@@ -1255,6 +1288,26 @@ free_bytes: number | null;
  * KataBox can install languages on this OS and CPU.
  */
 platform_supported: boolean }
+export type LearnComplexity = { best: string; average: string; worst: string; space: string; stable: boolean; in_place: boolean }
+/**
+ * The limits of "your own" input, also the tracer's cap.
+ */
+export type LearnInput = { min_len: number; max_len: number; min: number; max: number }
+export type LearnSample = { language: Language; source: string }
+/**
+ * A subject in the catalogue, with its topics (possibly none yet: "Coming soon").
+ */
+export type LearnSubject = { id: string; name: string; blurb: string; icon: string; topics: LearnTopicSummary[] }
+/**
+ * Everything the topic page shows, in one UI language.
+ */
+export type LearnTopic = { id: string; subject: string; subject_name: string; title: string; tags: string[]; complexity: LearnComplexity; problems: string[]; presets: string[]; input: LearnInput; default_input: number[]; theory: string; samples: LearnSample[]; quiz: QuizQuestion[] }
+export type LearnTopicSummary = { id: string; subject: string; title: string; tags: string[] }
+/**
+ * A Learn topic page (ADR 0029): the topic, and its linked problems in display order
+ * (ids the catalogue no longer has are left out).
+ */
+export type LearnTopicView = { topic: LearnTopic; problems: ProblemSummary[] }
 /**
  * One entry of a list: the problem, or its id when content no longer has it.
  */
@@ -1595,6 +1648,7 @@ time_scale: number }
  * A public test as shown in the UI.
  */
 export type PublicTest = { index: number; input: Partial<{ [key in string]: JsonValue }>; output: JsonValue }
+export type QuizQuestion = { prompt: string; options: string[]; answer: number; explain: string }
 /**
  * The reference solution's time at one size, at this machine's time scale.
  */

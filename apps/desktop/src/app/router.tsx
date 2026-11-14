@@ -79,6 +79,18 @@ const problemRoute = createRoute({
   validateSearch: parseProblemSearch,
   component: lazyRouteComponent(() => import("@/workspace/WorkspacePage"), "WorkspacePage"),
 });
+// Learn (ADR 0029) is lazy too: the engine, the scenes, the tracers and motion load only
+// when a Learn page opens.
+const learnRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/learn",
+  component: lazyRouteComponent(() => import("@/learn/LearnHome"), "LearnHome"),
+});
+const learnTopicRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/learn/$subject/$topic",
+  component: lazyRouteComponent(() => import("@/learn/TopicPage"), "TopicPage"),
+});
 const interviewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/interview",
@@ -111,6 +123,8 @@ const routeTree = rootRoute.addChildren([
   homeRoute,
   libraryRoute,
   problemRoute,
+  learnRoute,
+  learnTopicRoute,
   interviewRoute,
   progressRoute,
   settingsRoute,
