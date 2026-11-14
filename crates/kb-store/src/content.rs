@@ -12,11 +12,12 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions, SqliteRo
 use sqlx::{Connection, Row, SqliteConnection};
 
 use crate::blob;
+use crate::learn::{LearnPack, check_learn, insert_learn};
 use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 5;
+pub const CONTENT_SCHEMA_VERSION: i64 = 6;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -260,6 +261,10 @@ impl ContentDb {
 
     pub async fn close(&self) {
         self.pool.close().await;
+    }
+
+    pub(crate) fn pool(&self) -> &SqlitePool {
+        &self.pool
     }
 
     pub async fn meta(&self) -> Result<ContentMeta> {
@@ -522,13 +527,24 @@ impl ContentDb {
 /// it over `out` only when everything succeeded. Rows are inserted in a fixed order, so
 /// two builds of the same input differ only in `content_meta.built_at`.
 pub async fn build(out: &Path, meta: &PackMeta, problems: &[PackProblem]) -> Result<()> {
+    build_with_learn(out, meta, problems, &LearnPack::default()).await
+}
+
+/// [`build`], plus the Learn module's subjects and topics (ADR 0029).
+pub async fn build_with_learn(
+    out: &Path,
+    meta: &PackMeta,
+    problems: &[PackProblem],
+    learn: &LearnPack,
+) -> Result<()> {
     check_pack(problems)?;
+    check_learn(learn)?;
     if let Some(dir) = out.parent().filter(|d| !d.as_os_str().is_empty()) {
         std::fs::create_dir_all(dir)?;
     }
     let tmp = PathBuf::from(format!("{}.tmp", out.display()));
     remove_if_exists(&tmp)?;
-    let result = write_pack(&tmp, meta, problems).await;
+    let result = write_pack(&tmp, meta, problems, learn).await;
     match result {
         Ok(()) => {
             std::fs::rename(&tmp, out)?;
@@ -590,7 +606,12 @@ fn check_pack(problems: &[PackProblem]) -> Result<()> {
     Ok(())
 }
 
-async fn write_pack(path: &Path, meta: &PackMeta, problems: &[PackProblem]) -> Result<()> {
+async fn write_pack(
+    path: &Path,
+    meta: &PackMeta,
+    problems: &[PackProblem],
+    learn: &LearnPack,
+) -> Result<()> {
     let opts = SqliteConnectOptions::new()
         .filename(path)
         .create_if_missing(true);
@@ -622,6 +643,7 @@ async fn write_pack(path: &Path, meta: &PackMeta, problems: &[PackProblem]) -> R
     for p in sorted {
         insert_problem(&mut tx, p).await?;
     }
+    insert_learn(&mut tx, learn).await?;
     tx.commit().await?;
     sqlx::raw_sql("VACUUM").execute(&mut conn).await?;
     conn.close().await?;
@@ -816,7 +838,7 @@ fn parse_kind(s: &str) -> Result<TestKind> {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use crate::testutil::temp_dir;
+    pub(crate) use crate::testutil::temp_dir;
     use serde_json::json;
 
     pub fn sample_problem(
@@ -967,7 +989,7 @@ pub(crate) mod tests {
                 .await
                 .unwrap();
         assert_eq!(kinds, ["blob/blob"]);
-        assert_eq!(CONTENT_SCHEMA_VERSION, 5);
+        assert_eq!(CONTENT_SCHEMA_VERSION, 6);
         // Profile data round-trips (ADR 0024); gap-b has none.
         let mut want = packed.profile.clone().unwrap();
         want.reference.sort_by_key(|(l, _)| l.id());

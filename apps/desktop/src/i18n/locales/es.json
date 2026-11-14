@@ -8,6 +8,7 @@
     "label": "Navegación principal",
     "home": "Inicio",
     "library": "Biblioteca",
+    "learn": "Aprender",
     "workspace": "Espacio de trabajo",
     "progress": "Progreso",
     "settings": "Ajustes",
@@ -21,7 +22,9 @@
     "pages": "Ir a",
     "problems": "Abrir problema",
     "theme": "Tema",
-    "language": "Idioma"
+    "language": "Idioma",
+    "topics": "Temas de Aprender",
+    "topic": "Aprender: {{title}}"
   },
   "theme": {
     "label": "Tema",
@@ -858,6 +861,169 @@
       "you": "Tuyos",
       "ref": "Referencia",
       "notRun": "no ejecutado"
+    }
+  },
+  "learn": {
+    "title": "Aprender",
+    "home": {
+      "heading": "Aprende algoritmos viéndolos funcionar",
+      "intro": "Cada tema tiene la teoría, un ejemplo probado en Python y TypeScript y una animación que puedes recorrer paso a paso.",
+      "search_label": "Buscar temas",
+      "search_placeholder": "Buscar temas: ordenación rápida, pivote, estable…",
+      "results": "Resultados de la búsqueda",
+      "no_results": "Ningún tema coincide con «{{q}}».",
+      "continue": "Continuar",
+      "continue_detail": "{{subject}} · paso {{step}} de {{total}}",
+      "resume": "Reanudar",
+      "subjects": "Materias",
+      "topics_one": "{{count}} tema",
+      "topics_other": "{{count}} temas",
+      "viewed": "{{count}} vistos",
+      "coming_soon": "Próximamente",
+      "progress": "{{viewed}} de {{total}} temas vistos",
+      "loading": "Cargando temas…"
+    },
+    "picker": {
+      "label": "Temas",
+      "filter": "Filtrar temas",
+      "viewed": "Visto",
+      "coming_soon": "Próximamente",
+      "show": "Mostrar temas",
+      "hide": "Ocultar temas"
+    },
+    "topic": {
+      "not_found": "Tema no encontrado",
+      "not_found_body": "Este tema no está en el catálogo.",
+      "back": "Volver a Aprender",
+      "practice_one": "Practicar: {{count}} problema",
+      "practice_other": "Practicar: {{count}} problemas",
+      "compare": "Comparar con…",
+      "compare_soon": "Próximamente: compara dos algoritmos lado a lado.",
+      "average": "{{cost}} en promedio",
+      "stable": "Estable",
+      "not_stable": "No estable",
+      "in_place": "En el sitio",
+      "not_in_place": "Usa espacio extra",
+      "resize": "Cambiar el tamaño de los paneles"
+    },
+    "stage": {
+      "label": "Animación",
+      "legend": "Leyenda",
+      "comparisons": "comparaciones",
+      "swaps": "intercambios",
+      "shifts": "desplazamientos",
+      "writes": "escrituras",
+      "summary": "Valores en orden: {{values}}.",
+      "summary_compare": "Comparando las posiciones {{positions}}.",
+      "summary_move": "Moviendo las posiciones {{positions}}.",
+      "summary_pivot": "Pivote {{value}} en la posición {{at}}.",
+      "summary_key": "Clave {{value}} levantada sobre la posición {{at}}.",
+      "summary_range": "Tramo activo: posiciones {{lo}} a {{hi}}.",
+      "fallback": "Valores por posición",
+      "fallback_item": "Posición {{at}}: {{value}}, {{role}}",
+      "positions": "Posiciones",
+      "pointers": "Punteros"
+    },
+    "roles": {
+      "idle": "Aún sin colocar",
+      "out": "Fuera del tramo",
+      "pivot": "Pivote",
+      "compare": "Comparando",
+      "swap": "Intercambiando",
+      "shift": "Desplazando",
+      "sorted": "En su lugar definitivo",
+      "key": "Clave"
+    },
+    "controls": {
+      "label": "Reproducción",
+      "restart": "Reiniciar",
+      "back": "Paso atrás",
+      "play": "Reproducir",
+      "pause": "Pausa",
+      "forward": "Paso adelante",
+      "timeline": "Línea de tiempo",
+      "step": "Paso {{step}} de {{total}}",
+      "speed": "Velocidad",
+      "shortcuts": "Espacio: reproducir o pausar · ← →: paso · Inicio: reiniciar"
+    },
+    "input": {
+      "label": "Entrada",
+      "presets": {
+        "random": "Aleatoria",
+        "nearly-sorted": "Casi ordenada",
+        "reversed": "Invertida",
+        "few-unique": "Pocos distintos"
+      },
+      "custom": "La tuya",
+      "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
+      "apply": "Aplicar",
+      "errors": {
+        "count": "Escribe de {{min}} a {{max}} números.",
+        "nan": "«{{token}}» no es un número entero.",
+        "range": "{{value}} está fuera de rango: usa de {{min}} a {{max}}.",
+        "steps": "Esta entrada necesita más de {{max}} pasos. Prueba con menos valores."
+      }
+    },
+    "tabs": {
+      "label": "Detalles del tema",
+      "theory": "Teoría",
+      "code": "Código",
+      "practice": "Práctica"
+    },
+    "code": {
+      "language": "Lenguaje del ejemplo",
+      "variables": "Variables",
+      "note": "La línea resaltada es la que corresponde al paso actual. El ejemplo se prueba contra la animación, así que siempre coinciden.",
+      "current": "Línea actual",
+      "none": "—"
+    },
+    "practice": {
+      "quiz": "Predice el siguiente paso",
+      "question": "Pregunta {{n}} de {{total}}",
+      "correct": "Correcto",
+      "incorrect": "No exactamente",
+      "next": "Siguiente pregunta",
+      "again": "Intentar de nuevo",
+      "problems": "Problemas para practicar",
+      "no_problems": "Aún no hay problemas enlazados."
+    },
+    "tags": {
+      "comparison-sort": "Ordenación por comparación",
+      "adjacent-swaps": "Intercambios de vecinos",
+      "online": "En línea",
+      "divide-and-conquer": "Divide y vencerás"
+    },
+    "narration": {
+      "bubble-sort": {
+        "ready": "Listo. Cada pasada lleva el mayor valor sin ordenar hasta el final. Pulsa Reproducir o avanza paso a paso.",
+        "pass": "Nueva pasada sobre las posiciones 0 a {{end}}.",
+        "compare_bigger": "¿{{a}} es mayor que {{b}}? Sí, así que se intercambian.",
+        "compare_ok": "¿{{a}} es mayor que {{b}}? No, se quedan como están.",
+        "swap": "Intercambia {{a}} y {{b}}: {{a}} avanza un lugar a la derecha.",
+        "settled": "Fin de la pasada: {{value}} está en su lugar definitivo, la posición {{end}}.",
+        "no_swaps": "Ningún intercambio en esta pasada, así que el arreglo está ordenado: para antes.",
+        "done": "Ordenado: {{comparisons}} comparaciones y {{moves}} intercambios para {{n}} valores."
+      },
+      "insertion-sort": {
+        "ready": "Listo. La parte izquierda crece ordenada, un valor cada vez. Pulsa Reproducir o avanza paso a paso.",
+        "take": "Saca {{key}} de la posición {{i}} como clave; su lugar queda como hueco.",
+        "compare_bigger": "¿{{value}} es mayor que la clave {{key}}? Sí, así que se desplaza a la derecha.",
+        "compare_stop": "¿{{value}} es mayor que la clave {{key}}? No, así que la clave va justo después.",
+        "shift": "Desplaza {{value}} a la derecha, a la posición {{to}}; el hueco se mueve a la izquierda.",
+        "insert": "Coloca la clave {{key}} en el hueco, en la posición {{at}}.",
+        "done": "Ordenado: {{comparisons}} comparaciones y {{moves}} desplazamientos para {{n}} valores."
+      },
+      "quick-sort": {
+        "ready": "Listo. Pulsa Reproducir o avanza paso a paso.",
+        "base": "El tramo [{{lo}}..{{lo}}] tiene un solo valor, así que ya está en su lugar.",
+        "pivot": "Particiona [{{lo}}..{{hi}}]. El pivote es el último valor: {{pivot}}.",
+        "compare_smaller": "¿{{value}} es menor que {{pivot}}? Sí, va en la parte izquierda.",
+        "compare_not": "¿{{value}} es menor que {{pivot}}? No, se queda a la derecha.",
+        "swap": "Intercambia {{value}} a la posición {{i}}. La parte izquierda ahora termina en el índice {{i}}.",
+        "swap_self": "{{value}} ya está en el borde de la parte izquierda, así que i simplemente avanza.",
+        "place": "Coloca el pivote {{pivot}} en el índice {{i}}. Todo lo que queda a su izquierda es menor; ya está en su lugar definitivo.",
+        "done": "Ordenado: {{comparisons}} comparaciones y {{moves}} intercambios para {{n}} valores."
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 // Problem text: Markdown + GFM + math (KaTeX), code fences highlighted with the same
 // highlighter as the editor (ADR 0013). Raw HTML in Markdown is not rendered.
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -51,22 +51,38 @@ function Code({ className, children }: { className?: string; children?: React.Re
   );
 }
 
-export function Markdown({ text, className }: { text: string; className?: string }) {
+/** Renders an in-app link (an href with the `learn:` scheme, ADR 0029). */
+export type InternalLink = (href: string, children: React.ReactNode) => React.ReactNode;
+
+export function Markdown({
+  text,
+  className,
+  internalLink,
+}: {
+  text: string;
+  className?: string;
+  /** When set, `learn:` links are kept and rendered by this instead of an <a>. */
+  internalLink?: InternalLink;
+}) {
   return (
     <div className={cn("kb-prose", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}
+        urlTransform={(url) => (internalLink && url.startsWith("learn:") ? url : defaultUrlTransform(url))}
         components={{
           code: ({ className: cls, children }) => <Code className={cls}>{children}</Code>,
           pre: ({ children }) => (
             <pre className="my-3 overflow-x-auto rounded-md border bg-muted/50 p-3 leading-relaxed">{children}</pre>
           ),
-          a: ({ children, href }) => (
-            <a href={href} className="text-primary underline underline-offset-2" target="_blank" rel="noreferrer">
-              {children}
-            </a>
-          ),
+          a: ({ children, href }) =>
+            internalLink && href?.startsWith("learn:") ? (
+              internalLink(href, children)
+            ) : (
+              <a href={href} className="text-primary underline underline-offset-2" target="_blank" rel="noreferrer">
+                {children}
+              </a>
+            ),
         }}
       >
         {text}

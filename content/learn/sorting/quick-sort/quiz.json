@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "The pivot is 64 and a[j] = 21. What happens next?",
+    "prompt_es": "El pivote es 64 y a[j] = 21. ¿Qué pasa a continuación?",
+    "options": [
+      { "en": "21 is swapped into the smaller part", "es": "21 se intercambia a la parte de los menores" },
+      { "en": "21 stays where it is", "es": "21 se queda donde está" },
+      { "en": "The pivot moves", "es": "El pivote se mueve" }
+    ],
+    "answer": 0,
+    "explain_en": "21 is smaller than the pivot, so it is swapped to position i and the smaller part grows by one.",
+    "explain_es": "21 es menor que el pivote, así que se intercambia a la posición i y la parte de los menores crece en uno."
+  },
+  {
+    "prompt_en": "j has reached the pivot's position and i = 4. Where does the pivot go?",
+    "prompt_es": "j ha llegado a la posición del pivote e i = 4. ¿Adónde va el pivote?",
+    "options": [
+      { "en": "It stays at the end of the range", "es": "Se queda al final del tramo" },
+      { "en": "To position 4, its final place", "es": "A la posición 4, su lugar definitivo" },
+      { "en": "To the start of the range", "es": "Al principio del tramo" }
+    ],
+    "answer": 1,
+    "explain_en": "Positions lo..3 hold the smaller values, so the pivot is swapped to position 4 and never moves again.",
+    "explain_es": "Las posiciones lo..3 tienen los valores menores, así que el pivote se intercambia a la posición 4 y ya no vuelve a moverse."
+  },
+  {
+    "prompt_en": "With the last value as pivot, which input makes Lomuto quick sort slowest?",
+    "prompt_es": "Con el último valor como pivote, ¿qué entrada hace más lenta la ordenación rápida de Lomuto?",
+    "options": [
+      { "en": "A random order", "es": "Un orden aleatorio" },
+      { "en": "Already sorted or reversed", "es": "Ya ordenada o invertida" },
+      { "en": "All values different", "es": "Todos los valores distintos" }
+    ],
+    "answer": 1,
+    "explain_en": "Each pivot is then the biggest or smallest value of its range, so one side is always empty and the work grows to n²/2.",
+    "explain_es": "Entonces cada pivote es el mayor o el menor de su tramo, así que un lado queda siempre vacío y el trabajo crece hasta n²/2."
+  }
+]

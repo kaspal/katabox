@@ -45,6 +45,8 @@
   --color-viz-edge: var(--viz-edge);
   --color-viz-pointer: var(--viz-pointer);
   --color-viz-changed: var(--viz-changed);
+  --color-viz-range: var(--viz-range);
+  --color-viz-code-line: var(--viz-code-line);
   --color-verdict-wrong: var(--verdict-wrong);
   --color-verdict-error: var(--verdict-error);
   --color-verdict-limit: var(--verdict-limit);

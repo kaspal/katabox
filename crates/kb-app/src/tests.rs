@@ -1033,6 +1033,16 @@ async fn export_import_round_trip_reproduces_progress_and_home() {
     a.add_to_list(list, "retired-one").await.unwrap();
     a.set_setting("ui_lang", &json!("es")).await.unwrap();
     a.set_setting("editor.keymap", &json!("vim")).await.unwrap();
+    // Learn progress travels (ADR 0029); the Learn layout stays home and must not break
+    // the import.
+    let learn_last = json!({"subject": "sorting", "topic": "quick-sort", "step": 14});
+    a.set_setting("learn.viewed", &json!(["bubble-sort", "quick-sort"]))
+        .await
+        .unwrap();
+    a.set_setting("learn.last", &learn_last).await.unwrap();
+    a.set_setting("learn.layout", &json!([20, 50, 30]))
+        .await
+        .unwrap();
     a.set_setting("app.install_id", &json!("machine-a"))
         .await
         .unwrap();
@@ -1135,6 +1145,12 @@ async fn export_import_round_trip_reproduces_progress_and_home() {
         b.solved_by_language().await.unwrap()
     );
     assert_eq!(b.get_setting("ui_lang").await.unwrap(), Some(json!("es")));
+    assert_eq!(
+        b.get_setting("learn.viewed").await.unwrap(),
+        Some(json!(["bubble-sort", "quick-sort"]))
+    );
+    assert_eq!(b.get_setting("learn.last").await.unwrap(), Some(learn_last));
+    assert_eq!(b.get_setting("learn.layout").await.unwrap(), None);
     assert!(
         !b.get_setting("app.install_id")
             .await
@@ -1315,4 +1331,39 @@ async fn import_rejects_bad_files_and_imports_nothing() {
     assert!(b.list_submissions("two-sum").await.unwrap().is_empty());
     a.close().await;
     b.close().await;
+}
+
+#[tokio::test]
+async fn learn_commands_read_the_bundled_topics() {
+    let a = app("learn").await;
+    let catalog = a.learn_catalog(UiLang::En).await.unwrap();
+    assert_eq!(catalog.len(), 13, "every subject, with or without topics");
+    let sorting = catalog.iter().find(|s| s.id == "sorting").unwrap();
+    let ids: Vec<_> = sorting.topics.iter().map(|t| t.id.as_str()).collect();
+    assert_eq!(ids, ["bubble-sort", "insertion-sort", "quick-sort"]);
+    assert!(
+        catalog.iter().any(|s| s.topics.is_empty()),
+        "coming-soon subjects"
+    );
+
+    let view = a.learn_topic("quick-sort", UiLang::Es).await.unwrap();
+    assert_eq!(view.topic.subject_name, "Ordenación");
+    let linked: Vec<_> = view.problems.iter().map(|p| p.id.as_str()).collect();
+    assert_eq!(
+        linked,
+        view.topic
+            .problems
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>()
+    );
+    assert_eq!(view.topic.samples.len(), 2);
+
+    let err = a
+        .learn_topic("no-such-topic", UiLang::En)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::NotFound);
+    let found = a.search_learn("pivote", UiLang::En).await.unwrap();
+    assert_eq!(found[0].id, "quick-sort");
 }

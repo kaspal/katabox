@@ -5,7 +5,6 @@
 
 use std::path::{Path, PathBuf};
 
-use kb_app::LanguageCount;
 use kb_app::debug::{DebugAction, DebugInspect, DebugStart, DebugView};
 use kb_app::interview::{InterviewResult, InterviewSetup, InterviewView};
 use kb_app::practice::{
@@ -18,9 +17,10 @@ use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
     LanguagesInfo, SubmissionView, SubmitOptions, SubmitResult,
 };
+use kb_app::{LanguageCount, LearnTopicView};
 use kb_core::debug::EvalResult;
 use kb_core::{JudgeEvent, Language, Report};
-use kb_store::{AcceptedSolution, ActivityRow};
+use kb_store::{AcceptedSolution, ActivityRow, LearnSubject, LearnTopicSummary};
 use kb_store::{
     Draft, ProblemFilter, ProblemSummary, ProblemView, Snapshot, SubmissionSummary, UiLang,
 };
@@ -54,6 +54,35 @@ async fn list_problems(
     filter: ProblemFilter,
 ) -> Res<Vec<ProblemSummary>> {
     state.app()?.list_problems(&filter).await
+}
+
+/// Every Learn subject with its topics (ADR 0029).
+#[tauri::command]
+#[specta::specta]
+async fn learn_catalog(state: State<'_, AppState>, ui_lang: UiLang) -> Res<Vec<LearnSubject>> {
+    state.app()?.learn_catalog(ui_lang).await
+}
+
+/// One Learn topic page with its linked problems.
+#[tauri::command]
+#[specta::specta]
+async fn learn_topic(
+    state: State<'_, AppState>,
+    id: String,
+    ui_lang: UiLang,
+) -> Res<LearnTopicView> {
+    state.app()?.learn_topic(&id, ui_lang).await
+}
+
+/// Learn topics matching free text in either language.
+#[tauri::command]
+#[specta::specta]
+async fn search_learn(
+    state: State<'_, AppState>,
+    query: String,
+    ui_lang: UiLang,
+) -> Res<Vec<LearnTopicSummary>> {
+    state.app()?.search_learn(&query, ui_lang).await
 }
 
 /// The most recently edited draft whose problem exists, for Home's "Continue".
@@ -699,6 +728,9 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         continue_item,
         list_problems,
         get_problem,
+        learn_catalog,
+        learn_topic,
+        search_learn,
         editorial,
         last_language,
         get_stub,

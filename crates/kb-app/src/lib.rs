@@ -52,8 +52,8 @@ use std::sync::{Arc, RwLock};
 use kb_core::{JudgeEvent, Language, Report, TestCase, TestKind, Verdict};
 use kb_judge::{JudgeEnv, Problem};
 use kb_store::{
-    ContentMeta, Draft, ProblemFilter, ProblemSummary, ProblemView, Snapshot, Store,
-    SubmissionSummary, UiLang,
+    ContentMeta, Draft, LearnSubject, LearnTopic, LearnTopicSummary, ProblemFilter, ProblemSummary,
+    ProblemView, Snapshot, Store, SubmissionSummary, UiLang,
 };
 use serde::Serialize;
 use serde_json::{Map, Value};
@@ -156,6 +156,15 @@ pub enum EditorialReason {
     Accepted,
     /// Enough submissions failed.
     Attempts,
+}
+
+/// A Learn topic page (ADR 0029): the topic, and its linked problems in display order
+/// (ids the catalogue no longer has are left out).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct LearnTopicView {
+    pub topic: LearnTopic,
+    pub problems: Vec<ProblemSummary>,
 }
 
 /// The editorial tab's state.
@@ -443,6 +452,34 @@ impl App {
 
     pub async fn list_problems(&self, filter: &ProblemFilter) -> Result<Vec<ProblemSummary>> {
         Ok(self.store.list_problems(filter).await?)
+    }
+
+    /// Every Learn subject with its topics (ADR 0029).
+    pub async fn learn_catalog(&self, lang: UiLang) -> Result<Vec<LearnSubject>> {
+        Ok(self.store.content.learn_catalog(lang).await?)
+    }
+
+    /// A Learn topic page with its linked problems (status included).
+    pub async fn learn_topic(&self, id: &str, lang: UiLang) -> Result<LearnTopicView> {
+        let topic = self.store.content.learn_topic(id, lang).await?;
+        let all = self
+            .store
+            .list_problems(&ProblemFilter {
+                lang: Some(lang),
+                ..Default::default()
+            })
+            .await?;
+        let problems = topic
+            .problems
+            .iter()
+            .filter_map(|id| all.iter().find(|p| &p.id == id).cloned())
+            .collect();
+        Ok(LearnTopicView { topic, problems })
+    }
+
+    /// Learn topics matching `query` in either language.
+    pub async fn search_learn(&self, query: &str, lang: UiLang) -> Result<Vec<LearnTopicSummary>> {
+        Ok(self.store.content.search_learn(query, lang).await?)
     }
 
     /// The problem page. The editorial is left out on purpose: it is locked until the

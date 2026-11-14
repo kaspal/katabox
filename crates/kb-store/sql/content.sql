@@ -94,3 +94,60 @@ CREATE VIRTUAL TABLE problem_fts USING fts5 (
     statement,
     tokenize = 'unicode61 remove_diacritics 2'
 );
+
+-- Learn module (ADR 0029): algorithm topics with theory, samples and a quiz. The
+-- tracers that animate them are TypeScript in the app, not content.
+CREATE TABLE learn_subjects (
+    id       TEXT PRIMARY KEY,
+    ord      INTEGER NOT NULL,
+    name_en  TEXT NOT NULL,
+    name_es  TEXT NOT NULL,
+    blurb_en TEXT NOT NULL,
+    blurb_es TEXT NOT NULL,
+    icon     TEXT NOT NULL
+) WITHOUT ROWID;
+
+CREATE TABLE learn_topics (
+    id            TEXT PRIMARY KEY,
+    subject       TEXT NOT NULL REFERENCES learn_subjects (id),
+    ord           INTEGER NOT NULL,
+    title_en      TEXT NOT NULL,
+    title_es      TEXT NOT NULL,
+    tags          TEXT NOT NULL,  -- JSON array of strings
+    complexity    TEXT NOT NULL,  -- JSON {best, average, worst, space, stable, in_place}
+    problems      TEXT NOT NULL,  -- JSON array of problem ids
+    presets       TEXT NOT NULL,  -- JSON array of preset ids
+    input         TEXT NOT NULL,  -- JSON {min_len, max_len, min, max}
+    default_input TEXT NOT NULL,  -- JSON array of integers
+    UNIQUE (subject, ord)
+) WITHOUT ROWID;
+
+CREATE TABLE learn_texts (
+    topic_id TEXT NOT NULL REFERENCES learn_topics (id),
+    lang     TEXT NOT NULL,
+    theory   TEXT NOT NULL,
+    PRIMARY KEY (topic_id, lang)
+) WITHOUT ROWID;
+
+-- Raw samples, `@step` marker comments included (the UI strips them).
+CREATE TABLE learn_samples (
+    topic_id TEXT NOT NULL REFERENCES learn_topics (id),
+    language TEXT NOT NULL,
+    source   TEXT NOT NULL,
+    PRIMARY KEY (topic_id, language)
+) WITHOUT ROWID;
+
+-- quiz.json as written (both languages), localized at read time.
+CREATE TABLE learn_quiz (
+    topic_id TEXT PRIMARY KEY REFERENCES learn_topics (id),
+    json     TEXT NOT NULL
+) WITHOUT ROWID;
+
+CREATE VIRTUAL TABLE learn_fts USING fts5 (
+    topic_id UNINDEXED,
+    lang UNINDEXED,
+    title,
+    tags,
+    theory,
+    tokenize = 'unicode61 remove_diacritics 2'
+);

@@ -1,0 +1,106 @@
+# Learn module subjects (ADR 0029), in display order. `icon` is a name from the UI's
+# fixed icon map (apps/desktop/src/learn/icons.ts). Topics live in <subject>/<topic>/.
+
+[[subject]]
+id = "foundations"
+name = "Foundations"
+name_es = "Fundamentos"
+blurb = "Big-O growth, recursion and the call stack, Towers of Hanoi"
+blurb_es = "Crecimiento Big-O, recursión y pila de llamadas, Torres de Hanói"
+icon = "chart-line"
+
+[[subject]]
+id = "sorting"
+name = "Sorting"
+name_es = "Ordenación"
+blurb = "Bubble, insertion, merge, quick, heap, radix and Tim sort"
+blurb_es = "Burbuja, inserción, mezcla, rápida, montículo, radix y Tim sort"
+icon = "chart-column"
+
+[[subject]]
+id = "searching"
+name = "Searching and techniques"
+name_es = "Búsqueda y técnicas"
+blurb = "Binary search, search on the answer, two pointers, sliding window"
+blurb_es = "Búsqueda binaria, búsqueda sobre la respuesta, dos punteros, ventana deslizante"
+icon = "search"
+
+[[subject]]
+id = "linear"
+name = "Linear structures"
+name_es = "Estructuras lineales"
+blurb = "Stacks, queues, linked lists, cycle detection, LRU cache"
+blurb_es = "Pilas, colas, listas enlazadas, detección de ciclos, caché LRU"
+icon = "rows"
+
+[[subject]]
+id = "hashing"
+name = "Hashing"
+name_es = "Hashing"
+blurb = "Chaining, open addressing, Bloom filters, rolling hash"
+blurb_es = "Encadenamiento, direccionamiento abierto, filtros de Bloom, hash rodante"
+icon = "hash"
+
+[[subject]]
+id = "trees"
+name = "Trees"
+name_es = "Árboles"
+blurb = "BST, AVL and red-black rotations, heaps, tries, segment trees"
+blurb_es = "ABB, rotaciones AVL y rojo-negro, montículos, tries, árboles de segmentos"
+icon = "tree"
+
+[[subject]]
+id = "graphs"
+name = "Graphs"
+name_es = "Grafos"
+blurb = "BFS, DFS, Dijkstra, MST, SCC, bridges, max flow"
+blurb_es = "BFS, DFS, Dijkstra, árbol de expansión mínima, CFC, puentes, flujo máximo"
+icon = "graph"
+
+[[subject]]
+id = "grid-pathfinding"
+name = "Grid pathfinding"
+name_es = "Caminos en cuadrículas"
+blurb = "BFS vs Dijkstra vs A* on a maze you draw"
+blurb_es = "BFS frente a Dijkstra frente a A* en un laberinto que tú dibujas"
+icon = "grid"
+
+[[subject]]
+id = "dynamic-programming"
+name = "Dynamic programming"
+name_es = "Programación dinámica"
+blurb = "Knapsack, LCS, edit distance, LIS, interval and bitmask DP"
+blurb_es = "Mochila, LCS, distancia de edición, LIS, DP por intervalos y por máscaras"
+icon = "table"
+
+[[subject]]
+id = "greedy"
+name = "Greedy"
+name_es = "Voraces"
+blurb = "Activity selection, Huffman coding, jump game"
+blurb_es = "Selección de actividades, codificación de Huffman, juego de saltos"
+icon = "trending-up"
+
+[[subject]]
+id = "backtracking"
+name = "Backtracking"
+name_es = "Vuelta atrás"
+blurb = "Subsets, permutations, N-Queens, Sudoku"
+blurb_es = "Subconjuntos, permutaciones, N reinas, sudoku"
+icon = "undo"
+
+[[subject]]
+id = "strings"
+name = "Strings"
+name_es = "Cadenas"
+blurb = "KMP, Z-function, Rabin–Karp, Manacher, Aho–Corasick"
+blurb_es = "KMP, función Z, Rabin–Karp, Manacher, Aho–Corasick"
+icon = "type"
+
+[[subject]]
+id = "math-geometry"
+name = "Math and geometry"
+name_es = "Matemáticas y geometría"
+blurb = "Sieve, fast power, modular inverse, convex hull"
+blurb_es = "Criba, potencia rápida, inverso modular, envolvente convexa"
+icon = "sigma"

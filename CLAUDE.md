@@ -10,7 +10,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 
 | Path | What it is |
 | --- | --- |
-| `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI (ADR 0012: `app/` shell, router, palette; `pages/`; `workspace/` editor, problem and results panes (ADR 0013), `workspace/debug/` debugger panels (ADR 0022), `workspace/debug/visualize/` the Visualize tab (ADR 0027); `components/ui/` shadcn; `lib/api.ts` is the only door to the generated `bindings.ts`; `i18n/locales/`; `styles/tokens.css`; `smoke/` is a temporary dev-only screen), `src-tauri/` = thin Rust shell (commands and wiring only; ADR 0011; `windows/` installer hooks, `icons/katabox.svg` the icon source; ADR 0021) |
+| `apps/desktop/` | Tauri 2 app. `src/` = React 19 + TypeScript UI (ADR 0012: `app/` shell, router, palette; `pages/`; `workspace/` editor, problem and results panes (ADR 0013), `workspace/debug/` debugger panels (ADR 0022), `workspace/debug/visualize/` the Visualize tab (ADR 0027); `learn/` the Learn section: engine, scenes, tracers, pages (ADR 0029); `components/ui/` shadcn; `lib/api.ts` is the only door to the generated `bindings.ts`; `i18n/locales/`; `styles/tokens.css`; `smoke/` is a temporary dev-only screen), `src-tauri/` = thin Rust shell (commands and wiring only; ADR 0011; `windows/` installer hooks, `icons/katabox.svg` the icon source; ADR 0021) |
 | `crates/kb-app` | App service behind the Tauri commands: state, sandbox root, Run/Submit, typed `AppError` (ADR 0011); `practice.rs`: reviews, daily problem, streak, pattern map, next problem, lists (ADR 0019); `interview.rs`, `transfer.rs` (ADR 0020); `debug.rs`: debugger sessions and navigation (ADR 0022) |
 | `crates/kb-core` | Domain types (Language, Difficulty, Verdict, Limits, TestResult, the judge Report). No I/O |
 | `crates/kb-judge` | Checkers, harness/stub codegen (minijinja), and the judge: Python, TypeScript, PHP, Rust (ADR 0008, 0009); per-language time limits and the machine calibration benchmark (ADR 0017); `debug.rs`: replay debugger runs (ADR 0022); `profile.rs` + `complexity.rs`: complexity profiler runs and fit (ADR 0024) |
@@ -20,6 +20,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 | `crates/kb-bridge` | Language servers over stdio, outside the sandbox: sessions, message policy, virtual project per problem (ADR 0014). DAP later |
 | `crates/kb-pack` | `kb-pack validate [--run]`, `generate`, `profile` and `build` (content.db) CLI for problem packages; `--run` runs every problem script in the sandbox (ADR 0016) and judges speed per language (ADR 0017); `profile` records complexity-profile inputs and reference times (ADR 0024) |
 | `content/problems/` | Problem packages (CC BY-SA 4.0) |
+| `content/learn/` | Learn topics (ADR 0029): `subjects.toml`, then `<subject>/<topic>/` with `topic.toml`, theory EN/ES, `sample.py` + `sample.ts` with `@step` markers, `quiz.json`, generated `cases.json` |
 | `languages/` | Per-language runtime definitions (`language.toml`, with the `[time]` factor and startup allowance of ADR 0017) and harness templates |
 
 ## Commands
@@ -38,7 +39,10 @@ cargo run -p kb-pack -- generate content/problems/<id> --size max --seeds 1,2  #
 cargo run --release -p kb-pack -- profile content/problems/<id>  # complexity profile: input hashes + reference times in every language into profile/reference.json (sandbox; committed; ADR 0024)
 cargo run --release -p kb-pack -- profile --inputs  # regenerate the gitignored profile input caches from gen.py and verify their hashes (sandbox; the build packs profiles only from these)
 cargo test -p kb-judge --release --test complexity_windows -- --nocapture  # profiler calibration set (28 known solutions; prints the hit rate, needs ≥ 85%)
-cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE)
+cargo run -p kb-pack -- validate --learn --run  # Learn topics only: structure, then both samples on every case in the sandbox (ADR 0029)
+pnpm learn:cases                 # regenerate content/learn/*/*/cases.json from the tracers (Vitest fails when stale)
+cargo test -p kb-pack --test learn_samples_windows -- --nocapture  # Learn samples vs tracers in the sandbox (Windows)
+cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE) and content/learn
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
 cargo test -p kb-judge --test debug_windows -- --nocapture  # debugger e2e in the sandbox (prints the replay timings; debug_js_windows for JS/TS)
 cargo test -p kb-judge --release --test visualize_windows -- --nocapture  # visualizer snapshots, Python + TS: shapes, identity, caps, no user code, cost per stop (ADR 0027)
@@ -81,6 +85,7 @@ pnpm release:build -- --bundles nsis,msi  # Windows installers into target/relea
 - Problems must be original. Never copy statements or tests from LeetCode, HackerRank or similar sites.
 - Solutions use each language's standard library only.
 - Debugger (ADR 0022): replay only. Every debugger action is an ordinary sandboxed run of the language's debug harness (`languages/python/debug.py.j2`; `languages/typescript/debug.ts.j2` steps the solution through Node's in-process inspector from a worker thread, ADR 0023; `kb-judge/src/debug.rs`); never add sockets, a loopback exemption, a network capability or a kb-runner change for debugging. Harness frames stay hidden (only `solution.*` is traced). The debug run's output budget (`TRACE_BUDGET_BYTES` + `RECORD_ALLOWANCE` + prints) is its `max_output_bytes`; truncate the trace gracefully, never raise the cap. The editor is read-only during a session.
+- Learn (ADR 0029): tracers are pure TypeScript teaching content in `apps/desktop/src/learn/tracers/`, the one exception to "business logic in `crates/`"; they never touch I/O, emit i18n narration keys only, and their samples are checked against them in the sandbox by `kb-pack validate --run`. Steps are snapshots with stable item ids; a topic counts as viewed only when its last step is reached by playing or stepping. `learn.viewed` and `learn.last` travel with an export; the scenes use only `--viz-*` tokens.
 - Record significant decisions as a new ADR in `docs/adr/`.
 
 ## Problem package format

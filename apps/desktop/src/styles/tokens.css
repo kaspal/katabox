@@ -63,6 +63,24 @@
   --viz-pointer: #0b5cad;
   --viz-changed: #9a4b00;
 
+  /* Learn scenes (ADR 0029): bar and cell roles (≥ 3:1 on the card; `out` is a deliberate
+     fade, always with the range band and text too), pointer labels (text, ≥ 4.5:1), the
+     active range band and the current code line. Roles also differ by outline, lift and
+     legend label, never by color alone. */
+  --viz-idle: #8492a6;
+  --viz-out: #d5dbe4;
+  --viz-pivot: #4338ca;
+  --viz-compare: #d97706;
+  --viz-swap: #c2410c;
+  --viz-sorted: #0f9d8a;
+  --viz-key: #7c3aed;
+  --viz-range: #f2f3fe;
+  --viz-code-line: #eef0ff;
+  --viz-ptr-pivot: #4338ca;
+  --viz-ptr-i: #0f766e;
+  --viz-ptr-j: #b45309;
+  --viz-ptr-key: #6d28d9;
+
   /* Code syntax (editor and highlighted blocks; styles/syntax.css) */
   --syntax-keyword: #6f42c1;
   --syntax-string: #116329;
@@ -129,6 +147,20 @@
   --viz-edge: #8f98a8;
   --viz-pointer: #82aaff;
   --viz-changed: #f0b871;
+
+  --viz-idle: #7d8794;
+  --viz-out: #3a4250;
+  --viz-pivot: #6366f1;
+  --viz-compare: #fbbf24;
+  --viz-swap: #fb923c;
+  --viz-sorted: #2dd4bf;
+  --viz-key: #a78bfa;
+  --viz-range: #1e2232;
+  --viz-code-line: #23284a;
+  --viz-ptr-pivot: #a5acff;
+  --viz-ptr-i: #5eead4;
+  --viz-ptr-j: #fcd34d;
+  --viz-ptr-key: #c4b5fd;
 
   --syntax-keyword: #c792ea;
   --syntax-string: #9ad18b;

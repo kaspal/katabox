@@ -16,6 +16,7 @@
 
 pub mod blob;
 pub mod content;
+pub mod learn;
 pub mod modes;
 pub mod practice;
 pub mod transfer;
@@ -26,7 +27,11 @@ use std::path::Path;
 pub use content::{
     CONTENT_SCHEMA_VERSION, ContentDb, ContentMeta, JudgeData, PackMeta, PackProblem, PackText,
     ProblemFilter, ProblemSummary, ProblemView, ProfileData, PublicTest, StatusFilter, UiLang,
-    build,
+    build, build_with_learn,
+};
+pub use learn::{
+    LearnComplexity, LearnInput, LearnPack, LearnSample, LearnSubject, LearnTopic,
+    LearnTopicSummary, PackQuizOption, PackQuizQuestion, PackSubject, PackTopic, QuizQuestion,
 };
 pub use modes::{AcceptedSolution, SessionRow, SubmitFact};
 pub use practice::{ActivityRow, DailyPick, INSTALL_ID_SETTING, ListRow, ReviewRow};

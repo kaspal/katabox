@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Languages, Monitor, Moon, Sun } from "lucide-react";
+import { GraduationCap, Languages, Monitor, Moon, Sun } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -13,7 +13,7 @@ import { DifficultyLabel, useTagLabel } from "@/components/Semantic";
 import { DEV_NAV, NAV, WORKSPACE_ICON } from "@/app/nav";
 import { UI_LANGS } from "@/i18n";
 import { THEMES, usePrefs, type ThemePref } from "@/lib/prefs";
-import { useProblems } from "@/lib/queries";
+import { useLearnCatalog, useProblems } from "@/lib/queries";
 
 const THEME_ICON: Record<ThemePref, typeof Sun> = { system: Monitor, light: Sun, dark: Moon };
 
@@ -29,6 +29,7 @@ export function CommandPalette({
   const navigate = useNavigate();
   const { theme, lang, setTheme, setLang } = usePrefs();
   const problems = useProblems();
+  const learn = useLearnCatalog();
   const tagLabel = useTagLabel();
 
   const run = (action: () => void) => {
@@ -73,6 +74,22 @@ export function CommandPalette({
               <DifficultyLabel difficulty={p.difficulty} className="text-xs" />
             </CommandItem>
           ))}
+        </CommandGroup>
+        <CommandGroup heading={t("palette.topics")}>
+          {(learn.data ?? []).flatMap((s) =>
+            s.topics.map((tp) => (
+              <CommandItem
+                key={tp.id}
+                value={`learn ${t("nav.learn")} ${tp.title} ${tp.id} ${s.name}`}
+                onSelect={() =>
+                  run(() => void navigate({ to: "/learn/$subject/$topic", params: { subject: s.id, topic: tp.id } }))
+                }
+              >
+                <GraduationCap aria-hidden />
+                {t("palette.topic", { title: tp.title })}
+              </CommandItem>
+            )),
+          )}
         </CommandGroup>
         <CommandGroup heading={t("palette.theme")}>
           {THEMES.map((th) => {
