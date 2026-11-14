@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import type { Failure, JsonValue, ProblemMode, Report, TestKind } from "@/bindings";
 import { VerdictBadge } from "@/components/Verdict";
+import { ShrinkPanel } from "@/workspace/results/Shrink";
 import { describeMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { diffParts } from "@/workspace/results/jsonDiff";
@@ -160,6 +161,11 @@ function ProgramFailureView({ failure, checker }: { failure: Failure; checker: s
           </pre>
         </div>
       )}
+      {SHRINKABLE.has(failure.verdict) && (
+        <p className="text-xs text-muted-foreground" data-testid="shrink-program">
+          {t("results.shrink.programUnavailable")}
+        </p>
+      )}
     </section>
   );
 }
@@ -219,9 +225,13 @@ export function FailureView({
           </pre>
         </div>
       )}
+      {SHRINKABLE.has(failure.verdict) && <ShrinkPanel input={failure.input} />}
     </section>
   );
 }
+
+/** Verdicts the shrinker can chase (ADR 0030). */
+const SHRINKABLE = new Set(["wrong_answer", "runtime_error", "time_limit_exceeded", "memory_limit_exceeded"]);
 
 /** A judge report: verdict header, compiler output, per-test table, first failure. */
 export function ResultView({

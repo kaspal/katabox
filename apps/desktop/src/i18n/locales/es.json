@@ -426,7 +426,8 @@
     "import_invalid": "Este archivo no es una exportación válida de KataBox.",
     "debug_unsupported": "Este lenguaje todavía no se puede depurar. La depuración está disponible para Python.",
     "debug_diverged": "Este programa se comporta distinto en cada ejecución (hora, azar o identidad de objetos), así que no se puede reproducir paso a paso.",
-    "profile_unavailable": "Este problema no tiene perfil de complejidad."
+    "profile_unavailable": "Este problema no tiene perfil de complejidad.",
+    "shrink_unavailable": "Aquí no se puede buscar una entrada más pequeña que falle (es un problema de programa o no hay solución de referencia en este lenguaje)."
   },
   "judge": {
     "verdict": {
@@ -521,6 +522,24 @@
       "firstDiff": "primera diferencia",
       "missing": "(la salida termina aquí)",
       "timeNote": "Los tiempos incluyen el arranque de cada ejecución."
+    },
+    "shrink": {
+      "start": "Buscar una entrada más pequeña que falle",
+      "starting": "Comprobando que esta entrada falla…",
+      "progress": "Reduciendo: tamaño {{size}} (era {{original}})…",
+      "runs": "{{runs}} de {{max}} ejecuciones en el sandbox",
+      "stop": "Detener",
+      "title": "Entrada más pequeña que falla",
+      "stopped": {
+        "smallest": "No se puede reducir más: tamaño {{size}}, desde {{original}} ({{runs}} ejecuciones).",
+        "budget": "Se alcanzó el límite de ejecuciones: tamaño {{size}}, desde {{original}} ({{runs}} ejecuciones).",
+        "cancelled": "Detenido: tamaño {{size}}, desde {{original}} ({{runs}} ejecuciones).",
+        "not_failing": "Tu código actual supera esta entrada, así que no hay nada que reducir."
+      },
+      "notFailing": "Tu código actual supera esta entrada, así que no hay nada que reducir.",
+      "addToTests": "Añadir a mis pruebas",
+      "busy": "Espera a que termine la ejecución o la sesión de depuración actual.",
+      "programUnavailable": "Buscar una entrada más pequeña solo funciona en problemas de función: la entrada de un programa tiene recuentos y líneas de estructura que no se pueden recortar sin romperla."
     }
   },
   "lsp": {

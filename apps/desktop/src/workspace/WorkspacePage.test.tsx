@@ -349,3 +349,55 @@ describe("Workspace: focus mode", () => {
     expect(nav).not.toHaveAttribute("hidden");
   });
 });
+
+describe("Failing-test shrinker (ADR 0030)", () => {
+  useFakeApi();
+
+  it("shrinks a failing test's input, then adds the smaller one to the custom tests", async () => {
+    const fake = setFakeApi();
+    const { user } = await openWorkspace();
+    await editor();
+    fake.state.nextReport = makeReport("wrong_answer");
+    await user.click(screen.getByRole("button", { name: "Run" }));
+    const failure = await screen.findByTestId("first-failure");
+    await user.click(within(failure).getByRole("button", { name: "Find a smaller failing input" }));
+    const done = await screen.findByTestId("shrink-done");
+    expect(fake.api.shrink).toHaveBeenCalledWith(
+      "two-sum",
+      expect.any(String),
+      expect.any(String),
+      { nums: [7, -3, 10, 5], target: 2 },
+      expect.any(Function),
+    );
+    expect(done).toHaveTextContent("As small as it gets: size 4, down from 20 (8 runs).");
+    expect(within(done).getByTestId("shrink-input")).toHaveTextContent("nums = [7,-3]");
+    await user.click(within(done).getByRole("button", { name: "Add to my tests" }));
+    // The Testcases tab now has a custom test with the shrunk values.
+    expect(await screen.findByDisplayValue("[7,-3]")).toBeInTheDocument();
+  });
+
+  it("shows progress while it runs, and Stop ends it with what it has so far", async () => {
+    const fake = setFakeApi();
+    let stop!: () => void;
+    const stopped = new Promise<void>((r) => (stop = r));
+    vi.mocked(fake.api.cancelShrink).mockImplementation(async () => {
+      stop();
+      return null;
+    });
+    vi.mocked(fake.api.shrink).mockImplementation(async (_p, _l, _c, input, onEvent) => {
+      onEvent({ runs: 6, max_runs: 60, original_size: 20, size: 9 });
+      await stopped;
+      return { input, expected: [1, 3], actual: [2, 4], verdict: "wrong_answer", message: null, original_size: 20, size: 9, runs: 6, stop: "cancelled" };
+    });
+    const { user } = await openWorkspace();
+    await editor();
+    fake.state.nextReport = makeReport("wrong_answer");
+    await user.click(screen.getByRole("button", { name: "Run" }));
+    await user.click(await screen.findByRole("button", { name: "Find a smaller failing input" }));
+    const running = await screen.findByTestId("shrink-running");
+    expect(running).toHaveTextContent("Shrinking: size 9 (was 20)");
+    expect(within(running).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "6");
+    await user.click(within(running).getByRole("button", { name: "Stop" }));
+    expect(await screen.findByTestId("shrink-done")).toHaveTextContent("Stopped: size 9, down from 20 (6 runs).");
+  });
+});

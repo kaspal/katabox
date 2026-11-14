@@ -3,6 +3,7 @@ import { vi } from "vitest";
 import { fakeCatalog, fakeTopic } from "@/test/fakeLearn";
 import type {
   ActivityRow,
+  ShrinkEvent,
   ReviewSummary,
   SolvedBreakdown,
   AppError,
@@ -424,6 +425,24 @@ export function createFakeApi(
       ).map((p) => ({ ...p, title: p.title[lang] }));
     }),
     learnCatalog: vi.fn(async (lang: "en" | "es") => fakeCatalog(lang)),
+    shrink: vi.fn(
+      async (_p: string, _l: Language, _code: string, input: CustomInput, onEvent: (e: ShrinkEvent) => void) => {
+        onEvent({ runs: 2, max_runs: 60, original_size: 20, size: 20 });
+        onEvent({ runs: 8, max_runs: 60, original_size: 20, size: 4 });
+        return {
+          input: { ...input, nums: [7, -3] },
+          expected: [0, 1],
+          actual: [0, 0],
+          verdict: "wrong_answer" as const,
+          message: null,
+          original_size: 20,
+          size: 4,
+          runs: 8,
+          stop: "smallest" as const,
+        };
+      },
+    ),
+    cancelShrink: vi.fn(async () => null),
     placementProblems: vi.fn(async (lang: "en" | "es") =>
       PROBLEMS.filter((p) => p.mode === "function")
         .slice(0, 3)

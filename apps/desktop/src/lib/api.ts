@@ -8,6 +8,8 @@ import {
   type AppError,
   type AppInfo,
   type Diagnostics,
+  type ShrinkEvent,
+  type ShrinkResult,
   type AcceptedSolution,
   type DebugAction,
   type DebugInspect,
@@ -131,6 +133,18 @@ export const api = {
     custom: CustomInput[],
     onEvent: (e: JudgeEvent) => void,
   ): Promise<Report> => call(commands.run(problem, language, code, custom, progress(onEvent))),
+  shrink: (
+    problem: string,
+    language: Language,
+    code: string,
+    input: CustomInput,
+    onEvent: (e: ShrinkEvent) => void,
+  ): Promise<ShrinkResult> => {
+    const ch = new Channel<ShrinkEvent>();
+    ch.onmessage = onEvent;
+    return call(commands.shrink(problem, language, code, input, ch));
+  },
+  cancelShrink: (): Promise<null> => call(commands.cancelShrink()),
   submit: (
     problem: string,
     language: Language,

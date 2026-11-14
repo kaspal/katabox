@@ -426,7 +426,8 @@
     "import_invalid": "This file is not a valid KataBox export.",
     "debug_unsupported": "This language cannot be debugged yet. Debugging is available for Python.",
     "debug_diverged": "This program behaves differently on each run (time, randomness or object identity), so it cannot be replayed step by step.",
-    "profile_unavailable": "This problem has no complexity profile."
+    "profile_unavailable": "This problem has no complexity profile.",
+    "shrink_unavailable": "Finding a smaller failing input is not available here (a program problem, or no reference solution in this language)."
   },
   "judge": {
     "verdict": {
@@ -521,6 +522,24 @@
       "firstDiff": "first difference",
       "missing": "(the output ends here)",
       "timeNote": "Times include each run's start-up."
+    },
+    "shrink": {
+      "start": "Find a smaller failing input",
+      "starting": "Checking that this input fails…",
+      "progress": "Shrinking: size {{size}} (was {{original}})…",
+      "runs": "{{runs}} of {{max}} sandbox runs",
+      "stop": "Stop",
+      "title": "Smaller failing input",
+      "stopped": {
+        "smallest": "As small as it gets: size {{size}}, down from {{original}} ({{runs}} runs).",
+        "budget": "Stopped at the run budget: size {{size}}, down from {{original}} ({{runs}} runs).",
+        "cancelled": "Stopped: size {{size}}, down from {{original}} ({{runs}} runs).",
+        "not_failing": "Your current code passes this input, so there is nothing to shrink."
+      },
+      "notFailing": "Your current code passes this input, so there is nothing to shrink.",
+      "addToTests": "Add to my tests",
+      "busy": "Wait for the current run or debug session to finish.",
+      "programUnavailable": "Finding a smaller failing input works for function problems only: a program's input has counts and structure lines that can't be cut safely."
     }
   },
   "lsp": {

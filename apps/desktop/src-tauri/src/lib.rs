@@ -225,6 +225,35 @@ async fn run(
         .await
 }
 
+/// Shrink a failing input to a smaller one that still fails (ADR 0030); progress goes to
+/// `on_event` after each round.
+#[tauri::command]
+#[specta::specta]
+async fn shrink(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+    code: String,
+    input: CustomInput,
+    on_event: Channel<kb_app::ShrinkEvent>,
+) -> Res<kb_app::ShrinkResult> {
+    let send = move |e| {
+        let _ = on_event.send(e);
+    };
+    state
+        .app()?
+        .shrink(&problem, language, &code, input, send)
+        .await
+}
+
+/// Stop the running shrink after its current sandbox run.
+#[tauri::command]
+#[specta::specta]
+async fn cancel_shrink(state: State<'_, AppState>) -> Res<()> {
+    state.app()?.cancel_shrink();
+    Ok(())
+}
+
 /// Every test; the submission is recorded. Progress goes to `on_event`.
 #[tauri::command]
 #[specta::specta]
@@ -783,6 +812,8 @@ async fn uninstall_language(state: State<'_, AppState>, language: Language) -> R
 fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::<tauri::Wry>::new().commands(tauri_specta::collect_commands![
         app_info,
+        shrink,
+        cancel_shrink,
         diagnostics,
         third_party_notices,
         activity,

@@ -789,3 +789,50 @@ async fn profiles_a_solution_and_estimates_the_class() {
         Some(AppErrorCode::ProfileUnavailable)
     );
 }
+
+/// The failing-test shrinker (ADR 0030): a two-sum solution that fails whenever a number
+/// is negative shrinks from eight numbers to a valid input of at most three that still has
+/// a negative number, within the run budget.
+#[tokio::test]
+async fn shrinks_a_failing_input_to_a_small_one_that_still_fails() {
+    let app = app("shrink").await;
+    let wrong = "def two_sum(nums, target):\n    if any(x < 0 for x in nums):\n        return [0, 0]\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n    return []\n";
+    let input = json!({"nums": [10, 20, -3, 40, 50, 60, 1, 2], "target": 3});
+    let r = app
+        .shrink(
+            "two-sum",
+            Language::Python,
+            wrong,
+            input.as_object().unwrap().clone(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_ne!(r.stop, kb_app::ShrinkStop::NotFailing, "{r:?}");
+    let nums: Vec<i64> = r.input["nums"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_i64().unwrap())
+        .collect();
+    assert!(nums.len() <= 3 && nums.iter().any(|x| *x < 0), "{r:?}");
+    assert!(r.size < r.original_size, "{r:?}");
+    assert!(r.runs <= kb_app::shrink::MAX_RUNS, "{r:?}");
+    assert_eq!(r.verdict, Verdict::WrongAnswer, "{r:?}");
+    assert_eq!(r.actual, Some(json!([0, 0])));
+
+    // A correct solution does not fail: nothing to shrink.
+    let right =
+        std::fs::read_to_string(repo().join("content/problems/two-sum/solutions/ref.py")).unwrap();
+    let ok = app
+        .shrink(
+            "two-sum",
+            Language::Python,
+            &right,
+            input.as_object().unwrap().clone(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_eq!(ok.stop, kb_app::ShrinkStop::NotFailing);
+}

@@ -20,6 +20,7 @@ pub mod learn_links;
 pub mod practice;
 pub mod profile;
 mod root;
+pub mod shrink;
 pub mod transfer;
 pub mod uninstall;
 
@@ -65,6 +66,7 @@ pub use diagnostics::{Diagnostics, RuntimeDiag};
 pub use error::{AppError, AppErrorCode};
 pub use learn_links::{PatternTopics, TopicReview};
 pub use root::{RootSource, SANDBOX_ROOT_ENV, SANDBOX_ROOT_SETTING};
+pub use shrink::{ShrinkEvent, ShrinkResult, ShrinkStop};
 
 pub type Result<T, E = AppError> = std::result::Result<T, E>;
 
@@ -245,6 +247,8 @@ pub struct App {
     pending_import: std::sync::Mutex<Option<transfer::PendingImport>>,
     /// The debug session (ADR 0022): a recorded trace and the debugger's position in it.
     debug: std::sync::Mutex<Option<debug::Session>>,
+    /// Stop requested for the running shrink (ADR 0030).
+    shrink_cancel: std::sync::atomic::AtomicBool,
 }
 
 /// Solved problems per judge language (cross-language practice, ADR 0020).
@@ -298,6 +302,7 @@ impl App {
                 .map(Path::to_path_buf)
                 .unwrap_or_default(),
             judging: tokio::sync::Mutex::new(()),
+            shrink_cancel: std::sync::atomic::AtomicBool::new(false),
             calibration: RwLock::new(calibration),
             clock: std::sync::Mutex::new(None),
             pending_import: std::sync::Mutex::new(None),

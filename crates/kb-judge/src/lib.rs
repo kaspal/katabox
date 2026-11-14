@@ -20,6 +20,7 @@ pub mod profile;
 pub mod program;
 mod protocol;
 pub mod sandbox;
+pub mod shrink;
 pub mod signature;
 pub mod tools;
 

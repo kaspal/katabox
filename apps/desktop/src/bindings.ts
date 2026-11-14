@@ -16,6 +16,29 @@ async appInfo() : Promise<Result<AppInfo, AppError>> {
 }
 },
 /**
+ * Shrink a failing input to a smaller one that still fails (ADR 0030); progress goes to
+ * `on_event` after each round.
+ */
+async shrink(problem: string, language: Language, code: string, input: Partial<{ [key in string]: JsonValue }>, onEvent: TAURI_CHANNEL<ShrinkEvent>) : Promise<Result<ShrinkResult, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("shrink", { problem, language, code, input, onEvent }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Stop the running shrink after its current sandbox run.
+ */
+async cancelShrink() : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("cancel_shrink") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * What "Copy diagnostics" shows: versions and flags, never paths or user data.
  */
 async diagnostics() : Promise<Result<Diagnostics, AppError>> {
@@ -932,6 +955,10 @@ export type AppErrorCode =
  * This problem has no complexity profile (ADR 0024).
  */
 "profile_unavailable" | 
+/**
+ * The failing-test shrinker does not work here (a program problem, no reference).
+ */
+"shrink_unavailable" | 
 /**
  * Anything else, including the app failing to start.
  */
@@ -1871,6 +1898,31 @@ export type RuntimeDiag = { language: Language; installed: boolean;
  * The pinned runtime, e.g. `python-3.14` (the toolchain folder's name, no path).
  */
 version: string | null; language_server: boolean }
+/**
+ * Progress, after each round.
+ */
+export type ShrinkEvent = { runs: number; max_runs: number; original_size: number; size: number }
+/**
+ * The smallest failing input found, with what the reference and the user's code gave.
+ */
+export type ShrinkResult = { input: Partial<{ [key in string]: JsonValue }>; expected: JsonValue; actual: JsonValue | null; verdict: Verdict; message: Message | null; original_size: number; size: number; runs: number; stop: ShrinkStop }
+export type ShrinkStop = 
+/**
+ * No smaller candidate fails: this is as small as the moves get.
+ */
+"smallest" | 
+/**
+ * The run or time budget ran out.
+ */
+"budget" | 
+/**
+ * The user pressed Stop.
+ */
+"cancelled" | 
+/**
+ * The starting input does not fail (any more) with this code.
+ */
+"not_failing"
 /**
  * A container or a node. `len` is the real length; `items` / `entries` may list fewer
  * (the snapshot's caps).

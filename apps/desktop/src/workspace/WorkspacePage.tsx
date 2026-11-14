@@ -54,10 +54,11 @@ import { ScriptModeToggle, useScriptMode } from "@/workspace/editor/ScriptMode";
 import { ResultsPane, type ResultsTab } from "@/workspace/results/ResultsPane";
 import { DebugPanel } from "@/workspace/debug/DebugPanel";
 import { DebugCaseContext, type DebugCase } from "@/workspace/debug/context";
+import { ShrinkContext, type ShrinkCase } from "@/workspace/results/Shrink";
 import { useDebugLanguages, useDebugger } from "@/workspace/debug/useDebugger";
 import { debugExtension } from "@/workspace/editor/debug";
 import type { CustomInput } from "@/lib/api";
-import { parseSignature, validateCustom, type CustomTestDraft } from "@/workspace/results/validate";
+import { parseSignature, validateCustom, valuesFrom, type CustomTestDraft } from "@/workspace/results/validate";
 
 const route = getRouteApi("/problems/$problemId");
 
@@ -192,6 +193,21 @@ export function WorkspacePage() {
         ? t("debug.busy")
         : null,
   };
+  // The failing-test shrinker (ADR 0030): the code in the editor now, never alongside a
+  // judge run or a debug session; its result can join the custom tests.
+  const shrinkCase: ShrinkCase | null =
+    language && signature
+      ? {
+          problemId,
+          language,
+          code: () => session.doc?.text ?? "",
+          disabledReason: busy || dbg.busy || dbg.active ? t("results.shrink.busy") : null,
+          addCustom: (input) => {
+            setCustoms((cs) => [...cs, { id: Math.max(0, ...cs.map((c) => c.id)) + 1, values: valuesFrom(signature, input) }]);
+            setTab("testcases");
+          },
+        }
+      : null;
   const debugCurrent = dbg.view?.state.state === "paused" ? dbg.view.state.line : null;
   const debugEditor = useMemo(
     () =>
@@ -603,6 +619,7 @@ export function WorkspacePage() {
             <ResizablePanel id="results" panelRef={resultsPanel} defaultSize="38" minSize="12" collapsible collapsedSize="0">
               <section aria-label={t("workspace.resultsPane")} className="h-full min-h-0 border-t">
                 <DebugCaseContext.Provider value={debugCase}>
+                <ShrinkContext.Provider value={shrinkCase}>
                 <ResultsPane
                   problem={p}
                   signature={signature}
@@ -629,6 +646,7 @@ export function WorkspacePage() {
                     ) : null
                   }
                 />
+                </ShrinkContext.Provider>
                 </DebugCaseContext.Provider>
               </section>
             </ResizablePanel>
