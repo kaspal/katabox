@@ -42,4 +42,4 @@ La salida es `[0, 0, 0, 1, 1, 1, 2, 2, 2, 2]`: tres componentes.
 - [Unión-búsqueda (conjuntos disjuntos)](learn:trees/union-find): componentes que crecen arista a arista.
 - [Pila](learn:linear/stack): la pila que mueve el relleno.
 - [Búsqueda en profundidad (DFS)](learn:graphs/dfs): la forma recursiva de extender una etiqueta.
-- Relleno por inundación en cuadrículas (próximamente): la misma idea sobre las celdas de una cuadrícula.
+- [Búsqueda en anchura en una cuadrícula](learn:grid-pathfinding/grid-bfs): la misma idea sobre las celdas de una cuadrícula.

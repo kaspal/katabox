@@ -43,6 +43,14 @@ function kbGraph(values: number[]): [number, number[][][]] {
   return [n, adj];
 }
 
+// A stored grid [rows, cols, sr, sc, gr, gc, cell...] as [rows of cells, start, goal].
+function kbGrid(values: number[]): [number[][], number[], number[]] {
+  const [rows, cols, sr, sc, gr, gc] = values;
+  const grid: number[][] = [];
+  for (let r = 0; r < rows; r++) grid.push(values.slice(6 + r * cols, 6 + (r + 1) * cols));
+  return [grid, [sr, sc], [gr, gc]];
+}
+
 // Stored groups (pairs, edges) as arrays of `size` values.
 function kbChunks(values: number[], size: number): number[][] {
   const out: number[][] = [];

@@ -978,7 +978,11 @@
         "joined": "joined",
         "bridges_found": "bridges",
         "paths": "paths",
-        "placed": "placed"
+        "placed": "placed",
+        "explored": "explored",
+        "discovered": "discovered",
+        "carved": "carved",
+        "backtracks": "backtracks"
       },
       "rows": {
         "prefix": "Prefix sums",
@@ -1038,7 +1042,8 @@
         "white": "white",
         "grey": "grey"
       },
-      "summary_graph": "Graph with {{n}} nodes: {{nodes}}. Edges: {{edges}}."
+      "summary_graph": "Graph with {{n}} nodes: {{nodes}}. Edges: {{edges}}.",
+      "summary_grid": "A {{rows}} by {{cols}} grid: {{map}}."
     },
     "roles": {
       "idle": "Not yet placed",
@@ -1163,7 +1168,13 @@
       "full": "Full (no spare capacity)",
       "odd_degree": "Odd degree",
       "just_walked": "Just walked",
-      "used_or_placed": "Used / on the path"
+      "used_or_placed": "Used / on the path",
+      "explored": "Explored",
+      "path": "Path found",
+      "stale": "Stale entry",
+      "open": "Open",
+      "dead_end": "Dead end",
+      "wall_removed": "Wall knocked down"
     },
     "controls": {
       "label": "Playback",
@@ -1251,7 +1262,14 @@
         "two-lanes": "Two lanes",
         "house-of-cards": "A house",
         "detour-loop": "A loop on the way",
-        "too-many-odd": "Too many odd nodes"
+        "too-many-odd": "Too many odd nodes",
+        "maze": "A maze",
+        "open": "Open floor",
+        "swamp": "A swamp",
+        "trap": "A trap",
+        "small": "Small",
+        "large": "Large",
+        "toll-lane": "A toll lane"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1291,7 +1309,14 @@
           "weight_range": "Weights go from {{min}} to {{max}}.",
           "edge_weighted": "\"{{edge}}\": write an edge as u v w (two nodes and a weight).",
           "edge_pair": "\"{{edge}}\": write an edge as u v (two nodes).",
-          "antiparallel": "Edges {{u}} {{v}} and {{v}} {{u}} cannot both be used here."
+          "antiparallel": "Edges {{u}} {{v}} and {{v}} {{u}} cannot both be used here.",
+          "grid_size": "Use 2 to {{rows}} rows of 2 to {{cols}} cells.",
+          "grid_ragged": "Every row needs the same number of cells.",
+          "grid_start_goal": "Put exactly one S and one G, on different cells.",
+          "grid_cell": "Use only . # S G and the digits 2-9 (\"{{ch}}\" is not one of them).",
+          "grid_no_weights": "Use only . # S and G (\"{{ch}}\" is not one of them).",
+          "maze_size": "The size k goes from {{min}} to {{max}}.",
+          "maze_seed": "The seed goes from 1 to {{max}}."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1312,7 +1337,10 @@
         "parents": "Parents",
         "pairs": "Pairs",
         "edges": "Edges",
-        "directed": "Directed (0 / 1)"
+        "directed": "Directed (0 / 1)",
+        "grid": "Map (rows split by /; . open, # wall, 2-9 weight, S start, G goal)",
+        "size": "Size k (2k+1 cells a side)",
+        "seed": "Seed"
       }
     },
     "tabs": {
@@ -1391,7 +1419,10 @@
       "minimum-spanning-tree": "Minimum spanning tree",
       "strongly-connected-components": "Strongly connected components",
       "network-flow": "Network flow",
-      "dynamic-programming": "Dynamic programming"
+      "dynamic-programming": "Dynamic programming",
+      "grid": "Grid",
+      "heuristic": "Heuristic",
+      "maze": "Maze"
     },
     "narration": {
       "bubble-sort": {
@@ -2049,6 +2080,46 @@
         "back": "{{u}} has no unused edges: move it to the path.",
         "done": "All {{m}} edges used once, from {{start}} to {{end}}.",
         "missed": "{{left}} edge(s) were never reached: the graph is in pieces, so there is no path."
+      },
+      "grid-bfs": {
+        "ready": "Find the fewest steps from S to G on a {{rows}} × {{cols}} grid. Every step costs 1.",
+        "visit": "Take ({{r}}, {{c}}) from the queue: {{d}} step(s) from S.",
+        "discover": "({{r}}, {{c}}) is new: {{d}} step(s) from S. It joins the back of the queue.",
+        "goal": "G reached in {{d}} step(s), after exploring {{explored}} cell(s).",
+        "done": "The shortest path takes {{d}} step(s); {{explored}} cell(s) were explored.",
+        "no_path": "The queue is empty after {{explored}} cell(s): walls cut G off."
+      },
+      "grid-dijkstra": {
+        "ready": "Find the cheapest path from S to G on a {{rows}} × {{cols}} grid. Entering a cell costs its weight (1 when open).",
+        "pop": "Pop the cheapest entry: ({{r}}, {{c}}) at {{d}}.",
+        "stale": "({{r}}, {{c}}) already has {{best}}: this entry ({{d}}) is stale, skip it.",
+        "relax": "Through here, ({{r}}, {{c}}) costs {{d}}: better, so update it and push it.",
+        "goal": "G is settled at cost {{d}}, after exploring {{explored}} cell(s).",
+        "done": "The cheapest path costs {{d}}; {{explored}} cell(s) were explored.",
+        "no_path": "The queue is empty after {{explored}} cell(s): walls cut G off."
+      },
+      "a-star": {
+        "ready": "A* from S to G on a {{rows}} × {{cols}} grid: the queue orders cells by f = g (cost so far) + h (Manhattan distance to G).",
+        "pop": "Pop the smallest f: ({{r}}, {{c}}) with g = {{d}}.",
+        "stale": "({{r}}, {{c}}) already has g = {{best}}: this entry is stale, skip it.",
+        "relax": "({{r}}, {{c}}): g = {{d}}, h = {{h}}, so f = {{f}}. Push it.",
+        "goal": "G is popped with cost {{d}}, after exploring {{explored}} cell(s).",
+        "done": "The cheapest path costs {{d}}; only {{explored}} cell(s) were explored.",
+        "no_path": "The queue is empty after {{explored}} cell(s): walls cut G off."
+      },
+      "greedy-best-first": {
+        "ready": "Greedy best-first from S to G on a {{rows}} × {{cols}} grid: always expand the cell that looks closest to G.",
+        "pop": "Pop the smallest h: ({{r}}, {{c}}), {{h}} away from G.",
+        "discover": "({{r}}, {{c}}) is new: h = {{h}}, paid {{d}} so far. Push it.",
+        "goal": "G reached at cost {{d}}, after exploring {{explored}} cell(s). Fast, but not always the cheapest path.",
+        "done": "The path found costs {{d}}; {{explored}} cell(s) were explored.",
+        "no_path": "The queue is empty after {{explored}} cell(s): walls cut G off."
+      },
+      "maze-generation": {
+        "ready": "Carve a {{size}} × {{size}} maze with {{cells}} rooms by randomized depth-first search (seed {{seed}}).",
+        "carve": "{{options}} unvisited neighbour(s); the generator picks number {{pick}}. Knock down the wall and move to ({{r}}, {{c}}).",
+        "back": "({{r}}, {{c}}) is a dead end: back up one room.",
+        "done": "All {{cells}} rooms are connected, with exactly one path between any two."
       }
     },
     "compare": {

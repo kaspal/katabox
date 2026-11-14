@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default map. S is at the top-left corner. Which cell leaves the queue right after S?",
+    "prompt_es": "Mapa por defecto. S está en la esquina superior izquierda. ¿Qué celda sale de la cola justo después de S?",
+    "options": [
+      { "en": "The cell below S", "es": "La celda de debajo de S" },
+      { "en": "The cell to the right of S", "es": "La celda a la derecha de S" },
+      { "en": "G, because it is the target", "es": "G, porque es el objetivo" }
+    ],
+    "answer": 1,
+    "explain_en": "Neighbours are tried up, right, down, left. Up is outside the grid, so the right-hand cell is queued first and leaves first. It turns out to be a dead end.",
+    "explain_es": "Los vecinos se prueban arriba, derecha, abajo, izquierda. Arriba queda fuera de la cuadrícula, así que la celda de la derecha entra primero y sale primero. Resulta ser un callejón sin salida."
+  },
+  {
+    "prompt_en": "What is the output for the default map?",
+    "prompt_es": "¿Cuál es la salida para el mapa por defecto?",
+    "options": [
+      { "en": "[12]", "es": "[12]" },
+      { "en": "[25]", "es": "[25]" },
+      { "en": "[16]", "es": "[16]" }
+    ],
+    "answer": 2,
+    "explain_en": "The route needs 16 steps: down the left edge, through row 2, up to the top row, along it and down column 7 into G. 12 is G's Manhattan distance, which the walls make impossible; 25 is how many cells leave the queue.",
+    "explain_es": "La ruta necesita 16 pasos: por el borde izquierdo, la fila 2, arriba hasta la primera fila, a lo largo de ella y bajando por la columna 7 hasta G. 12 es la distancia Manhattan a G, imposible por los muros; 25 es cuántas celdas salen de la cola."
+  },
+  {
+    "prompt_en": "A cell holds a 9 (it costs 9 to enter). How does grid BFS treat it?",
+    "prompt_es": "Una celda tiene un 9 (cuesta 9 entrar). ¿Cómo la trata BFS en cuadrícula?",
+    "options": [
+      { "en": "As an open cell: entering it counts as one step", "es": "Como una celda abierta: entrar cuenta como un paso" },
+      { "en": "As a wall", "es": "Como un muro" },
+      { "en": "As nine steps", "es": "Como nueve pasos" }
+    ],
+    "answer": 0,
+    "explain_en": "Only 1 means wall; every other value is open and BFS adds 1 per step. On Dijkstra's default map it answers 11 steps while the cheapest route costs 27.",
+    "explain_es": "Solo el 1 significa muro; cualquier otro valor es abierto y BFS suma 1 por paso. En el mapa por defecto de Dijkstra responde 11 pasos, mientras que la ruta más barata cuesta 27."
+  }
+]

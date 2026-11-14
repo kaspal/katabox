@@ -159,6 +159,40 @@ function piecesWithout(n: number, edges: readonly [number, number, number][], sk
   return count;
 }
 
+
+/** A stored grid, read independently of engine/grid.ts. */
+function gridOf(input: readonly number[]) {
+  const [rows, cols, sr, sc, gr, gc] = input as number[];
+  const cell = (r: number, c: number) => input[6 + r * cols! + c]!;
+  const open = (r: number, c: number) => r >= 0 && r < rows! && c >= 0 && c < cols! && cell(r, c) !== 1;
+  const steps = [[-1, 0], [0, 1], [1, 0], [0, -1]] as const;
+  return { rows: rows!, cols: cols!, start: [sr!, sc!] as const, goal: [gr!, gc!] as const, cell, open, steps };
+}
+
+/** Cheapest cost from start to goal by relaxing every cell until nothing changes. */
+function gridCost(input: readonly number[], unit: boolean): number {
+  const g = gridOf(input);
+  const d = Array.from({ length: g.rows }, () => new Array<number>(g.cols).fill(Infinity));
+  d[g.start[0]]![g.start[1]] = 0;
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (let r = 0; r < g.rows; r++)
+      for (let c = 0; c < g.cols; c++) {
+        if (!g.open(r, c)) continue;
+        for (const [dr, dc] of g.steps) {
+          if (!g.open(r + dr, c + dc)) continue;
+          const w = unit ? 1 : Math.max(1, g.cell(r, c));
+          if (d[r + dr]![c + dc]! + w < d[r]![c]!) {
+            d[r]![c] = d[r + dr]![c + dc]! + w;
+            changed = true;
+          }
+        }
+      }
+  }
+  const best = d[g.goal[0]]![g.goal[1]]!;
+  return best === Infinity ? -1 : best;
+}
+
 export const REFERENCE: Record<string, (input: readonly number[]) => number[]> = {
   "big-o-growth": ([n]) => [1, log2(n!), n!, n! * log2(n!), n! * n!, 2 ** n!],
   "recursion-call-stack": (xs) => [sum(xs)],
@@ -697,6 +731,52 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
     walk(odd.length ? odd[0]! : g.edges[0]![0]);
     return used.size === g.edges.length ? path.reverse() : [-1];
   },
+  // Grid pathfinding.
+  "grid-bfs": (input) => [gridCost(input, true)],
+  "grid-dijkstra": (input) => [gridCost(input, false)],
+  "a-star": (input) => [gridCost(input, false)],
+  "greedy-best-first": (input) => {
+    // The same rule with a plain list: take the open entry with the smallest (h, r, c).
+    const g = gridOf(input);
+    const h = (r: number, c: number) => Math.abs(r - g.goal[0]) + Math.abs(c - g.goal[1]);
+    const paid = new Map<string, number>([[`${g.start[0]},${g.start[1]}`, 0]]);
+    const open: [number, number][] = [[g.start[0], g.start[1]]];
+    while (open.length) {
+      let best = 0;
+      open.forEach(([r, c], j) => {
+        const [br, bc] = open[best]!;
+        if (h(r, c) < h(br, bc) || (h(r, c) === h(br, bc) && (r < br || (r === br && c < bc)))) best = j;
+      });
+      const [r, c] = open.splice(best, 1)[0]!;
+      if (r === g.goal[0] && c === g.goal[1]) return [paid.get(`${r},${c}`)!];
+      for (const [dr, dc] of g.steps) {
+        const key = `${r + dr},${c + dc}`;
+        if (!g.open(r + dr, c + dc) || paid.has(key)) continue;
+        paid.set(key, paid.get(`${r},${c}`)! + Math.max(1, g.cell(r + dr, c + dc)));
+        open.push([r + dr, c + dc]);
+      }
+    }
+    return [-1];
+  },
+  "maze-generation": ([k, seed]) => {
+    // Recursive carving with the same generator.
+    const size = 2 * k! + 1;
+    const grid = Array.from({ length: size }, () => new Array<number>(size).fill(1));
+    let state = seed!;
+    const carve = (r: number, c: number): void => {
+      grid[r]![c] = 0;
+      for (;;) {
+        const options = ([[-1, 0], [0, 1], [1, 0], [0, -1]] as const).filter(([dr, dc]) => r + 2 * dr > 0 && r + 2 * dr < size && c + 2 * dc > 0 && c + 2 * dc < size && grid[r + 2 * dr]![c + 2 * dc] === 1);
+        if (!options.length) return;
+        state = (state * 48271) % 2147483647;
+        const [dr, dc] = options[state % options.length]!;
+        grid[r + dr]![c + dc] = 0;
+        carve(r + 2 * dr, c + 2 * dc);
+      }
+    };
+    carve(1, 1);
+    return grid.flat();
+  },
   "bubble-sort": sorted,
   "insertion-sort": sorted,
   "quick-sort": sorted,
@@ -792,6 +872,36 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  "grid-bfs": {
+    input: [2, 2, 0, 0, 0, 1, 0, 0, 0, 0],
+    markers: [null, "visit", "discover", "discover", "visit", "goal", null],
+    py: [null, 12, 18, 18, 12, 14, null],
+    ts: [null, 11, 19, 19, 11, 13, null],
+  },
+  "grid-dijkstra": {
+    input: [2, 2, 0, 0, 0, 1, 0, 0, 0, 0],
+    markers: [null, "pop", "relax", "relax", "pop", "goal", null],
+    py: [null, 16, 26, 26, 16, 20, null],
+    ts: [null, 16, 29, 29, 16, 21, null],
+  },
+  "a-star": {
+    input: [2, 2, 0, 0, 0, 1, 0, 0, 0, 0],
+    markers: [null, "pop", "relax", "relax", "pop", "goal", null],
+    py: [null, 20, 30, 30, 20, 24, null],
+    ts: [null, 16, 29, 29, 16, 21, null],
+  },
+  "greedy-best-first": {
+    input: [2, 2, 0, 0, 0, 1, 0, 0, 0, 0],
+    markers: [null, "pop", "discover", "discover", "pop", "goal", null],
+    py: [null, 20, 26, 26, 20, 22, null],
+    ts: [null, 16, 24, 24, 16, 18, null],
+  },
+  "maze-generation": {
+    input: [2, 1],
+    markers: [null, "carve", "carve", "carve", "back", "back", "back", "back", null],
+    py: [null, 26, 26, 26, 29, 29, 29, 29, null],
+    ts: [null, 24, 24, 24, 27, 27, 27, 27, null],
+  },
   "floyd-warshall": {
     input: [3, 1, 0, 1, 1, 1, 2, 1],
     markers: [null, "pivot", "pivot", "improve", "pivot", null],
@@ -1224,6 +1334,11 @@ export const GOLDEN: Record<string, Golden> = {
 export const WORST: Record<string, number[]> = {
   "big-o-growth": [16],
   "towers-of-hanoi": [5],
+  "grid-bfs": [12, 16, 0, 0, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  "grid-dijkstra": [12, 16, 0, 0, 11, 15, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0],
+  "a-star": [12, 16, 0, 0, 11, 15, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0],
+  "greedy-best-first": [12, 16, 0, 0, 11, 15, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0],
+  "maze-generation": [7, 9999],
   "floyd-warshall": [6, 1, 0, 1, 9, 0, 2, 8, 0, 4, 7, 1, 2, 6, 1, 3, 5, 1, 5, 4, 2, 0, 3, 2, 3, 9, 2, 4, 8, 3, 1, 7, 3, 4, 6, 3, 5, 5, 4, 0, 4, 4, 2, 3, 4, 5, 9],
   "zero-one-bfs": [12, 0, 0, 1, 0, 0, 2, 1, 1, 3, 0, 2, 3, 1, 3, 4, 0, 4, 5, 1, 5, 6, 0, 6, 7, 1, 7, 8, 0, 8, 9, 1, 9, 10, 0, 10, 11, 1, 0, 11, 0, 1, 5, 1, 2, 7, 0, 3, 9, 1, 4, 10, 0, 6, 11, 1, 1, 8, 0, 2, 10, 1],
   prim: [12, 0, 0, 1, 1, 0, 2, 6, 1, 3, 2, 2, 3, 7, 3, 4, 3, 4, 5, 8, 5, 6, 4, 6, 7, 9, 7, 8, 5, 8, 9, 1, 9, 10, 6, 10, 11, 2, 0, 11, 7, 1, 5, 3, 2, 7, 8, 3, 9, 4, 4, 10, 9, 6, 11, 5, 1, 8, 1, 2, 10, 6],

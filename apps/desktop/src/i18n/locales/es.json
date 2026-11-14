@@ -978,7 +978,11 @@
         "joined": "unidos",
         "bridges_found": "puentes",
         "paths": "caminos",
-        "placed": "colocados"
+        "placed": "colocados",
+        "explored": "exploradas",
+        "discovered": "descubiertas",
+        "carved": "excavadas",
+        "backtracks": "retrocesos"
       },
       "rows": {
         "prefix": "Sumas prefijas",
@@ -1038,7 +1042,8 @@
         "white": "blanco",
         "grey": "gris"
       },
-      "summary_graph": "Grafo de {{n}} nodos: {{nodes}}. Aristas: {{edges}}."
+      "summary_graph": "Grafo de {{n}} nodos: {{nodes}}. Aristas: {{edges}}.",
+      "summary_grid": "Una cuadrícula de {{rows}} por {{cols}}: {{map}}."
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -1163,7 +1168,13 @@
       "full": "Lleno (sin capacidad libre)",
       "odd_degree": "Grado impar",
       "just_walked": "Recién recorrida",
-      "used_or_placed": "Usada / en el camino"
+      "used_or_placed": "Usada / en el camino",
+      "explored": "Explorada",
+      "path": "Camino encontrado",
+      "stale": "Entrada vieja",
+      "open": "Libre",
+      "dead_end": "Callejón sin salida",
+      "wall_removed": "Muro derribado"
     },
     "controls": {
       "label": "Reproducción",
@@ -1251,7 +1262,14 @@
         "two-lanes": "Dos carriles",
         "house-of-cards": "Una casa",
         "detour-loop": "Un bucle en el camino",
-        "too-many-odd": "Demasiados nodos impares"
+        "too-many-odd": "Demasiados nodos impares",
+        "maze": "Un laberinto",
+        "open": "Suelo despejado",
+        "swamp": "Un pantano",
+        "trap": "Una trampa",
+        "small": "Pequeño",
+        "large": "Grande",
+        "toll-lane": "Un carril de peaje"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1291,7 +1309,14 @@
           "weight_range": "Los pesos van de {{min}} a {{max}}.",
           "edge_weighted": "\"{{edge}}\": escribe una arista como u v w (dos nodos y un peso).",
           "edge_pair": "\"{{edge}}\": escribe una arista como u v (dos nodos).",
-          "antiparallel": "Aquí no se pueden usar a la vez las aristas {{u}} {{v}} y {{v}} {{u}}."
+          "antiparallel": "Aquí no se pueden usar a la vez las aristas {{u}} {{v}} y {{v}} {{u}}.",
+          "grid_size": "Usa de 2 a {{rows}} filas de 2 a {{cols}} celdas.",
+          "grid_ragged": "Todas las filas necesitan el mismo número de celdas.",
+          "grid_start_goal": "Pon exactamente una S y una G, en celdas distintas.",
+          "grid_cell": "Usa solo . # S G y los dígitos 2-9 (\"{{ch}}\" no es uno de ellos).",
+          "grid_no_weights": "Usa solo . # S y G (\"{{ch}}\" no es uno de ellos).",
+          "maze_size": "El tamaño k va de {{min}} a {{max}}.",
+          "maze_seed": "La semilla va de 1 a {{max}}."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1312,7 +1337,10 @@
         "parents": "Padres",
         "pairs": "Pares",
         "edges": "Aristas",
-        "directed": "Dirigido (0 / 1)"
+        "directed": "Dirigido (0 / 1)",
+        "grid": "Mapa (filas separadas por /; . libre, # muro, 2-9 peso, S inicio, G meta)",
+        "size": "Tamaño k (2k+1 celdas por lado)",
+        "seed": "Semilla"
       }
     },
     "tabs": {
@@ -1391,7 +1419,10 @@
       "minimum-spanning-tree": "Árbol de expansión mínima",
       "strongly-connected-components": "Componentes fuertemente conexas",
       "network-flow": "Flujo en redes",
-      "dynamic-programming": "Programación dinámica"
+      "dynamic-programming": "Programación dinámica",
+      "grid": "Cuadrícula",
+      "heuristic": "Heurística",
+      "maze": "Laberinto"
     },
     "narration": {
       "bubble-sort": {
@@ -2049,6 +2080,46 @@
         "back": "A {{u}} no le quedan aristas sin usar: pásalo al camino.",
         "done": "Las {{m}} aristas usadas una vez, de {{start}} a {{end}}.",
         "missed": "{{left}} arista(s) no se alcanzaron nunca: el grafo está en trozos, así que no hay camino."
+      },
+      "grid-bfs": {
+        "ready": "Encuentra el menor número de pasos de S a G en una cuadrícula de {{rows}} × {{cols}}. Cada paso cuesta 1.",
+        "visit": "Saca ({{r}}, {{c}}) de la cola: a {{d}} paso(s) de S.",
+        "discover": "({{r}}, {{c}}) es nueva: a {{d}} paso(s) de S. Entra al final de la cola.",
+        "goal": "G alcanzada en {{d}} paso(s), tras explorar {{explored}} celda(s).",
+        "done": "El camino más corto tiene {{d}} paso(s); se exploraron {{explored}} celda(s).",
+        "no_path": "La cola se vacía tras {{explored}} celda(s): los muros aíslan G."
+      },
+      "grid-dijkstra": {
+        "ready": "Encuentra el camino más barato de S a G en una cuadrícula de {{rows}} × {{cols}}. Entrar en una celda cuesta su peso (1 si está libre).",
+        "pop": "Saca la entrada más barata: ({{r}}, {{c}}) a {{d}}.",
+        "stale": "({{r}}, {{c}}) ya tiene {{best}}: esta entrada ({{d}}) es vieja, sáltala.",
+        "relax": "Por aquí, ({{r}}, {{c}}) cuesta {{d}}: mejor, así que actualízala y métela en la cola.",
+        "goal": "G queda fijada con coste {{d}}, tras explorar {{explored}} celda(s).",
+        "done": "El camino más barato cuesta {{d}}; se exploraron {{explored}} celda(s).",
+        "no_path": "La cola se vacía tras {{explored}} celda(s): los muros aíslan G."
+      },
+      "a-star": {
+        "ready": "A* de S a G en una cuadrícula de {{rows}} × {{cols}}: la cola ordena las celdas por f = g (coste hasta ahora) + h (distancia Manhattan a G).",
+        "pop": "Saca la f más pequeña: ({{r}}, {{c}}) con g = {{d}}.",
+        "stale": "({{r}}, {{c}}) ya tiene g = {{best}}: esta entrada es vieja, sáltala.",
+        "relax": "({{r}}, {{c}}): g = {{d}}, h = {{h}}, así que f = {{f}}. Métela en la cola.",
+        "goal": "G sale de la cola con coste {{d}}, tras explorar {{explored}} celda(s).",
+        "done": "El camino más barato cuesta {{d}}; solo se exploraron {{explored}} celda(s).",
+        "no_path": "La cola se vacía tras {{explored}} celda(s): los muros aíslan G."
+      },
+      "greedy-best-first": {
+        "ready": "Búsqueda voraz primero el mejor de S a G en una cuadrícula de {{rows}} × {{cols}}: expande siempre la celda que parece más cerca de G.",
+        "pop": "Saca la h más pequeña: ({{r}}, {{c}}), a {{h}} de G.",
+        "discover": "({{r}}, {{c}}) es nueva: h = {{h}}, pagado {{d}} hasta ahora. Métela en la cola.",
+        "goal": "G alcanzada con coste {{d}}, tras explorar {{explored}} celda(s). Rápido, pero no siempre el camino más barato.",
+        "done": "El camino encontrado cuesta {{d}}; se exploraron {{explored}} celda(s).",
+        "no_path": "La cola se vacía tras {{explored}} celda(s): los muros aíslan G."
+      },
+      "maze-generation": {
+        "ready": "Excava un laberinto de {{size}} × {{size}} con {{cells}} salas mediante búsqueda en profundidad aleatoria (semilla {{seed}}).",
+        "carve": "{{options}} vecino(s) sin visitar; el generador elige el número {{pick}}. Derriba el muro y pasa a ({{r}}, {{c}}).",
+        "back": "({{r}}, {{c}}) es un callejón sin salida: retrocede una sala.",
+        "done": "Las {{cells}} salas quedan conectadas, con exactamente un camino entre cada dos."
       }
     },
     "compare": {

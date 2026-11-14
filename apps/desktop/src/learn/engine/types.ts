@@ -121,6 +121,8 @@ export type SceneData = {
   bitArray?: { bits: number[]; hits: number[]; miss?: number | null; key?: number | null };
   /** A graph (Phases 4-5): fixed node positions, roles on nodes and edges, panels. */
   graph?: GraphData;
+  /** A grid (Phase 6): walls, weights, per-cell roles and labels, the path found. */
+  grid?: GridData;
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
    * not the final row). cases.json `output` comes from here, so it is the tracer's own. */
   result?: number[];
@@ -164,6 +166,20 @@ export type GraphData = {
   hotRow?: number;
   /** A matrix panel (representations, Floyd-Warshall); null is drawn as ∞. */
   matrix?: { label: RowLabel; cells: (number | null)[][]; hot?: [number, number][]; via?: [number, number][] };
+};
+
+/** Grids (Phase 6): cells by index r * cols + c (0 open, 1 wall, 2-9 a weight). */
+export type GridData = {
+  rows: number;
+  cols: number;
+  cells: number[];
+  start: [number, number] | null;
+  goal: [number, number] | null;
+  roles: Record<number, Role>;
+  /** A label replacing the cell's weight (a distance, f, h). */
+  text: Record<number, string>;
+  /** The path found, as cell indices from start to goal. */
+  path: number[];
 };
 
 export type ForestNode = {
@@ -225,7 +241,8 @@ export type SceneKind =
   | "tree"
   | "hash"
   | "bits-array"
-  | "graph";
+  | "graph"
+  | "grid";
 
 /** How a topic's input is shaped. Inputs are always one flat list of integers (the DB and
  * the sample driver see only that):
@@ -270,8 +287,8 @@ export type TracerDef = {
   subject: string;
   scene: SceneKind;
   /** Topics in the same subject and group can be compared on one input: "sort" (values
-   * to sort), "find" (a value to look for). */
-  compareGroup?: "sort" | "find";
+   * to sort), "find" (a value to look for), "grid" (a map: the pathfinding race). */
+  compareGroup?: "sort" | "find" | "grid";
   /** The array scene keeps room above the row for a lifted key (insertion-style sorts). */
   lifts?: boolean;
   /** The topic.toml `[input]` limits (Vitest checks they match). */

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default \"trap\" map: S on the left of row 3, G on the right, a box of walls open towards S. Which cells leave the queue right after S?",
+    "prompt_es": "Mapa \"trampa\" por defecto: S a la izquierda de la fila 3, G a la derecha y una caja de muros abierta hacia S. ¿Qué celdas salen de la cola justo después de S?",
+    "options": [
+      { "en": "The cells up the left edge, towards the top row", "es": "Las celdas que suben por el borde izquierdo, hacia la fila de arriba" },
+      { "en": "The cells above and below S, in turn", "es": "Las celdas de encima y de debajo de S, por turnos" },
+      { "en": "The four cells to its right along row 3, into the box", "es": "Las cuatro celdas a su derecha por la fila 3, hacia dentro de la caja" }
+    ],
+    "answer": 2,
+    "explain_en": "Each step right lowers h: 6, 5, 4, 3. Greedy search ignores the wall it cannot see coming and runs straight into the box.",
+    "explain_es": "Cada paso a la derecha baja h: 6, 5, 4, 3. La búsqueda voraz ignora el muro que no ve venir y se mete de lleno en la caja."
+  },
+  {
+    "prompt_en": "What is the output for the default map?",
+    "prompt_es": "¿Cuál es la salida para el mapa por defecto?",
+    "options": [
+      { "en": "[13]", "es": "[13]" },
+      { "en": "[7]", "es": "[7]" },
+      { "en": "[28]", "es": "[28]" }
+    ],
+    "answer": 0,
+    "explain_en": "After emptying the box it goes up 3, across 7 and down 3: 13, which here also happens to be the cheapest. 7 is S's h, and 28 is how many cells leave the queue.",
+    "explain_es": "Tras vaciar la caja sube 3, cruza 7 y baja 3: 13, que aquí además resulta ser lo más barato. 7 es la h de S, y 28 es cuántas celdas salen de la cola."
+  },
+  {
+    "prompt_en": "On the map S9G/... (two rows, a 9 between S and G), what does greedy best-first search return?",
+    "prompt_es": "En el mapa S9G/... (dos filas, un 9 entre S y G), ¿qué devuelve la búsqueda voraz primero el mejor?",
+    "options": [
+      { "en": "[4], the route around the 9", "es": "[4], la ruta que rodea el 9" },
+      { "en": "[10], straight through the 9", "es": "[10], atravesando el 9" },
+      { "en": "[2], two steps", "es": "[2], dos pasos" }
+    ],
+    "answer": 1,
+    "explain_en": "The 9 has h = 1, better than the cell below S (h = 3), so greedy enters it and pays 9 + 1. Dijkstra and A* go around for 4.",
+    "explain_es": "El 9 tiene h = 1, mejor que la celda de debajo de S (h = 3), así que la búsqueda voraz entra en él y paga 9 + 1. Dijkstra y A* lo rodean por 4."
+  }
+]

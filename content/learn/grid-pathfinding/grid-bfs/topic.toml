@@ -1,0 +1,28 @@
+id = "grid-bfs"
+subject = "grid-pathfinding"
+order = 1
+title = "Breadth-first search on a grid"
+title_es = "Búsqueda en anchura en una cuadrícula"
+tags = ["grid", "bfs"]
+problems = ["warehouse-robot"]
+presets = ["maze", "random", "open"]
+default = [5, 9, 0, 0, 4, 8, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0]
+
+[complexity]
+best = "O(R·C)"
+average = "O(R·C)"
+worst = "O(R·C)"
+space = "O(R·C)"
+stable = true
+in_place = true
+
+[input]
+min_len = 10
+max_len = 198
+min = 0
+max = 16
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = grid_bfs(*kb_grid(a))"
+typescript = "a = gridBfs(...kbGrid(a))"

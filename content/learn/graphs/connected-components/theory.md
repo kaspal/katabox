@@ -42,4 +42,4 @@ Use it to count islands, networks or groups, to check whether a graph is connect
 - [Union-find](learn:trees/union-find): components that grow edge by edge.
 - [Stack](learn:linear/stack): the stack that drives the fill.
 - [Depth-first search](learn:graphs/dfs): the recursive way to spread a label.
-- Grid flood fill (coming soon): the same idea on the cells of a grid.
+- [Breadth-first search on a grid](learn:grid-pathfinding/grid-bfs): the same idea on the cells of a grid.

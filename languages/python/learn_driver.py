@@ -41,6 +41,13 @@ def kb_graph(values):
     return n, adj
 
 
+def kb_grid(values):
+    """A stored grid [rows, cols, sr, sc, gr, gc, cell...] as (rows of cells, start, goal)."""
+    rows, cols, sr, sc, gr, gc = values[:6]
+    cells = values[6:]
+    return [cells[r * cols:(r + 1) * cols] for r in range(rows)], (sr, sc), (gr, gc)
+
+
 def kb_chunks(values, size):
     """Stored groups (pairs, edges) as lists of `size` values."""
     return [list(values[k:k + size]) for k in range(0, len(values), size)]

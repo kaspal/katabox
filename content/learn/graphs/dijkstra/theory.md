@@ -40,4 +40,4 @@ Use Dijkstra for road maps, network routing, game maps with terrain costs, and a
 - [Binary heap and priority queue](learn:trees/binary-heap): the queue behind the algorithm.
 - [Breadth-first search](learn:graphs/bfs): the special case where every edge costs 1.
 - [Bellman-Ford](learn:graphs/bellman-ford): shortest paths when weights can be negative.
-- A* (coming soon): Dijkstra steered towards a goal by an estimate.
+- [A* search](learn:grid-pathfinding/a-star): Dijkstra steered towards a goal by an estimate.

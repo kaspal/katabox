@@ -41,4 +41,4 @@ Usa BFS 0-1 cuando los movimientos son gratuitos o cuestan una unidad: el menor 
 - [Búsqueda en anchura (BFS)](learn:graphs/bfs): la misma idea cuando cada arista cuesta 1.
 - [Caminos más cortos de Dijkstra](learn:graphs/dijkstra): la herramienta general para cualquier peso no negativo.
 - [Bicola y cola monótona](learn:linear/deque-monotonic-queue): la cola de dos extremos que mueve la búsqueda.
-- BFS en cuadrículas (próximamente): rutas más cortas sobre las celdas de una cuadrícula.
+- [Búsqueda en anchura en una cuadrícula](learn:grid-pathfinding/grid-bfs): rutas más cortas sobre las celdas de una cuadrícula.

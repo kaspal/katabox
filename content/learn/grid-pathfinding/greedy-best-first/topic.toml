@@ -1,0 +1,28 @@
+id = "greedy-best-first"
+subject = "grid-pathfinding"
+order = 4
+title = "Greedy best-first search"
+title_es = "Búsqueda voraz primero el mejor"
+tags = ["grid", "heuristic"]
+problems = []
+presets = ["trap", "random", "toll-lane"]
+default = [7, 8, 3, 0, 3, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+[complexity]
+best = "O(path length)"
+average = "often few cells, path not always cheapest"
+worst = "O(R·C · log(R·C))"
+space = "O(R·C)"
+stable = true
+in_place = true
+
+[input]
+min_len = 10
+max_len = 198
+min = 0
+max = 16
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = greedy_best_first(*kb_grid(a))"
+typescript = "a = greedyBestFirst(...kbGrid(a))"

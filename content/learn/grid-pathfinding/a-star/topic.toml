@@ -1,0 +1,28 @@
+id = "a-star"
+subject = "grid-pathfinding"
+order = 3
+title = "A* search"
+title_es = "Búsqueda A*"
+tags = ["grid", "shortest-path", "heuristic"]
+problems = ["warehouse-robot"]
+presets = ["maze", "random", "swamp"]
+default = [5, 9, 0, 0, 4, 8, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0]
+
+[complexity]
+best = "O(path length) with a perfect h"
+average = "fewer cells than Dijkstra"
+worst = "O(R·C · log(R·C))"
+space = "O(R·C)"
+stable = true
+in_place = true
+
+[input]
+min_len = 10
+max_len = 198
+min = 0
+max = 16
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = a_star(*kb_grid(a))"
+typescript = "a = aStar(...kbGrid(a))"

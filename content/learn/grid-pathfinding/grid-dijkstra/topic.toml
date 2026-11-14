@@ -1,0 +1,28 @@
+id = "grid-dijkstra"
+subject = "grid-pathfinding"
+order = 2
+title = "Dijkstra on a weighted grid"
+title_es = "Dijkstra en una cuadrícula con pesos"
+tags = ["grid", "shortest-path", "heap"]
+problems = ["toll-grid", "gentle-trail"]
+presets = ["swamp", "random", "maze"]
+default = [4, 9, 0, 0, 3, 8, 0, 0, 0, 9, 9, 0, 0, 0, 0, 0, 1, 0, 9, 9, 0, 1, 1, 0, 0, 1, 0, 9, 9, 0, 0, 1, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0]
+
+[complexity]
+best = "O(R·C · log(R·C))"
+average = "O(R·C · log(R·C))"
+worst = "O(R·C · log(R·C))"
+space = "O(R·C)"
+stable = true
+in_place = true
+
+[input]
+min_len = 10
+max_len = 198
+min = 0
+max = 16
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = grid_dijkstra(*kb_grid(a))"
+typescript = "a = gridDijkstra(...kbGrid(a))"

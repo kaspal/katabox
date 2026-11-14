@@ -40,4 +40,4 @@ Usa Dijkstra para mapas de carreteras, enrutamiento en redes, mapas de juegos co
 - [Montículo binario y cola de prioridad](learn:trees/binary-heap): la cola que hay detrás del algoritmo.
 - [Búsqueda en anchura (BFS)](learn:graphs/bfs): el caso particular en el que cada arista cuesta 1.
 - [Bellman-Ford](learn:graphs/bellman-ford): caminos más cortos cuando los pesos pueden ser negativos.
-- A* (próximamente): Dijkstra guiado hacia una meta por una estimación.
+- [Búsqueda A*](learn:grid-pathfinding/a-star): Dijkstra guiado hacia una meta por una estimación.

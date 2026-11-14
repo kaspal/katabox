@@ -36,6 +36,11 @@ import { scc } from "./scc";
 import { bridgesArticulation } from "./bridges-articulation";
 import { maxFlow } from "./max-flow";
 import { eulerianPath } from "./eulerian-path";
+import { gridBfs } from "./grid-bfs";
+import { gridDijkstra } from "./grid-dijkstra";
+import { aStar } from "./a-star";
+import { greedyBestFirst } from "./greedy-best-first";
+import { mazeGeneration } from "./maze-generation";
 import { dynamicArrayOps } from "./dynamic-array-ops";
 import { stack } from "./stack";
 import { queueRingBuffer } from "./queue-ring-buffer";
@@ -145,4 +150,9 @@ export const TRACERS: Record<string, TracerDef> = {
   "bridges-articulation": bridgesArticulation,
   "max-flow": maxFlow,
   "eulerian-path": eulerianPath,
+  "grid-bfs": gridBfs,
+  "grid-dijkstra": gridDijkstra,
+  "a-star": aStar,
+  "greedy-best-first": greedyBestFirst,
+  "maze-generation": mazeGeneration,
 };

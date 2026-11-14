@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default map. The cell in row 0, column 2 has distance 2, and its right-hand neighbour is a 9. What distance does relaxing give that neighbour?",
+    "prompt_es": "Mapa por defecto. La celda de la fila 0, columna 2 tiene distancia 2, y su vecino de la derecha es un 9. ¿Qué distancia le da a ese vecino la relajación?",
+    "options": [
+      { "en": "3", "es": "3" },
+      { "en": "9", "es": "9" },
+      { "en": "11", "es": "11" }
+    ],
+    "answer": 2,
+    "explain_en": "Entering a cell costs its weight: 2 + 9 = 11. A plain open cell would have given 3.",
+    "explain_es": "Entrar en una celda cuesta su peso: 2 + 9 = 11. Una celda abierta normal habría dado 3."
+  },
+  {
+    "prompt_en": "What is the output for the default map?",
+    "prompt_es": "¿Cuál es la salida para el mapa por defecto?",
+    "options": [
+      { "en": "[27]", "es": "[27]" },
+      { "en": "[11]", "es": "[11]" },
+      { "en": "[29]", "es": "[29]" }
+    ],
+    "answer": 0,
+    "explain_en": "Every route crosses both swamp columns (18), and the best ones enter nine more cells at 1 each: 27. 11 is BFS's step count.",
+    "explain_es": "Toda ruta cruza las dos columnas de la ciénaga (18), y las mejores entran en nueve celdas más a 1 cada una: 27. 11 es el número de pasos de BFS."
+  },
+  {
+    "prompt_en": "An entry (d, r, c) leaves the queue, but the cell's best distance is already smaller than d. What does the sample do?",
+    "prompt_es": "Sale de la cola una entrada (d, r, c), pero la mejor distancia de la celda ya es menor que d. ¿Qué hace el ejemplo?",
+    "options": [
+      { "en": "Relaxes the neighbours again with d", "es": "Relaja otra vez los vecinos con d" },
+      { "en": "Skips it: the entry is stale", "es": "La ignora: la entrada está caducada" },
+      { "en": "Returns -1", "es": "Devuelve -1" }
+    ],
+    "answer": 1,
+    "explain_en": "A cheaper route was found after this entry was pushed, and the cell has already been handled with that cheaper distance.",
+    "explain_es": "Se encontró una ruta más barata después de meter esta entrada, y la celda ya se trató con esa distancia menor."
+  }
+]

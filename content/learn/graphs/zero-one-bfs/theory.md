@@ -41,4 +41,4 @@ Use 0-1 BFS when moves are either free or cost one unit: the fewest walls to bre
 - [Breadth-first search](learn:graphs/bfs): the same idea when every edge costs 1.
 - [Dijkstra's shortest paths](learn:graphs/dijkstra): the general tool for any non-negative weights.
 - [Deque and monotonic queue](learn:linear/deque-monotonic-queue): the double-ended queue that drives the search.
-- Grid BFS (coming soon): shortest routes over the cells of a grid.
+- [Breadth-first search on a grid](learn:grid-pathfinding/grid-bfs): shortest routes over the cells of a grid.

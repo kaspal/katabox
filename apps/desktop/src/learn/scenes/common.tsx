@@ -173,6 +173,19 @@ export function sceneSummary(t: TFunction, step: Step): string {
     const edges = g.edges.map((e) => `${e.u}${g.directed ? "→" : "–"}${e.v}${g.weighted ? ` (${e.label ?? e.w})` : ""}`).join(", ") || "—";
     parts.push(t("learn.stage.summary_graph", { n: g.n, nodes, edges }));
   }
+  if (step.grid) {
+    const g = step.grid;
+    const map = Array.from({ length: g.rows }, (_, r) =>
+      Array.from({ length: g.cols }, (_, c) => {
+        const k = r * g.cols + c;
+        const v = g.cells[k]!;
+        if (g.start && g.start[0] === r && g.start[1] === c) return "S";
+        if (g.goal && g.goal[0] === r && g.goal[1] === c) return "G";
+        return v === 1 ? "#" : g.path.includes(k) ? "*" : v >= 2 ? String(v) : ".";
+      }).join(""),
+    ).join(" / ");
+    parts.push(t("learn.stage.summary_grid", { rows: g.rows, cols: g.cols, map }));
+  }
   if (step.bitArray) parts.push(t("learn.stage.summary_bits_array", { bits: step.bitArray.bits.join("") }));
   if (step.table) {
     const rows = step.table.rows.map((r) => `${r.key}: ${r.value}`).join(", ") || "—";
