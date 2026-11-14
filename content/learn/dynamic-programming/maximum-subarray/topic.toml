@@ -1,0 +1,28 @@
+id = "maximum-subarray"
+subject = "dynamic-programming"
+order = 4
+title = "Maximum subarray (Kadane)"
+title_es = "Subarreglo de suma máxima (Kadane)"
+tags = ["dynamic-programming", "array"]
+problems = []
+presets = ["mixed", "random", "all-negative"]
+default = [-2, 3, -1, 4, -6, 2, 5, -3, 1]
+
+[complexity]
+best = "O(n)"
+average = "O(n)"
+worst = "O(n)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 14
+min = -9
+max = 9
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = kadane(a)"
+typescript = "a = kadane(a)"

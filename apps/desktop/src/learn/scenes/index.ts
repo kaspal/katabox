@@ -6,6 +6,7 @@ import { BarsScene } from "./BarsScene";
 import { BitsScene } from "./BitsScene";
 import { BucketsScene } from "./BucketsScene";
 import type { SceneProps } from "./common";
+import { DPTableScene } from "./DPTableScene";
 import { GraphScene } from "./GraphScene";
 import { GridScene } from "./GridScene";
 import { GrowthScene } from "./GrowthScene";
@@ -36,4 +37,5 @@ export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
   "bits-array": BitArrayScene,
   graph: GraphScene,
   grid: GridScene,
+  dp: DPTableScene,
 };

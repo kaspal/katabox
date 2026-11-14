@@ -123,6 +123,8 @@ export type SceneData = {
   graph?: GraphData;
   /** A grid (Phase 6): walls, weights, per-cell roles and labels, the path found. */
   grid?: GridData;
+  /** A dynamic programming table (Phases 7-8). */
+  dp?: DPData;
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
    * not the final row). cases.json `output` comes from here, so it is the tracer's own. */
   result?: number[];
@@ -180,6 +182,19 @@ export type GridData = {
   text: Record<number, string>;
   /** The path found, as cell indices from start to goal. */
   path: number[];
+};
+
+/** A dynamic programming table (Phases 7-8): one row for 1-D tables; null = not filled yet. */
+export type DPData = {
+  label: RowLabel;
+  colLabels: string[];
+  rowLabels?: string[];
+  cells: (number | null)[][];
+  /** The cell being computed and the cells it reads (drawn with arrows). */
+  hot?: [number, number] | null;
+  deps?: [number, number][];
+  /** The traceback, once the table is full. */
+  path?: [number, number][];
 };
 
 export type ForestNode = {
@@ -242,7 +257,8 @@ export type SceneKind =
   | "hash"
   | "bits-array"
   | "graph"
-  | "grid";
+  | "grid"
+  | "dp";
 
 /** How a topic's input is shaped. Inputs are always one flat list of integers (the DB and
  * the sample driver see only that):

@@ -982,7 +982,11 @@
         "explored": "explored",
         "discovered": "discovered",
         "carved": "carved",
-        "backtracks": "backtracks"
+        "backtracks": "backtracks",
+        "stored": "stored",
+        "filled": "filled",
+        "records": "new bests",
+        "values_read": "values read"
       },
       "rows": {
         "prefix": "Prefix sums",
@@ -1005,7 +1009,16 @@
         "matrix": "Matrix",
         "adjacency": "Adjacency list",
         "sorted_edges": "Edges by weight (label: u-v)",
-        "path": "Path (reversed)"
+        "path": "Path (reversed)",
+        "memo_table": "Memo (top-down) and table (bottom-up), by n",
+        "ways": "Ways to reach each step",
+        "houses": "Houses",
+        "best": "Best loot from the first i houses",
+        "coins": "Coins",
+        "fewest": "Fewest coins for each total",
+        "items": "Items (weight/value)",
+        "best_value": "Best value",
+        "prices": "Prices (length:price)"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -1174,7 +1187,11 @@
       "stale": "Stale entry",
       "open": "Open",
       "dead_end": "Dead end",
-      "wall_removed": "Wall knocked down"
+      "wall_removed": "Wall knocked down",
+      "filled": "Filled",
+      "taken": "Taken",
+      "current_run": "Current run",
+      "best_run": "Best run so far"
     },
     "controls": {
       "label": "Playback",
@@ -1269,7 +1286,14 @@
         "trap": "A trap",
         "small": "Small",
         "large": "Large",
-        "toll-lane": "A toll lane"
+        "toll-lane": "A toll lane",
+        "mixed": "Mixed signs",
+        "all-negative": "All negative",
+        "greedy-fails": "Greedy fails",
+        "cannot-make": "Cannot be made",
+        "one-heavy": "One heavy item",
+        "cut-pays": "Cutting pays",
+        "whole-rod": "Keep it whole"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1316,7 +1340,10 @@
           "grid_cell": "Use only . # S G and the digits 2-9 (\"{{ch}}\" is not one of them).",
           "grid_no_weights": "Use only . # S and G (\"{{ch}}\" is not one of them).",
           "maze_size": "The size k goes from {{min}} to {{max}}.",
-          "maze_seed": "The seed goes from 1 to {{max}}."
+          "maze_seed": "The seed goes from 1 to {{max}}.",
+          "item_pair": "Write each item as weight value (\"{{item}}\").",
+          "capacity_range": "The capacity goes from 1 to {{max}}.",
+          "item_count": "Use {{min}} to {{max}} items."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1340,7 +1367,9 @@
         "directed": "Directed (0 / 1)",
         "grid": "Map (rows split by /; . open, # wall, 2-9 weight, S start, G goal)",
         "size": "Size k (2k+1 cells a side)",
-        "seed": "Seed"
+        "seed": "Seed",
+        "amount": "Amount",
+        "items": "Items (weight value, …)"
       }
     },
     "tabs": {
@@ -1422,7 +1451,10 @@
       "dynamic-programming": "Dynamic programming",
       "grid": "Grid",
       "heuristic": "Heuristic",
-      "maze": "Maze"
+      "maze": "Maze",
+      "memoization": "Memoization",
+      "knapsack": "Knapsack",
+      "array": "Array"
     },
     "narration": {
       "bubble-sort": {
@@ -2120,6 +2152,57 @@
         "carve": "{{options}} unvisited neighbour(s); the generator picks number {{pick}}. Knock down the wall and move to ({{r}}, {{c}}).",
         "back": "({{r}}, {{c}}) is a dead end: back up one room.",
         "done": "All {{cells}} rooms are connected, with exactly one path between any two."
+      },
+      "fibonacci-memo-table": {
+        "ready": "fib({{n}}) two ways: top-down with a memo, then bottom-up with a table.",
+        "call": "Call fib({{k}}).",
+        "hit": "fib({{k}}) is already in the memo: {{value}}. No more calls below it.",
+        "store": "fib({{k}}) = {{value}}: store it in the memo.",
+        "table": "The memo needed {{calls}} call(s). Now bottom-up: start the table with 0 and 1.",
+        "fill": "table[{{i}}] = table[{{i}} − 1] + table[{{i}} − 2] = {{value}}.",
+        "done": "fib({{n}}) = {{value}}: {{calls}} call(s) top-down, {{fills}} addition(s) bottom-up, and no repeated work either way."
+      },
+      "climbing-stairs": {
+        "ready": "Ways to climb {{n}} steps, 1 or 2 at a time. ways[0] = 1: standing still.",
+        "one": "Reach step {{i}} with a single step from {{from}}: {{ways}} way(s) so far.",
+        "two": "Or with a double step from {{from}}: add {{add}}, {{ways}} way(s).",
+        "done": "{{ways}} way(s) to climb {{n}} steps."
+      },
+      "house-robber": {
+        "ready": "{{n}} houses in a row; neighbours cannot both be robbed.",
+        "first": "With one house, take it: {{value}}.",
+        "take": "House {{house}}: taking it gives {{take}}, skipping gives {{skip}}. Take it.",
+        "skip": "House {{house}}: taking it gives {{take}}, skipping gives {{skip}}. Skip it.",
+        "trace": "Back from the end: house {{house}} ({{value}}) was taken.",
+        "done": "Best loot {{best}}, from {{count}} house(s)."
+      },
+      "maximum-subarray": {
+        "ready": "Find the run of {{n}} values with the biggest sum.",
+        "restart": "The run so far is not positive, so it cannot help: start a new run at {{value}} (index {{i}}).",
+        "extend": "Extend the run with {{value}}: its sum is {{current}}.",
+        "record": "New best: {{best}}, from index {{from}} to {{to}}.",
+        "done": "The best run sums to {{best}}, from index {{from}} to {{to}}."
+      },
+      "coin-change": {
+        "ready": "Fewest coins for {{amount}} using {{kinds}} coin value(s), each as often as needed. ∞ means cannot be made.",
+        "total": "Total {{total}}: try ending with each coin.",
+        "improve": "End with a {{coin}}: fewest[{{from}}] + 1 = {{count}} coin(s), the best so far for {{total}}.",
+        "done": "{{amount}} needs {{count}} coin(s).",
+        "impossible": "{{amount}} cannot be made with these coins: the answer is -1."
+      },
+      "knapsack-01": {
+        "ready": "{{n}} items, capacity {{capacity}}: each item is packed once or not at all. Row i uses the first i items.",
+        "skip": "Item {{item}} at capacity {{c}}: start without it, from the cell above: {{value}}.",
+        "take": "Item {{item}} at capacity {{c}}: packing it gives {{value}}, more than {{without}} without it.",
+        "trace": "Back from the corner: item {{item}} was packed (weight {{weight}}), {{left}} capacity left.",
+        "done": "Best value {{best}}, with {{count}} item(s) packed."
+      },
+      "rod-cutting": {
+        "ready": "A rod of length {{n}}, and a price for every piece length. Pieces can repeat.",
+        "length": "Length {{length}}: try every length for the first piece.",
+        "improve": "First piece {{cut}}, then the best for {{rest}}: {{value}}, the best so far.",
+        "trace": "Cut a piece of {{piece}}; {{left}} left.",
+        "done": "A rod of {{n}} earns at most {{best}}, in {{count}} piece(s)."
       }
     },
     "compare": {

@@ -777,6 +777,111 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
     carve(1, 1);
     return grid.flat();
   },
+  // Dynamic programming, part 1.
+  "fibonacci-memo-table": ([n]) => {
+    // Binet-free: two running numbers.
+    const table = [0];
+    let [a, b] = [0, 1];
+    for (let k = 1; k <= n!; k++) {
+      [a, b] = [b, a + b];
+      table.push(a);
+    }
+    return [table[n!]!, ...table];
+  },
+  "climbing-stairs": ([n]) => {
+    // ways(m) = Σ C(m − k, k): choose which k of the m − k moves are double steps.
+    const choose = (a: number, b: number) => {
+      let r = 1;
+      for (let j = 1; j <= b; j++) r = (r * (a - b + j)) / j;
+      return Math.round(r);
+    };
+    return Array.from({ length: n! + 1 }, (_, m) => {
+      let total = 0;
+      for (let k = 0; 2 * k <= m; k++) total += choose(m - k, k);
+      return total;
+    });
+  },
+  "house-robber": (values) => {
+    // Top-down: best(i) for the first i houses; trace back preferring to skip.
+    const memo = new Map<number, number>();
+    const best = (i: number): number => {
+      if (i <= 0) return 0;
+      if (!memo.has(i)) memo.set(i, Math.max(best(i - 1), best(i - 2) + values[i - 1]!));
+      return memo.get(i)!;
+    };
+    const chosen: number[] = [];
+    for (let i = values.length; i > 0; ) {
+      if (best(i) === best(i - 1)) i--;
+      else {
+        chosen.unshift(i - 1);
+        i -= 2;
+      }
+    }
+    return [best(values.length), ...chosen];
+  },
+  "maximum-subarray": (values) => {
+    // Every run; ties: the earliest end, then the latest start (what one pass finds first).
+    let best = [values[0]!, 0, 0];
+    for (let end = 0; end < values.length; end++)
+      for (let start = end; start >= 0; start--) {
+        const sum = values.slice(start, end + 1).reduce((x, y) => x + y, 0);
+        if (sum > best[0]!) best = [sum, start, end];
+      }
+    return best;
+  },
+  "coin-change": ([amount, ...coins]) => {
+    // Breadth-first over totals: the first time a total is reached, it used fewest coins.
+    const seen = new Map<number, number>([[0, 0]]);
+    const queue = [0];
+    while (queue.length) {
+      const t = queue.shift()!;
+      for (const c of coins) {
+        if (t + c <= amount! && !seen.has(t + c)) {
+          seen.set(t + c, seen.get(t)! + 1);
+          queue.push(t + c);
+        }
+      }
+    }
+    return [seen.get(amount!) ?? -1];
+  },
+  "knapsack-01": ([capacity, ...flat]) => {
+    // Top-down over (items left, capacity); trace back: packed when it changes the value.
+    const items = Array.from({ length: flat.length / 2 }, (_, k) => [flat[2 * k]!, flat[2 * k + 1]!] as const);
+    const memo = new Map<string, number>();
+    const best = (i: number, c: number): number => {
+      if (i === 0) return 0;
+      const key = `${i},${c}`;
+      if (!memo.has(key)) {
+        const [w, v] = items[i - 1]!;
+        memo.set(key, Math.max(best(i - 1, c), w <= c ? best(i - 1, c - w) + v : -Infinity));
+      }
+      return memo.get(key)!;
+    };
+    const chosen: number[] = [];
+    let c = capacity!;
+    for (let i = items.length; i > 0; i--) {
+      if (best(i, c) !== best(i - 1, c)) {
+        chosen.unshift(i - 1);
+        c -= items[i - 1]![0];
+      }
+    }
+    return [best(items.length, capacity!), ...chosen];
+  },
+  "rod-cutting": (prices) => {
+    // Top-down; the first piece is the shortest one that reaches the best total.
+    const memo = new Map<number, number>([[0, 0]]);
+    const best = (len: number): number => {
+      if (!memo.has(len)) memo.set(len, Math.max(...Array.from({ length: len }, (_, k) => prices[k]! + best(len - k - 1))));
+      return memo.get(len)!;
+    };
+    const pieces: number[] = [];
+    for (let len = prices.length; len > 0; ) {
+      const cut = Array.from({ length: len }, (_, k) => k + 1).find((k) => prices[k - 1]! + best(len - k) === best(len))!;
+      pieces.push(cut);
+      len -= cut;
+    }
+    return [best(prices.length), ...pieces];
+  },
   "bubble-sort": sorted,
   "insertion-sort": sorted,
   "quick-sort": sorted,
@@ -872,6 +977,48 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  "fibonacci-memo-table": {
+    input: [3],
+    markers: [null, null, null, null, "store", null, "store", "store", null, "hit", "store", null, "fill", "fill", null],
+    py: [null, null, null, null, 8, null, 8, 8, null, 3, 8, null, 17, 17, null],
+    ts: [null, null, null, null, 6, null, 6, 6, null, 3, 6, null, 14, 14, null],
+  },
+  "climbing-stairs": {
+    input: [2],
+    markers: [null, "one", "one", "two", null],
+    py: [null, 5, 5, 7, null],
+    ts: [null, 5, 5, 7, null],
+  },
+  "house-robber": {
+    input: [2, 7],
+    markers: [null, null, "choose", "trace", null],
+    py: [null, null, 8, 14, null],
+    ts: [null, null, 8, 16, null],
+  },
+  "maximum-subarray": {
+    input: [1, -2, 3],
+    markers: [null, "restart", "extend", "restart", "record", null],
+    py: [null, 6, 8, 6, 10, null],
+    ts: [null, 9, 12, 9, 15, null],
+  },
+  "coin-change": {
+    input: [3, 1, 2],
+    markers: [null, null, "improve", null, "improve", "improve", null, "improve", null],
+    py: [null, null, 9, null, 9, 9, null, 9, null],
+    ts: [null, null, 8, null, 8, 8, null, 8, null],
+  },
+  "knapsack-01": {
+    input: [1, 1, 5],
+    markers: [null, "skip", "skip", "take", "trace", null],
+    py: [null, 7, 7, 9, 13, null],
+    ts: [null, 7, 7, 9, 17, null],
+  },
+  "rod-cutting": {
+    input: [1, 5],
+    markers: [null, null, "improve", null, "improve", "improve", "trace", null],
+    py: [null, null, 8, null, 8, 8, 12, null],
+    ts: [null, null, 8, null, 8, 8, 16, null],
+  },
   "grid-bfs": {
     input: [2, 2, 0, 0, 0, 1, 0, 0, 0, 0],
     markers: [null, "visit", "discover", "discover", "visit", "goal", null],
@@ -1334,6 +1481,10 @@ export const GOLDEN: Record<string, Golden> = {
 export const WORST: Record<string, number[]> = {
   "big-o-growth": [16],
   "towers-of-hanoi": [5],
+  "fibonacci-memo-table": [12],
+  "climbing-stairs": [15],
+  "coin-change": [20, 1, 2, 3, 4, 5],
+  "knapsack-01": [12, 1, 20, 2, 19, 3, 18, 4, 17, 5, 16, 6, 15],
   "grid-bfs": [12, 16, 0, 0, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   "grid-dijkstra": [12, 16, 0, 0, 11, 15, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0],
   "a-star": [12, 16, 0, 0, 11, 15, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0, 0, 9, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 0, 0, 3, 0, 0, 0, 0, 6, 0, 0, 0],

@@ -982,7 +982,11 @@
         "explored": "exploradas",
         "discovered": "descubiertas",
         "carved": "excavadas",
-        "backtracks": "retrocesos"
+        "backtracks": "retrocesos",
+        "stored": "guardados",
+        "filled": "rellenados",
+        "records": "nuevos mejores",
+        "values_read": "valores leídos"
       },
       "rows": {
         "prefix": "Sumas prefijas",
@@ -1005,7 +1009,16 @@
         "matrix": "Matriz",
         "adjacency": "Lista de adyacencia",
         "sorted_edges": "Aristas por peso (etiqueta: u-v)",
-        "path": "Camino (al revés)"
+        "path": "Camino (al revés)",
+        "memo_table": "Memo (de arriba abajo) y tabla (de abajo arriba), por n",
+        "ways": "Formas de llegar a cada escalón",
+        "houses": "Casas",
+        "best": "Mejor botín de las primeras i casas",
+        "coins": "Monedas",
+        "fewest": "Menos monedas para cada total",
+        "items": "Objetos (peso/valor)",
+        "best_value": "Mejor valor",
+        "prices": "Precios (longitud:precio)"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -1174,7 +1187,11 @@
       "stale": "Entrada vieja",
       "open": "Libre",
       "dead_end": "Callejón sin salida",
-      "wall_removed": "Muro derribado"
+      "wall_removed": "Muro derribado",
+      "filled": "Rellenada",
+      "taken": "Tomado",
+      "current_run": "Tramo actual",
+      "best_run": "Mejor tramo hasta ahora"
     },
     "controls": {
       "label": "Reproducción",
@@ -1269,7 +1286,14 @@
         "trap": "Una trampa",
         "small": "Pequeño",
         "large": "Grande",
-        "toll-lane": "Un carril de peaje"
+        "toll-lane": "Un carril de peaje",
+        "mixed": "Signos mezclados",
+        "all-negative": "Todos negativos",
+        "greedy-fails": "Lo voraz falla",
+        "cannot-make": "No se puede formar",
+        "one-heavy": "Un objeto pesado",
+        "cut-pays": "Cortar compensa",
+        "whole-rod": "Mejor entera"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1316,7 +1340,10 @@
           "grid_cell": "Usa solo . # S G y los dígitos 2-9 (\"{{ch}}\" no es uno de ellos).",
           "grid_no_weights": "Usa solo . # S y G (\"{{ch}}\" no es uno de ellos).",
           "maze_size": "El tamaño k va de {{min}} a {{max}}.",
-          "maze_seed": "La semilla va de 1 a {{max}}."
+          "maze_seed": "La semilla va de 1 a {{max}}.",
+          "item_pair": "Escribe cada objeto como peso valor (\"{{item}}\").",
+          "capacity_range": "La capacidad va de 1 a {{max}}.",
+          "item_count": "Usa de {{min}} a {{max}} objetos."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1340,7 +1367,9 @@
         "directed": "Dirigido (0 / 1)",
         "grid": "Mapa (filas separadas por /; . libre, # muro, 2-9 peso, S inicio, G meta)",
         "size": "Tamaño k (2k+1 celdas por lado)",
-        "seed": "Semilla"
+        "seed": "Semilla",
+        "amount": "Cantidad",
+        "items": "Objetos (peso valor, …)"
       }
     },
     "tabs": {
@@ -1422,7 +1451,10 @@
       "dynamic-programming": "Programación dinámica",
       "grid": "Cuadrícula",
       "heuristic": "Heurística",
-      "maze": "Laberinto"
+      "maze": "Laberinto",
+      "memoization": "Memoización",
+      "knapsack": "Mochila",
+      "array": "Arreglo"
     },
     "narration": {
       "bubble-sort": {
@@ -2120,6 +2152,57 @@
         "carve": "{{options}} vecino(s) sin visitar; el generador elige el número {{pick}}. Derriba el muro y pasa a ({{r}}, {{c}}).",
         "back": "({{r}}, {{c}}) es un callejón sin salida: retrocede una sala.",
         "done": "Las {{cells}} salas quedan conectadas, con exactamente un camino entre cada dos."
+      },
+      "fibonacci-memo-table": {
+        "ready": "fib({{n}}) de dos formas: de arriba abajo con un memo y luego de abajo arriba con una tabla.",
+        "call": "Llama a fib({{k}}).",
+        "hit": "fib({{k}}) ya está en el memo: {{value}}. No hay más llamadas por debajo.",
+        "store": "fib({{k}}) = {{value}}: guárdalo en el memo.",
+        "table": "El memo necesitó {{calls}} llamada(s). Ahora de abajo arriba: la tabla empieza con 0 y 1.",
+        "fill": "tabla[{{i}}] = tabla[{{i}} − 1] + tabla[{{i}} − 2] = {{value}}.",
+        "done": "fib({{n}}) = {{value}}: {{calls}} llamada(s) de arriba abajo, {{fills}} suma(s) de abajo arriba y ningún trabajo repetido."
+      },
+      "climbing-stairs": {
+        "ready": "Formas de subir {{n}} escalones, de 1 en 1 o de 2 en 2. ways[0] = 1: quedarse quieto.",
+        "one": "Llega al escalón {{i}} con un paso simple desde {{from}}: {{ways}} forma(s) por ahora.",
+        "two": "O con un paso doble desde {{from}}: suma {{add}}, {{ways}} forma(s).",
+        "done": "{{ways}} forma(s) de subir {{n}} escalones."
+      },
+      "house-robber": {
+        "ready": "{{n}} casas en fila; no se pueden robar dos vecinas.",
+        "first": "Con una casa, tómala: {{value}}.",
+        "take": "Casa {{house}}: tomarla da {{take}}, saltarla da {{skip}}. Tómala.",
+        "skip": "Casa {{house}}: tomarla da {{take}}, saltarla da {{skip}}. Sáltala.",
+        "trace": "Desde el final: la casa {{house}} ({{value}}) se tomó.",
+        "done": "Mejor botín {{best}}, de {{count}} casa(s)."
+      },
+      "maximum-subarray": {
+        "ready": "Encuentra el tramo de los {{n}} valores con la mayor suma.",
+        "restart": "El tramo actual no es positivo, así que no ayuda: empieza uno nuevo en {{value}} (índice {{i}}).",
+        "extend": "Alarga el tramo con {{value}}: su suma es {{current}}.",
+        "record": "Nuevo mejor: {{best}}, del índice {{from}} al {{to}}.",
+        "done": "El mejor tramo suma {{best}}, del índice {{from}} al {{to}}."
+      },
+      "coin-change": {
+        "ready": "Menos monedas para {{amount}} con {{kinds}} valor(es) de moneda, cada uno tantas veces como haga falta. ∞ significa que no se puede formar.",
+        "total": "Total {{total}}: prueba a terminar con cada moneda.",
+        "improve": "Terminar con un {{coin}}: fewest[{{from}}] + 1 = {{count}} moneda(s), lo mejor por ahora para {{total}}.",
+        "done": "{{amount}} necesita {{count}} moneda(s).",
+        "impossible": "{{amount}} no se puede formar con estas monedas: la respuesta es -1."
+      },
+      "knapsack-01": {
+        "ready": "{{n}} objetos, capacidad {{capacity}}: cada objeto se mete una vez o ninguna. La fila i usa los i primeros objetos.",
+        "skip": "Objeto {{item}} con capacidad {{c}}: empieza sin él, con la celda de arriba: {{value}}.",
+        "take": "Objeto {{item}} con capacidad {{c}}: meterlo da {{value}}, más que {{without}} sin él.",
+        "trace": "Desde la esquina: el objeto {{item}} se metió (peso {{weight}}); quedan {{left}} de capacidad.",
+        "done": "Mejor valor {{best}}, con {{count}} objeto(s)."
+      },
+      "rod-cutting": {
+        "ready": "Una barra de longitud {{n}} y un precio para cada longitud de trozo. Los trozos pueden repetirse.",
+        "length": "Longitud {{length}}: prueba cada longitud para el primer trozo.",
+        "improve": "Primer trozo {{cut}} y luego lo mejor para {{rest}}: {{value}}, lo mejor por ahora.",
+        "trace": "Corta un trozo de {{piece}}; quedan {{left}}.",
+        "done": "Una barra de {{n}} gana como mucho {{best}}, en {{count}} trozo(s)."
       }
     },
     "compare": {

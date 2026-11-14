@@ -41,6 +41,13 @@ import { gridDijkstra } from "./grid-dijkstra";
 import { aStar } from "./a-star";
 import { greedyBestFirst } from "./greedy-best-first";
 import { mazeGeneration } from "./maze-generation";
+import { fibonacciMemoTable } from "./fibonacci-memo-table";
+import { climbingStairs } from "./climbing-stairs";
+import { houseRobber } from "./house-robber";
+import { maximumSubarray } from "./maximum-subarray";
+import { coinChange } from "./coin-change";
+import { knapsack01 } from "./knapsack-01";
+import { rodCutting } from "./rod-cutting";
 import { dynamicArrayOps } from "./dynamic-array-ops";
 import { stack } from "./stack";
 import { queueRingBuffer } from "./queue-ring-buffer";
@@ -155,4 +162,11 @@ export const TRACERS: Record<string, TracerDef> = {
   "a-star": aStar,
   "greedy-best-first": greedyBestFirst,
   "maze-generation": mazeGeneration,
+  "fibonacci-memo-table": fibonacciMemoTable,
+  "climbing-stairs": climbingStairs,
+  "house-robber": houseRobber,
+  "maximum-subarray": maximumSubarray,
+  "coin-change": coinChange,
+  "knapsack-01": knapsack01,
+  "rod-cutting": rodCutting,
 };
