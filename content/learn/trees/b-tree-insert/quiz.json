@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Insert 10, 20, 30. The only leaf now holds 10 20 30. What does the split produce?",
+    "prompt_es": "Inserta 10, 20, 30. La única hoja guarda ahora 10 20 30. ¿Qué produce la división?",
+    "options": [
+      { "en": "20 as a new root over the leaves 10 and 30", "es": "20 como raíz nueva sobre las hojas 10 y 30" },
+      { "en": "10 as the root over a leaf 20 30", "es": "10 como raíz sobre una hoja 20 30" },
+      { "en": "Two leaves, 10 20 and 30, with no root", "es": "Dos hojas, 10 20 y 30, sin raíz" }
+    ],
+    "answer": 0,
+    "explain_en": "A node with 3 keys splits around its middle key. The leaf was the root, so 20 becomes a new root with one key, and 10 and 30 become its two children.",
+    "explain_es": "Un nodo con 3 claves se divide por su clave central. La hoja era la raíz, así que 20 pasa a ser una raíz nueva con una clave, y 10 y 30 pasan a ser sus dos hijos."
+  },
+  {
+    "prompt_en": "The root holds 20 40 and the leaf 50 60 receives 70. What happens?",
+    "prompt_es": "La raíz guarda 20 40 y la hoja 50 60 recibe 70. ¿Qué pasa?",
+    "options": [
+      { "en": "70 starts a new leaf below 50 60", "es": "70 empieza una hoja nueva bajo 50 60" },
+      { "en": "The leaf splits and 60 joins the root, which keeps 3 keys", "es": "La hoja se divide y 60 se une a la raíz, que se queda con 3 claves" },
+      { "en": "The leaf splits, 60 goes up, the root 20 40 60 splits too and 40 becomes the new root", "es": "La hoja se divide, 60 sube, la raíz 20 40 60 también se divide y 40 pasa a ser la raíz nueva" }
+    ],
+    "answer": 2,
+    "explain_en": "50 60 70 splits and sends 60 up. The root then holds 3 keys, so it splits as well: 40 becomes a new root over 20 and 60, and the tree is one level taller with all leaves still at the same depth.",
+    "explain_es": "50 60 70 se divide y sube 60. Entonces la raíz tiene 3 claves, así que también se divide: 40 pasa a ser una raíz nueva sobre 20 y 60, y el árbol gana un nivel con todas las hojas aún a la misma profundidad."
+  },
+  {
+    "prompt_en": "Last, 25 is inserted. Where does it end up?",
+    "prompt_es": "Por último se inserta 25. ¿Dónde acaba?",
+    "options": [
+      { "en": "In the node 20, as 20 25", "es": "En el nodo 20, como 20 25" },
+      { "en": "In the leaf with 30, as 25 30", "es": "En la hoja con 30, como 25 30" },
+      { "en": "In a new leaf below 20", "es": "En una hoja nueva bajo 20" }
+    ],
+    "answer": 1,
+    "explain_en": "25 is smaller than 40 (go left) and not smaller than 20 (go right), reaching the leaf 30. New keys always go into a leaf, and that leaf has room, so no split happens.",
+    "explain_es": "25 es menor que 40 (a la izquierda) y no es menor que 20 (a la derecha), y llega a la hoja 30. Las claves nuevas siempre van a una hoja, y esa hoja tiene sitio, así que no hay división."
+  }
+]

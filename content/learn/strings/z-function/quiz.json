@@ -1,0 +1,26 @@
+[
+  {
+    "prompt_en": "Default input: s = aab|aabaabaab. What is z[4], at the first letter of the text?",
+    "prompt_es": "Entrada por defecto: s = aab|aabaabaab. ¿Cuánto vale z[4], en la primera letra del texto?",
+    "options": [
+      { "en": "9: the text length", "es": "9: la longitud del texto" },
+      { "en": "3: aab agrees, then the bar stops it", "es": "3: aab coincide, y después la barra lo detiene" },
+      { "en": "1: only the first a agrees", "es": "1: solo coincide la primera a" }
+    ],
+    "answer": 1,
+    "explain_en": "s[4..6] is aab like s[0..2], and then s[3] is the bar while s[7] is a. Since z[4] = m = 3, the text has a match at 4 - 3 - 1 = 0.",
+    "explain_es": "s[4..6] es aab como s[0..2], y después s[3] es la barra mientras que s[7] es a. Como z[4] = m = 3, el texto tiene una coincidencia en 4 - 3 - 1 = 0."
+  },
+  {
+    "prompt_en": "With the Z-box [4, 7), where does z[5] start before extending?",
+    "prompt_es": "Con la caja Z [4, 7), ¿desde qué valor empieza z[5] antes de extender?",
+    "options": [
+      { "en": "0, like every position", "es": "0, como todas las posiciones" },
+      { "en": "2, the distance to the box edge", "es": "2, la distancia al borde de la caja" },
+      { "en": "1, copied from z[1]", "es": "1, copiado de z[1]" }
+    ],
+    "answer": 2,
+    "explain_en": "Position 5 mirrors position 5 - 4 = 1, and min(7 - 5, z[1]) = min(2, 1) = 1. The next comparison, a against b, fails.",
+    "explain_es": "La posición 5 refleja la posición 5 - 4 = 1, y min(7 - 5, z[1]) = min(2, 1) = 1. La comparación siguiente, a contra b, falla."
+  }
+]

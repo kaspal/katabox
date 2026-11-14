@@ -1,0 +1,28 @@
+id = "knapsack-01"
+subject = "dynamic-programming"
+order = 6
+title = "0/1 knapsack"
+title_es = "Mochila 0/1"
+tags = ["dynamic-programming", "knapsack"]
+problems = ["backpack-weight"]
+presets = ["greedy-fails", "random", "one-heavy"]
+default = [10, 5, 10, 4, 7, 6, 12, 3, 6]
+
+[complexity]
+best = "O(n · capacity)"
+average = "O(n · capacity)"
+worst = "O(n · capacity)"
+space = "O(n · capacity)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 13
+min = 1
+max = 20
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = knapsack(a[0], kb_chunks(a[1:], 2))"
+typescript = "a = knapsack(a[0], kbChunks(a.slice(1), 2))"

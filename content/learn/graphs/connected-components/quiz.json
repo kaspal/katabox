@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph: edges 0 1, 1 2, 3 4, 4 5, 5 3, 6 7, 8 9, 7 8. Which node starts the component with label 1?",
+    "prompt_es": "Grafo por defecto: aristas 0 1, 1 2, 3 4, 4 5, 5 3, 6 7, 8 9, 7 8. ¿Qué nodo empieza la componente con etiqueta 1?",
+    "options": [
+      { "en": "1", "es": "1" },
+      { "en": "3", "es": "3" },
+      { "en": "6", "es": "6" }
+    ],
+    "answer": 1,
+    "explain_en": "The scan finds 0 unlabelled and fills 0, 1, 2 with label 0. It skips 1 and 2, and 3 is the next node without a label.",
+    "explain_es": "El recorrido encuentra 0 sin etiqueta y rellena 0, 1, 2 con la etiqueta 0. Se salta 1 y 2, y 3 es el siguiente nodo sin etiqueta."
+  },
+  {
+    "prompt_en": "The edge 7 8 is written last. Does that change the labels of 8 and 9?",
+    "prompt_es": "La arista 7 8 se escribe la última. ¿Cambia eso las etiquetas de 8 y 9?",
+    "options": [
+      { "en": "Yes: 8 and 9 get label 3", "es": "Sí: 8 y 9 reciben la etiqueta 3" },
+      { "en": "Yes: 9 stays at -1", "es": "Sí: 9 se queda en -1" },
+      { "en": "No: the fill from 6 reaches them, so they get label 2", "es": "No: el relleno desde 6 llega a ellos, así que reciben la etiqueta 2" }
+    ],
+    "answer": 2,
+    "explain_en": "All edges are in the lists before the fill starts. From 6 the fill reaches 7, then 8 through the edge 7 8, then 9.",
+    "explain_es": "Todas las aristas están en las listas antes de empezar el relleno. Desde 6 llega a 7, luego a 8 por la arista 7 8 y después a 9."
+  },
+  {
+    "prompt_en": "You add an eleventh node, 10, with no edges. What label does it get?",
+    "prompt_es": "Añades un undécimo nodo, el 10, sin aristas. ¿Qué etiqueta recibe?",
+    "options": [
+      { "en": "3, a component of its own", "es": "3, una componente propia" },
+      { "en": "-1, because it has no edges", "es": "-1, porque no tiene aristas" },
+      { "en": "2, the last label used", "es": "2, la última etiqueta usada" }
+    ],
+    "answer": 0,
+    "explain_en": "The scan visits every node. 10 has no label, so it starts a new component with the next label, 3, and the fill ends at once.",
+    "explain_es": "El recorrido pasa por todos los nodos. 10 no tiene etiqueta, así que empieza una componente nueva con la siguiente etiqueta, 3, y el relleno acaba enseguida."
+  }
+]

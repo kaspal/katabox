@@ -1,0 +1,28 @@
+id = "dynamic-array-ops"
+subject = "linear"
+order = 1
+title = "Dynamic array: insert and delete"
+title_es = "Arreglo dinámico: insertar y borrar"
+tags = ["arrays"]
+problems = []
+presets = ["middle-inserts", "random", "front-deletes"]
+default = [1, 10, 0, 1, 20, 0, 1, 30, 0, 2, 1, 15, 2, 0, 5, 2, 2, 12]
+
+[complexity]
+best = "O(1) at the end"
+average = "O(n) in the middle"
+worst = "O(n)"
+space = "O(n)"
+stable = true
+in_place = false
+
+[input]
+min_len = 3
+max_len = 36
+min = 0
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(kb_ops(a, [\"append\", \"insert\", \"remove\"], 2))"
+typescript = "a = run(kbOps(a, [\"append\", \"insert\", \"remove\"], 2))"

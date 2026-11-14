@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input: 7^1000 mod 13, with 1000 = 1111101000 in binary. How many multiplications into the result does the loop make?",
+    "prompt_es": "Entrada por defecto: 7^1000 mod 13, con 1000 = 1111101000 en binario. ¿Cuántas multiplicaciones sobre el resultado hace el bucle?",
+    "options": [
+      { "en": "10, one per bit", "es": "10, una por bit" },
+      { "en": "6, one per 1 bit", "es": "6, una por cada bit a 1" },
+      { "en": "999", "es": "999" }
+    ],
+    "answer": 1,
+    "explain_en": "The result is multiplied only when the current bit is 1, and 1000 has six 1 bits. The ten bits each cost one squaring.",
+    "explain_es": "El resultado solo se multiplica cuando el bit actual es 1, y 1000 tiene seis bits a 1. Cada uno de los diez bits cuesta un cuadrado."
+  },
+  {
+    "prompt_en": "Why is it safe to take the remainder mod m after every multiplication?",
+    "prompt_es": "¿Por qué es seguro tomar el resto mod m tras cada multiplicación?",
+    "options": [
+      { "en": "Because m is always prime", "es": "Porque m siempre es primo" },
+      { "en": "Because the exponent is reduced mod m too", "es": "Porque el exponente también se reduce mod m" },
+      { "en": "Because (x · y) mod m equals ((x mod m) · (y mod m)) mod m", "es": "Porque (x · y) mod m es igual a ((x mod m) · (y mod m)) mod m" }
+    ],
+    "answer": 2,
+    "explain_en": "Remainders multiply like the numbers themselves, so reducing early gives the same answer while keeping every value below m. The exponent is never reduced mod m.",
+    "explain_es": "Los restos se multiplican como los propios números, así que reducir pronto da la misma respuesta y mantiene cada valor por debajo de m. El exponente nunca se reduce mod m."
+  },
+  {
+    "prompt_en": "\"A power of two\" preset: 3^64 mod 101. How many squarings does the loop make?",
+    "prompt_es": "Ajuste \"una potencia de dos\": 3^64 mod 101. ¿Cuántos cuadrados hace el bucle?",
+    "options": [
+      { "en": "7, one per bit of 1000000", "es": "7, uno por cada bit de 1000000" },
+      { "en": "64", "es": "64" },
+      { "en": "6", "es": "6" }
+    ],
+    "answer": 0,
+    "explain_en": "64 has seven bits, and the loop squares once per bit, the last one included. Only the top bit is 1, so there is a single multiplication.",
+    "explain_es": "64 tiene siete bits, y el bucle eleva al cuadrado una vez por bit, el último incluido. Solo el bit más alto es 1, así que hay una única multiplicación."
+  }
+]

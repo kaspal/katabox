@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "10 is the black root. 20 arrives as a red right child of 10. What happens?",
+    "prompt_es": "10 es la raíz negra. 20 llega como hijo derecho rojo de 10. ¿Qué pasa?",
+    "options": [
+      { "en": "Nothing: one red link is allowed", "es": "Nada: se permite un enlace rojo" },
+      { "en": "10 rotates left: 20 becomes the root with red 10 on its left", "es": "10 rota a la izquierda: 20 pasa a ser la raíz con 10 rojo a su izquierda" },
+      { "en": "A colour flip at 10", "es": "Una inversión de colores en 10" }
+    ],
+    "answer": 1,
+    "explain_en": "One red link is fine, but in this variant it must lean left. The right child is red and the left is not, so 10 rotates left; 20 takes 10's black colour and 10 turns red.",
+    "explain_es": "Un enlace rojo está bien, pero en esta variante tiene que inclinarse a la izquierda. El hijo derecho es rojo y el izquierdo no, así que 10 rota a la izquierda; 20 toma el color negro de 10 y 10 pasa a rojo."
+  },
+  {
+    "prompt_en": "After 10, 20, 30, 40 the root 20 has black children 10 and 40, and 30 is red on 40's left. 50 arrives red on 40's right. Which fix runs first?",
+    "prompt_es": "Tras 10, 20, 30, 40 la raíz 20 tiene hijos negros 10 y 40, y 30 es rojo a la izquierda de 40. 50 llega rojo a la derecha de 40. ¿Qué corrección se hace primero?",
+    "options": [
+      { "en": "A colour flip at 40", "es": "Una inversión de colores en 40" },
+      { "en": "A left rotation at 20", "es": "Una rotación a la izquierda en 20" },
+      { "en": "A left rotation at 40", "es": "Una rotación a la izquierda en 40" }
+    ],
+    "answer": 0,
+    "explain_en": "At 40 both children are red, so its left is red and no rotation applies: the flip runs. 40 turns red and leans right of 20, so back at 20 the left rotation follows and 40 becomes the root.",
+    "explain_es": "En 40 los dos hijos son rojos, así que su izquierdo es rojo y no se aplica ninguna rotación: se hace la inversión. 40 pasa a rojo y se inclina a la derecha de 20, así que de vuelta en 20 sigue la rotación a la izquierda y 40 pasa a ser la raíz."
+  },
+  {
+    "prompt_en": "After 25 and 5, what is the whole output row (values in pre-order, then colours)?",
+    "prompt_es": "Tras 25 y 5, ¿cuál es la fila de salida completa (valores en preorden y luego colores)?",
+    "options": [
+      { "en": "[20, 10, 5, 40, 30, 25, 50, 0, 0, 1, 0, 0, 1, 0]", "es": "[20, 10, 5, 40, 30, 25, 50, 0, 0, 1, 0, 0, 1, 0]" },
+      { "en": "[40, 20, 10, 5, 30, 25, 50, 0, 0, 1, 1, 0, 1, 0]", "es": "[40, 20, 10, 5, 30, 25, 50, 0, 0, 1, 1, 0, 1, 0]" },
+      { "en": "[40, 20, 10, 5, 30, 25, 50, 0, 1, 0, 1, 0, 1, 0]", "es": "[40, 20, 10, 5, 30, 25, 50, 0, 1, 0, 1, 0, 1, 0]" }
+    ],
+    "answer": 2,
+    "explain_en": "40 is the black root with red 20 on its left. 25 and 5 land as red left children of the black nodes 30 and 10, and need no fix. So 20, 5 and 25 are red and the rest are black.",
+    "explain_es": "40 es la raíz negra con 20 rojo a su izquierda. 25 y 5 quedan como hijos izquierdos rojos de los nodos negros 30 y 10, y no necesitan corrección. Así que 20, 5 y 25 son rojos y el resto negros."
+  }
+]

@@ -18,6 +18,31 @@ use crate::{Result, StoreError};
 pub struct LearnPack {
     pub subjects: Vec<PackSubject>,
     pub topics: Vec<PackTopic>,
+    /// Learning paths (Phase 6): ordered topic lists shown on Learn home.
+    pub paths: Vec<PackPath>,
+}
+
+/// A learning path as `content/learn/paths.toml` holds it.
+#[derive(Debug, Clone)]
+pub struct PackPath {
+    pub id: String,
+    pub ord: u32,
+    pub title_en: String,
+    pub title_es: String,
+    pub blurb_en: String,
+    pub blurb_es: String,
+    /// Topic ids, in the order to study them.
+    pub topics: Vec<String>,
+}
+
+/// A learning path in one UI language.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct LearnPath {
+    pub id: String,
+    pub title: String,
+    pub blurb: String,
+    pub topics: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -112,6 +137,8 @@ pub struct LearnTopicSummary {
     pub subject: String,
     pub title: String,
     pub tags: Vec<String>,
+    /// Linked catalogue problems: a problem page links back here ("See it animated").
+    pub problems: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -173,6 +200,18 @@ pub(crate) fn check_learn(pack: &LearnPack) -> Result<()> {
             ));
         }
     }
+    let mut paths = HashSet::new();
+    for p in &pack.paths {
+        if !paths.insert(p.id.as_str()) {
+            return bad(format!("duplicate path {}", p.id));
+        }
+        if p.topics.is_empty() {
+            return bad(format!("path {} has no topics", p.id));
+        }
+        if let Some(t) = p.topics.iter().find(|t| !topics.contains(t.as_str())) {
+            return bad(format!("path {}: unknown topic {t}", p.id));
+        }
+    }
     Ok(())
 }
 
@@ -191,6 +230,21 @@ pub(crate) async fn insert_learn(conn: &mut SqliteConnection, pack: &LearnPack) 
         .bind(&s.blurb_en)
         .bind(&s.blurb_es)
         .bind(&s.icon)
+        .execute(&mut *conn)
+        .await?;
+    }
+    for p in &pack.paths {
+        sqlx::query(
+            "INSERT INTO learn_paths (id, ord, title_en, title_es, blurb_en, blurb_es, topics)
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(&p.id)
+        .bind(p.ord)
+        .bind(&p.title_en)
+        .bind(&p.title_es)
+        .bind(&p.blurb_en)
+        .bind(&p.blurb_es)
+        .bind(serde_json::to_string(&p.topics)?)
         .execute(&mut *conn)
         .await?;
     }
@@ -274,6 +328,7 @@ fn summary(r: &SqliteRow, lang: UiLang) -> Result<LearnTopicSummary> {
         subject: r.try_get("subject")?,
         title: pick(lang, r.try_get("title_en")?, r.try_get("title_es")?),
         tags: json(r, "tags")?,
+        problems: json(r, "problems")?,
     })
 }
 
@@ -300,6 +355,23 @@ impl ContentDb {
                     icon: r.try_get("icon")?,
                     topics: topics.iter().filter(|t| t.subject == id).cloned().collect(),
                     id,
+                })
+            })
+            .collect()
+    }
+
+    /// The learning paths in order (Phase 6), in `lang`.
+    pub async fn learn_paths(&self, lang: UiLang) -> Result<Vec<LearnPath>> {
+        let rows = sqlx::query("SELECT * FROM learn_paths ORDER BY ord, id")
+            .fetch_all(self.pool())
+            .await?;
+        rows.iter()
+            .map(|r| {
+                Ok(LearnPath {
+                    id: r.try_get("id")?,
+                    title: pick(lang, r.try_get("title_en")?, r.try_get("title_es")?),
+                    blurb: pick(lang, r.try_get("blurb_en")?, r.try_get("blurb_es")?),
+                    topics: json(r, "topics")?,
                 })
             })
             .collect()
@@ -485,6 +557,15 @@ pub(crate) mod tests {
                     "Intercambia vecinos.",
                 ),
             ],
+            paths: vec![PackPath {
+                id: "start-here".into(),
+                ord: 1,
+                title_en: "Start here".into(),
+                title_es: "Empieza aquí".into(),
+                blurb_en: "First steps".into(),
+                blurb_es: "Primeros pasos".into(),
+                topics: vec!["bubble-sort".into(), "quick-sort".into()],
+            }],
         }
     }
 
@@ -541,6 +622,22 @@ pub(crate) mod tests {
     }
 
     #[tokio::test]
+    async fn learning_paths_round_trip_in_both_languages() {
+        let db = learn_db("learn-paths", &sample_learn()).await.unwrap();
+        let en = db.learn_paths(UiLang::En).await.unwrap();
+        assert_eq!(en.len(), 1);
+        assert_eq!(en[0].id, "start-here");
+        assert_eq!(en[0].title, "Start here");
+        assert_eq!(en[0].topics, ["bubble-sort", "quick-sort"]);
+        let es = db.learn_paths(UiLang::Es).await.unwrap();
+        assert_eq!(es[0].title, "Empieza aquí");
+        assert_eq!(es[0].blurb, "Primeros pasos");
+        // Topic summaries carry their linked problems ("See it animated").
+        let catalog = db.learn_catalog(UiLang::En).await.unwrap();
+        assert_eq!(catalog[1].topics[0].problems, ["gap-a"]);
+    }
+
+    #[tokio::test]
     async fn a_missing_topic_is_not_found() {
         let db = learn_db("learn-missing", &sample_learn()).await.unwrap();
         let err = db.learn_topic("nope", UiLang::En).await.unwrap_err();
@@ -585,6 +682,12 @@ pub(crate) mod tests {
         let mut place = sample_learn();
         place.topics[0].ord = 1;
         assert!(learn_db("learn-place", &place).await.is_err());
+        let mut path = sample_learn();
+        path.paths[0].topics.push("heap-sort".into());
+        assert!(learn_db("learn-path-topic", &path).await.is_err());
+        let mut twice = sample_learn();
+        twice.paths.push(twice.paths[0].clone());
+        assert!(learn_db("learn-path-twice", &twice).await.is_err());
     }
 
     #[tokio::test]

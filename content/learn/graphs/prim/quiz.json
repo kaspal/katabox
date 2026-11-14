@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph. After node 0 joins, the queue holds (2, 5, 0), (4, 1, 0) and (8, 3, 0). Which node joins next?",
+    "prompt_es": "Grafo por defecto. Tras entrar el nodo 0, la cola tiene (2, 5, 0), (4, 1, 0) y (8, 3, 0). ¿Qué nodo entra a continuación?",
+    "options": [
+      { "en": "Node 1, the smallest neighbour number", "es": "El nodo 1, el vecino con menor número" },
+      { "en": "Node 5, through the cheapest edge", "es": "El nodo 5, por la arista más barata" },
+      { "en": "Node 3, the heaviest edge first", "es": "El nodo 3, primero la arista más pesada" }
+    ],
+    "answer": 1,
+    "explain_en": "The queue is ordered by weight first. The edge 0 – 5 weighs 2, the cheapest crossing out of the tree.",
+    "explain_es": "La cola se ordena primero por peso. La arista 0 – 5 pesa 2, el cruce más barato para salir del árbol."
+  },
+  {
+    "prompt_en": "What is the output for the default graph?",
+    "prompt_es": "¿Cuál es la salida para el grafo por defecto?",
+    "options": [
+      { "en": "[12, 0, 1, 2, 3, 4, 5]", "es": "[12, 0, 1, 2, 3, 4, 5]" },
+      { "en": "[17, 0, 5, 4, 3, 1, 2]", "es": "[17, 0, 5, 4, 3, 1, 2]" },
+      { "en": "[12, 0, 5, 4, 3, 1, 2]", "es": "[12, 0, 5, 4, 3, 1, 2]" }
+    ],
+    "answer": 2,
+    "explain_en": "The tree uses 0 – 5 (2), 5 – 4 (3), 4 – 3 (1), 0 – 1 (4) and 1 – 2 (2): 12 in total. The nodes are listed in the order they joined, not by number.",
+    "explain_es": "El árbol usa 0 – 5 (2), 5 – 4 (3), 4 – 3 (1), 0 – 1 (4) y 1 – 2 (2): 12 en total. Los nodos aparecen en el orden en que entraron, no por número."
+  },
+  {
+    "prompt_en": "The graph has two parts with no edge between them. What does this sample return?",
+    "prompt_es": "El grafo tiene dos partes sin ninguna arista entre ellas. ¿Qué devuelve este ejemplo?",
+    "options": [
+      { "en": "The tree of node 0's part only; the other nodes never appear", "es": "Solo el árbol de la parte del nodo 0; los demás nodos no aparecen" },
+      { "en": "A tree for each part, one after the other", "es": "Un árbol por cada parte, uno detrás de otro" },
+      { "en": "An error", "es": "Un error" }
+    ],
+    "answer": 0,
+    "explain_en": "Prim only pushes edges from nodes already in the tree, so nothing ever leads to the other part. Kruskal would return a spanning forest instead.",
+    "explain_es": "Prim solo mete aristas desde nodos que ya están en el árbol, así que nada lleva nunca a la otra parte. Kruskal devolvería en cambio un bosque de expansión."
+  }
+]

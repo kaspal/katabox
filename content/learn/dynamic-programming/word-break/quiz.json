@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input: sunflowerpot with sun, flow, flower, pot, er. At end = 9, which word sets ok[9]?",
+    "prompt_es": "Entrada por defecto: sunflowerpot con sun, flow, flower, pot, er. En end = 9, ¿qué palabra marca ok[9]?",
+    "options": [
+      { "en": "er, from ok[7]", "es": "er, desde ok[7]" },
+      { "en": "flower, from ok[3]", "es": "flower, desde ok[3]" },
+      { "en": "None: ok[9] stays false", "es": "Ninguna: ok[9] se queda en falso" }
+    ],
+    "answer": 1,
+    "explain_en": "Words are tried in the given order and the first fit wins. flower comes before er in the list, so it sets ok[9]; er would also have fit.",
+    "explain_es": "Las palabras se prueban en el orden dado y gana la primera que encaja. flower va antes que er en la lista, así que marca ok[9]; er también habría encajado."
+  },
+  {
+    "prompt_en": "\"Dead end\" preset: goldfishy with gold, fish, goldfish, shy. shy fits the last three letters. Why is the output still [0]?",
+    "prompt_es": "Ajuste \"un callejón sin salida\": goldfishy con gold, fish, goldfish, shy. shy encaja en las tres últimas letras. ¿Por qué la salida sigue siendo [0]?",
+    "options": [
+      { "en": "goldfish was found first, so shy is never tried", "es": "goldfish se encontró antes, así que shy nunca se prueba" },
+      { "en": "A word cannot end at the last letter", "es": "Una palabra no puede terminar en la última letra" },
+      { "en": "shy starts at 6, and ok[6] is false", "es": "shy empieza en 6, y ok[6] es falso" }
+    ],
+    "answer": 2,
+    "explain_en": "The true cells are 0, 4 and 8. A word that fits only counts if the prefix before it can be split, and goldfi cannot.",
+    "explain_es": "Las celdas verdaderas son 0, 4 y 8. Una palabra que encaja solo cuenta si el prefijo anterior se puede partir, y goldfi no se puede."
+  },
+  {
+    "prompt_en": "Text fishyard, words fish, fishy, yard. What does greedy longest-word-first answer, and what does the table answer?",
+    "prompt_es": "Texto fishyard, palabras fish, fishy, yard. ¿Qué responde el voraz que toma primero la palabra más larga, y qué responde la tabla?",
+    "options": [
+      { "en": "Greedy says no; the table says yes", "es": "El voraz dice que no; la tabla dice que sí" },
+      { "en": "Both say yes", "es": "Los dos dicen que sí" },
+      { "en": "Both say no", "es": "Los dos dicen que no" }
+    ],
+    "answer": 0,
+    "explain_en": "Greedy takes fishy and is left with ard. The table marks ok[4] with fish and then ok[8] with yard.",
+    "explain_es": "El voraz toma fishy y se queda con ard. La tabla marca ok[4] con fish y después ok[8] con yard."
+  }
+]

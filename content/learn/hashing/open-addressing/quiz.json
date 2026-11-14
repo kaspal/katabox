@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "insert 3, insert 11, insert 19 into 8 slots. Which slot does 19 end up in?",
+    "prompt_es": "insert 3, insert 11, insert 19 en 8 huecos. ¿En qué hueco acaba 19?",
+    "options": [
+      { "en": "Slot 3, its home slot", "es": "El hueco 3, su hueco de origen" },
+      { "en": "Slot 4", "es": "El hueco 4" },
+      { "en": "Slot 5", "es": "El hueco 5" }
+    ],
+    "answer": 2,
+    "explain_en": "19 mod 8 = 3, but slot 3 holds 3 and slot 4 holds 11 (which also started at 3). After two probes, 19 goes into slot 5.",
+    "explain_es": "19 mod 8 = 3, pero el hueco 3 tiene el 3 y el hueco 4 tiene el 11 (que también empezó en 3). Tras dos sondeos, 19 va al hueco 5."
+  },
+  {
+    "prompt_en": "Then insert 4. Its home slot is 4. Where does it go?",
+    "prompt_es": "Luego insert 4. Su hueco de origen es el 4. ¿Dónde va?",
+    "options": [
+      { "en": "Slot 6, past the cluster", "es": "Al hueco 6, pasado el grupo" },
+      { "en": "Slot 4: it replaces 11", "es": "Al hueco 4: sustituye a 11" },
+      { "en": "Slot 7", "es": "Al hueco 7" }
+    ],
+    "answer": 0,
+    "explain_en": "Slots 4 and 5 hold 11 and 19, so 4 probes twice and lands in slot 6. It never shared a hash with them, yet the cluster pushed it along: that is clustering.",
+    "explain_es": "Los huecos 4 y 5 tienen 11 y 19, así que 4 sondea dos veces y acaba en el hueco 6. Nunca compartió hash con ellos, pero el grupo lo empujó: eso es el agrupamiento."
+  },
+  {
+    "prompt_en": "Finally find 19, find 27. What is the output row?",
+    "prompt_es": "Por último find 19, find 27. ¿Cuál es la fila de salida?",
+    "options": [
+      { "en": "[1, 1]", "es": "[1, 1]" },
+      { "en": "[1, 0]", "es": "[1, 0]" },
+      { "en": "[0, 0]: 19 is not in its home slot", "es": "[0, 0]: 19 no está en su hueco de origen" }
+    ],
+    "answer": 1,
+    "explain_en": "find 19 probes from slot 3 and meets 19 in slot 5 (1). find 27 also starts at slot 3, walks past 3, 11, 19 and 4, and stops at empty slot 7 (0).",
+    "explain_es": "find 19 sondea desde el hueco 3 y encuentra 19 en el hueco 5 (1). find 27 también empieza en el hueco 3, pasa por 3, 11, 19 y 4, y se para en el hueco vacío 7 (0)."
+  }
+]

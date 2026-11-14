@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph. The edge 0 → 2 weighs 9. What is dist[0][2] after round k = 1?",
+    "prompt_es": "Grafo por defecto. La arista 0 → 2 pesa 9. ¿Cuánto vale dist[0][2] tras la ronda k = 1?",
+    "options": [
+      { "en": "9, the direct edge", "es": "9, la arista directa" },
+      { "en": "3, the weight of 1 → 2", "es": "3, el peso de 1 → 2" },
+      { "en": "7, through node 1", "es": "7, a través del nodo 1" }
+    ],
+    "answer": 2,
+    "explain_en": "Round 1 allows node 1 as a stop: dist[0][1] + dist[1][2] = 4 + 3 = 7, which beats 9.",
+    "explain_es": "La ronda 1 permite el nodo 1 como parada: dist[0][1] + dist[1][2] = 4 + 3 = 7, que mejora 9."
+  },
+  {
+    "prompt_en": "Why must k be the outermost loop?",
+    "prompt_es": "¿Por qué k tiene que ser el bucle más exterior?",
+    "options": [
+      { "en": "When round k combines i → k and k → j, both must already be best for stops below k", "es": "Cuando la ronda k combina i → k y k → j, las dos deben ser ya las mejores para paradas menores que k" },
+      { "en": "It only matters for speed; any loop order gives the same matrix", "es": "Solo importa para la velocidad; cualquier orden de bucles da la misma matriz" },
+      { "en": "Because the matrix is stored row by row", "es": "Porque la matriz se guarda fila a fila" }
+    ],
+    "answer": 0,
+    "explain_en": "Each round extends the set of allowed stops by one node. With k inside, a cell would be settled before the routes it is built from were ready, and some distances would stay too large.",
+    "explain_es": "Cada ronda amplía en un nodo el conjunto de paradas permitidas. Con k dentro, una celda se cerraría antes de que estuvieran listas las rutas con las que se construye, y algunas distancias quedarían demasiado grandes."
+  },
+  {
+    "prompt_en": "In the final matrix, why is row 4 all 999 except its diagonal?",
+    "prompt_es": "En la matriz final, ¿por qué la fila 4 es todo 999 salvo su diagonal?",
+    "options": [
+      { "en": "Node 4 is never chosen as k", "es": "El nodo 4 nunca se elige como k" },
+      { "en": "Node 4 has no outgoing edges, so it reaches nothing", "es": "El nodo 4 no tiene aristas de salida, así que no llega a nada" },
+      { "en": "The edges into node 4 weigh too much", "es": "Las aristas que llegan al nodo 4 pesan demasiado" }
+    ],
+    "answer": 1,
+    "explain_en": "The edges 1 → 4 and 3 → 4 only lead into node 4. Column 4 gets real values, such as dist[0][4] = 10, but row 4 can never improve.",
+    "explain_es": "Las aristas 1 → 4 y 3 → 4 solo llegan al nodo 4. La columna 4 recibe valores reales, como dist[0][4] = 10, pero la fila 4 nunca puede mejorar."
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input. Row 0 reads 1, 2, 3 and the search reaches cell (0, 3). What happens there?",
+    "prompt_es": "Entrada por defecto. La fila 0 tiene 1, 2, 3 y la búsqueda llega a la casilla (0, 3). ¿Qué pasa ahí?",
+    "options": [
+      { "en": "It takes 4 and the search goes on", "es": "Toma el 4 y la búsqueda sigue" },
+      { "en": "Only 4 is missing from the row, but column 3 already has a 4, so the search undoes the 3 in (0, 2)", "es": "A la fila solo le falta el 4, pero la columna 3 ya tiene un 4, así que la búsqueda deshace el 3 de (0, 2)" },
+      { "en": "The sample outputs [-1]", "es": "El ejemplo devuelve [-1]" }
+    ],
+    "answer": 1,
+    "explain_en": "The given 4 in the bottom-right corner blocks column 3. fill() fails for (0, 3), so (0, 2) moves on to its next digit, 4.",
+    "explain_es": "El 4 inicial de la esquina inferior derecha bloquea la columna 3. fill() fracasa en (0, 3), así que (0, 2) pasa a su siguiente cifra, el 4."
+  },
+  {
+    "prompt_en": "In the default input, cell (2, 0) first gets 2. What does it end up holding?",
+    "prompt_es": "En la entrada por defecto, la casilla (2, 0) recibe primero un 2. ¿Qué cifra tiene al final?",
+    "options": [
+      { "en": "2", "es": "2" },
+      { "en": "3", "es": "3" },
+      { "en": "4", "es": "4" }
+    ],
+    "answer": 2,
+    "explain_en": "With 2 there, (2, 3) would need a 4 that column 3 already has. 3 is in its row, so the next digit that fits is 4.",
+    "explain_es": "Con un 2 ahí, (2, 3) necesitaría un 4 que la columna 3 ya tiene. El 3 está en su fila, así que la siguiente cifra que cabe es el 4."
+  },
+  {
+    "prompt_en": "Which change usually finds dead ends sooner?",
+    "prompt_es": "¿Qué cambio suele encontrar antes los callejones sin salida?",
+    "options": [
+      { "en": "Filling next the empty cell with the fewest allowed digits", "es": "Llenar a continuación la casilla vacía con menos cifras permitidas" },
+      { "en": "Trying the digits from largest to smallest", "es": "Probar las cifras de mayor a menor" },
+      { "en": "Filling the cells column by column", "es": "Llenar las casillas columna a columna" }
+    ],
+    "answer": 0,
+    "explain_en": "A cell with few options either forces its value or fails quickly, so wrong guesses are caught near the top of the search.",
+    "explain_es": "Una casilla con pocas opciones o bien fuerza su valor o bien falla enseguida, así que los tanteos erróneos se detectan cerca de la cima de la búsqueda."
+  }
+]

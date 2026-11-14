@@ -1,0 +1,27 @@
+{
+  "cases": [
+    {"name": "big-exponent", "input": [7,1000,13], "output": [9]},
+    {"name": "random", "input": [62,27,528], "output": [512]},
+    {"name": "power-of-two", "input": [3,64,101], "output": [88]},
+    {"name": "random-1", "input": [14,2674,112], "output": [0]},
+    {"name": "random-2", "input": [43,5340,417], "output": [1]},
+    {"name": "random-3", "input": [33,2245,919], "output": [19]},
+    {"name": "random-4", "input": [17,2753,468], "output": [413]},
+    {"name": "random-5", "input": [41,6922,547], "output": [506]},
+    {"name": "random-6", "input": [35,2205,932], "output": [431]},
+    {"name": "random-7", "input": [87,2430,100], "output": [49]},
+    {"name": "random-8", "input": [77,7263,501], "output": [221]},
+    {"name": "random-9", "input": [69,6296,413], "output": [239]},
+    {"name": "random-10", "input": [43,8017,888], "output": [43]},
+    {"name": "random-11", "input": [99,6732,907], "output": [637]},
+    {"name": "random-12", "input": [29,5488,484], "output": [317]},
+    {"name": "random-13", "input": [2,1970,693], "output": [67]},
+    {"name": "random-14", "input": [15,8134,875], "output": [750]},
+    {"name": "random-15", "input": [25,9490,388], "output": [101]},
+    {"name": "random-16", "input": [98,9943,275], "output": [142]},
+    {"name": "random-17", "input": [22,1881,46], "output": [22]},
+    {"name": "random-18", "input": [71,8538,377], "output": [168]},
+    {"name": "random-19", "input": [5,9785,755], "output": [85]},
+    {"name": "random-20", "input": [12,9402,562], "output": [66]}
+  ]
+}

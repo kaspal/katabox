@@ -20,7 +20,7 @@ A free, open-source, offline desktop app for coding practice (LeetCode/HackerRan
 | `crates/kb-bridge` | Language servers over stdio, outside the sandbox: sessions, message policy, virtual project per problem (ADR 0014). DAP later |
 | `crates/kb-pack` | `kb-pack validate [--run]`, `generate`, `profile` and `build` (content.db) CLI for problem packages; `--run` runs every problem script in the sandbox (ADR 0016) and judges speed per language (ADR 0017); `profile` records complexity-profile inputs and reference times (ADR 0024) |
 | `content/problems/` | Problem packages (CC BY-SA 4.0) |
-| `content/learn/` | Learn topics (ADR 0029): `subjects.toml`, then `<subject>/<topic>/` with `topic.toml`, theory EN/ES, `sample.py` + `sample.ts` with `@step` markers, `quiz.json`, generated `cases.json` |
+| `content/learn/` | Learn topics (ADR 0029): `subjects.toml`, `paths.toml` (learning paths), then `<subject>/<topic>/` with `topic.toml`, theory EN/ES, `sample.py` + `sample.ts` with `@step` markers, `quiz.json`, generated `cases.json` |
 | `languages/` | Per-language runtime definitions (`language.toml`, with the `[time]` factor and startup allowance of ADR 0017) and harness templates |
 
 ## Commands

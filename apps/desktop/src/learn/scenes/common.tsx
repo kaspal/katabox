@@ -6,7 +6,7 @@ import { motion, type Transition } from "motion/react";
 import { useReducedMotion } from "../engine/media";
 import type { TFunction } from "i18next";
 import { GROWTH_CLASSES } from "../engine/growth";
-import type { Pointer, Role, Step, TracerDef } from "../engine/types";
+import type { NoteKey, Pointer, Role, Step, TracerDef } from "../engine/types";
 
 export type SceneProps = {
   step: Step;
@@ -93,16 +93,23 @@ export function Pointers({
   y: number;
   transition: Transition;
 }) {
-  const seen = new Map<number, number>();
-  const counts = new Map<number, number>();
-  for (const p of pointers) counts.set(p.at, (counts.get(p.at) ?? 0) + 1);
+  // Labels sharing a position fan out side by side, each as wide as its text (one-letter
+  // labels take 26 px, as before), centred on the position.
+  const width = (p: Pointer) => Math.max(18, p.label.length * 7.5) + 8;
+  const offset = new Map<Pointer, number>();
+  const groups = new Map<number, Pointer[]>();
+  for (const p of pointers) groups.set(p.at, [...(groups.get(p.at) ?? []), p]);
+  for (const group of groups.values()) {
+    let x = -group.reduce((s, p) => s + width(p), 0) / 2;
+    for (const p of group) {
+      offset.set(p, x + width(p) / 2);
+      x += width(p);
+    }
+  }
   return (
     <g aria-hidden>
       {pointers.map((p) => {
-        const k = seen.get(p.at) ?? 0;
-        seen.set(p.at, k + 1);
-        const spread = ((counts.get(p.at) ?? 1) - 1) * 13;
-        const x = (p.at + 0.5) * slot - spread + k * 26;
+        const x = (p.at + 0.5) * slot + offset.get(p)!;
         return (
           <motion.g
             key={p.label}
@@ -140,6 +147,79 @@ export function sceneSummary(t: TFunction, step: Step): string {
     parts.push(t("learn.stage.summary_bits", { rows: step.bits.map((b) => `${b.label} = ${b.value}`).join("; ") }));
   }
   if (step.chart) parts.push(t("learn.stage.summary_growth", { count: step.chart.shown, n: step.chart.n }));
+  if (step.list) {
+    parts.push(t("learn.stage.summary_list", { values: step.list.nodes.map((n) => n.value).join(" → ") || "—" }));
+  }
+  if (step.slots) {
+    const values = step.slots.cells.map((c) => (c ? c.value : "_")).join(", ") || "—";
+    parts.push(t("learn.stage.fallback_row", { label: t(`learn.stage.rows.${step.slots.label}`), values }) + ".");
+  }
+  if (step.forest?.length) {
+    const nodes = step.forest
+      .map((n) => {
+        const parent = n.parent === null ? null : step.forest!.find((p) => p.id === n.parent);
+        return parent ? `${n.text} (${parent.text})` : n.text;
+      })
+      .join(", ");
+    parts.push(t("learn.stage.summary_tree", { nodes }));
+  }
+  if (step.hash) {
+    const buckets = step.hash.buckets.map((b, k) => `${k}: ${b.map((it) => (it.value === -2 ? "✕" : it.value)).join(" ") || "—"}`).join("; ");
+    parts.push(t("learn.stage.summary_hash", { buckets }));
+  }
+  if (step.graph) {
+    const g = step.graph;
+    const nodes = g.nodes.map((v) => (v.note ? `${v.id} (${v.note.startsWith("@") ? t(`learn.stage.notes.${v.note.slice(1) as NoteKey}`) : v.note})` : String(v.id))).join(", ");
+    const edges = g.edges.map((e) => `${e.u}${g.directed ? "→" : "–"}${e.v}${g.weighted ? ` (${e.label ?? e.w})` : ""}`).join(", ") || "—";
+    parts.push(t("learn.stage.summary_graph", { n: g.n, nodes, edges }));
+  }
+  if (step.grid) {
+    const g = step.grid;
+    const map = Array.from({ length: g.rows }, (_, r) =>
+      Array.from({ length: g.cols }, (_, c) => {
+        const k = r * g.cols + c;
+        const v = g.cells[k]!;
+        if (g.start && g.start[0] === r && g.start[1] === c) return "S";
+        if (g.goal && g.goal[0] === r && g.goal[1] === c) return "G";
+        return v === 1 ? "#" : g.path.includes(k) ? "*" : v >= 2 ? String(v) : ".";
+      }).join(""),
+    ).join(" / ");
+    parts.push(t("learn.stage.summary_grid", { rows: g.rows, cols: g.cols, map }));
+  }
+  if (step.dp) {
+    const d = step.dp;
+    const rows = d.cells
+      .map((row, r) => `${d.rowLabels?.[r] ?? ""}${d.rowLabels ? ": " : ""}${row.map((v) => (v === null ? "_" : v >= 1e6 ? "∞" : v)).join(" ")}`)
+      .join("; ");
+    parts.push(t("learn.stage.fallback_row", { label: t(`learn.stage.rows.${d.label}`), values: rows }) + ".");
+  }
+  if (step.timeline) {
+    const bars = step.timeline.bars.map((b) => `${b.start}–${b.end}`).join(", ") || "—";
+    const output = (step.timeline.output ?? []).map((b) => `${b.start}–${b.end}`).join(", ") || "—";
+    parts.push(t("learn.stage.summary_timeline", { bars, output }));
+  }
+  if (step.board) {
+    const b = step.board;
+    const cells = Array.from({ length: b.rows }, (_, r) => b.cells.slice(r * b.cols, (r + 1) * b.cols).map((c) => c || ".").join("")).join(" / ");
+    parts.push(t("learn.stage.summary_board", { rows: b.rows, cols: b.cols, cells }));
+  }
+  if (step.strings) {
+    const rows = step.strings.rows.map((row) => `${t(`learn.stage.rows.${row.label}`)}: ${row.cells.map((c) => (c === null ? "_" : c)).join(row.kind === "letters" ? "" : " ")}`).join("; ");
+    parts.push(t("learn.stage.summary_strings", { rows }));
+  }
+  if (step.decision) {
+    const line = step.decision.current == null ? null : step.decision.lines[step.decision.current];
+    if (line) parts.push(t("learn.stage.fallback_row", { label: t("learn.stage.rows.decisions"), values: line.text }) + ".");
+  }
+  if (step.plane) {
+    const points = step.plane.points.map((p) => `${p.label ?? p.id} (${p.x}, ${p.y})`).join(", ");
+    parts.push(t("learn.stage.summary_plane", { points }));
+  }
+  if (step.bitArray) parts.push(t("learn.stage.summary_bits_array", { bits: step.bitArray.bits.join("") }));
+  if (step.table) {
+    const rows = step.table.rows.map((r) => `${r.key}: ${r.value}`).join(", ") || "—";
+    parts.push(t("learn.stage.fallback_row", { label: t(`learn.stage.rows.${step.table.label}`), values: rows }) + ".");
+  }
   if (step.stack?.length) parts.push(t("learn.stage.summary_stack", { top: step.stack[step.stack.length - 1]!.text }));
   const at = (role: Role) =>
     Object.entries(step.roles)
@@ -157,6 +237,7 @@ export function sceneSummary(t: TFunction, step: Step): string {
     parts.push(t("learn.stage.summary_key", { value: step.items[step.lifted]!.value, at: step.lifted }));
   }
   if (step.range) parts.push(t("learn.stage.summary_range", { lo: step.range[0], hi: step.range[1] }));
+  if (parts.length === 0) parts.push(t("learn.stage.summary_empty"));
   return parts.join(" ");
 }
 

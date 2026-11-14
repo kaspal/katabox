@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input: amount 12, coins 1, 6 and 9. How many coins does the greedy plan (largest coin first) use?",
+    "prompt_es": "Entrada por defecto: cantidad 12, monedas 1, 6 y 9. ¿Cuántas monedas usa el plan voraz (primero la moneda más grande)?",
+    "options": [
+      { "en": "2", "es": "2" },
+      { "en": "3", "es": "3" },
+      { "en": "4", "es": "4" }
+    ],
+    "answer": 2,
+    "explain_en": "Greedy takes 9 and is left with 3, which only 1s can pay: 9 + 1 + 1 + 1. The table finds 6 + 6, two coins.",
+    "explain_es": "El voraz toma 9 y le quedan 3, que solo se pagan con unos: 9 + 1 + 1 + 1. La tabla encuentra 6 + 6, dos monedas."
+  },
+  {
+    "prompt_en": "Which last coin gives fewest[12] = 2?",
+    "prompt_es": "¿Qué última moneda da fewest[12] = 2?",
+    "options": [
+      { "en": "Coin 6, from fewest[6] = 1", "es": "La moneda 6, desde fewest[6] = 1" },
+      { "en": "Coin 9, from fewest[3] = 3", "es": "La moneda 9, desde fewest[3] = 3" },
+      { "en": "Coin 1, from fewest[11] = 3", "es": "La moneda 1, desde fewest[11] = 3" }
+    ],
+    "answer": 0,
+    "explain_en": "Coin 1 offers 3 + 1 = 4 first, coin 6 improves it to 1 + 1 = 2, and coin 9 offers 3 + 1 = 4, which is not smaller.",
+    "explain_es": "La moneda 1 ofrece primero 3 + 1 = 4, la moneda 6 lo mejora a 1 + 1 = 2 y la moneda 9 ofrece 3 + 1 = 4, que no es menor."
+  },
+  {
+    "prompt_en": "\"Cannot make\" preset: amount 7, coins 2 and 4. fewest[7] is still 999 at the end. What is the output?",
+    "prompt_es": "Ajuste \"no se puede\": cantidad 7, monedas 2 y 4. Al final fewest[7] sigue en 999. ¿Cuál es la salida?",
+    "options": [
+      { "en": "[999]", "es": "[999]" },
+      { "en": "[-1]", "es": "[-1]" },
+      { "en": "[0]", "es": "[0]" }
+    ],
+    "answer": 1,
+    "explain_en": "999 is only the sample's marker for \"cannot be made\". Even coins never reach an odd total, so the answer is reported as -1.",
+    "explain_es": "999 es solo la marca del ejemplo para \"no se puede formar\". Con monedas pares nunca se llega a un total impar, así que la respuesta se da como -1."
+  }
+]

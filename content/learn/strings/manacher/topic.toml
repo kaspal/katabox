@@ -1,0 +1,28 @@
+id = "manacher"
+subject = "strings"
+order = 4
+title = "Manacher's longest palindrome"
+title_es = "Palíndromo más largo de Manacher"
+tags = ["strings", "palindrome"]
+problems = ["longest-mirror"]
+presets = ["nested-mirrors", "random", "even-length"]
+default = [0, 1, 0, 2, 0, 1, 0, 3, 0, 1]
+
+[complexity]
+best = "O(n)"
+average = "O(n)"
+worst = "O(n)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 12
+min = 0
+max = 25
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = manacher(kb_text(a)[0])"
+typescript = "a = manacher(kbText(a)[0])"

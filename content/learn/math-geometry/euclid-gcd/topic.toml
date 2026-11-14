@@ -1,0 +1,28 @@
+id = "euclid-gcd"
+subject = "math-geometry"
+order = 1
+title = "Euclid's GCD"
+title_es = "MCD de Euclides"
+tags = ["math", "number-theory"]
+problems = ["shared-tile"]
+presets = ["big-factor", "random", "fibonacci-pair"]
+default = [336, 252]
+
+[complexity]
+best = "O(1) when b divides a"
+average = "O(log min(a, b))"
+worst = "O(log min(a, b))"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 2
+min = 1
+max = 999
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = gcd_steps(a[0], a[1])"
+typescript = "a = gcdSteps(a[0], a[1])"

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input 2, 3, 1, 1, 0, 2, 4, 0, 1, 1. What is the reach after square 1?",
+    "prompt_es": "Entrada por defecto 2, 3, 1, 1, 0, 2, 4, 0, 1, 1. ¿Cuál es el alcance tras la casilla 1?",
+    "options": [
+      { "en": "3: the jump on square 1", "es": "3: el salto de la casilla 1" },
+      { "en": "5: 2 + 3", "es": "5: 2 + 3" },
+      { "en": "4: 1 + 3", "es": "4: 1 + 3" }
+    ],
+    "answer": 2,
+    "explain_en": "Square 1 can jump up to 3 squares, so it reaches index 1 + 3 = 4, beyond square 0's reach of 2.",
+    "explain_es": "La casilla 1 puede saltar hasta 3 casillas, así que llega al índice 1 + 3 = 4, más allá del alcance de 2 de la casilla 0."
+  },
+  {
+    "prompt_en": "What is the output for the default input?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto?",
+    "options": [
+      { "en": "[0, 4]", "es": "[0, 4]" },
+      { "en": "[1, 9]", "es": "[1, 9]" },
+      { "en": "[0, 5]", "es": "[0, 5]" }
+    ],
+    "answer": 0,
+    "explain_en": "No square up to index 4 reaches past 4, and square 4 holds a 0. Square 5 is beyond the reach, so the walk stops with reach 4.",
+    "explain_es": "Ninguna casilla hasta el índice 4 llega más allá de 4, y la casilla 4 tiene un 0. La casilla 5 está fuera del alcance, así que el recorrido se detiene con alcance 4."
+  },
+  {
+    "prompt_en": "Input 2, 0, 1. Does the 0 on square 1 trap the walk?",
+    "prompt_es": "Entrada 2, 0, 1. ¿El 0 de la casilla 1 atrapa el recorrido?",
+    "options": [
+      { "en": "Yes: every 0 is a dead end", "es": "Sí: todo 0 es un callejón sin salida" },
+      { "en": "No: square 0 already reaches index 2, so the output is [1, 2]", "es": "No: la casilla 0 ya llega al índice 2, así que la salida es [1, 2]" },
+      { "en": "Only if the walk lands on it", "es": "Solo si el recorrido cae en ella" }
+    ],
+    "answer": 1,
+    "explain_en": "The reach is a maximum over every square seen. Square 1 adds nothing, but the reach of 2 from square 0 still covers the last index.",
+    "explain_es": "El alcance es un máximo sobre todas las casillas vistas. La casilla 1 no añade nada, pero el alcance de 2 desde la casilla 0 sigue cubriendo el último índice."
+  }
+]

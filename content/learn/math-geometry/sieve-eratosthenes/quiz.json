@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input: n = 60. Which values of p actually cross out numbers?",
+    "prompt_es": "Entrada por defecto: n = 60. ¿Qué valores de p tachan números de verdad?",
+    "options": [
+      { "en": "2, 3, 5 and 7", "es": "2, 3, 5 y 7" },
+      { "en": "Every prime up to 30", "es": "Todos los primos hasta 30" },
+      { "en": "2, 3, 4, 5, 6 and 7", "es": "2, 3, 4, 5, 6 y 7" }
+    ],
+    "answer": 0,
+    "explain_en": "The loop runs while p · p ≤ 60, so p goes up to 7. 4 and 6 are already crossed out when their turn comes, so they are skipped.",
+    "explain_es": "El bucle sigue mientras p · p ≤ 60, así que p llega hasta 7. El 4 y el 6 ya están tachados cuando les llega el turno, así que se saltan."
+  },
+  {
+    "prompt_en": "Why can prime 7 start crossing at 49 instead of 14?",
+    "prompt_es": "¿Por qué el primo 7 puede empezar a tachar en 49 en lugar de en 14?",
+    "options": [
+      { "en": "Because 14, 21, 28, 35 and 42 are primes", "es": "Porque 14, 21, 28, 35 y 42 son primos" },
+      { "en": "Because each of 14, 21, 28, 35 and 42 has a factor smaller than 7, which already crossed it out", "es": "Porque 14, 21, 28, 35 y 42 tienen un factor menor que 7, que ya los tachó" },
+      { "en": "Because 7 only crosses odd numbers", "es": "Porque el 7 solo tacha números impares" }
+    ],
+    "answer": 1,
+    "explain_en": "7 · j with j < 7 has the factor j, so 2, 3 or 5 crossed it earlier. 49 = 7 · 7 is the first multiple no smaller prime touches.",
+    "explain_es": "7 · j con j < 7 tiene el factor j, así que el 2, el 3 o el 5 lo tacharon antes. 49 = 7 · 7 es el primer múltiplo que ningún primo menor toca."
+  },
+  {
+    "prompt_en": "For n = 60 the sieve makes 57 crossings. Why are only 42 numbers crossed out?",
+    "prompt_es": "Con n = 60 la criba hace 57 tachados. ¿Por qué solo quedan tachados 42 números?",
+    "options": [
+      { "en": "Some crossings fail", "es": "Algunos tachados fallan" },
+      { "en": "The last 15 numbers are never reached", "es": "Los últimos 15 números nunca se alcanzan" },
+      { "en": "Numbers with several small prime factors, like 12, are crossed by more than one prime", "es": "Los números con varios factores primos pequeños, como el 12, los tacha más de un primo" }
+    ],
+    "answer": 2,
+    "explain_en": "12 is crossed by 2 and again by 3. The 42 crossed numbers are exactly the composites from 4 to 60; the other 17 numbers from 2 to 60 are prime.",
+    "explain_es": "El 12 lo tacha el 2 y otra vez el 3. Los 42 números tachados son justo los compuestos de 4 a 60; los otros 17 números de 2 a 60 son primos."
+  }
+]

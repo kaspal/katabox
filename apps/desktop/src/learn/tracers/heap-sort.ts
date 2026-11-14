@@ -3,7 +3,7 @@
 // to the end, shrink the heap by one and sift the new root down, until one value is left.
 import { SORT_INPUT } from "../engine/cases";
 import { Recorder } from "../engine/recorder";
-import { sortCounters, type NarrationKey, type Pointer, type Role, type Step, type TracerDef } from "../engine/types";
+import { type NarrationKey, type NarrationParams, type Pointer, type Role, sortCounters, type Step, type TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"heap-sort">;
 const KEYS = [
@@ -18,7 +18,7 @@ const KEYS = [
   "heap-sort.extract",
   "heap-sort.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["build", "pick", "compare", "swap", "extract"] as const;
 

@@ -1,0 +1,28 @@
+id = "sudoku"
+subject = "backtracking"
+order = 5
+title = "Sudoku"
+title_es = "Sudoku"
+tags = ["backtracking"]
+problems = []
+presets = ["four-by-four", "random", "nine-by-nine"]
+default = [4, 1, 0, 0, 0, 0, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0, 4]
+
+[complexity]
+best = "fast with few gaps"
+average = "exponential in the gaps"
+worst = "exponential in the gaps"
+space = "O(cells)"
+stable = true
+in_place = true
+
+[input]
+min_len = 17
+max_len = 82
+min = 0
+max = 9
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = solve_sudoku(a[0], a[1:])"
+typescript = "a = solveSudoku(a[0], a.slice(1))"

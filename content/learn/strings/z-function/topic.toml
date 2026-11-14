@@ -1,0 +1,28 @@
+id = "z-function"
+subject = "strings"
+order = 2
+title = "Z-function"
+title_es = "Función Z"
+tags = ["strings", "string-matching"]
+problems = ["pattern-count"]
+presets = ["repeats", "random", "one-letter"]
+default = [0, 0, 1, 0, 0, 1, 0, 0, 1, -1, 0, 0, 1]
+
+[complexity]
+best = "O(n + m)"
+average = "O(n + m)"
+worst = "O(n + m)"
+space = "O(n + m)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 25
+min = -1
+max = 25
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = z_search(*kb_text(a))"
+typescript = "a = zSearch(...(kbText(a) as [string, string]))"

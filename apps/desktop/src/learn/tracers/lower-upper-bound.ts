@@ -4,7 +4,7 @@
 // copies of the target (none when they are equal).
 import { pickSearchTarget, SEARCH_INPUT } from "../engine/search";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Pointer, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"lower-upper-bound">;
 const KEYS = [
@@ -17,7 +17,7 @@ const KEYS = [
   "lower-upper-bound.upper_done",
   "lower-upper-bound.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["lower", "lower-done", "upper", "upper-done"] as const;
 
@@ -82,7 +82,7 @@ function trace(input: readonly number[]): Step[] {
   });
   r.snap({
     roles,
-    narration: say("lower-upper-bound.done", { lower, upper, count: upper - lower, target }),
+    narration: say("lower-upper-bound.done", { lower, upper, num: upper - lower, target }),
     marker: null,
     vars: vars(upper, upper, null, lower),
     result: [lower, upper],

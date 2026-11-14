@@ -1,0 +1,28 @@
+id = "kmp"
+subject = "strings"
+order = 1
+title = "Knuth-Morris-Pratt"
+title_es = "Knuth-Morris-Pratt"
+tags = ["strings", "string-matching"]
+problems = ["pattern-count"]
+presets = ["overlaps", "random", "no-border"]
+default = [0, 1, 0, 1, 0, 1, 2, 0, 1, 0, 1, -1, 0, 1, 0, 1]
+
+[complexity]
+best = "O(n + m)"
+average = "O(n + m)"
+worst = "O(n + m)"
+space = "O(m)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 33
+min = -1
+max = 25
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = kmp(*kb_text(a))"
+typescript = "a = kmp(...(kbText(a) as [string, string]))"

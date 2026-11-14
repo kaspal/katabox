@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Parents 0, 1, 2, 3, 1, 2, 3, 0 (nodes 1 to 8). The first BFS runs from node 0. Which node does it report as the farthest?",
+    "prompt_es": "Padres 0, 1, 2, 3, 1, 2, 3, 0 (nodos 1 a 8). El primer BFS sale del nodo 0. ¿Qué nodo da como el más lejano?",
+    "options": [
+      { "en": "Node 8", "es": "El nodo 8" },
+      { "en": "Node 7, at distance 4", "es": "El nodo 7, a distancia 4" },
+      { "en": "Node 4, at distance 4", "es": "El nodo 4, a distancia 4" }
+    ],
+    "answer": 2,
+    "explain_en": "Nodes 4 and 7 are both 4 edges from 0 (0 – 1 – 2 – 3 – 4 or 7). Node 4 is reached first, and the farthest node only changes on a strictly greater distance.",
+    "explain_es": "Los nodos 4 y 7 están los dos a 4 aristas de 0 (0 – 1 – 2 – 3 – 4 o 7). El nodo 4 se alcanza antes, y el más lejano solo cambia con una distancia estrictamente mayor."
+  },
+  {
+    "prompt_en": "The second BFS runs from node 4. What is the diameter?",
+    "prompt_es": "El segundo BFS sale del nodo 4. ¿Cuál es el diámetro?",
+    "options": [
+      { "en": "5 edges: 4 – 3 – 2 – 1 – 0 – 8", "es": "5 aristas: 4 – 3 – 2 – 1 – 0 – 8" },
+      { "en": "4 edges, the first BFS's distance", "es": "4 aristas, la distancia del primer BFS" },
+      { "en": "6, the nodes on the longest path", "es": "6, los nodos del camino más largo" }
+    ],
+    "answer": 0,
+    "explain_en": "From 4 the path climbs to 0 and goes down to 8, five edges. The first BFS only found an end; the diameter counts edges, not the 6 nodes on the path.",
+    "explain_es": "Desde 4 el camino sube hasta 0 y baja hasta 8, cinco aristas. El primer BFS solo encontró un extremo; el diámetro cuenta aristas, no los 6 nodos del camino."
+  },
+  {
+    "prompt_en": "Why are two BFS runs enough, instead of one BFS from every node?",
+    "prompt_es": "¿Por qué bastan dos BFS en vez de uno desde cada nodo?",
+    "options": [
+      { "en": "Node 0 is always one end of the longest path", "es": "El nodo 0 siempre es un extremo del camino más largo" },
+      { "en": "The node farthest from any start is always an end of some longest path", "es": "El nodo más lejano desde cualquier inicio siempre es un extremo de algún camino más largo" },
+      { "en": "BFS visits every path in the tree", "es": "BFS visita todos los caminos del árbol" }
+    ],
+    "answer": 1,
+    "explain_en": "Node 0 is not an end here (the diameter runs 4 to 8). But the first BFS's farthest node always is an end, so one more BFS from it measures the longest path, for O(n) in total.",
+    "explain_es": "Aquí el nodo 0 no es un extremo (el diámetro va de 4 a 8). Pero el nodo más lejano del primer BFS siempre lo es, así que un BFS más desde él mide el camino más largo, con O(n) en total."
+  }
+]

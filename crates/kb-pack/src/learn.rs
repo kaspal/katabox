@@ -9,13 +9,16 @@ use std::path::{Path, PathBuf};
 
 use kb_core::{Language, TestCase, TestKind, Verdict};
 use kb_judge::{JudgeEnv, Problem, ProblemMode};
-use kb_store::{LearnComplexity, LearnInput, LearnPack, PackQuizQuestion, PackSubject, PackTopic};
+use kb_store::{
+    LearnComplexity, LearnInput, LearnPack, PackPath, PackQuizQuestion, PackSubject, PackTopic,
+};
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
 /// The languages every topic has a sample in.
 pub const SAMPLE_LANGUAGES: [Language; 2] = [Language::Python, Language::TypeScript];
-const PRESETS: [&str; 4] = ["random", "nearly-sorted", "reversed", "few-unique"];
+/// The longest flat input a topic may take (a 20 × 20 grid with its header fits).
+pub const MAX_INPUT_LEN: u32 = 512;
 const FILES: [&str; 6] = [
     "topic.toml",
     "theory.md",
@@ -40,6 +43,24 @@ pub fn learn_dir_for(problems: &Path) -> PathBuf {
 #[serde(deny_unknown_fields)]
 struct SubjectsToml {
     subject: Vec<SubjectToml>,
+}
+
+/// `content/learn/paths.toml` (Phase 6): learning paths, in display order.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PathsToml {
+    path: Vec<PathToml>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PathToml {
+    id: String,
+    title: String,
+    title_es: String,
+    blurb: String,
+    blurb_es: String,
+    topics: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -245,6 +266,60 @@ pub fn read_learn(learn: &Path, problems: &Path) -> Result<Learn, Vec<String>> {
             }
         }
     }
+    // Learning paths (optional file): known topics, each once per path.
+    let path_file = learn.join("paths.toml");
+    if path_file.is_file() {
+        match fs::read_to_string(&path_file)
+            .map_err(|e| e.to_string())
+            .and_then(|s| toml::from_str::<PathsToml>(&s).map_err(|e| e.to_string()))
+        {
+            Err(e) => errors.push(format!("paths.toml: {e}")),
+            Ok(file) => {
+                let ids: BTreeSet<&str> = topics.iter().map(|t| t.topic.id.as_str()).collect();
+                let mut seen_paths = BTreeSet::new();
+                for (k, p) in file.path.into_iter().enumerate() {
+                    if !kebab(&p.id) || !seen_paths.insert(p.id.clone()) {
+                        errors.push(format!(
+                            "paths.toml: path id {:?} is not unique kebab-case",
+                            p.id
+                        ));
+                    }
+                    for (what, v) in [
+                        ("title", &p.title),
+                        ("title_es", &p.title_es),
+                        ("blurb", &p.blurb),
+                        ("blurb_es", &p.blurb_es),
+                    ] {
+                        if v.trim().is_empty() {
+                            errors.push(format!("paths.toml: {}: empty {what}", p.id));
+                        }
+                    }
+                    if p.topics.is_empty() {
+                        errors.push(format!("paths.toml: {}: no topics", p.id));
+                    }
+                    let mut in_path = BTreeSet::new();
+                    for t in &p.topics {
+                        if !ids.contains(t.as_str()) {
+                            errors.push(format!("paths.toml: {}: unknown topic {t}", p.id));
+                        }
+                        if !in_path.insert(t.as_str()) {
+                            errors.push(format!("paths.toml: {}: {t} listed twice", p.id));
+                        }
+                    }
+                    pack.paths.push(PackPath {
+                        id: p.id,
+                        ord: k as u32 + 1,
+                        title_en: p.title,
+                        title_es: p.title_es,
+                        blurb_en: p.blurb,
+                        blurb_es: p.blurb_es,
+                        topics: p.topics,
+                    });
+                }
+            }
+        }
+    }
+
     // Tracers live in the app (ADR 0029); check each topic has one when the app is here.
     if let Some(tracers) = tracers_dir(learn) {
         for t in &topics {
@@ -365,14 +440,20 @@ fn read_topic(dir: &Path, subject: &str, problems: &Path) -> Result<TopicDir, Ve
             errors.push(format!("linked problem {p:?} is not in the catalogue"));
         }
     }
-    if t.presets.is_empty() || t.presets.iter().any(|p| !PRESETS.contains(&p.as_str())) {
-        errors.push(format!("presets: one or more of {PRESETS:?}"));
+    // Preset ids are the tracer's (Vitest checks each exists there and has a name in both
+    // locales); here they only need to be well-formed.
+    if t.presets.is_empty() || t.presets.iter().any(|p| !kebab(p)) {
+        errors.push("presets: one or more kebab-case ids".into());
     }
     let lim = t.input;
-    let lim_ok =
-        lim.min_len >= 1 && lim.min_len <= lim.max_len && lim.max_len <= 64 && lim.min <= lim.max;
+    let lim_ok = lim.min_len >= 1
+        && lim.min_len <= lim.max_len
+        && lim.max_len <= MAX_INPUT_LEN
+        && lim.min <= lim.max;
     if !lim_ok {
-        errors.push("input: need 1 ≤ min_len ≤ max_len ≤ 64 and min ≤ max".into());
+        errors.push(format!(
+            "input: need 1 ≤ min_len ≤ max_len ≤ {MAX_INPUT_LEN} and min ≤ max"
+        ));
     }
     let fits = |xs: &[i64]| {
         (lim.min_len as usize..=lim.max_len as usize).contains(&xs.len())
@@ -735,7 +816,8 @@ mod tests {
                 let all = (lim.max - lim.min + 1) as usize;
                 assert_eq!(t.cases.len(), all, "{}: every n", t.topic.id);
             } else {
-                assert!(t.cases.len() >= 24, "{}: presets + 20 random", t.topic.id);
+                // At least one preset plus the 20 random inputs.
+                assert!(t.cases.len() >= 21, "{}: presets + 20 random", t.topic.id);
             }
         }
     }
@@ -844,6 +926,45 @@ mod tests {
     }
 
     #[test]
+    fn learning_paths_are_checked() {
+        let path = |id: &str, title: &str, topics: &str| {
+            format!(
+                "[[path]]\nid = \"{id}\"\ntitle = \"{title}\"\ntitle_es = \"T\"\nblurb = \"b\"\n\
+                 blurb_es = \"b\"\ntopics = [{topics}]\n"
+            )
+        };
+        let write = |t: &Path, body: String| {
+            fs::write(
+                t.parent().unwrap().parent().unwrap().join("paths.toml"),
+                body,
+            )
+            .unwrap()
+        };
+        let e = broken("path-ok", |t| {
+            write(t, path("start", "Start", "\"quick-sort\""))
+        });
+        assert!(e.is_empty(), "{e:?}");
+        let e = broken("path-unknown", |t| {
+            write(t, path("start", "Start", "\"heap-sort\""))
+        });
+        assert!(has(&e, "unknown topic heap-sort"), "{e:?}");
+        let e = broken("path-twice", |t| {
+            write(t, path("start", "Start", "\"quick-sort\", \"quick-sort\""))
+        });
+        assert!(has(&e, "quick-sort listed twice"), "{e:?}");
+        let e = broken("path-id", |t| {
+            write(t, path("Start Here", "Start", "\"quick-sort\""))
+        });
+        assert!(has(&e, "not unique kebab-case"), "{e:?}");
+        let e = broken("path-title", |t| {
+            write(t, path("start", " ", "\"quick-sort\""))
+        });
+        assert!(has(&e, "empty title"), "{e:?}");
+        let e = broken("path-none", |t| write(t, path("start", "Start", "")));
+        assert!(has(&e, "no topics"), "{e:?}");
+    }
+
+    #[test]
     fn broken_topics_are_refused_with_a_reason() {
         let e = broken("missing", |t| {
             fs::remove_file(t.join("theory.es.md")).unwrap()
@@ -882,7 +1003,8 @@ mod tests {
         });
         assert!(has(&e, "not the sorted input"), "{e:?}");
         let e = broken("preset", |t| {
-            rewrite(&t.join("topic.toml"), "\"few-unique\"", "\"zigzag\"")
+            // Existence is the tracer's (checked by Vitest); kb-pack refuses malformed ids.
+            rewrite(&t.join("topic.toml"), "\"few-unique\"", "\"Zig Zag\"")
         });
         assert!(has(&e, "presets"), "{e:?}");
         let e = broken("id", |t| {

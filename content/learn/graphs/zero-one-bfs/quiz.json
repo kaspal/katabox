@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph. Node 0 has just been processed. What does the deque hold, front first?",
+    "prompt_es": "Grafo por defecto. Se acaba de procesar el nodo 0. ¿Qué hay en la bicola, del frente al final?",
+    "options": [
+      { "en": "1, 3", "es": "1, 3" },
+      { "en": "3, 1", "es": "3, 1" },
+      { "en": "3 only", "es": "Solo 3" }
+    ],
+    "answer": 1,
+    "explain_en": "The edge 0 – 1 costs 1, so 1 goes to the back. The edge 0 – 3 is free, so 3 goes to the front, ahead of 1.",
+    "explain_es": "La arista 0 – 1 cuesta 1, así que 1 va al final. La arista 0 – 3 es gratuita, así que 3 va al frente, por delante de 1."
+  },
+  {
+    "prompt_en": "What distance does node 5 get?",
+    "prompt_es": "¿Qué distancia recibe el nodo 5?",
+    "options": [
+      { "en": "1, along 0 → 3 → 4 → 5", "es": "1, por 0 → 3 → 4 → 5" },
+      { "en": "3, the fewest edges from 0", "es": "3, el menor número de aristas desde 0" },
+      { "en": "2, along 0 → 1 → 2 → 5", "es": "2, por 0 → 1 → 2 → 5" }
+    ],
+    "answer": 0,
+    "explain_en": "0 – 3 and 3 – 4 are free, and 4 – 5 costs 1. The route 0 → 1 → 2 → 5 would cost 3.",
+    "explain_es": "0 – 3 y 3 – 4 son gratuitas, y 4 – 5 cuesta 1. La ruta 0 → 1 → 2 → 5 costaría 3."
+  },
+  {
+    "prompt_en": "Why is a node reached by a 0-edge put at the front of the deque?",
+    "prompt_es": "¿Por qué un nodo alcanzado por una arista 0 se pone al frente de la bicola?",
+    "options": [
+      { "en": "Because it has fewer neighbours", "es": "Porque tiene menos vecinos" },
+      { "en": "To visit nodes in number order", "es": "Para visitar los nodos en orden de número" },
+      { "en": "It is as close as the current node, so it must be handled before anything farther away", "es": "Está igual de cerca que el nodo actual, así que debe tratarse antes que cualquier cosa más lejana" }
+    ],
+    "answer": 2,
+    "explain_en": "The deque always holds distance d at the front and d + 1 behind. A 0-edge gives distance d, so it belongs at the front; a 1-edge gives d + 1, so it goes to the back.",
+    "explain_es": "La bicola siempre tiene la distancia d al frente y d + 1 detrás. Una arista 0 da distancia d, así que va al frente; una arista 1 da d + 1, así que va al final."
+  }
+]

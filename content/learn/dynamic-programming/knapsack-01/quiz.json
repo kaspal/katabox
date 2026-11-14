@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input, capacity 10. Row 3 handles item 2 (weight 6, value 12). The cell above best[3][10] holds 17, and best[2][4] = 7. What is best[3][10]?",
+    "prompt_es": "Entrada por defecto, capacidad 10. La fila 3 trata el objeto 2 (peso 6, valor 12). La celda de arriba de best[3][10] vale 17, y best[2][4] = 7. ¿Cuánto vale best[3][10]?",
+    "options": [
+      { "en": "17: the item is left out", "es": "17: el objeto se queda fuera" },
+      { "en": "29: 17 + 12", "es": "29: 17 + 12" },
+      { "en": "19: 7 + 12 beats 17", "es": "19: 7 + 12 supera a 17" }
+    ],
+    "answer": 2,
+    "explain_en": "Packing item 2 leaves room 10 - 6 = 4 for the earlier items, worth best[2][4] = 7. Adding 12 to 17 would need capacity 15.",
+    "explain_es": "Meter el objeto 2 deja un hueco de 10 - 6 = 4 para los objetos anteriores, que vale best[2][4] = 7. Sumar 12 a 17 necesitaría capacidad 15."
+  },
+  {
+    "prompt_en": "What is the output for the default input?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto?",
+    "options": [
+      { "en": "[19, 1, 2]", "es": "[19, 1, 2]" },
+      { "en": "[22, 0, 2]", "es": "[22, 0, 2]" },
+      { "en": "[17, 0, 1]", "es": "[17, 0, 1]" }
+    ],
+    "answer": 0,
+    "explain_en": "Items 1 and 2 weigh 4 + 6 = 10 and are worth 7 + 12 = 19. Items 0 and 2 would weigh 11, too much; items 0 and 1 give only 17.",
+    "explain_es": "Los objetos 1 y 2 pesan 4 + 6 = 10 y valen 7 + 12 = 19. Los objetos 0 y 2 pesarían 11, demasiado; los objetos 0 y 1 dan solo 17."
+  },
+  {
+    "prompt_en": "With a single row instead of a table, why must the capacities be visited from right to left?",
+    "prompt_es": "Con una sola fila en vez de una tabla, ¿por qué hay que recorrer las capacidades de derecha a izquierda?",
+    "options": [
+      { "en": "It is faster", "es": "Es más rápido" },
+      { "en": "Left to right reads cells already updated for the same item, which can pack it twice", "es": "De izquierda a derecha se leen celdas ya actualizadas para el mismo objeto, lo que puede meterlo dos veces" },
+      { "en": "Left to right never packs heavy items", "es": "De izquierda a derecha nunca se meten los objetos pesados" }
+    ],
+    "answer": 1,
+    "explain_en": "The cell at c - w must still hold the previous item's value. Right to left keeps it untouched; left to right turns the problem into the unbounded knapsack.",
+    "explain_es": "La celda c - w debe seguir teniendo el valor del objeto anterior. De derecha a izquierda sigue intacta; de izquierda a derecha el problema se convierte en la mochila sin límite."
+  }
+]

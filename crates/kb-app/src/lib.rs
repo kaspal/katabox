@@ -52,8 +52,8 @@ use std::sync::{Arc, RwLock};
 use kb_core::{JudgeEvent, Language, Report, TestCase, TestKind, Verdict};
 use kb_judge::{JudgeEnv, Problem};
 use kb_store::{
-    ContentMeta, Draft, LearnSubject, LearnTopic, LearnTopicSummary, ProblemFilter, ProblemSummary,
-    ProblemView, Snapshot, Store, SubmissionSummary, UiLang,
+    ContentMeta, Draft, LearnPath, LearnSubject, LearnTopic, LearnTopicSummary, ProblemFilter,
+    ProblemSummary, ProblemView, Snapshot, Store, SubmissionSummary, UiLang,
 };
 use serde::Serialize;
 use serde_json::{Map, Value};
@@ -457,6 +457,11 @@ impl App {
     /// Every Learn subject with its topics (ADR 0029).
     pub async fn learn_catalog(&self, lang: UiLang) -> Result<Vec<LearnSubject>> {
         Ok(self.store.content.learn_catalog(lang).await?)
+    }
+
+    /// The learning paths on Learn home (Phase 6).
+    pub async fn learn_paths(&self, lang: UiLang) -> Result<Vec<LearnPath>> {
+        Ok(self.store.content.learn_paths(lang).await?)
     }
 
     /// A Learn topic page with its linked problems (status included).

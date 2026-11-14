@@ -171,11 +171,14 @@ function TopicView({
               {t(`learn.tags.${tag}` as "learn.title")}
             </li>
           ))}
-          <li className="rounded-full bg-muted px-2 py-1 font-mono">
-            {topic.subject === "sorting"
-              ? t("learn.topic.average", { cost: topic.complexity.average })
-              : t("learn.topic.cost", { cost: topic.complexity.average })}
-          </li>
+          {/* A topic about cost itself (Big-O growth) writes "—": no chip. */}
+          {topic.complexity.average !== "—" && (
+            <li className="rounded-full bg-muted px-2 py-1 font-mono">
+              {topic.subject === "sorting"
+                ? t("learn.topic.average", { cost: topic.complexity.average })
+                : t("learn.topic.cost", { cost: topic.complexity.average })}
+            </li>
+          )}
           {/* Stability and in-place are sorting traits; other subjects leave them out. */}
           {topic.subject === "sorting" && (
             <>
@@ -224,9 +227,10 @@ function TopicView({
             <TooltipContent id="compare-none">{t("learn.compare.none")}</TooltipContent>
           </Tooltip>
         )}
-        <Button onClick={() => setTab("practice")} disabled={problems.length === 0}>
-          {t("learn.topic.practice", { count: problems.length })}
-        </Button>
+        {/* No linked problems: no button (the Practice tab still has the quiz). */}
+        {problems.length > 0 && (
+          <Button onClick={() => setTab("practice")}>{t("learn.topic.practice", { count: problems.length })}</Button>
+        )}
       </div>
     </div>
   );

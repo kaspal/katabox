@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph. The edges 1 2 2 and 5 0 2 both weigh 2. Which one is considered first?",
+    "prompt_es": "Grafo por defecto. Las aristas 1 2 2 y 5 0 2 pesan las dos 2. ¿Cuál se considera primero?",
+    "options": [
+      { "en": "5 0 2, because it appears later in the input", "es": "5 0 2, porque aparece más tarde en la entrada" },
+      { "en": "1 2 2, because the sort key is (weight, u, v) and 1 < 5", "es": "1 2 2, porque la clave de ordenación es (peso, u, v) y 1 < 5" },
+      { "en": "Whichever touches node 0", "es": "La que toca el nodo 0" }
+    ],
+    "answer": 1,
+    "explain_en": "With equal weights, the first endpoint decides: 1 comes before 5. Both are taken anyway, since each joins two separate pieces.",
+    "explain_es": "Con pesos iguales decide el primer extremo: 1 va antes que 5. De todos modos se toman las dos, porque cada una une dos trozos separados."
+  },
+  {
+    "prompt_en": "When the edge 2 3 5 is reached, why is it skipped?",
+    "prompt_es": "Cuando se llega a la arista 2 3 5, ¿por qué se salta?",
+    "options": [
+      { "en": "Its weight is above the average", "es": "Su peso está por encima de la media" },
+      { "en": "Node 2 already has two tree edges", "es": "El nodo 2 ya tiene dos aristas del árbol" },
+      { "en": "2 and 3 already have the same root, so it would close a cycle", "es": "2 y 3 ya tienen la misma raíz, así que cerraría un ciclo" }
+    ],
+    "answer": 2,
+    "explain_en": "After 3 4 1, 1 2 2, 5 0 2, 4 5 3 and 0 1 4 every node is in one piece, so this edge and the two after it are all skipped.",
+    "explain_es": "Tras 3 4 1, 1 2 2, 5 0 2, 4 5 3 y 0 1 4 todos los nodos están en un mismo trozo, así que esta arista y las dos siguientes se saltan."
+  },
+  {
+    "prompt_en": "What is the total weight of the tree for the default graph?",
+    "prompt_es": "¿Cuál es el peso total del árbol para el grafo por defecto?",
+    "options": [
+      { "en": "12", "es": "12" },
+      { "en": "17", "es": "17" },
+      { "en": "31", "es": "31" }
+    ],
+    "answer": 0,
+    "explain_en": "1 + 2 + 2 + 3 + 4 = 12: the five cheapest edges happen to form no cycle. Prim finds the same total.",
+    "explain_es": "1 + 2 + 2 + 3 + 4 = 12: las cinco aristas más baratas no forman ningún ciclo. Prim encuentra el mismo total."
+  }
+]

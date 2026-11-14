@@ -49,8 +49,8 @@ export function useTrace(def: TracerDef, initial: number[]) {
       setSeed(s);
       return apply(presetInput(def, id, (Date.now() % 100_000) + s, initial.length));
     },
-    applyCustom: (text: string, target?: string) => {
-      const r = parseCustom(def, text, target);
+    applyCustom: (texts: readonly string[]) => {
+      const r = parseCustom(def, texts);
       if ("error" in r) {
         setError(r.error);
         return false;

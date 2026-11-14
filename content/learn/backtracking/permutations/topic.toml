@@ -1,0 +1,28 @@
+id = "permutations"
+subject = "backtracking"
+order = 2
+title = "Permutations"
+title_es = "Permutaciones"
+tags = ["backtracking", "recursion"]
+problems = []
+presets = ["random", "reversed", "nearly-sorted"]
+default = [1, 2, 3]
+
+[complexity]
+best = "O(n · n!)"
+average = "O(n · n!)"
+worst = "O(n · n!)"
+space = "O(n) depth"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 4
+min = 1
+max = 9
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = permutations(a)"
+typescript = "a = permutations(a)"

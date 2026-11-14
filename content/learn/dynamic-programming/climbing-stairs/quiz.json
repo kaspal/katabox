@@ -1,0 +1,26 @@
+[
+  {
+    "prompt_en": "Default input, n = 6. The table so far is [1, 1, 2, 3]. What goes into ways[4]?",
+    "prompt_es": "Entrada por defecto, n = 6. La tabla va por [1, 1, 2, 3]. ¿Qué va en ways[4]?",
+    "options": [
+      { "en": "4", "es": "4" },
+      { "en": "6", "es": "6" },
+      { "en": "5", "es": "5" }
+    ],
+    "answer": 2,
+    "explain_en": "The cell first copies ways[3] = 3 (last move of 1 step), then adds ways[2] = 2 (last move of 2 steps): 3 + 2 = 5.",
+    "explain_es": "La celda copia primero ways[3] = 3 (último movimiento de 1 escalón) y después suma ways[2] = 2 (último movimiento de 2): 3 + 2 = 5."
+  },
+  {
+    "prompt_en": "Why is ways[0] set to 1 and not 0?",
+    "prompt_es": "¿Por qué ways[0] vale 1 y no 0?",
+    "options": [
+      { "en": "Standing at the bottom without moving is one way, and it makes ways[2] = 2 come out right", "es": "Estar abajo sin moverse es una forma, y hace que ways[2] = 2 salga bien" },
+      { "en": "To avoid dividing by zero", "es": "Para no dividir entre cero" },
+      { "en": "It does not matter; 0 gives the same table", "es": "Da igual; con 0 sale la misma tabla" }
+    ],
+    "answer": 0,
+    "explain_en": "With 0 every cell would only add zeros. With 1, the 2-step move straight from the bottom is counted once.",
+    "explain_es": "Con 0 cada celda solo sumaría ceros. Con 1, el movimiento de 2 directamente desde abajo se cuenta una vez."
+  }
+]

@@ -1,0 +1,81 @@
+# Learning paths (ADR 0029, Phase 6): ordered topic lists shown on Learn home, with
+# progress (topics viewed to the end). Each topic id must exist; kb-pack checks it.
+
+[[path]]
+id = "start-here"
+title = "Start here"
+title_es = "Empieza aquí"
+blurb = "The ideas everything else builds on: cost, recursion, searching, the first data structures."
+blurb_es = "Las ideas en las que se apoya todo lo demás: coste, recursión, búsqueda y las primeras estructuras de datos."
+topics = [
+    "big-o-growth",
+    "recursion-call-stack",
+    "linear-search",
+    "binary-search",
+    "insertion-sort",
+    "merge-sort",
+    "stack",
+    "queue-ring-buffer",
+    "separate-chaining",
+    "tree-traversals",
+    "bfs",
+    "fibonacci-memo-table",
+]
+
+[[path]]
+id = "interview-essentials"
+title = "Interview essentials"
+title_es = "Lo esencial para entrevistas"
+blurb = "The patterns that come up again and again in coding interviews."
+blurb_es = "Los patrones que aparecen una y otra vez en las entrevistas de programación."
+topics = [
+    "two-pointers",
+    "sliding-window",
+    "prefix-sums",
+    "binary-search-answer",
+    "monotonic-stack",
+    "quick-sort",
+    "reverse-list",
+    "lru-cache",
+    "binary-heap",
+    "bst-operations",
+    "trie",
+    "union-find",
+    "dfs",
+    "topological-sort",
+    "dijkstra",
+    "subsets",
+    "coin-change",
+    "knapsack-01",
+    "lis",
+    "merge-intervals",
+]
+
+[[path]]
+id = "graph-master"
+title = "Graph master"
+title_es = "Maestría en grafos"
+blurb = "From storing a graph to shortest paths, spanning trees, components and flows."
+blurb_es = "Desde guardar un grafo hasta caminos mínimos, árboles de expansión, componentes y flujos."
+topics = [
+    "graph-representations",
+    "bfs",
+    "dfs",
+    "connected-components",
+    "cycle-detection",
+    "topological-sort",
+    "bipartite-check",
+    "dijkstra",
+    "zero-one-bfs",
+    "bellman-ford",
+    "floyd-warshall",
+    "union-find",
+    "kruskal",
+    "prim",
+    "scc",
+    "bridges-articulation",
+    "max-flow",
+    "eulerian-path",
+    "grid-bfs",
+    "a-star",
+]

@@ -1,0 +1,28 @@
+id = "zero-one-bfs"
+subject = "graphs"
+order = 11
+title = "0-1 BFS"
+title_es = "BFS 0-1"
+tags = ["graph", "shortest-path", "bfs"]
+problems = []
+presets = ["free-shortcut", "random", "all-free"]
+default = [6, 0, 0, 1, 1, 1, 2, 1, 2, 5, 1, 0, 3, 0, 3, 4, 0, 4, 5, 1, 3, 1, 1]
+
+[complexity]
+best = "O(n + m)"
+average = "O(n + m)"
+worst = "O(n + m)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 62
+min = 0
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = zero_one_bfs(*kb_graph(a), 0)"
+typescript = "a = zeroOneBfs(...kbGraph(a), 0)"

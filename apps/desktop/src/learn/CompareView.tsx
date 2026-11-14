@@ -85,7 +85,10 @@ export function CompareView({
           </div>
         ))}
       </div>
-      <PlayerControls player={player} total={total} />
+      {/* Sticky, so the shared player stays in view however tall the two panes are. */}
+      <div className="sticky bottom-0 z-10 -mx-5 -mb-5 rounded-b-2xl border-t bg-card/95 px-5 pb-5 pt-3 backdrop-blur" data-testid="compare-controls">
+        <PlayerControls player={player} total={total} />
+      </div>
       <InputRow
         def={a}
         input={input}

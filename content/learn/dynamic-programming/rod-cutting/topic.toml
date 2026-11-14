@@ -1,0 +1,28 @@
+id = "rod-cutting"
+subject = "dynamic-programming"
+order = 7
+title = "Rod cutting (unbounded knapsack)"
+title_es = "Corte de barras (mochila sin límite)"
+tags = ["dynamic-programming", "knapsack"]
+problems = []
+presets = ["cut-pays", "random", "whole-rod"]
+default = [2, 5, 7, 8, 12, 13]
+
+[complexity]
+best = "O(n²)"
+average = "O(n²)"
+worst = "O(n²)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 10
+min = 1
+max = 30
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = rod_cutting(a)"
+typescript = "a = rodCutting(a)"

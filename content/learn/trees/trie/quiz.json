@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "car is already in the trie. How many new nodes does inserting cart create?",
+    "prompt_es": "car ya está en el trie. ¿Cuántos nodos nuevos crea insertar cart?",
+    "options": [
+      { "en": "4, one per letter", "es": "4, uno por letra" },
+      { "en": "1, for the t", "es": "1, el de la t" },
+      { "en": "0: cart shares car's node", "es": "0: cart comparte el nodo de car" }
+    ],
+    "answer": 1,
+    "explain_en": "The edges c, a and r already exist and are only followed (their counts go up). Only t needs a new node, which is marked as the end of cart.",
+    "explain_es": "Las aristas c, a y r ya existen y solo se siguen (sus contadores suben). Solo la t necesita un nodo nuevo, que se marca como final de cart."
+  },
+  {
+    "prompt_en": "After car, cart, care, cat and dog, what is the count on the node for \"car\"?",
+    "prompt_es": "Tras car, cart, care, cat y dog, ¿cuál es el contador del nodo de \"car\"?",
+    "options": [
+      { "en": "1: only car ends there", "es": "1: solo car termina ahí" },
+      { "en": "4", "es": "4" },
+      { "en": "3: car, cart and care pass through it", "es": "3: car, cart y care pasan por él" }
+    ],
+    "answer": 2,
+    "explain_en": "The count is the number of words that pass through the node. cat leaves the path at \"ca\", and dog never enters it. The end mark, not the count, says that car itself ends here.",
+    "explain_es": "El contador es el número de palabras que pasan por el nodo. cat se separa en \"ca\" y dog ni entra. Es la marca de fin, no el contador, la que dice que car termina aquí."
+  },
+  {
+    "prompt_en": "Then the prefix \"ca\" is counted. What is the output?",
+    "prompt_es": "Después se cuenta el prefijo \"ca\". ¿Cuál es la salida?",
+    "options": [
+      { "en": "[4, 0]", "es": "[4, 0]" },
+      { "en": "[4, 1]", "es": "[4, 1]" },
+      { "en": "[3, 0]", "es": "[3, 0]" }
+    ],
+    "answer": 0,
+    "explain_en": "car, cart, care and cat all start with \"ca\", so its node counts 4. No inserted word is exactly \"ca\", so the node has no end mark.",
+    "explain_es": "car, cart, care y cat empiezan por \"ca\", así que su nodo cuenta 4. Ninguna palabra insertada es exactamente \"ca\", así que el nodo no tiene marca de fin."
+  }
+]

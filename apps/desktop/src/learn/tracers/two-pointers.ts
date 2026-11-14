@@ -3,7 +3,7 @@
 // can only grow by moving i right, a sum too big only shrink by moving j left, so every
 // step rules out one value for good.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Pointer, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"two-pointers">;
 const KEYS = [
@@ -14,7 +14,7 @@ const KEYS = [
   "two-pointers.move_j",
   "two-pointers.missing",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["sum", "found", "move", "missing"] as const;
 export const PAIR_INPUT = { min_len: 3, max_len: 17, min: 1, max: 60 };

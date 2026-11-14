@@ -5,7 +5,7 @@
 // before: that stability is why the last pass leaves everything sorted.
 import { BucketBoard, fixBucketDepth } from "../engine/buckets";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"radix-sort">;
 const KEYS = [
@@ -15,7 +15,7 @@ const KEYS = [
   "radix-sort.collect",
   "radix-sort.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["pass", "distribute", "collect"] as const;
 

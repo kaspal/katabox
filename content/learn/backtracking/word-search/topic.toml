@@ -1,0 +1,28 @@
+id = "word-search"
+subject = "backtracking"
+order = 6
+title = "Word search"
+title_es = "Sopa de letras"
+tags = ["backtracking", "grid"]
+problems = ["word-grid-hunt"]
+presets = ["winding-word", "random", "false-start"]
+default = [4, 4, 22, 16, 25, 10, 0, 17, 24, 12, 19, 4, 11, 18, 1, 13, 14, 22, -1, 22, 0, 19, 4, 17]
+
+[complexity]
+best = "O(R · C)"
+average = "O(R · C · 3ᴸ)"
+worst = "O(R · C · 3ᴸ)"
+space = "O(L) path"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 36
+min = -1
+max = 25
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = find_word(a[0], a[1], *kb_text(a[2:]))"
+typescript = "a = findWord(a[0], a[1], ...(kbText(a.slice(2)) as [string, string]))"

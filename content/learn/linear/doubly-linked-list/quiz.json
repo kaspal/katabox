@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "back 10, back 20, front 5, back 30. Then pop-front and pop-back. What do they return?",
+    "prompt_es": "back 10, back 20, front 5, back 30. Luego pop-front y pop-back. ¿Qué devuelven?",
+    "options": [
+      { "en": "30, then 5", "es": "30 y luego 5" },
+      { "en": "10, then 20", "es": "10 y luego 20" },
+      { "en": "5, then 30", "es": "5 y luego 30" }
+    ],
+    "answer": 2,
+    "explain_en": "The list is 5 ⇄ 10 ⇄ 20 ⇄ 30. pop-front takes the head, 5, and pop-back takes the tail, 30. 10 ⇄ 20 remain.",
+    "explain_es": "La lista es 5 ⇄ 10 ⇄ 20 ⇄ 30. pop-front saca la cabeza, 5, y pop-back saca el final, 30. Quedan 10 ⇄ 20."
+  },
+  {
+    "prompt_en": "Then front 1 leaves 1 ⇄ 10 ⇄ 20. The output is the pops, a 0, the list forwards, a 0, the list backwards. Which row is it?",
+    "prompt_es": "Después front 1 deja 1 ⇄ 10 ⇄ 20. La salida son los pops, un 0, la lista hacia delante, un 0 y la lista hacia atrás. ¿Qué fila es?",
+    "options": [
+      { "en": "[5, 30, 0, 1, 10, 20, 0, 20, 10, 1]", "es": "[5, 30, 0, 1, 10, 20, 0, 20, 10, 1]" },
+      { "en": "[5, 30, 0, 1, 10, 20, 0, 1, 10, 20]", "es": "[5, 30, 0, 1, 10, 20, 0, 1, 10, 20]" },
+      { "en": "[5, 30, 1, 10, 20]", "es": "[5, 30, 1, 10, 20]" }
+    ],
+    "answer": 0,
+    "explain_en": "Reading backwards starts at the tail, 20, and follows prev. If a prev link were wrong, the two halves would not mirror each other.",
+    "explain_es": "Leer hacia atrás empieza en el final, 20, y sigue prev. Si algún enlace prev estuviera mal, las dos mitades no serían una el espejo de la otra."
+  },
+  {
+    "prompt_en": "Why is pop-back O(1) here but O(n) in a singly linked list, even one that keeps a tail pointer?",
+    "prompt_es": "¿Por qué pop-back es O(1) aquí pero O(n) en una lista simplemente enlazada, aunque guarde un puntero al final?",
+    "options": [
+      { "en": "Doubly linked nodes are stored next to each other", "es": "Los nodos doblemente enlazados están juntos en memoria" },
+      { "en": "tail.prev gives the new tail; a singly linked list must walk to find it", "es": "tail.prev da el nuevo final; una lista simple tiene que recorrerla para encontrarlo" },
+      { "en": "It is O(n) in both", "es": "Es O(n) en las dos" }
+    ],
+    "answer": 1,
+    "explain_en": "After removing the tail you need the node before it. Only a back link gives it without starting from the head.",
+    "explain_es": "Tras quitar el final necesitas el nodo anterior. Solo un enlace hacia atrás lo da sin empezar desde la cabeza."
+  }
+]

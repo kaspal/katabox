@@ -1,0 +1,28 @@
+id = "segment-intersection"
+subject = "math-geometry"
+order = 7
+title = "Segment intersection"
+title_es = "Intersección de segmentos"
+tags = ["geometry", "math"]
+problems = ["crossing-paths"]
+presets = ["crossing", "random", "end-on-the-line", "side-by-side"]
+default = [2, 3, 15, 14, 3, 16, 17, 2]
+
+[complexity]
+best = "O(1)"
+average = "O(1)"
+worst = "O(1)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 8
+max_len = 8
+min = 0
+max = 20
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = intersects(*kb_chunks(a, 2))"
+typescript = "a = intersects(...(kbChunks(a, 2) as [number[], number[], number[], number[]]))"

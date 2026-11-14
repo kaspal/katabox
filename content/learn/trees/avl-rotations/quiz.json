@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "After 10, 20, 30, 40 the tree is 20 with children 10 and 30, and 40 below 30. Insert 50: going back up, which node is the first with balance −2?",
+    "prompt_es": "Tras 10, 20, 30, 40 el árbol es 20 con hijos 10 y 30, y 40 bajo 30. Inserta 50: a la vuelta, ¿cuál es el primer nodo con equilibrio −2?",
+    "options": [
+      { "en": "40", "es": "40" },
+      { "en": "20, the root", "es": "20, la raíz" },
+      { "en": "30", "es": "30" }
+    ],
+    "answer": 2,
+    "explain_en": "40 gets balance −1 (no left child, right height 1). 30 gets −2 (left height 0, right height 2). It is right-right, so one left rotation puts 40 in its place, with children 30 and 50.",
+    "explain_es": "40 queda con equilibrio −1 (sin hijo izquierdo, altura derecha 1). 30 queda con −2 (altura izquierda 0, derecha 2). Es derecha-derecha, así que una rotación a la izquierda pone 40 en su lugar, con hijos 30 y 50."
+  },
+  {
+    "prompt_en": "Then 25 is inserted, and the root 20 ends with balance −2. Which rotations fix it?",
+    "prompt_es": "Después se inserta 25, y la raíz 20 acaba con equilibrio −2. ¿Qué rotaciones lo arreglan?",
+    "options": [
+      { "en": "One left rotation at 20", "es": "Una rotación a la izquierda en 20" },
+      { "en": "A right rotation at 40, then a left rotation at 20", "es": "Una rotación a la derecha en 40 y luego una a la izquierda en 20" },
+      { "en": "A left rotation at 40, then a right rotation at 20", "es": "Una rotación a la izquierda en 40 y luego una a la derecha en 20" }
+    ],
+    "answer": 1,
+    "explain_en": "25 went right of 20 but left of 40: a right-left zigzag. Rotating 40 right lifts 30 and straightens it; rotating 20 left then makes 30 the root.",
+    "explain_es": "25 fue a la derecha de 20 pero a la izquierda de 40: un zigzag derecha-izquierda. Rotar 40 a la derecha sube 30 y lo endereza; después, rotar 20 a la izquierda deja 30 como raíz."
+  },
+  {
+    "prompt_en": "What is the whole output row (the final tree in pre-order)?",
+    "prompt_es": "¿Cuál es la fila de salida completa (el árbol final en preorden)?",
+    "options": [
+      { "en": "[30, 20, 10, 25, 40, 50]", "es": "[30, 20, 10, 25, 40, 50]" },
+      { "en": "[20, 10, 40, 30, 25, 50]", "es": "[20, 10, 40, 30, 25, 50]" },
+      { "en": "[30, 20, 10, 40, 25, 50]", "es": "[30, 20, 10, 40, 25, 50]" }
+    ],
+    "answer": 0,
+    "explain_en": "30 is the root. Its left child 20 has children 10 and 25 (25 moved across in the left rotation), and its right child 40 keeps 50 on its right.",
+    "explain_es": "30 es la raíz. Su hijo izquierdo 20 tiene hijos 10 y 25 (25 se cruzó en la rotación a la izquierda), y su hijo derecho 40 conserva 50 a la derecha."
+  }
+]

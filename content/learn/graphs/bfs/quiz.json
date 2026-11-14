@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "On the default 3 × 3 grid, BFS has just visited 0 and then 1. What does the queue hold, front first?",
+    "prompt_es": "En la cuadrícula de 3 × 3 por defecto, BFS acaba de visitar 0 y luego 1. ¿Qué hay en la cola, del frente al final?",
+    "options": [
+      { "en": "2, 4, 3", "es": "2, 4, 3" },
+      { "en": "3, 2, 4", "es": "3, 2, 4" },
+      { "en": "3, 4", "es": "3, 4" }
+    ],
+    "answer": 1,
+    "explain_en": "Visiting 0 queued 1 and 3. Taking 1 leaves 3 at the front, and 1's unseen neighbours, 2 and 4, join at the back.",
+    "explain_es": "Visitar 0 encoló 1 y 3. Al sacar 1, 3 queda al frente, y los vecinos de 1 aún no vistos, 2 y 4, entran por el final."
+  },
+  {
+    "prompt_en": "Node 4 is a neighbour of both 1 and 3. Why is it queued only once?",
+    "prompt_es": "El nodo 4 es vecino de 1 y de 3. ¿Por qué entra en la cola una sola vez?",
+    "options": [
+      { "en": "Its distance is set when it is discovered from 1, so 3 sees it as already seen", "es": "Su distancia se fija al descubrirlo desde 1, así que 3 lo ve como ya visto" },
+      { "en": "BFS skips nodes with more than two neighbours", "es": "BFS se salta los nodos con más de dos vecinos" },
+      { "en": "3 is visited before 1", "es": "3 se visita antes que 1" }
+    ],
+    "answer": 0,
+    "explain_en": "1 leaves the queue before 3 and gives 4 the distance 2. When 3 is visited, 4's distance is no longer -1, so it is skipped.",
+    "explain_es": "1 sale de la cola antes que 3 y da a 4 la distancia 2. Cuando se visita 3, la distancia de 4 ya no es -1, así que se salta."
+  },
+  {
+    "prompt_en": "What distance does BFS give node 8, the bottom-right corner?",
+    "prompt_es": "¿Qué distancia da BFS al nodo 8, la esquina inferior derecha?",
+    "options": [
+      { "en": "2", "es": "2" },
+      { "en": "8", "es": "8" },
+      { "en": "4", "es": "4" }
+    ],
+    "answer": 2,
+    "explain_en": "Any route from the top-left to the bottom-right corner needs two steps right and two steps down: 4 edges. BFS discovers 8 from 5, whose distance is 3.",
+    "explain_es": "Cualquier camino de la esquina superior izquierda a la inferior derecha necesita dos pasos a la derecha y dos hacia abajo: 4 aristas. BFS descubre 8 desde 5, cuya distancia es 3."
+  }
+]

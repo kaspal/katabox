@@ -1,0 +1,28 @@
+id = "modular-inverse"
+subject = "math-geometry"
+order = 4
+title = "Modular inverse"
+title_es = "Inverso modular"
+tags = ["math", "modular-arithmetic", "number-theory"]
+problems = []
+presets = ["prime-modulus", "random", "shares-a-factor"]
+default = [17, 101]
+
+[complexity]
+best = "O(1)"
+average = "O(log m)"
+worst = "O(log m)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 2
+min = 1
+max = 999
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = mod_inverse(a[0], a[1])"
+typescript = "a = modInverse(a[0], a[1])"

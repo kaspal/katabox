@@ -63,6 +63,21 @@ describe("Learn navigation and home", () => {
     expect(within(card).getByRole("link", { name: "Resume" })).toHaveAttribute("href", "/learn/sorting/quick-sort");
   });
 
+  it("shows learning paths with progress and a link to the next unviewed topic", async () => {
+    const fake = setFakeApi();
+    await fake.api.setSetting("learn.viewed", ["bubble-sort"]);
+    renderApp("/learn");
+    const paths = await screen.findByTestId("paths");
+    const card = await within(paths).findByText("Start here");
+    const article = card.closest("article")!;
+    expect(within(article).getByText("1 of 3 topics viewed")).toBeInTheDocument();
+    expect(within(article).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
+    expect(within(article).getByRole("link", { name: "Next: Insertion Sort" })).toHaveAttribute(
+      "href",
+      "/learn/sorting/insertion-sort",
+    );
+  });
+
   it("lists topics in the command palette", async () => {
     const { user } = renderApp("/");
     await screen.findByRole("navigation", { name: "Main navigation" });
@@ -222,6 +237,13 @@ describe("Learn topic page", () => {
       "/problems/two-sum",
       "/problems/valid-brackets",
     ]);
+  });
+
+  it("hides the Practice button when a topic has no linked problems, but keeps the quiz tab", async () => {
+    renderApp("/learn/sorting/insertion-sort");
+    await screen.findByRole("heading", { level: 1, name: "Insertion Sort" });
+    expect(screen.queryByRole("button", { name: /^Practice:/ })).toBeNull();
+    expect(screen.getByRole("tab", { name: "Practice" })).toBeInTheDocument();
   });
 
   it("compares two sorts side by side on one input, with one player, and never counts as viewing", async () => {

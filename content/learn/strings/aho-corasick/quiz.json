@@ -1,0 +1,26 @@
+[
+  {
+    "prompt_en": "Default input: patterns ab, bc, abc and cab. Where does the failure link of the node for abc point?",
+    "prompt_es": "Entrada por defecto: patrones ab, bc, abc y cab. ¿A dónde apunta el enlace de fallo del nodo de abc?",
+    "options": [
+      { "en": "To bc, the longest proper suffix of abc that is in the trie", "es": "A bc, el sufijo propio más largo de abc que está en el trie" },
+      { "en": "To ab, its parent", "es": "A ab, su padre" },
+      { "en": "To the root, because abc is a whole pattern", "es": "A la raíz, porque abc es un patrón completo" }
+    ],
+    "answer": 0,
+    "explain_en": "The proper suffixes of abc are bc and c; bc is a node of the trie, so the link goes there, and the node's output becomes abc and bc.",
+    "explain_es": "Los sufijos propios de abc son bc y c; bc es un nodo del trie, así que el enlace va ahí, y la salida del nodo pasa a ser abc y bc."
+  },
+  {
+    "prompt_en": "In the text abcabcab, the pattern ab is counted 3 times, although the scan reaches the node for ab itself only once. Why?",
+    "prompt_es": "En el texto abcabcab, el patrón ab se cuenta 3 veces, aunque el recorrido solo llega una vez al nodo de ab. ¿Por qué?",
+    "options": [
+      { "en": "The scan reads the text three times", "es": "El recorrido lee el texto tres veces" },
+      { "en": "The node for cab links to ab and inherits its output, so ending at cab counts ab too", "es": "El nodo de cab enlaza con ab y hereda su salida, así que terminar en cab también cuenta ab" },
+      { "en": "Each failure link adds one to every pattern", "es": "Cada enlace de fallo suma uno a todos los patrones" }
+    ],
+    "answer": 1,
+    "explain_en": "The scan ends at ab once and at cab twice. The merged output of cab is cab and ab, so ab is counted 1 + 2 = 3 times.",
+    "explain_es": "El recorrido termina una vez en ab y dos veces en cab. La salida unida de cab es cab y ab, así que ab se cuenta 1 + 2 = 3 veces."
+  }
+]

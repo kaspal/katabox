@@ -2,7 +2,7 @@
 // content/learn/sorting/quick-sort/sample.{py,ts} line for line (`@step` markers).
 import { Recorder } from "../engine/recorder";
 import { SORT_INPUT } from "../engine/cases";
-import { sortCounters, type NarrationKey, type Pointer, type Step, type TracerDef } from "../engine/types";
+import { type NarrationKey, type NarrationParams, type Pointer, sortCounters, type Step, type TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"quick-sort">;
 const KEYS = [
@@ -16,7 +16,7 @@ const KEYS = [
   "quick-sort.place",
   "quick-sort.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["base", "pivot", "compare", "swap", "place"] as const;
 

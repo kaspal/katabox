@@ -1,0 +1,28 @@
+id = "binary-heap"
+subject = "trees"
+order = 4
+title = "Binary heap and priority queue"
+title_es = "Montículo binario y cola de prioridad"
+tags = ["heap", "binary-tree"]
+problems = ["top-scores", "workshop-lathes", "nearest-stalls"]
+presets = ["heap-sort-order", "random", "rising-pushes"]
+default = [1, 42, 1, 17, 1, 8, 1, 23, 1, 4, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0]
+
+[complexity]
+best = "O(1) peek"
+average = "O(log n) push and pop"
+worst = "O(log n)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 32
+min = 0
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(kb_ops(a, [\"push\", \"pop\"], 1))"
+typescript = "a = run(kbOps(a, [\"push\", \"pop\"], 1))"

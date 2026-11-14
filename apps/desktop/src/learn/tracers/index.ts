@@ -1,6 +1,93 @@
 // Topic id → tracer (ADR 0029). kb-pack checks every topic in content/learn has a file
 // here; Vitest checks the registry matches the files.
 import type { TracerDef } from "../engine/types";
+import { separateChaining } from "./separate-chaining";
+import { openAddressing } from "./open-addressing";
+import { bloomFilter } from "./bloom-filter";
+import { rollingHash } from "./rolling-hash";
+import { treeTraversals } from "./tree-traversals";
+import { levelOrder } from "./level-order";
+import { bstOperations } from "./bst-operations";
+import { binaryHeap } from "./binary-heap";
+import { trie } from "./trie";
+import { unionFind } from "./union-find";
+import { treeDiameter } from "./tree-diameter";
+import { avlRotations } from "./avl-rotations";
+import { redBlackInsert } from "./red-black-insert";
+import { bTreeInsert } from "./b-tree-insert";
+import { segmentTree } from "./segment-tree";
+import { lazyPropagation } from "./lazy-propagation";
+import { fenwickTree } from "./fenwick-tree";
+import { lcaBinaryLifting } from "./lca-binary-lifting";
+import { graphRepresentations } from "./graph-representations";
+import { bfs } from "./bfs";
+import { dfs } from "./dfs";
+import { cycleDetection } from "./cycle-detection";
+import { topologicalSort } from "./topological-sort";
+import { connectedComponents } from "./connected-components";
+import { bipartiteCheck } from "./bipartite-check";
+import { dijkstra } from "./dijkstra";
+import { bellmanFord } from "./bellman-ford";
+import { floydWarshall } from "./floyd-warshall";
+import { zeroOneBfs } from "./zero-one-bfs";
+import { prim } from "./prim";
+import { kruskal } from "./kruskal";
+import { scc } from "./scc";
+import { bridgesArticulation } from "./bridges-articulation";
+import { maxFlow } from "./max-flow";
+import { eulerianPath } from "./eulerian-path";
+import { gridBfs } from "./grid-bfs";
+import { gridDijkstra } from "./grid-dijkstra";
+import { aStar } from "./a-star";
+import { greedyBestFirst } from "./greedy-best-first";
+import { mazeGeneration } from "./maze-generation";
+import { fibonacciMemoTable } from "./fibonacci-memo-table";
+import { climbingStairs } from "./climbing-stairs";
+import { houseRobber } from "./house-robber";
+import { maximumSubarray } from "./maximum-subarray";
+import { coinChange } from "./coin-change";
+import { knapsack01 } from "./knapsack-01";
+import { rodCutting } from "./rod-cutting";
+import { lis } from "./lis";
+import { lcs } from "./lcs";
+import { editDistance } from "./edit-distance";
+import { gridPaths } from "./grid-paths";
+import { wordBreak } from "./word-break";
+import { matrixChain } from "./matrix-chain";
+import { bitmaskTsp } from "./bitmask-tsp";
+import { activitySelection } from "./activity-selection";
+import { fractionalKnapsack } from "./fractional-knapsack";
+import { huffmanCoding } from "./huffman-coding";
+import { jumpGame } from "./jump-game";
+import { mergeIntervals } from "./merge-intervals";
+import { subsets } from "./subsets";
+import { permutations } from "./permutations";
+import { combinationSum } from "./combination-sum";
+import { nQueens } from "./n-queens";
+import { sudoku } from "./sudoku";
+import { wordSearch } from "./word-search";
+import { kmp } from "./kmp";
+import { zFunction } from "./z-function";
+import { rabinKarp } from "./rabin-karp";
+import { manacher } from "./manacher";
+import { ahoCorasick } from "./aho-corasick";
+import { suffixArray } from "./suffix-array";
+import { euclidGcd } from "./euclid-gcd";
+import { fastPower } from "./fast-power";
+import { modularInverse } from "./modular-inverse";
+import { pascalNcr } from "./pascal-ncr";
+import { sieveEratosthenes } from "./sieve-eratosthenes";
+import { convexHull } from "./convex-hull";
+import { segmentIntersection } from "./segment-intersection";
+import { dynamicArrayOps } from "./dynamic-array-ops";
+import { stack } from "./stack";
+import { queueRingBuffer } from "./queue-ring-buffer";
+import { dequeMonotonicQueue } from "./deque-monotonic-queue";
+import { singlyLinkedList } from "./singly-linked-list";
+import { doublyLinkedList } from "./doubly-linked-list";
+import { reverseList } from "./reverse-list";
+import { floydCycle } from "./floyd-cycle";
+import { lruCache } from "./lru-cache";
 import { bigOGrowth } from "./big-o-growth";
 import { bitManipulation } from "./bit-manipulation";
 import { bubbleSort } from "./bubble-sort";
@@ -57,4 +144,91 @@ export const TRACERS: Record<string, TracerDef> = {
   "two-pointers": twoPointers,
   "sliding-window": slidingWindow,
   "monotonic-stack": monotonicStack,
+  "dynamic-array-ops": dynamicArrayOps,
+  "stack": stack,
+  "queue-ring-buffer": queueRingBuffer,
+  "deque-monotonic-queue": dequeMonotonicQueue,
+  "singly-linked-list": singlyLinkedList,
+  "doubly-linked-list": doublyLinkedList,
+  "reverse-list": reverseList,
+  "floyd-cycle": floydCycle,
+  "lru-cache": lruCache,
+  "separate-chaining": separateChaining,
+  "open-addressing": openAddressing,
+  "bloom-filter": bloomFilter,
+  "rolling-hash": rollingHash,
+  "tree-traversals": treeTraversals,
+  "level-order": levelOrder,
+  "bst-operations": bstOperations,
+  "binary-heap": binaryHeap,
+  "trie": trie,
+  "union-find": unionFind,
+  "tree-diameter": treeDiameter,
+  "avl-rotations": avlRotations,
+  "red-black-insert": redBlackInsert,
+  "b-tree-insert": bTreeInsert,
+  "segment-tree": segmentTree,
+  "lazy-propagation": lazyPropagation,
+  "fenwick-tree": fenwickTree,
+  "lca-binary-lifting": lcaBinaryLifting,
+  "graph-representations": graphRepresentations,
+  bfs,
+  dfs,
+  "cycle-detection": cycleDetection,
+  "topological-sort": topologicalSort,
+  "connected-components": connectedComponents,
+  "bipartite-check": bipartiteCheck,
+  dijkstra,
+  "bellman-ford": bellmanFord,
+  "floyd-warshall": floydWarshall,
+  "zero-one-bfs": zeroOneBfs,
+  prim,
+  kruskal,
+  scc,
+  "bridges-articulation": bridgesArticulation,
+  "max-flow": maxFlow,
+  "eulerian-path": eulerianPath,
+  "grid-bfs": gridBfs,
+  "grid-dijkstra": gridDijkstra,
+  "a-star": aStar,
+  "greedy-best-first": greedyBestFirst,
+  "maze-generation": mazeGeneration,
+  "fibonacci-memo-table": fibonacciMemoTable,
+  "climbing-stairs": climbingStairs,
+  "house-robber": houseRobber,
+  "maximum-subarray": maximumSubarray,
+  "coin-change": coinChange,
+  "knapsack-01": knapsack01,
+  "rod-cutting": rodCutting,
+  lis,
+  lcs,
+  "edit-distance": editDistance,
+  "grid-paths": gridPaths,
+  "word-break": wordBreak,
+  "matrix-chain": matrixChain,
+  "bitmask-tsp": bitmaskTsp,
+  "activity-selection": activitySelection,
+  "fractional-knapsack": fractionalKnapsack,
+  "huffman-coding": huffmanCoding,
+  "jump-game": jumpGame,
+  "merge-intervals": mergeIntervals,
+  subsets,
+  permutations,
+  "combination-sum": combinationSum,
+  "n-queens": nQueens,
+  sudoku,
+  "word-search": wordSearch,
+  kmp,
+  "z-function": zFunction,
+  "rabin-karp": rabinKarp,
+  manacher,
+  "aho-corasick": ahoCorasick,
+  "suffix-array": suffixArray,
+  "euclid-gcd": euclidGcd,
+  "sieve-eratosthenes": sieveEratosthenes,
+  "fast-power": fastPower,
+  "modular-inverse": modularInverse,
+  "pascal-ncr": pascalNcr,
+  "convex-hull": convexHull,
+  "segment-intersection": segmentIntersection,
 };

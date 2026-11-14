@@ -3,7 +3,7 @@
 // left of position i), then one range query reads two prefix cells. The query covers
 // positions n / 4 to 3n / 4 (the sample check makes the same call).
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"prefix-sums">;
 const KEYS = [
@@ -12,7 +12,7 @@ const KEYS = [
   "prefix-sums.query",
   "prefix-sums.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["add", "query"] as const;
 

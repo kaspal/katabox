@@ -2,7 +2,7 @@
 // AND, OR, XOR and both shifts on two bytes, then counting x's 1 bits by clearing the
 // lowest one (x & (x - 1)) until none are left.
 import { Recorder } from "../engine/recorder";
-import type { BitRow, NarrationKey, Step, TracerDef } from "../engine/types";
+import type { BitRow, NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"bit-manipulation">;
 const KEYS = [
@@ -16,7 +16,7 @@ const KEYS = [
   "bit-manipulation.count",
   "bit-manipulation.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["and", "or", "xor", "left", "right", "clear", "count"] as const;
 
@@ -71,14 +71,14 @@ function trace(input: readonly number[]): Step[] {
     r.comparisons++;
     count++;
     snap(
-      say("bit-manipulation.clear", { before, minus: before - 1, after: x, count }),
+      say("bit-manipulation.clear", { before, minus: before - 1, after: x, num: count }),
       "clear",
       [row("x", before), row("x − 1", before - 1), row("x & (x − 1)", x, { role: "sorted" })],
       { x: before, count: count - 1 },
     );
   }
   results.push(count);
-  snap(say("bit-manipulation.count", { x: x0, count }), "count", [row("x₀", x0), row("x", 0, { role: "sorted" })], { x, count });
+  snap(say("bit-manipulation.count", { x: x0, num: count }), "count", [row("x₀", x0), row("x", 0, { role: "sorted" })], { x, count });
   r.snap({
     narration: say("bit-manipulation.done", { ops: r.comparisons }),
     marker: null,

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "The list is 7 → 12 → 25, and back 31 arrives. cur starts at the head, 7. How many times does it move on before it stops at the last node?",
+    "prompt_es": "La lista es 7 → 12 → 25 y llega back 31. cur empieza en la cabeza, 7. ¿Cuántas veces avanza antes de parar en el último nodo?",
+    "options": [
+      { "en": "3", "es": "3" },
+      { "en": "2", "es": "2" },
+      { "en": "0: back is O(1)", "es": "0: back es O(1)" }
+    ],
+    "answer": 1,
+    "explain_en": "cur moves to 12 and then to 25, whose next is empty, and links 25 to 31. Without a tail pointer, every back insert walks the list.",
+    "explain_es": "cur pasa a 12 y luego a 25, cuyo next está vacío, y enlaza 25 con 31. Sin un puntero al final, cada back recorre la lista."
+  },
+  {
+    "prompt_en": "delete 25 on 7 → 12 → 25 → 31. When cur reaches 25, what changes?",
+    "prompt_es": "delete 25 sobre 7 → 12 → 25 → 31. Cuando cur llega a 25, ¿qué cambia?",
+    "options": [
+      { "en": "head moves to 31", "es": "head pasa a 31" },
+      { "en": "prev is 7, and 7 now links to 31", "es": "prev es 7, y 7 pasa a enlazar con 31" },
+      { "en": "prev is 12, and 12 now links to 31", "es": "prev es 12, y 12 pasa a enlazar con 31" }
+    ],
+    "answer": 2,
+    "explain_en": "prev trails one node behind cur, so it is 12. Setting 12's next to 25's next drops 25 out: 7 → 12 → 31.",
+    "explain_es": "prev va un nodo por detrás de cur, así que es 12. Poner el next de 12 en el next de 25 deja fuera a 25: 7 → 12 → 31."
+  },
+  {
+    "prompt_en": "front 3 gives 3 → 7 → 12 → 31, then delete 3. cur matches at once and prev is empty. What happens?",
+    "prompt_es": "front 3 da 3 → 7 → 12 → 31 y luego delete 3. cur coincide a la primera y prev está vacío. ¿Qué pasa?",
+    "options": [
+      { "en": "head skips to 7", "es": "head salta a 7" },
+      { "en": "Nothing: there is no prev to relink", "es": "Nada: no hay prev que reenlazar" },
+      { "en": "The walk goes on looking for another 3", "es": "El recorrido sigue buscando otro 3" }
+    ],
+    "answer": 0,
+    "explain_en": "Deleting the head is the special case: head = cur.next. The final list is 7 → 12 → 31.",
+    "explain_es": "Borrar la cabeza es el caso especial: head = cur.next. La lista final es 7 → 12 → 31."
+  }
+]

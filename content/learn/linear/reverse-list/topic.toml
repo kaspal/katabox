@@ -1,0 +1,28 @@
+id = "reverse-list"
+subject = "linear"
+order = 7
+title = "Reversing a list"
+title_es = "Invertir una lista"
+tags = ["linked-list", "pointers"]
+problems = ["batch-reversal", "zigzag-boarding"]
+presets = ["random", "reversed"]
+default = [3, 8, 15, 21, 42]
+
+[complexity]
+best = "O(n)"
+average = "O(n)"
+worst = "O(n)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 10
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(a)"
+typescript = "a = run(a)"

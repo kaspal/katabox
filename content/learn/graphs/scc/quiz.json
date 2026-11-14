@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph. In what order do the nodes finish in pass 1?",
+    "prompt_es": "Grafo por defecto. ¿En qué orden terminan los nodos en la pasada 1?",
+    "options": [
+      { "en": "0, 1, 2, 3, 4, 5, 6, 7", "es": "0, 1, 2, 3, 4, 5, 6, 7" },
+      { "en": "2, 1, 0, 5, 4, 3, 7, 6", "es": "2, 1, 0, 5, 4, 3, 7, 6" },
+      { "en": "7, 6, 5, 4, 3, 2, 1, 0", "es": "7, 6, 5, 4, 3, 2, 1, 0" }
+    ],
+    "answer": 2,
+    "explain_en": "The DFS from 0 dives through every node down to 7, which has nowhere new to go. Each call finishes after its descendants, so 0 finishes last.",
+    "explain_es": "El DFS desde 0 baja por todos los nodos hasta 7, que no tiene a dónde ir. Cada llamada termina después de sus descendientes, así que 0 termina el último."
+  },
+  {
+    "prompt_en": "In pass 2, the search from 3 follows the reversed edge to 2. Why is 2 not added to component 1?",
+    "prompt_es": "En la pasada 2, la búsqueda desde 3 sigue la arista invertida hacia 2. ¿Por qué 2 no entra en la componente 1?",
+    "options": [
+      { "en": "2 already carries label 0, so the search does not enter it", "es": "2 ya tiene la etiqueta 0, así que la búsqueda no entra en él" },
+      { "en": "Reversed edges are only followed from the first node", "es": "Las aristas invertidas solo se siguen desde el primer nodo" },
+      { "en": "2 has a smaller number than 3", "es": "2 tiene un número menor que 3" }
+    ],
+    "answer": 0,
+    "explain_en": "Pass 2 started at 0 and labelled 0, 2 and 1 first. A labelled node blocks the search, so {3, 4, 5} stays separate.",
+    "explain_es": "La pasada 2 empezó en 0 y etiquetó primero 0, 2 y 1. Un nodo con etiqueta frena la búsqueda, así que {3, 4, 5} queda aparte."
+  },
+  {
+    "prompt_en": "What is the output for the default graph?",
+    "prompt_es": "¿Cuál es la salida para el grafo por defecto?",
+    "options": [
+      { "en": "[2, 2, 2, 1, 1, 1, 0, 0]", "es": "[2, 2, 2, 1, 1, 1, 0, 0]" },
+      { "en": "[0, 0, 0, 1, 1, 1, 2, 2]", "es": "[0, 0, 0, 1, 1, 1, 2, 2]" },
+      { "en": "[0, 0, 0, 0, 0, 0, 0, 0]", "es": "[0, 0, 0, 0, 0, 0, 0, 0]" }
+    ],
+    "answer": 1,
+    "explain_en": "Three loops, three components, labelled in the order pass 2 finds them: {0, 1, 2}, then {3, 4, 5}, then {6, 7}. All nodes are reachable from 0, but 0 cannot be reached back from 3.",
+    "explain_es": "Tres bucles, tres componentes, etiquetadas en el orden en que las encuentra la pasada 2: {0, 1, 2}, luego {3, 4, 5} y luego {6, 7}. Desde 0 se llega a todos los nodos, pero desde 3 no se puede volver a 0."
+  }
+]

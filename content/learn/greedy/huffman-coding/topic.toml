@@ -1,0 +1,28 @@
+id = "huffman-coding"
+subject = "greedy"
+order = 3
+title = "Huffman coding"
+title_es = "Codificación de Huffman"
+tags = ["greedy", "huffman", "heap"]
+problems = []
+presets = ["skewed", "random", "even"]
+default = [4, 7, 11, 15, 18, 40]
+
+[complexity]
+best = "O(n log n)"
+average = "O(n log n)"
+worst = "O(n log n)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 8
+min = 1
+max = 40
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = huffman(a)"
+typescript = "a = huffman(a)"

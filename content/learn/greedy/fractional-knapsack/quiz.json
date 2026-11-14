@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input, capacity 10. Items 2 (3, 12) and 0 (4, 12) are packed whole. Item 1 is (6, 9). How much of it goes in?",
+    "prompt_es": "Entrada por defecto, capacidad 10. Los objetos 2 (3, 12) y 0 (4, 12) entran enteros. El objeto 1 es (6, 9). ¿Cuánto de él entra?",
+    "options": [
+      { "en": "None: it does not fit whole", "es": "Nada: no cabe entero" },
+      { "en": "Half: 3 of its 6 units, worth 4 1/2", "es": "La mitad: 3 de sus 6 unidades, que valen 4 1/2" },
+      { "en": "All of it, pushing out item 0", "es": "Entero, sacando al objeto 0" }
+    ],
+    "answer": 1,
+    "explain_en": "After 3 + 4 = 7 units, room 3 is left. The cut part is worth 9 · 3 / 6 = 27 / 6 = 4 1/2.",
+    "explain_es": "Tras 3 + 4 = 7 unidades queda un hueco de 3. La parte cortada vale 9 · 3 / 6 = 27 / 6 = 4 1/2."
+  },
+  {
+    "prompt_en": "What is the output for the default input?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto?",
+    "options": [
+      { "en": "[24, 0, 1]", "es": "[24, 0, 1]" },
+      { "en": "[28, 27, 6]", "es": "[28, 27, 6]" },
+      { "en": "[28, 1, 2]", "es": "[28, 1, 2]" }
+    ],
+    "answer": 2,
+    "explain_en": "The total is 24 + 27/6 = 28 1/2: the integer part 28, then the leftover fraction 1/2 in lowest terms. [24, 0, 1] is the 0/1 answer with the same greedy order.",
+    "explain_es": "El total es 24 + 27/6 = 28 1/2: la parte entera 28 y después la fracción que sobra, 1/2, irreducible. [24, 0, 1] es la respuesta 0/1 con el mismo orden voraz."
+  },
+  {
+    "prompt_en": "Why does the best-ratio-first rule fail for the 0/1 knapsack but not here?",
+    "prompt_es": "¿Por qué la regla de la mejor razón primero falla en la mochila 0/1 pero no aquí?",
+    "options": [
+      { "en": "In the 0/1 version the leftover room may stay empty, because the next item cannot be split", "es": "En la versión 0/1 el hueco que sobra puede quedar vacío, porque el siguiente objeto no se puede partir" },
+      { "en": "The 0/1 version sorts by weight instead", "es": "La versión 0/1 ordena por peso" },
+      { "en": "It does not fail; both are greedy", "es": "No falla; las dos son voraces" }
+    ],
+    "answer": 0,
+    "explain_en": "With capacity 10 and items (6, 12), (5, 9), (5, 9), greedy packs the first item and wastes 4 units of room: 12 against 18. Splitting fills that room, so no unit is ever wasted.",
+    "explain_es": "Con capacidad 10 y objetos (6, 12), (5, 9), (5, 9), el algoritmo voraz mete el primero y desperdicia 4 unidades de hueco: 12 frente a 18. Partir llena ese hueco, así que nunca se desperdicia ninguna unidad."
+  }
+]

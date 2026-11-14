@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input, row 4 (the last). The cell above the bottom-right holds 13 and the cell to its left holds 15. What is the output?",
+    "prompt_es": "Entrada por defecto, fila 4 (la última). La celda de encima de la esquina inferior derecha vale 13 y la de su izquierda vale 15. ¿Cuál es la salida?",
+    "options": [
+      { "en": "[15]: the larger neighbour", "es": "[15]: el vecino mayor" },
+      { "en": "[126]: every right/down path", "es": "[126]: todos los caminos a la derecha o hacia abajo" },
+      { "en": "[28]: 13 + 15", "es": "[28]: 13 + 15" }
+    ],
+    "answer": 2,
+    "explain_en": "Every path into a cell comes from above or from the left, so the counts add. 126 is the count without the three blocks.",
+    "explain_es": "Todo camino que entra en una celda viene de arriba o de la izquierda, así que las cuentas se suman. 126 es la cuenta sin los tres bloqueos."
+  },
+  {
+    "prompt_en": "An open cell has a blocked cell above it and a blocked cell to its left. What does it hold?",
+    "prompt_es": "Una celda abierta tiene una celda bloqueada encima y otra bloqueada a su izquierda. ¿Cuánto vale?",
+    "options": [
+      { "en": "0: no path can reach it", "es": "0: ningún camino puede llegar a ella" },
+      { "en": "1: it is open", "es": "1: está abierta" },
+      { "en": "2: one path from each side", "es": "2: un camino desde cada lado" }
+    ],
+    "answer": 0,
+    "explain_en": "Blocked cells hold 0, so up + left = 0. Only the top-left cell starts at 1.",
+    "explain_es": "Las celdas bloqueadas valen 0, así que arriba + izquierda = 0. Solo la celda superior izquierda empieza en 1."
+  },
+  {
+    "prompt_en": "Why does filling row by row, left to right, work?",
+    "prompt_es": "¿Por qué funciona rellenar fila a fila, de izquierda a derecha?",
+    "options": [
+      { "en": "It visits the blocked cells first", "es": "Visita primero las celdas bloqueadas" },
+      { "en": "The up and left neighbours are always filled before the cell", "es": "Los vecinos de arriba y de la izquierda siempre se rellenan antes que la celda" },
+      { "en": "It follows the shortest path", "es": "Sigue el camino más corto" }
+    ],
+    "answer": 1,
+    "explain_en": "The row above is finished before this row starts, and the left neighbour comes earlier in the same row.",
+    "explain_es": "La fila de arriba está terminada antes de empezar esta, y el vecino de la izquierda va antes en la misma fila."
+  }
+]

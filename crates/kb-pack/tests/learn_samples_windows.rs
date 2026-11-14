@@ -75,7 +75,8 @@ fn every_sample_matches_its_tracer_and_a_plain_sort() {
                 t.topic.id
             );
         } else {
-            assert!(t.cases.len() >= 24, "{}: 4 presets + 20 random", t.topic.id);
+            // At least one preset plus the 20 random inputs.
+            assert!(t.cases.len() >= 21, "{}: presets + 20 random", t.topic.id);
         }
         if t.sorts {
             for c in &t.cases {

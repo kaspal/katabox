@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default prices 2, 5, 7, 8, 12, 13. With best = [0, 2, 5, 7, 10, 12], which first piece wins for length 6?",
+    "prompt_es": "Precios por defecto 2, 5, 7, 8, 12, 13. Con best = [0, 2, 5, 7, 10, 12], ¿qué primer trozo gana para la longitud 6?",
+    "options": [
+      { "en": "6, the whole rod: 13", "es": "6, la barra entera: 13" },
+      { "en": "1: 2 + 12 = 14", "es": "1: 2 + 12 = 14" },
+      { "en": "2: 5 + 10 = 15", "es": "2: 5 + 10 = 15" }
+    ],
+    "answer": 2,
+    "explain_en": "The first pieces offer 14, 15, 14, 13, 14 and 13. A piece of 2 plus the best for the remaining 4 gives 15.",
+    "explain_es": "Los primeros trozos ofrecen 14, 15, 14, 13, 14 y 13. Un trozo de 2 más lo mejor para los 4 restantes da 15."
+  },
+  {
+    "prompt_en": "The output is [15, 2, 2, 2]. Why can the piece of length 2 appear three times?",
+    "prompt_es": "La salida es [15, 2, 2, 2]. ¿Por qué el trozo de longitud 2 puede aparecer tres veces?",
+    "options": [
+      { "en": "It is a bug: each piece should appear once", "es": "Es un error: cada trozo debería aparecer una vez" },
+      { "en": "This is the unbounded knapsack: best[L - cut] may already use the same piece", "es": "Es la mochila sin límite: best[L - cut] puede usar ya el mismo trozo" },
+      { "en": "The price of a piece of 2 is the largest", "es": "El precio de un trozo de 2 es el mayor" }
+    ],
+    "answer": 1,
+    "explain_en": "Any length can be cut any number of times. The 0/1 knapsack, with one row per item, would allow each piece at most once.",
+    "explain_es": "Cualquier longitud se puede cortar cuantas veces se quiera. La mochila 0/1, con una fila por objeto, permitiría cada trozo como mucho una vez."
+  },
+  {
+    "prompt_en": "For length 3, the first pieces 1, 2 and 3 all give 7. What is first[3]?",
+    "prompt_es": "Para la longitud 3, los primeros trozos 1, 2 y 3 dan 7. ¿Cuánto vale first[3]?",
+    "options": [
+      { "en": "1", "es": "1" },
+      { "en": "2", "es": "2" },
+      { "en": "3", "es": "3" }
+    ],
+    "answer": 0,
+    "explain_en": "The cell improves only when a cut is strictly better, so the first piece tried that reaches 7, the shortest, is kept.",
+    "explain_es": "La celda solo mejora cuando un corte es estrictamente mejor, así que se conserva el primer trozo probado que llega a 7, el más corto."
+  }
+]

@@ -8,7 +8,7 @@ import type { LearnInput } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { PRESETS, hasTarget, valueLimits, type PresetId } from "./engine/inputs";
+import { fieldsOf, presetIds, valueLimits, type PresetId } from "./engine/inputs";
 import type { TraceError } from "./engine/useTrace";
 import { SPEEDS, isSpeed, type Player } from "./engine/usePlayer";
 import type { Role, Step, TracerDef } from "./engine/types";
@@ -48,6 +48,12 @@ function errorText(t: TFunction, e: TraceError): string {
       return t("learn.input.errors.unsorted");
     case "target":
       return t("learn.input.errors.target", { min: e.min, max: e.max });
+    case "custom": {
+      // A `field` parameter is a field key: show its label.
+      const params = { ...e.params };
+      if (typeof params.field === "string") params.field = t(`learn.input.field.${params.field}` as "learn.title");
+      return t(`learn.input.errors.custom.${e.key}` as "learn.title", params);
+    }
   }
 }
 
@@ -190,24 +196,24 @@ export type InputRowProps = {
   values: number[];
   error: TraceError | null;
   onPreset: (id: PresetId) => void;
-  onCustom: (text: string, target?: string) => boolean;
+  onCustom: (texts: readonly string[]) => boolean;
   onClearError: () => void;
 };
 
-/** Presets and "your own" input (with a Target or n field for those topics). */
+/** Presets and "your own" input: one field per part of the input (values, a target, n,
+ * or a structured topic's fields such as operations or text). */
 export function InputRow({ def, input, presets, values, error, onPreset, onCustom, onClearError }: InputRowProps) {
   const { t } = useTranslation();
-  const withTarget = hasTarget(def);
-  const count = def.input.kind === "count";
-  const shown = withTarget ? values.slice(1) : values;
-  const [custom, setCustom] = useState(() => shown.join(", "));
-  const [target, setTarget] = useState(() => (withTarget ? String(values[0]) : ""));
+  const fields = fieldsOf(def, values);
+  const [texts, setTexts] = useState<string[]>(() => fields.map((f) => f.text));
   const errorId = useId();
   const vl = valueLimits(def);
+  const offered = presetIds(def).filter((p) => presets.includes(p));
+  const label = (key: string) => t(`learn.input.field.${key}` as "learn.title");
   return (
     <div className="flex flex-wrap items-start gap-2 border-t pt-3 text-sm">
       <span className="mt-1.5 mr-1 text-muted-foreground">{t("learn.input.label")}</span>
-      {PRESETS.filter((p) => presets.includes(p) && !(count && p !== "random")).map((p) => (
+      {offered.map((p) => (
         <Button
           key={p}
           type="button"
@@ -216,65 +222,57 @@ export function InputRow({ def, input, presets, values, error, onPreset, onCusto
           className="rounded-full"
           onClick={() => {
             onPreset(p);
-            setCustom("");
-            setTarget("");
+            setTexts(fields.map(() => ""));
           }}
           data-preset={p}
         >
-          {t(`learn.input.presets.${p}`)}
+          {t(`learn.input.presets.${p}` as "learn.title")}
         </Button>
       ))}
       <form
         className="ml-auto flex flex-col gap-1"
         onSubmit={(e) => {
           e.preventDefault();
-          onCustom(custom, withTarget ? target : undefined);
+          onCustom(texts);
         }}
       >
-        <div className="flex items-center gap-1.5">
-          <label htmlFor={`${errorId}-input`} className="text-muted-foreground">
-            {count ? t("learn.input.count") : t("learn.input.custom")}
-          </label>
-          <input
-            id={`${errorId}-input`}
-            value={custom}
-            onChange={(e) => {
-              setCustom(e.target.value);
-              if (error) onClearError();
-            }}
-            aria-label={
-              count
-                ? t("learn.input.count_label", { lo: input.min, hi: input.max })
-                : t("learn.input.custom_label", { min: vl.min_len, max: vl.max_len, lo: input.min, hi: input.max })
-            }
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? errorId : undefined}
-            placeholder={shown.join(", ")}
-            className={cn(
-              "h-8 rounded-md border bg-card px-2.5 font-mono text-xs aria-invalid:border-destructive",
-              count ? "w-16" : "w-56",
-            )}
-          />
-          {withTarget && (
-            <>
-              <label htmlFor={`${errorId}-target`} className="text-muted-foreground">
-                {t(`learn.input.target.${def.input.targetLabel ?? "target"}`)}
-              </label>
-              <input
-                id={`${errorId}-target`}
-                value={target}
-                onChange={(e) => {
-                  setTarget(e.target.value);
-                  if (error) onClearError();
-                }}
-                aria-invalid={error ? true : undefined}
-                aria-describedby={error ? errorId : undefined}
-                placeholder={String(values[0])}
-                className="h-8 w-14 rounded-md border bg-card px-2 font-mono text-xs aria-invalid:border-destructive"
-                data-testid="target-input"
-              />
-            </>
-          )}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {fields.map((f, k) => {
+            // Lists and text get a wide box; single numbers (n, a target, a capacity) a short one.
+            const short = !["values", "ops", "text", "words", "pattern", "edges", "grid", "map", "word", "segments", "distances", "first", "second", "parents", "pairs", "points", "intervals", "items"].includes(f.key);
+            return (
+              <div key={f.key} className="flex items-center gap-1.5">
+                <label htmlFor={`${errorId}-${f.key}`} className="text-muted-foreground">
+                  {label(f.key)}
+                </label>
+                <input
+                  id={`${errorId}-${f.key}`}
+                  value={texts[k] ?? ""}
+                  onChange={(e) => {
+                    const next = [...texts];
+                    next[k] = e.target.value;
+                    setTexts(next);
+                    if (error) onClearError();
+                  }}
+                  aria-label={
+                    f.key === "values"
+                      ? t("learn.input.custom_label", { min: vl.min_len, max: vl.max_len, lo: input.min, hi: input.max })
+                      : f.key === "count"
+                        ? t("learn.input.count_label", { lo: input.min, hi: input.max })
+                        : undefined
+                  }
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? errorId : undefined}
+                  placeholder={f.text}
+                  className={cn(
+                    "h-8 rounded-md border bg-card px-2.5 font-mono text-xs aria-invalid:border-destructive",
+                    short ? "w-16" : "w-56",
+                  )}
+                  data-field={f.key}
+                />
+              </div>
+            );
+          })}
           <Button type="submit" size="sm" variant="secondary">
             {t("learn.input.apply")}
           </Button>

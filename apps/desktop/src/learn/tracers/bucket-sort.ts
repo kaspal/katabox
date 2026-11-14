@@ -3,7 +3,7 @@
 // its range, sort each (small) bucket, and gather the buckets in order.
 import { BucketBoard, fixBucketDepth } from "../engine/buckets";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"bucket-sort">;
 const KEYS = [
@@ -14,7 +14,7 @@ const KEYS = [
   "bucket-sort.gather",
   "bucket-sort.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params });
 
 export const MARKERS = ["scatter", "sort", "gather"] as const;
 const COUNT = 5;
@@ -24,7 +24,7 @@ function trace(values: readonly number[]): Step[] {
   const n = values.length;
   const labels = Array.from({ length: COUNT }, (_, b) => `${(b * 100) / COUNT}–${((b + 1) * 100) / COUNT - 1}`);
   const board = new BucketBoard(r, labels);
-  r.snap({ ...board.frame(null), narration: say("bucket-sort.ready", { n, count: COUNT }), marker: null, vars: { v: null, bucket: null, k: null } });
+  r.snap({ ...board.frame(null), narration: say("bucket-sort.ready", { n, num: COUNT }), marker: null, vars: { v: null, bucket: null, k: null } });
   for (let p = 0; p < n; p++) {
     const v = r.value(p);
     const b = Math.floor((v * COUNT) / 100);
@@ -65,7 +65,7 @@ function trace(values: readonly number[]): Step[] {
       k++;
     }
   }
-  r.snap({ ...board.frame(null), narration: say("bucket-sort.done", { n, count: COUNT }), marker: null, vars: { v: null, bucket: null, k: null } });
+  r.snap({ ...board.frame(null), narration: say("bucket-sort.done", { n, num: COUNT }), marker: null, vars: { v: null, bucket: null, k: null } });
   return fixBucketDepth(r.steps);
 }
 

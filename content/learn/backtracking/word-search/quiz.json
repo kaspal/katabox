@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input, word water. The path is at (1, 0), the a. Which neighbour does the search step onto next?",
+    "prompt_es": "Entrada por defecto, palabra water. El camino está en (1, 0), la a. ¿A qué vecina pasa la búsqueda a continuación?",
+    "options": [
+      { "en": "(1, 1), the r", "es": "(1, 1), la r" },
+      { "en": "(2, 0), the t", "es": "(2, 0), la t" },
+      { "en": "(0, 0), the w", "es": "(0, 0), la w" }
+    ],
+    "answer": 1,
+    "explain_en": "The next letter is t. Up is the w and right is the r, both wrong letters; down is the t.",
+    "explain_es": "La letra siguiente es la t. Arriba está la w y a la derecha la r, las dos letras equivocadas; abajo está la t."
+  },
+  {
+    "prompt_en": "What is the output for the default input?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto?",
+    "options": [
+      { "en": "[1, 3, 3, 2, 3, 1, 3, 1, 2, 1, 1]", "es": "[1, 3, 3, 2, 3, 1, 3, 1, 2, 1, 1]" },
+      { "en": "[0]", "es": "[0]" },
+      { "en": "[1, 0, 0, 1, 0, 2, 0, 2, 1, 1, 1]", "es": "[1, 0, 0, 1, 0, 2, 0, 2, 1, 1, 1]" }
+    ],
+    "answer": 2,
+    "explain_en": "The starts are tried in reading order, and the w at (0, 0) already spells the word: down, down, right, up. The w at (3, 3) is never tried.",
+    "explain_es": "Los inicios se prueban en orden de lectura, y la w de (0, 0) ya forma la palabra: abajo, abajo, derecha, arriba. La w de (3, 3) nunca se prueba."
+  },
+  {
+    "prompt_en": "Why does a failed walk pop its cell off the path?",
+    "prompt_es": "¿Por qué un walk que falla quita su casilla del camino?",
+    "options": [
+      { "en": "So other branches may use that cell again", "es": "Para que otras ramas puedan volver a usar esa casilla" },
+      { "en": "To save memory", "es": "Para ahorrar memoria" },
+      { "en": "So the same start is not tried twice", "es": "Para no probar dos veces el mismo inicio" }
+    ],
+    "answer": 0,
+    "explain_en": "The path must hold only the cells of the current attempt. A cell left behind would block every later path that needs it.",
+    "explain_es": "El camino solo debe tener las casillas del intento actual. Una casilla olvidada bloquearía todos los caminos posteriores que la necesiten."
+  }
+]

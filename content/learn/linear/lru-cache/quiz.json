@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Capacity 2: put 1 10, put 2 20, then get 1. What is the order now, least recent first?",
+    "prompt_es": "Capacidad 2: put 1 10, put 2 20 y luego get 1. ¿Cuál es ahora el orden, de menos a más reciente?",
+    "options": [
+      { "en": "1, 2", "es": "1, 2" },
+      { "en": "2, 1", "es": "2, 1" },
+      { "en": "Only 1: key 2 was evicted", "es": "Solo 1: la clave 2 se expulsó" }
+    ],
+    "answer": 1,
+    "explain_en": "get 1 is a hit (10) and moves key 1 to the most recent end. Key 2 is now the least recently used.",
+    "explain_es": "get 1 es un acierto (10) y mueve la clave 1 al extremo más reciente. Ahora la clave 2 es la menos usada recientemente."
+  },
+  {
+    "prompt_en": "Next, put 3 30 makes three keys in a cache of capacity 2. Which key is evicted?",
+    "prompt_es": "Después, put 3 30 deja tres claves en una caché de capacidad 2. ¿Qué clave se expulsa?",
+    "options": [
+      { "en": "Key 1, the oldest put", "es": "La clave 1, el put más antiguo" },
+      { "en": "Key 3, the newest", "es": "La clave 3, la más nueva" },
+      { "en": "Key 2", "es": "La clave 2" }
+    ],
+    "answer": 2,
+    "explain_en": "Key 1 was put first, but get 1 used it more recently than key 2. LRU looks at the last use, not the first put.",
+    "explain_es": "La clave 1 se puso primero, pero get 1 la usó más recientemente que la clave 2. LRU mira el último uso, no el primer put."
+  },
+  {
+    "prompt_en": "Then get 2, get 3, get 1. What does the whole output row hold?",
+    "prompt_es": "Luego get 2, get 3, get 1. ¿Qué tiene la fila de salida completa?",
+    "options": [
+      { "en": "[10, −1, 30, 10]", "es": "[10, −1, 30, 10]" },
+      { "en": "[10, 20, 30, 10]", "es": "[10, 20, 30, 10]" },
+      { "en": "[10, −1, 30, −1]", "es": "[10, −1, 30, −1]" }
+    ],
+    "answer": 0,
+    "explain_en": "The first get 1 gave 10. Key 2 was evicted, so get 2 misses (−1); keys 3 and 1 are both cached and hit. Only get adds to the output.",
+    "explain_es": "El primer get 1 dio 10. La clave 2 se expulsó, así que get 2 falla (−1); las claves 3 y 1 están en la caché y aciertan. Solo get añade algo a la salida."
+  }
+]

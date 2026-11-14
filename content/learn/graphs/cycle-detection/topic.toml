@@ -1,0 +1,28 @@
+id = "cycle-detection"
+subject = "graphs"
+order = 4
+title = "Cycle detection"
+title_es = "Detección de ciclos"
+tags = ["graph", "dfs", "cycle"]
+problems = ["recipe-steps"]
+presets = ["hidden-cycle", "random", "dag"]
+default = [7, 1, 0, 1, 1, 1, 2, 1, 0, 3, 1, 3, 4, 1, 4, 5, 1, 5, 3, 1, 2, 6, 1]
+
+[complexity]
+best = "O(n + m)"
+average = "O(n + m)"
+worst = "O(n + m)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 62
+min = 0
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = [has_cycle(*kb_graph(a))]"
+typescript = "a = [hasCycle(...kbGraph(a))]"

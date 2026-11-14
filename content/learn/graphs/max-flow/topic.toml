@@ -1,0 +1,28 @@
+id = "max-flow"
+subject = "graphs"
+order = 16
+title = "Maximum flow (Edmonds-Karp)"
+title_es = "Flujo máximo (Edmonds-Karp)"
+tags = ["graph", "network-flow", "bfs"]
+problems = []
+presets = ["two-lanes", "random", "take-it-back"]
+default = [6, 1, 0, 1, 5, 0, 2, 4, 1, 3, 3, 2, 4, 6, 1, 4, 2, 3, 5, 4, 4, 5, 7]
+
+[complexity]
+best = "O(n · m²)"
+average = "O(n · m²)"
+worst = "O(n · m²)"
+space = "O(n²) matrix"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 44
+min = 0
+max = 9
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = max_flow(a[0], kb_edges(a))"
+typescript = "a = maxFlow(a[0], kbEdges(a))"

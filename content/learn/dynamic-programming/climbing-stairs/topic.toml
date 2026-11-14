@@ -1,0 +1,28 @@
+id = "climbing-stairs"
+subject = "dynamic-programming"
+order = 2
+title = "Climbing stairs"
+title_es = "Subir escaleras"
+tags = ["dynamic-programming"]
+problems = ["path-tiles"]
+presets = ["random"]
+default = [6]
+
+[complexity]
+best = "O(n)"
+average = "O(n)"
+worst = "O(n)"
+space = "O(n), or O(1) with two variables"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 1
+min = 1
+max = 15
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = climb(a[0])"
+typescript = "a = climb(a[0])"

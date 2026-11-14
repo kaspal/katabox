@@ -2,7 +2,7 @@
 // scans the unsorted part for its smallest value and swaps it to the front of that part.
 import { SORT_INPUT } from "../engine/cases";
 import { Recorder } from "../engine/recorder";
-import { sortCounters, type NarrationKey, type Pointer, type Step, type TracerDef } from "../engine/types";
+import { type NarrationKey, type NarrationParams, type Pointer, sortCounters, type Step, type TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"selection-sort">;
 const KEYS = [
@@ -15,7 +15,7 @@ const KEYS = [
   "selection-sort.stay",
   "selection-sort.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["start", "compare", "new-min", "swap"] as const;
 

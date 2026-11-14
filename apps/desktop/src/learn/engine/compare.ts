@@ -60,8 +60,8 @@ export function useCompareTrace(a: TracerDef, b: TracerDef, initial: number[]) {
       }
       return apply(presetInput(a, id, base, initial.length));
     },
-    applyCustom: (text: string, target?: string) => {
-      const r = parseCustom(a, text, target);
+    applyCustom: (texts: readonly string[]) => {
+      const r = parseCustom(a, texts);
       if ("error" in r) {
         setError(r.error);
         return false;

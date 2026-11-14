@@ -3,7 +3,7 @@
 // storage (empty slots up to the capacity); a resize opens the new storage below it and
 // copies every value across, then the new storage becomes the array.
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"dynamic-array">;
 const KEYS = [
@@ -14,7 +14,7 @@ const KEYS = [
   "dynamic-array.write",
   "dynamic-array.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["check", "copy", "write"] as const;
 

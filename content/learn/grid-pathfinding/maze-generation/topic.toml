@@ -1,0 +1,28 @@
+id = "maze-generation"
+subject = "grid-pathfinding"
+order = 5
+title = "Maze generation"
+title_es = "Generación de laberintos"
+tags = ["grid", "dfs", "maze"]
+problems = []
+presets = ["small", "random", "large"]
+default = [3, 7]
+
+[complexity]
+best = "O(k²)"
+average = "O(k²)"
+worst = "O(k²)"
+space = "O(k²) stack"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 2
+min = 1
+max = 9999
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = make_maze(a[0], a[1])"
+typescript = "a = makeMaze(a[0], a[1])"

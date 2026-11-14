@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input, n = 5. Queens sit at row 0, column 0 and row 1, column 2. Why is column 3 rejected in row 2?",
+    "prompt_es": "Entrada por defecto, n = 5. Hay reinas en la fila 0, columna 0 y en la fila 1, columna 2. ¿Por qué se descarta la columna 3 en la fila 2?",
+    "options": [
+      { "en": "Column 3 is already used", "es": "La columna 3 ya está usada" },
+      { "en": "It shares a diagonal with the queen in row 1: |3 − 2| = 2 − 1", "es": "Comparte diagonal con la reina de la fila 1: |3 − 2| = 2 − 1" },
+      { "en": "It shares a diagonal with the queen in row 0", "es": "Comparte diagonal con la reina de la fila 0" }
+    ],
+    "answer": 1,
+    "explain_en": "The column distance to (1, 2) is 1 and so is the row distance. Against (0, 0) the distances are 3 and 2, which is fine.",
+    "explain_es": "La distancia en columnas a (1, 2) es 1 y la distancia en filas también. Frente a (0, 0) las distancias son 3 y 2, lo que no es problema."
+  },
+  {
+    "prompt_en": "What is the output for the default input, n = 5?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto, n = 5?",
+    "options": [
+      { "en": "[1, 0, 2, 4, 1, 3]", "es": "[1, 0, 2, 4, 1, 3]" },
+      { "en": "[10, 1, 3, 0, 2, 4]", "es": "[10, 1, 3, 0, 2, 4]" },
+      { "en": "[10, 0, 2, 4, 1, 3]", "es": "[10, 0, 2, 4, 1, 3]" }
+    ],
+    "answer": 2,
+    "explain_en": "The search counts every solution, 10 for n = 5, and the first one found, with the queen of row 0 in column 0, is 0, 2, 4, 1, 3.",
+    "explain_es": "La búsqueda cuenta todas las soluciones, 10 para n = 5, y la primera que encuentra, con la reina de la fila 0 en la columna 0, es 0, 2, 4, 1, 3."
+  },
+  {
+    "prompt_en": "Why does the search never need to check two queens in the same row?",
+    "prompt_es": "¿Por qué la búsqueda nunca necesita comprobar dos reinas en la misma fila?",
+    "options": [
+      { "en": "It places exactly one queen per row, one row at a time", "es": "Coloca exactamente una reina por fila, una fila cada vez" },
+      { "en": "Queens cannot attack along rows", "es": "Las reinas no atacan por las filas" },
+      { "en": "The diagonal test also covers rows", "es": "La prueba de la diagonal también cubre las filas" }
+    ],
+    "answer": 0,
+    "explain_en": "The state is one column per filled row, so a second queen in a row simply cannot be expressed.",
+    "explain_es": "El estado es una columna por cada fila llena, así que una segunda reina en una fila sencillamente no se puede expresar."
+  }
+]

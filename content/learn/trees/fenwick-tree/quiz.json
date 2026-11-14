@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "n = 8, all zeros. add 1 4 starts at slot 2. Which slots does it change?",
+    "prompt_es": "n = 8, todo a cero. add 1 4 empieza en la casilla 2. ¿Qué casillas cambia?",
+    "options": [
+      { "en": "2, 3 and 4", "es": "2, 3 y 4" },
+      { "en": "Only slot 2", "es": "Solo la casilla 2" },
+      { "en": "2, 4 and 8", "es": "2, 4 y 8" }
+    ],
+    "answer": 2,
+    "explain_en": "Each step adds the lowest set bit: 2 + 2 = 4, 4 + 4 = 8, and 8 + 8 = 16 is past the end. Slots 4 and 8 cover blocks that contain slot 2; slot 3 does not.",
+    "explain_es": "Cada paso suma el bit activo más bajo: 2 + 2 = 4, 4 + 4 = 8, y 8 + 8 = 16 se pasa del final. Las casillas 4 y 8 cubren bloques que contienen la casilla 2; la 3 no."
+  },
+  {
+    "prompt_en": "After the three adds, sum 5 starts at slot 6. Which slots does it read?",
+    "prompt_es": "Tras los tres add, sum 5 empieza en la casilla 6. ¿Qué casillas lee?",
+    "options": [
+      { "en": "6 and 4", "es": "6 y 4" },
+      { "en": "6, 5, 4, 3, 2 and 1", "es": "6, 5, 4, 3, 2 y 1" },
+      { "en": "6 and 8", "es": "6 y 8" }
+    ],
+    "answer": 0,
+    "explain_en": "Slot 6 covers slots 5 and 6 and holds 3; 6 − 2 = 4, and slot 4 covers slots 1 to 4 and holds 4; 4 − 4 = 0 stops the walk. The sum is 7.",
+    "explain_es": "La casilla 6 cubre las casillas 5 y 6 y guarda 3; 6 − 2 = 4, y la casilla 4 cubre de la 1 a la 4 y guarda 4; 4 − 4 = 0 para el recorrido. La suma es 7."
+  },
+  {
+    "prompt_en": "Why does sum 7 read a single slot?",
+    "prompt_es": "¿Por qué sum 7 lee una sola casilla?",
+    "options": [
+      { "en": "Positions 6 and 7 are zero, so they are skipped", "es": "Las posiciones 6 y 7 son cero, así que se saltan" },
+      { "en": "It starts at slot 8, and lowbit(8) = 8 covers slots 1 to 8", "es": "Empieza en la casilla 8, y lowbit(8) = 8 cubre de la 1 a la 8" },
+      { "en": "The earlier sum 5 is reused", "es": "Se reutiliza la sum 5 anterior" }
+    ],
+    "answer": 1,
+    "explain_en": "Slot 8 holds the whole prefix, 4 + 3 + 2 = 9, because every add reached it. 8 − 8 = 0 ends the walk after one read.",
+    "explain_es": "La casilla 8 guarda todo el prefijo, 4 + 3 + 2 = 9, porque todos los add llegaron a ella. 8 − 8 = 0 termina el recorrido tras una lectura."
+  }
+]

@@ -1359,9 +1359,10 @@ async fn learn_commands_read_the_bundled_topics() {
             "quickselect",
         ]
     );
+    // Phases 2-6 filled every subject (no "Coming soon" left).
     assert!(
-        catalog.iter().any(|s| s.topics.is_empty()),
-        "coming-soon subjects"
+        catalog.iter().all(|s| !s.topics.is_empty()),
+        "every subject has topics"
     );
 
     let view = a.learn_topic("quick-sort", UiLang::Es).await.unwrap();

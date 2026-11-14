@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleSource } from "@/test/fakeLearn";
 import { TRACERS } from "../tracers";
 import { comparePartners, paneStep } from "./compare";
+import { decodeText, encodeText, opsCodec, textCodec } from "./codecs";
 import { checkInput, parseCustom, preset, presetInput, PRESETS, rng } from "./inputs";
 import type { TracerDef } from "./types";
 import { playerKeyAction } from "./keys";
@@ -209,13 +210,13 @@ const COUNT: TracerDef = { ...SORT, limits: { min_len: 1, max_len: 1, min: 1, ma
 
 describe("input kinds", () => {
   it("puts the target first, and refuses unsorted values or a bad target", () => {
-    expect(parseCustom(TARGET, "1, 2, 3", "2")).toEqual({ values: [2, 1, 2, 3] });
-    expect(parseCustom(TARGET, "3, 1", "1")).toEqual({ error: { code: "unsorted" } });
-    expect(parseCustom(TARGET, "1, 2", "5")).toEqual({ error: { code: "target", min: 1, max: 2 } });
-    expect(parseCustom(TARGET, "1, 2", "x")).toEqual({ error: { code: "nan", token: "x" } });
-    expect(parseCustom(TARGET, "1, 2", "")).toEqual({ error: { code: "nan", token: "—" } });
+    expect(parseCustom(TARGET, ["1, 2, 3", "2"])).toEqual({ values: [2, 1, 2, 3] });
+    expect(parseCustom(TARGET, ["3, 1", "1"])).toEqual({ error: { code: "unsorted" } });
+    expect(parseCustom(TARGET, ["1, 2", "5"])).toEqual({ error: { code: "target", min: 1, max: 2 } });
+    expect(parseCustom(TARGET, ["1, 2", "x"])).toEqual({ error: { code: "nan", token: "x" } });
+    expect(parseCustom(TARGET, ["1, 2", ""])).toEqual({ error: { code: "nan", token: "—" } });
     // The count is of the values: the target is one of max_len.
-    expect(parseCustom(TARGET, "1 2 3 4 5 6", "1")).toEqual({ error: { code: "count", min: 1, max: 5 } });
+    expect(parseCustom(TARGET, ["1 2 3 4 5 6", "1"])).toEqual({ error: { code: "count", min: 1, max: 5 } });
   });
 
   it("presets fit the shape", () => {
@@ -235,16 +236,16 @@ describe("input kinds", () => {
 
 describe("inputs", () => {
   it("parses commas, spaces and semicolons", () => {
-    expect(parseCustom(SORT, "3, 1;2  9")).toEqual({ values: [3, 1, 2, 9] });
+    expect(parseCustom(SORT, ["3, 1;2  9"])).toEqual({ values: [3, 1, 2, 9] });
   });
 
   it("names the problem instead of clamping", () => {
-    expect(parseCustom(SORT, "5")).toEqual({ error: { code: "count", min: 2, max: 16 } });
-    expect(parseCustom(SORT, Array(17).fill(1).join(","))).toEqual({ error: { code: "count", min: 2, max: 16 } });
-    expect(parseCustom(SORT, "3, x, 4")).toEqual({ error: { code: "nan", token: "x" } });
-    expect(parseCustom(SORT, "3, 2.5")).toEqual({ error: { code: "nan", token: "2.5" } });
-    expect(parseCustom(SORT, "3, 120")).toEqual({ error: { code: "range", value: 120, min: 1, max: 99 } });
-    expect(parseCustom(SORT, "0, 4")).toEqual({ error: { code: "range", value: 0, min: 1, max: 99 } });
+    expect(parseCustom(SORT, ["5"])).toEqual({ error: { code: "count", min: 2, max: 16 } });
+    expect(parseCustom(SORT, [Array(17).fill(1).join(",")])).toEqual({ error: { code: "count", min: 2, max: 16 } });
+    expect(parseCustom(SORT, ["3, x, 4"])).toEqual({ error: { code: "nan", token: "x" } });
+    expect(parseCustom(SORT, ["3, 2.5"])).toEqual({ error: { code: "nan", token: "2.5" } });
+    expect(parseCustom(SORT, ["3, 120"])).toEqual({ error: { code: "range", value: 120, min: 1, max: 99 } });
+    expect(parseCustom(SORT, ["0, 4"])).toEqual({ error: { code: "range", value: 0, min: 1, max: 99 } });
   });
 
   it("presets are seeded, sized and shaped", () => {
@@ -321,5 +322,36 @@ describe("compare partners", () => {
     const steps = TRACERS["bubble-sort"]!.trace([2, 1]);
     expect(paneStep(steps, 0)).toEqual({ step: steps[0], finished: false });
     expect(paneStep(steps, steps.length + 5)).toEqual({ step: steps.at(-1), finished: true });
+  });
+});
+
+describe("input codecs", () => {
+  const ops = opsCodec(
+    [
+      { name: "push", args: 1 },
+      { name: "pop", args: 0 },
+    ],
+    ["capacity"],
+  );
+  it("operations round-trip between text and the flat list", () => {
+    expect(ops.parse(["3", "push 5, pop; push 7"])).toEqual({ values: [3, 1, 5, 2, 0, 1, 7] });
+    expect(ops.format([3, 1, 5, 2, 0, 1, 7])).toEqual(["3", "push 5, pop, push 7"]);
+    expect(ops.check!([3, 1, 5, 2, 0])).toBeNull();
+  });
+  it("refuses unknown operations, wrong arities and a missing header", () => {
+    expect(ops.parse(["3", "shove 5"])).toEqual({ error: { code: "custom", key: "unknown_op", params: { op: "shove", ops: "push, pop" } } });
+    expect(ops.parse(["3", "push"])).toEqual({ error: { code: "custom", key: "op_args", params: { op: "push", count: 1 } } });
+    expect(ops.parse(["", "pop"])).toEqual({ error: { code: "custom", key: "one_number", params: { field: "capacity" } } });
+    expect(ops.parse(["2", "  "])).toEqual({ error: { code: "custom", key: "no_ops", params: undefined } });
+    expect(ops.check!([3, 9, 0])).toEqual(expect.objectContaining({ key: "unknown_op" }));
+  });
+  it("text inputs store letters 0-25 and separate words with -1", () => {
+    const text = textCodec(["text", "pattern"], { maxLen: 5 });
+    expect(text.parse(["abc", "Ba"])).toEqual({ values: [0, 1, 2, -1, 1, 0] });
+    expect(decodeText([0, 1, 2, -1, 1, 0])).toEqual(["abc", "ba"]);
+    expect(encodeText(["abc", "ba"])).toEqual([0, 1, 2, -1, 1, 0]);
+    expect(text.parse(["ab1", "x"])).toEqual({ error: { code: "custom", key: "letters_only", params: { field: "text" } } });
+    expect(text.parse(["abcdef", "x"])).toEqual({ error: { code: "custom", key: "word_length", params: { field: "text", min: 1, max: 5 } } });
+    expect(text.check!([0, 1])).toEqual({ code: "custom", key: "size" });
   });
 });

@@ -1,0 +1,28 @@
+id = "house-robber"
+subject = "dynamic-programming"
+order = 3
+title = "House robber"
+title_es = "El ladrón de casas"
+tags = ["dynamic-programming"]
+problems = []
+presets = ["random", "reversed", "few-unique"]
+default = [6, 3, 10, 8, 2, 9, 4]
+
+[complexity]
+best = "O(n)"
+average = "O(n)"
+worst = "O(n)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 12
+min = 1
+max = 50
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = rob(a)"
+typescript = "a = rob(a)"

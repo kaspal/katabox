@@ -1,0 +1,28 @@
+id = "word-break"
+subject = "dynamic-programming"
+order = 12
+title = "Word break"
+title_es = "Partir en palabras"
+tags = ["dynamic-programming", "strings"]
+problems = []
+presets = ["splits", "random", "dead-end"]
+default = [18, 20, 13, 5, 11, 14, 22, 4, 17, 15, 14, 19, -1, 18, 20, 13, -1, 5, 11, 14, 22, -1, 5, 11, 14, 22, 4, 17, -1, 15, 14, 19, -1, 4, 17]
+
+[complexity]
+best = "O(n · words · L)"
+average = "O(n · words · L)"
+worst = "O(n · words · L)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 57
+min = -1
+max = 25
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = word_break(kb_text(a)[0], kb_text(a)[1:])"
+typescript = "a = wordBreak(kbText(a)[0], kbText(a).slice(1))"

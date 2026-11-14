@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "The default input has k = 3. How big is the output grid?",
+    "prompt_es": "La entrada por defecto tiene k = 3. ¿Qué tamaño tiene la cuadrícula de salida?",
+    "options": [
+      { "en": "3 × 3", "es": "3 × 3" },
+      { "en": "7 × 7", "es": "7 × 7" },
+      { "en": "6 × 6", "es": "6 × 6" }
+    ],
+    "answer": 1,
+    "explain_en": "The side is 2k + 1 = 7: three rooms per row, with a wall around and between them.",
+    "explain_es": "El lado es 2k + 1 = 7: tres salas por fila, con un muro alrededor y entre ellas."
+  },
+  {
+    "prompt_en": "How many walls between rooms does the generator remove when k = 3?",
+    "prompt_es": "¿Cuántos muros entre salas quita el generador cuando k = 3?",
+    "options": [
+      { "en": "8", "es": "8" },
+      { "en": "9", "es": "9" },
+      { "en": "12", "es": "12" }
+    ],
+    "answer": 0,
+    "explain_en": "Each room except the first is reached by knocking down one wall, so a spanning tree of 9 rooms has 9 − 1 = 8 openings. 12 would remove every inner wall and create loops.",
+    "explain_es": "A cada sala salvo la primera se llega derribando un muro, así que un árbol de expansión de 9 salas tiene 9 − 1 = 8 aberturas. Con 12 se quitarían todos los muros interiores y habría ciclos."
+  },
+  {
+    "prompt_en": "You run the generator twice with k = 3 and seed 7. What do you get?",
+    "prompt_es": "Ejecutas el generador dos veces con k = 3 y semilla 7. ¿Qué obtienes?",
+    "options": [
+      { "en": "Two different mazes, because the choices are random", "es": "Dos laberintos distintos, porque las elecciones son aleatorias" },
+      { "en": "The same rooms but with loops the second time", "es": "Las mismas salas, pero con ciclos la segunda vez" },
+      { "en": "Exactly the same maze both times", "es": "Exactamente el mismo laberinto las dos veces" }
+    ],
+    "answer": 2,
+    "explain_en": "The generator is a formula applied to the seed, so the same seed gives the same sequence of picks and the same maze. A different seed usually gives a different maze.",
+    "explain_es": "El generador es una fórmula aplicada a la semilla, así que la misma semilla da la misma secuencia de elecciones y el mismo laberinto. Otra semilla suele dar otro laberinto."
+  }
+]

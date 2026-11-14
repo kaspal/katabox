@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input: the signs are d1 = -1, d2 = 1, d3 = 1, d4 = -1. Why is it a proper crossing?",
+    "prompt_es": "Entrada por defecto: los signos son d1 = -1, d2 = 1, d3 = 1, d4 = -1. ¿Por qué es un cruce propio?",
+    "options": [
+      { "en": "Because the four signs add up to 0", "es": "Porque los cuatro signos suman 0" },
+      { "en": "Because d1 · d2 < 0 and d3 · d4 < 0: each segment has its ends on opposite sides of the other", "es": "Porque d1 · d2 < 0 y d3 · d4 < 0: cada segmento tiene sus extremos a lados opuestos del otro" },
+      { "en": "Because d1 · d2 < 0 alone is enough", "es": "Porque basta con d1 · d2 < 0" }
+    ],
+    "answer": 1,
+    "explain_en": "Both pairs must straddle. One pair alone only says that one segment crosses the other's line, maybe far beyond its end.",
+    "explain_es": "Los dos pares deben quedar a ambos lados. Un solo par solo dice que un segmento cruza la recta del otro, quizá muy lejos de su extremo."
+  },
+  {
+    "prompt_en": "\"An end on the other line\": the signs are 1, -1, 0, 1. Why is the output 1?",
+    "prompt_es": "\"Un extremo sobre la otra recta\": los signos son 1, -1, 0, 1. ¿Por qué la salida es 1?",
+    "options": [
+      { "en": "d3 = 0 puts (9, 6) on the line of the first segment, and it is inside that segment's bounding box", "es": "d3 = 0 pone (9, 6) en la recta del primer segmento, y queda dentro de la caja envolvente de ese segmento" },
+      { "en": "Because d1 · d2 < 0", "es": "Porque d1 · d2 < 0" },
+      { "en": "Any zero sign means the segments meet", "es": "Cualquier signo cero significa que los segmentos se tocan" }
+    ],
+    "answer": 0,
+    "explain_en": "d3 · d4 = 0, so it is not a proper crossing. The touch test then checks that (9, 6) lies between (3, 3) and (15, 9) in both x and y.",
+    "explain_es": "d3 · d4 = 0, así que no es un cruce propio. La prueba de contacto comprueba entonces que (9, 6) está entre (3, 3) y (15, 9) tanto en x como en y."
+  },
+  {
+    "prompt_en": "Segments (1, 1)–(3, 3) and (5, 5)–(8, 8) lie on one line. What is the output?",
+    "prompt_es": "Los segmentos (1, 1)–(3, 3) y (5, 5)–(8, 8) están en una misma recta. ¿Cuál es la salida?",
+    "options": [
+      { "en": "[1, 0, 0, 0, 0]", "es": "[1, 0, 0, 0, 0]" },
+      { "en": "[1, 1, 1, 1, 1]", "es": "[1, 1, 1, 1, 1]" },
+      { "en": "[0, 0, 0, 0, 0]", "es": "[0, 0, 0, 0, 0]" }
+    ],
+    "answer": 2,
+    "explain_en": "All four tests are 0, but no endpoint is inside the other segment's bounding box: there is a gap from (3, 3) to (5, 5).",
+    "explain_es": "Las cuatro pruebas dan 0, pero ningún extremo está dentro de la caja envolvente del otro segmento: hay un hueco de (3, 3) a (5, 5)."
+  }
+]

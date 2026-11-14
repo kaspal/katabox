@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "In cell (i, j), which neighbour stands for deleting the letter a[i - 1]?",
+    "prompt_es": "En la celda (i, j), ¿qué vecino representa borrar la letra a[i - 1]?",
+    "options": [
+      { "en": "The diagonal, cost[i - 1][j - 1]", "es": "La diagonal, cost[i - 1][j - 1]" },
+      { "en": "The cell to the left, cost[i][j - 1]", "es": "La celda de la izquierda, cost[i][j - 1]" },
+      { "en": "The cell above, cost[i - 1][j]", "es": "La celda de arriba, cost[i - 1][j]" }
+    ],
+    "answer": 2,
+    "explain_en": "cost[i - 1][j] already turned the first i - 1 letters of a into the first j letters of b; deleting a[i - 1] finishes the job. Left is an insertion, the diagonal a replacement.",
+    "explain_es": "cost[i - 1][j] ya convirtió las primeras i - 1 letras de a en las primeras j letras de b; borrar a[i - 1] termina el trabajo. La izquierda es una inserción y la diagonal una sustitución."
+  },
+  {
+    "prompt_en": "Default input: carpet and carrot. What is cost[4][4], for carp against carr?",
+    "prompt_es": "Entrada por defecto: carpet y carrot. ¿Cuánto vale cost[4][4], para carp frente a carr?",
+    "options": [
+      { "en": "1: the diagonal is 0, plus one replacement", "es": "1: la diagonal vale 0, más una sustitución" },
+      { "en": "0: both words start with car", "es": "0: las dos palabras empiezan por car" },
+      { "en": "2: delete p, then insert r", "es": "2: borrar la p y después insertar la r" }
+    ],
+    "answer": 0,
+    "explain_en": "p and r differ, so the cell is 1 + the smallest neighbour. The diagonal cost[3][3] is 0 because car matches car.",
+    "explain_es": "p y r son distintas, así que la celda es 1 + el menor vecino. La diagonal cost[3][3] vale 0 porque car coincide con car."
+  },
+  {
+    "prompt_en": "What is the output for the default input?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto?",
+    "options": [
+      { "en": "[3]", "es": "[3]" },
+      { "en": "[2]", "es": "[2]" },
+      { "en": "[4]", "es": "[4]" }
+    ],
+    "answer": 1,
+    "explain_en": "Replace p with r and e with o. The final t matches, so the corner copies the diagonal, 2.",
+    "explain_es": "Sustituir la p por r y la e por o. La t final coincide, así que la esquina copia la diagonal, 2."
+  }
+]

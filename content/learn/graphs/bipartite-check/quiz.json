@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph: squares 0 – 1 – 2 – 3 – 0 and 4 – 5 – 6 – 7 – 4, joined by 2 – 4. Which side does node 4 get?",
+    "prompt_es": "Grafo por defecto: cuadrados 0 – 1 – 2 – 3 – 0 y 4 – 5 – 6 – 7 – 4, unidos por 2 – 4. ¿Qué lado recibe el nodo 4?",
+    "options": [
+      { "en": "Side A (0), like node 0", "es": "El lado A (0), como el nodo 0" },
+      { "en": "Side B (1), opposite to 2", "es": "El lado B (1), el contrario de 2" },
+      { "en": "None: it is in another component", "es": "Ninguno: está en otra componente" }
+    ],
+    "answer": 1,
+    "explain_en": "0 is on A, 1 on B, 2 on A. Node 4 is discovered from 2, so it goes to the opposite side, B. The edge 2 – 4 makes the whole graph one component.",
+    "explain_es": "0 está en A, 1 en B y 2 en A. El nodo 4 se descubre desde 2, así que va al lado contrario, B. La arista 2 – 4 hace que todo el grafo sea una sola componente."
+  },
+  {
+    "prompt_en": "When node 3 is visited, it sees 2 and 0, both already coloured. What happens?",
+    "prompt_es": "Al visitar el nodo 3, ve a 2 y a 0, los dos ya coloreados. ¿Qué pasa?",
+    "options": [
+      { "en": "Nothing: 2 and 0 are on A, opposite to 3 on B", "es": "Nada: 2 y 0 están en A, el lado contrario de 3, que está en B" },
+      { "en": "A clash: 3 has two coloured neighbours", "es": "Un choque: 3 tiene dos vecinos coloreados" },
+      { "en": "3 switches to side A", "es": "3 cambia al lado A" }
+    ],
+    "answer": 0,
+    "explain_en": "Coloured neighbours are only a problem when they share u's side. Here both are on the other side, so the square 0 – 1 – 2 – 3 alternates correctly.",
+    "explain_es": "Los vecinos coloreados solo son un problema cuando comparten el lado de u. Aquí los dos están en el otro lado, así que el cuadrado 0 – 1 – 2 – 3 alterna bien."
+  },
+  {
+    "prompt_en": "You add the edge 0 – 2 to the default graph. What is the output?",
+    "prompt_es": "Añades la arista 0 – 2 al grafo por defecto. ¿Cuál es la salida?",
+    "options": [
+      { "en": "The same sides as before", "es": "Los mismos lados que antes" },
+      { "en": "[0, 1, 1, 1, 0, 1, 0, 1]", "es": "[0, 1, 1, 1, 0, 1, 0, 1]" },
+      { "en": "[-1]: 0, 1, 2 form a triangle, an odd cycle", "es": "[-1]: 0, 1, 2 forman un triángulo, un ciclo impar" }
+    ],
+    "answer": 2,
+    "explain_en": "A triangle has 3 edges, an odd number, so its sides cannot alternate all the way round. Visiting 0 puts 1 and 2 both on B; then visiting 1 finds the edge 1 – 2 inside side B and stops.",
+    "explain_es": "Un triángulo tiene 3 aristas, un número impar, así que sus lados no pueden alternar en toda la vuelta. Visitar 0 pone 1 y 2 en B; después, al visitar 1, encuentra la arista 1 – 2 dentro del lado B y se detiene."
+  }
+]

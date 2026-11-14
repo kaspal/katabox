@@ -3,7 +3,7 @@
 // cannot hold the target.
 import { pickSearchTarget, SEARCH_INPUT } from "../engine/search";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Pointer, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"binary-search">;
 const KEYS = [
@@ -14,7 +14,7 @@ const KEYS = [
   "binary-search.go_left",
   "binary-search.missing",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["mid", "found", "compare", "missing"] as const;
 

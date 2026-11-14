@@ -1,0 +1,28 @@
+id = "stack"
+subject = "linear"
+order = 2
+title = "Stack"
+title_es = "Pila"
+tags = ["stack"]
+problems = ["nested-brackets", "folder-path", "undo-notebook"]
+presets = ["last-in-first-out", "random", "underflow"]
+default = [1, 10, 1, 20, 1, 30, 2, 0, 2, 0, 1, 40, 3, 0, 2, 0, 2, 0]
+
+[complexity]
+best = "O(1)"
+average = "O(1) per operation"
+worst = "O(1)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 24
+min = 0
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(kb_ops(a, [\"push\", \"pop\", \"peek\"], 1))"
+typescript = "a = run(kbOps(a, [\"push\", \"pop\", \"peek\"], 1))"

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input [1, 2, 3]. Which subset is recorded right after [1, 2, 3]?",
+    "prompt_es": "Entrada por defecto [1, 2, 3]. ¿Qué subconjunto se apunta justo después de [1, 2, 3]?",
+    "options": [
+      { "en": "[2]", "es": "[2]" },
+      { "en": "[2, 3]", "es": "[2, 3]" },
+      { "en": "[1, 3]", "es": "[1, 3]" }
+    ],
+    "answer": 2,
+    "explain_en": "grow(3) has nothing to try, so the search returns to grow(1), undoes 2 and chooses 3. Only after 1 is undone does grow(0) reach [2].",
+    "explain_es": "grow(3) no tiene nada que probar, así que la búsqueda vuelve a grow(1), deshace el 2 y elige el 3. Solo cuando se deshace el 1 llega grow(0) a [2]."
+  },
+  {
+    "prompt_en": "How many calls to grow does an input of 4 values make?",
+    "prompt_es": "¿Cuántas llamadas a grow hace una entrada de 4 valores?",
+    "options": [
+      { "en": "16: one call per subset", "es": "16: una llamada por subconjunto" },
+      { "en": "4: one call per value", "es": "4: una llamada por valor" },
+      { "en": "24: one call per order", "es": "24: una llamada por orden" }
+    ],
+    "answer": 0,
+    "explain_en": "Every call records exactly one subset, and each subset is built once, so there are 2⁴ = 16 calls.",
+    "explain_es": "Cada llamada apunta exactamente un subconjunto, y cada subconjunto se construye una vez, así que hay 2⁴ = 16 llamadas."
+  },
+  {
+    "prompt_en": "Why must each call record a copy of chosen instead of chosen itself?",
+    "prompt_es": "¿Por qué cada llamada debe apuntar una copia de chosen y no el propio chosen?",
+    "options": [
+      { "en": "Copies are faster to append", "es": "Las copias se añaden más rápido" },
+      { "en": "chosen keeps changing and ends empty, so every recorded entry would show that same final list", "es": "chosen sigue cambiando y acaba vacío, así que todas las entradas apuntadas mostrarían esa misma lista final" },
+      { "en": "The recursion would never stop", "es": "La recursión no terminaría nunca" }
+    ],
+    "answer": 1,
+    "explain_en": "The search shares one list and undoes every choice, so only a snapshot keeps the subset as it was at that moment.",
+    "explain_es": "La búsqueda comparte una sola lista y deshace cada elección, así que solo una instantánea conserva el subconjunto tal como era en ese momento."
+  }
+]

@@ -38,7 +38,8 @@ import {
   type JudgeEvent,
   type Language,
   type LanguagesInfo,
-  type LearnSubject,
+  type LearnPath,
+  LearnSubject,
   type LearnTopicSummary,
   type LearnTopicView,
   type LspConnection,
@@ -83,6 +84,7 @@ export const api = {
     call(commands.getProblem(id, lang)),
   // Learn (ADR 0029)
   learnCatalog: (lang: UiLang): Promise<LearnSubject[]> => call(commands.learnCatalog(lang)),
+  learnPaths: (lang: UiLang): Promise<LearnPath[]> => call(commands.learnPaths(lang)),
   learnTopic: (id: string, lang: UiLang): Promise<LearnTopicView> =>
     call(commands.learnTopic(id, lang)),
   searchLearn: (query: string, lang: UiLang): Promise<LearnTopicSummary[]> =>

@@ -1,0 +1,28 @@
+id = "bitmask-tsp"
+subject = "dynamic-programming"
+order = 14
+title = "Travelling salesperson (bitmask DP)"
+title_es = "Viajante de comercio (PD con máscaras)"
+tags = ["dynamic-programming", "bitmask", "graph"]
+problems = ["delivery-round"]
+presets = ["four-towns", "random", "five-towns"]
+default = [4, 0, 2, 9, 10, 2, 0, 6, 4, 9, 6, 0, 3, 10, 4, 3, 0]
+
+[complexity]
+best = "O(2ⁿ · n²)"
+average = "O(2ⁿ · n²)"
+worst = "O(2ⁿ · n²)"
+space = "O(2ⁿ · n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 26
+min = 0
+max = 20
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = tsp(a[0], kb_chunks(a[1:], a[0]))"
+typescript = "a = tsp(a[0], kbChunks(a.slice(1), a[0]))"

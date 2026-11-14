@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "push 42, push 17, push 8, push 23. Where does 23 go after sifting up?",
+    "prompt_es": "push 42, push 17, push 8, push 23. ¿Dónde queda 23 tras subir?",
+    "options": [
+      { "en": "Position 3: it stays at the end", "es": "La posición 3: se queda al final" },
+      { "en": "Position 1: it swaps with 42, then stops below 8", "es": "La posición 1: se intercambia con 42 y se para bajo 8" },
+      { "en": "Position 0: it becomes the root", "es": "La posición 0: pasa a ser la raíz" }
+    ],
+    "answer": 1,
+    "explain_en": "Before the push the array is 8, 42, 17. 23 starts at position 3, whose parent (position 1) is 42, so they swap. Its new parent is 8, which is smaller, so it stops: 8, 23, 17, 42.",
+    "explain_es": "Antes del push el arreglo es 8, 42, 17. 23 empieza en la posición 3, cuyo padre (posición 1) es 42, así que se intercambian. Su nuevo padre es 8, que es menor, así que se para: 8, 23, 17, 42."
+  },
+  {
+    "prompt_en": "After push 4 the heap is 4, 8, 17, 42, 23. The first pop moves 23 to the root. Which value does 23 swap with?",
+    "prompt_es": "Tras push 4 el montículo es 4, 8, 17, 42, 23. El primer pop lleva 23 a la raíz. ¿Con qué valor se intercambia 23?",
+    "options": [
+      { "en": "17, the right child", "es": "17, el hijo derecho" },
+      { "en": "None: 23 stays at the root", "es": "Con ninguno: 23 se queda en la raíz" },
+      { "en": "8, the smaller child", "es": "8, el hijo menor" }
+    ],
+    "answer": 2,
+    "explain_en": "The root's children are 8 and 17. Sifting down swaps with the smaller one, 8; then 23 is not bigger than its only child 42, so it stops.",
+    "explain_es": "Los hijos de la raíz son 8 y 17. Al hundir se intercambia con el menor, 8; después 23 no es mayor que su único hijo, 42, así que se para."
+  },
+  {
+    "prompt_en": "With n values in the heap, what does one pop cost?",
+    "prompt_es": "Con n valores en el montículo, ¿cuánto cuesta un pop?",
+    "options": [
+      { "en": "O(log n): the moved value sinks along one path", "es": "O(log n): el valor movido se hunde por un solo camino" },
+      { "en": "O(1): the smallest is at the root", "es": "O(1): el menor está en la raíz" },
+      { "en": "O(n): the array has to be shifted", "es": "O(n): hay que desplazar el arreglo" }
+    ],
+    "answer": 0,
+    "explain_en": "Reading the root is O(1), but refilling it means sifting the last value down at most one step per level, and the tree has about log n levels.",
+    "explain_es": "Leer la raíz es O(1), pero rellenarla obliga a hundir el último valor, como mucho un paso por nivel, y el árbol tiene unos log n niveles."
+  }
+]

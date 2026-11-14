@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default map: S at the top-left corner, G at the bottom-right of a 5 × 9 grid. What is S's f when it is pushed?",
+    "prompt_es": "Mapa por defecto: S en la esquina superior izquierda y G en la inferior derecha de una cuadrícula de 5 × 9. ¿Cuál es la f de S al meterla en la cola?",
+    "options": [
+      { "en": "0", "es": "0" },
+      { "en": "12", "es": "12" },
+      { "en": "16", "es": "16" }
+    ],
+    "answer": 1,
+    "explain_en": "g is 0 and h is the Manhattan distance: 4 rows plus 8 columns, 12. 16 is the final cost, which the walls force.",
+    "explain_es": "g es 0 y h es la distancia Manhattan: 4 filas más 8 columnas, 12. 16 es el coste final, que imponen los muros."
+  },
+  {
+    "prompt_en": "All moves cost 1. A step takes the search one row further from G. How does f change?",
+    "prompt_es": "Todos los movimientos cuestan 1. Un paso aleja la búsqueda una fila de G. ¿Cómo cambia f?",
+    "options": [
+      { "en": "It stays the same", "es": "Se queda igual" },
+      { "en": "It goes down by 1", "es": "Baja en 1" },
+      { "en": "It goes up by 2", "es": "Sube en 2" }
+    ],
+    "answer": 2,
+    "explain_en": "g grows by 1 and h grows by 1. On the default map the route climbs two rows away from G, so the answer is 12 + 2 + 2 = 16.",
+    "explain_es": "g crece en 1 y h crece en 1. En el mapa por defecto la ruta sube dos filas alejándose de G, así que la respuesta es 12 + 2 + 2 = 16."
+  },
+  {
+    "prompt_en": "Why does A* with the Manhattan distance return the same cost as Dijkstra?",
+    "prompt_es": "¿Por qué A* con la distancia Manhattan devuelve el mismo coste que Dijkstra?",
+    "options": [
+      { "en": "h never overestimates: every step costs at least 1 and moves at most one row or column", "es": "h nunca sobrestima: cada paso cuesta al menos 1 y avanza como mucho una fila o una columna" },
+      { "en": "It explores every cell, like Dijkstra", "es": "Explora todas las celdas, como Dijkstra" },
+      { "en": "The Manhattan distance is always the exact cost", "es": "La distancia Manhattan es siempre el coste exacto" }
+    ],
+    "answer": 0,
+    "explain_en": "An estimate that never overestimates (and here is consistent) makes G's cost final when it leaves the queue. A* still takes fewer cells out of the queue: 23 instead of Dijkstra's 26 on the default map.",
+    "explain_es": "Una estimación que nunca sobrestima (y aquí además es consistente) hace definitivo el coste de G cuando sale de la cola. A* sigue sacando menos celdas de la cola: 23 en vez de las 26 de Dijkstra en el mapa por defecto."
+  }
+]

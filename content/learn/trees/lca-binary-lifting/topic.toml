@@ -1,0 +1,28 @@
+id = "lca-binary-lifting"
+subject = "trees"
+order = 14
+title = "LCA by binary lifting"
+title_es = "LCA con saltos binarios"
+tags = ["tree", "binary-lifting"]
+problems = ["common-boss"]
+presets = ["two-branches", "random", "deep-path"]
+default = [9, 0, 0, 1, 1, 2, 2, 3, 4, 6, 7, 8, 5, 9, 3, 4]
+
+[complexity]
+best = "O(n log n) to build"
+average = "O(log n) per pair"
+worst = "O(log n)"
+space = "O(n log n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 4
+max_len = 20
+min = 0
+max = 11
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(a[1:1 + a[0]], kb_chunks(a[1 + a[0]:], 2))"
+typescript = "a = run(a.slice(1, 1 + a[0]), kbChunks(a.slice(1 + a[0]), 2))"

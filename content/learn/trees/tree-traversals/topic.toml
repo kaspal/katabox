@@ -1,0 +1,28 @@
+id = "tree-traversals"
+subject = "trees"
+order = 1
+title = "Pre-, in- and post-order"
+title_es = "Preorden, inorden y postorden"
+tags = ["binary-tree", "recursion"]
+problems = ["bracket-notation", "hedge-trim", "garden-walk"]
+presets = ["random", "reversed", "nearly-sorted"]
+default = [50, 30, 70, 20, 40, 60, 80]
+
+[complexity]
+best = "O(n)"
+average = "O(n)"
+worst = "O(n)"
+space = "O(h) stack"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 12
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(a)"
+typescript = "a = run(a)"

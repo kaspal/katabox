@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "The values 50, 30, 70, 20, 40, 60, 80 build a BST. What does pre-order write?",
+    "prompt_es": "Los valores 50, 30, 70, 20, 40, 60, 80 forman un ABB. ¿Qué escribe el preorden?",
+    "options": [
+      { "en": "50, 30, 70, 20, 40, 60, 80", "es": "50, 30, 70, 20, 40, 60, 80" },
+      { "en": "50, 30, 20, 40, 70, 60, 80", "es": "50, 30, 20, 40, 70, 60, 80" },
+      { "en": "20, 30, 40, 50, 60, 70, 80", "es": "20, 30, 40, 50, 60, 70, 80" }
+    ],
+    "answer": 1,
+    "explain_en": "Pre-order writes the root, then finishes the whole left subtree (30, 20, 40) before going right (70, 60, 80). The first option is level order.",
+    "explain_es": "El preorden escribe la raíz y termina todo el subárbol izquierdo (30, 20, 40) antes de ir a la derecha (70, 60, 80). La primera opción es el recorrido por niveles."
+  },
+  {
+    "prompt_en": "In post-order on the same tree, which value is written last?",
+    "prompt_es": "En el postorden del mismo árbol, ¿qué valor se escribe el último?",
+    "options": [
+      { "en": "80, the rightmost leaf", "es": "80, la hoja más a la derecha" },
+      { "en": "20, the smallest", "es": "20, el menor" },
+      { "en": "50, the root", "es": "50, la raíz" }
+    ],
+    "answer": 2,
+    "explain_en": "Post-order writes a node after both of its subtrees, so the root always comes last: 20, 40, 30, 60, 80, 70, 50.",
+    "explain_es": "El postorden escribe un nodo después de sus dos subárboles, así que la raíz siempre sale la última: 20, 40, 30, 60, 80, 70, 50."
+  },
+  {
+    "prompt_en": "Why does in-order list a BST's values in ascending order?",
+    "prompt_es": "¿Por qué el inorden lista los valores de un ABB en orden ascendente?",
+    "options": [
+      { "en": "Each node is written after all smaller values (its left subtree) and before all others (its right subtree)", "es": "Cada nodo se escribe después de todos los valores menores (su subárbol izquierdo) y antes de los demás (su subárbol derecho)" },
+      { "en": "In-order sorts the values as it goes", "es": "El inorden ordena los valores sobre la marcha" },
+      { "en": "The values were inserted in ascending order", "es": "Los valores se insertaron en orden ascendente" }
+    ],
+    "answer": 0,
+    "explain_en": "Nothing is sorted during the walk; the BST rule already places smaller values left and the rest right, and in-order simply reads them left to right.",
+    "explain_es": "Nada se ordena durante el recorrido; la regla del ABB ya pone los valores menores a la izquierda y el resto a la derecha, y el inorden simplemente los lee de izquierda a derecha."
+  }
+]

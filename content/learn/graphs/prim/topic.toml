@@ -1,0 +1,28 @@
+id = "prim"
+subject = "graphs"
+order = 12
+title = "Prim's minimum spanning tree"
+title_es = "Árbol de expansión mínima de Prim"
+tags = ["graph", "minimum-spanning-tree", "heap"]
+problems = ["village-cables"]
+presets = ["cheap-ring", "random", "two-islands"]
+default = [6, 0, 0, 1, 4, 1, 2, 2, 2, 3, 5, 3, 4, 1, 4, 5, 3, 5, 0, 2, 0, 3, 8, 1, 4, 6]
+
+[complexity]
+best = "O(m log m)"
+average = "O(m log m)"
+worst = "O(m log m)"
+space = "O(n + m)"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 62
+min = 0
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = prim(*kb_graph(a))"
+typescript = "a = prim(...kbGraph(a))"

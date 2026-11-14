@@ -1,0 +1,28 @@
+id = "edit-distance"
+subject = "dynamic-programming"
+order = 10
+title = "Edit distance"
+title_es = "Distancia de edición"
+tags = ["dynamic-programming", "strings"]
+problems = ["typo-distance"]
+presets = ["near-miss", "random", "swapped-letters"]
+default = [2, 0, 17, 15, 4, 19, -1, 2, 0, 17, 17, 14, 19]
+
+[complexity]
+best = "O(m · n)"
+average = "O(m · n)"
+worst = "O(m · n)"
+space = "O(m · n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 17
+min = -1
+max = 25
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = edit_distance(*kb_text(a))"
+typescript = "a = editDistance(...(kbText(a) as [string, string]))"

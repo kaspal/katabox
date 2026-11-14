@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default houses 6, 3, 10, 8, 2, 9, 4. So far best = [0, 6, 6, 16]. What is best[4], for house 3 (value 8)?",
+    "prompt_es": "Casas por defecto 6, 3, 10, 8, 2, 9, 4. Por ahora best = [0, 6, 6, 16]. ¿Cuánto vale best[4], para la casa 3 (valor 8)?",
+    "options": [
+      { "en": "16: skipping beats taking (6 + 8 = 14)", "es": "16: saltarla gana a tomarla (6 + 8 = 14)" },
+      { "en": "14: the house is taken", "es": "14: se toma la casa" },
+      { "en": "24: 16 + 8", "es": "24: 16 + 8" }
+    ],
+    "answer": 0,
+    "explain_en": "Taking house 3 means skipping house 2, so it adds 8 to best[2] = 6. Adding to 16 would rob two neighbours.",
+    "explain_es": "Tomar la casa 3 obliga a saltar la casa 2, así que suma 8 a best[2] = 6. Sumarlo a 16 robaría dos vecinas."
+  },
+  {
+    "prompt_en": "In the traceback, best[6] = 25 and best[5] = 18. What happens next?",
+    "prompt_es": "En la reconstrucción, best[6] = 25 y best[5] = 18. ¿Qué pasa a continuación?",
+    "options": [
+      { "en": "House 6 is recorded and the walk steps back one", "es": "Se apunta la casa 6 y se retrocede uno" },
+      { "en": "Nothing is recorded; the walk steps back one", "es": "No se apunta nada; se retrocede uno" },
+      { "en": "House 5 is recorded and the walk jumps to best[4]", "es": "Se apunta la casa 5 y se salta a best[4]" }
+    ],
+    "answer": 2,
+    "explain_en": "The cells differ, so house 5 (index i - 1) was taken. Its neighbour, house 4, was skipped, so the walk jumps two.",
+    "explain_es": "Las celdas difieren, así que la casa 5 (índice i - 1) se tomó. Su vecina, la casa 4, se saltó, así que se retrocede dos."
+  },
+  {
+    "prompt_en": "What is the output for the default input?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto?",
+    "options": [
+      { "en": "[22, 0, 2, 4, 6]", "es": "[22, 0, 2, 4, 6]" },
+      { "en": "[25, 0, 2, 5]", "es": "[25, 0, 2, 5]" },
+      { "en": "[25, 2, 5]", "es": "[25, 2, 5]" }
+    ],
+    "answer": 1,
+    "explain_en": "6 + 10 + 9 = 25, from houses 0, 2 and 5. Every other house gives only 22.",
+    "explain_es": "6 + 10 + 9 = 25, con las casas 0, 2 y 5. Una casa sí y otra no da solo 22."
+  }
+]

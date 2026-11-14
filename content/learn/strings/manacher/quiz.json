@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Why does the sample put bars between and around the letters?",
+    "prompt_es": "¿Por qué el ejemplo pone barras entre las letras y alrededor de ellas?",
+    "options": [
+      { "en": "To mark where palindromes end", "es": "Para marcar dónde terminan los palíndromos" },
+      { "en": "To make the text twice as fast to scan", "es": "Para que el texto se recorra el doble de rápido" },
+      { "en": "So even palindromes get a center too, on a bar, and one rule handles both kinds", "es": "Para que los palíndromos pares también tengan centro, en una barra, y una sola regla sirva para los dos tipos" }
+    ],
+    "answer": 2,
+    "explain_en": "In |a|b|b|a| the even palindrome abba is centered on the middle bar. Odd palindromes stay centered on a letter.",
+    "explain_es": "En |a|b|b|a| el palíndromo par abba tiene su centro en la barra del medio. Los impares siguen centrados en una letra."
+  },
+  {
+    "prompt_en": "Default input abacabadab: the palindrome abacaba is centered at s[7] and reaches right = 14. At s[11], whose mirror s[3] has radius 3, where does radius[11] start?",
+    "prompt_es": "Entrada por defecto abacabadab: el palíndromo abacaba está centrado en s[7] y llega a right = 14. En s[11], cuyo espejo s[3] tiene radio 3, ¿desde qué valor empieza radius[11]?",
+    "options": [
+      { "en": "3: min(14 - 11, 3)", "es": "3: min(14 - 11, 3)" },
+      { "en": "0: every center starts from scratch", "es": "0: cada centro empieza desde cero" },
+      { "en": "7: the radius of the center", "es": "7: el radio del centro" }
+    ],
+    "answer": 0,
+    "explain_en": "The mirror is 2 · 7 - 11 = 3, and its radius fits inside the edge. Growing then compares c with d and stops.",
+    "explain_es": "El espejo es 2 · 7 - 11 = 3, y su radio cabe dentro del borde. Después, al crecer se compara c con d y se para."
+  },
+  {
+    "prompt_en": "The largest radius, 7, is at s[7]. What is the output?",
+    "prompt_es": "El radio mayor, 7, está en s[7]. ¿Cuál es la salida?",
+    "options": [
+      { "en": "[7, 7]", "es": "[7, 7]" },
+      { "en": "[7, 0]", "es": "[7, 0]" },
+      { "en": "[5, 5]", "es": "[5, 5]" }
+    ],
+    "answer": 1,
+    "explain_en": "The length is the radius, 7, and the start is (7 - 7) / 2 = 0: abacaba. badab, at 5, is only 5 letters long.",
+    "explain_es": "La longitud es el radio, 7, y el inicio es (7 - 7) / 2 = 0: abacaba. badab, en la posición 5, solo tiene 5 letras."
+  }
+]

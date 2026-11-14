@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input, n = 8. Plain recursion makes 67 calls. How many calls does the memo version make?",
+    "prompt_es": "Entrada por defecto, n = 8. La recursión directa hace 67 llamadas. ¿Cuántas hace la versión con memoria?",
+    "options": [
+      { "en": "8", "es": "8" },
+      { "en": "21", "es": "21" },
+      { "en": "15", "es": "15" }
+    ],
+    "answer": 2,
+    "explain_en": "Each value from 0 to 8 is stored once (9 stores), and fib(3) to fib(8) each find their second call, fib(k - 2), already in the memo (6 hits).",
+    "explain_es": "Cada valor de 0 a 8 se guarda una vez (9 guardados), y de fib(3) a fib(8) cada uno encuentra su segunda llamada, fib(k - 2), ya en la memoria (6 aciertos)."
+  },
+  {
+    "prompt_en": "What happens on a memo hit?",
+    "prompt_es": "¿Qué pasa cuando hay un acierto en la memoria?",
+    "options": [
+      { "en": "The saved answer is returned and the recursion stops there", "es": "Se devuelve la respuesta guardada y la recursión se corta ahí" },
+      { "en": "The value is worked out again to check it", "es": "El valor se vuelve a calcular para comprobarlo" },
+      { "en": "A new answer is stored", "es": "Se guarda una respuesta nueva" }
+    ],
+    "answer": 0,
+    "explain_en": "A hit skips the whole subtree of calls below it. That is what turns an exponential number of calls into a linear one.",
+    "explain_es": "Un acierto se salta todo el subárbol de llamadas que tiene debajo. Eso es lo que convierte un número exponencial de llamadas en uno lineal."
+  },
+  {
+    "prompt_en": "Bottom-up, which cells does table[5] read?",
+    "prompt_es": "De abajo arriba, ¿qué celdas lee table[5]?",
+    "options": [
+      { "en": "table[6] and table[7]", "es": "table[6] y table[7]" },
+      { "en": "table[4] and table[3]", "es": "table[4] y table[3]" },
+      { "en": "Only table[4]", "es": "Solo table[4]" }
+    ],
+    "answer": 1,
+    "explain_en": "Both were filled earlier, left to right, so table[5] = 3 + 2 = 5.",
+    "explain_es": "Las dos se llenaron antes, de izquierda a derecha, así que table[5] = 3 + 2 = 5."
+  }
+]

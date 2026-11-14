@@ -2,9 +2,10 @@
 // front, so playing, stepping and scrubbing only index into an array.
 import type en from "@/i18n/locales/en.json";
 import type { LearnInput } from "@/bindings";
+import type { InputError } from "./inputs";
 
 /** A value with a stable identity: scenes key on `id`, so equal values still slide. */
-export type Item = { id: number; value: number };
+export type Item = { id: number; value: number; /** Shown instead of the value (a letter). */ text?: string };
 
 /** How a position is drawn. Every role has a legend label; colour is never the only cue. */
 export type Role = "idle" | "out" | "pivot" | "compare" | "swap" | "sorted" | "key";
@@ -20,13 +21,41 @@ type Narrations = Locale["narration"];
 export type TopicId = keyof Narrations;
 /** A narration key of one topic, typed from the English locale. */
 export type NarrationKey<T extends TopicId> = `${T}.${keyof Narrations[T] & string}`;
-export type Narration = { key: string; params?: Record<string, string | number> };
+/** Names i18next reads in `t()`'s options as options, not as values: `replace` is the
+ * interpolation map (it blanks every placeholder), `count` picks a plural form, `context` a
+ * variant, and so on. Narration params never use them: the type refuses them in a `say`
+ * call, `Recorder.snap` throws on them, and a test renders every step in both languages. */
+export const RESERVED_NARRATION_PARAMS = [
+  "replace",
+  "count",
+  "context",
+  "lng",
+  "lngs",
+  "ns",
+  "defaultValue",
+  "returnObjects",
+  "returnDetails",
+  "ordinal",
+  "postProcess",
+  "interpolation",
+  "joinArrays",
+  "keySeparator",
+  "nsSeparator",
+  "skipInterpolation",
+  "fallbackLng",
+] as const;
+type ReservedParam = (typeof RESERVED_NARRATION_PARAMS)[number];
+/** Narration params: any name except i18next's reserved option names. */
+export type NarrationParams<V = string | number> = Record<string, V> & { [K in ReservedParam]?: never };
+export type Narration = { key: string; params?: NarrationParams };
 /** A counter label (`learn.stage.<label>`). */
 export type CounterLabel = keyof Locale["stage"]["counter"];
 /** A legend label (`learn.roles.<label>`). */
 export type RoleLabel = keyof Locale["roles"];
 /** A row label for an extra row of cells (`learn.stage.rows.<label>`). */
 export type RowLabel = keyof Locale["stage"]["rows"];
+/** A translated note under a tree node (`learn.stage.notes.<key>`), written "@key". */
+export type NoteKey = keyof Locale["stage"]["notes"];
 
 /** A variable shown in the variables grid. */
 export type VarValue = number | boolean | string | null;
@@ -101,9 +130,182 @@ export type SceneData = {
   bucketDepth?: number;
   /** Stack scenes: the deepest the stack gets during the trace (fixed height). */
   stackDepth?: number;
+  /** Linked list: nodes in display order and their links by node id. `fixed` keeps the
+   * nodes where they are (a reversal rewires arrows, nodes stay put). */
+  list?: ListData;
+  /** Slots of a stack (bottom first), a queue or deque (front first) or a ring buffer
+   * (by index), with pointers on slot positions. */
+  slots?: SlotsData;
+  /** A key → value table beside the scene (LRU's map). */
+  table?: TableData;
+  /** Trees and forests (BSTs, tries, union-find): drawn with a tidy layout. */
+  forest?: ForestNode[];
+  /** A hash table: buckets (chaining) or one item per slot (open addressing), the slots
+   * visited for the current key, and how its home slot was computed. */
+  hash?: HashData;
+  /** A bit array (Bloom filter) with the positions the current key touches. */
+  bitArray?: { bits: number[]; hits: number[]; miss?: number | null; key?: number | null };
+  /** A graph (Phases 4-5): fixed node positions, roles on nodes and edges, panels. */
+  graph?: GraphData;
+  /** A grid (Phase 6): walls, weights, per-cell roles and labels, the path found. */
+  grid?: GridData;
+  /** A dynamic programming table (Phases 7-8). */
+  dp?: DPData;
+  /** Intervals on a time line (Phase 8). */
+  timeline?: TimelineData;
+  /** Backtracking: the decision outline (Phase 9). */
+  decision?: DecisionData;
+  /** A board (Phase 9). */
+  board?: BoardData;
+  /** Strings (Phase 9). */
+  strings?: StringData;
+  /** The plane (Phase 10). */
+  plane?: PlaneData;
+  /** Extra dashed links on a forest (Aho-Corasick failure links), by node id. */
+  links?: { from: number; to: number }[];
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
    * not the final row). cases.json `output` comes from here, so it is the tracer's own. */
   result?: number[];
+};
+
+/** A list node; `text` replaces the value on the node (LRU shows `key:value`). */
+export type ListNode = Item & { role?: Role; text?: string };
+export type ListData = {
+  nodes: ListNode[];
+  next: Record<number, number | null>;
+  /** Doubly linked lists: the back links. */
+  prev?: Record<number, number | null>;
+  /** Labels on nodes (head, tail, prev, curr, slow, fast), by node id. */
+  labels: { label: string; id: number; tone: PointerTone }[];
+  fixed?: boolean;
+};
+export type SlotsData = {
+  layout: "stack" | "row" | "ring";
+  cells: (Item | null)[];
+  roles?: Record<number, Role>;
+  pointers?: Pointer[];
+  /** The row's title (`learn.stage.rows.<label>`). */
+  label: RowLabel;
+};
+export type TableData = {
+  label: RowLabel;
+  rows: { key: number; value: number; role?: Role }[];
+};
+
+/** Graphs (Phases 4-5): nodes 0..n-1 placed once by d3-force; edges in input order. */
+export type GraphNode = { id: number; role?: Role; note?: string; mark?: boolean; text?: string };
+export type GraphEdge = { id: number; u: number; v: number; w: number; role?: Role; label?: string };
+export type GraphData = {
+  n: number;
+  directed: boolean;
+  weighted: boolean;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  /** A panel with each node's neighbour list; `hotRow` is the row being written. */
+  adjacency?: number[][];
+  hotRow?: number;
+  /** A matrix panel (representations, Floyd-Warshall); null is drawn as ∞. */
+  matrix?: { label: RowLabel; cells: (number | null)[][]; hot?: [number, number][]; via?: [number, number][] };
+};
+
+/** Grids (Phase 6): cells by index r * cols + c (0 open, 1 wall, 2-9 a weight). */
+export type GridData = {
+  rows: number;
+  cols: number;
+  cells: number[];
+  start: [number, number] | null;
+  goal: [number, number] | null;
+  roles: Record<number, Role>;
+  /** A label replacing the cell's weight (a distance, f, h). */
+  text: Record<number, string>;
+  /** The path found, as cell indices from start to goal. */
+  path: number[];
+};
+
+/** A dynamic programming table (Phases 7-8): one row for 1-D tables; null = not filled yet. */
+export type DPData = {
+  label: RowLabel;
+  colLabels: string[];
+  rowLabels?: string[];
+  cells: (number | null)[][];
+  /** The cell being computed and the cells it reads (drawn with arrows). */
+  hot?: [number, number] | null;
+  deps?: [number, number][];
+  /** The traceback, once the table is full. */
+  path?: [number, number][];
+  /** Cells that cannot be used (a blocked grid square), drawn solid. */
+  blocked?: [number, number][];
+};
+
+/** Intervals on a time line (Phase 8): one lane per interval, a moment, a result lane. */
+export type TimelineData = {
+  min: number;
+  max: number;
+  bars: { id: number; start: number; end: number; role?: Role }[];
+  mark?: number | null;
+  output?: { start: number; end: number; role?: Role }[];
+  outputLabel?: RowLabel;
+};
+
+/** Backtracking (Phase 9): the decision tree as an outline, one line per call. */
+export type DecisionData = { lines: { depth: number; text: string; role?: Role }[]; current?: number | null };
+
+/** A board (Phase 9): N-Queens, Sudoku, word search. Cells by index r * cols + c. */
+export type BoardData = {
+  rows: number;
+  cols: number;
+  cells: string[];
+  roles: Record<number, Role>;
+  /** Cells under attack (hatched). */
+  shade?: number[];
+  /** Givens (bold). */
+  given?: number[];
+  /** Sudoku box size: thicker lines every `boxes` cells. */
+  boxes?: number;
+  /** A path through cell centres (word search). */
+  path?: number[];
+  checker?: boolean;
+};
+
+/** Strings (Phase 9): rows of letters or numbers, each shifted by `offset` cells. */
+export type StringRow = { label: RowLabel; kind: "letters" | "numbers"; offset: number; cells: (string | number | null)[]; roles?: Record<number, Role> };
+export type StringData = { rows: StringRow[]; lines?: { text: string; note?: string; role?: Role }[]; linesLabel?: RowLabel };
+
+/** The plane (Phase 10): points, segments, a polygon (the hull) and a turn being tested. */
+export type PlaneData = {
+  max: number;
+  points: { id: number; x: number; y: number; role?: Role; label?: string }[];
+  segments: { a: [number, number]; b: [number, number]; role?: Role }[];
+  polygon?: [number, number][];
+  closed?: boolean;
+  turn?: [number, number][];
+  turnRole?: Role;
+};
+
+export type ForestNode = {
+  id: number;
+  parent: number | null;
+  text: string;
+  role?: Role;
+  /** Binary trees: which child of its parent this is. */
+  side?: "L" | "R";
+  /** A label on the edge from the parent (a trie's letter). */
+  edge?: string;
+  /** A note under the node (a distance, a count); "@key" is translated (NoteKey). */
+  note?: string;
+  /** A second ring (a trie node that ends a word, a root). */
+  mark?: boolean;
+};
+export type HashData = {
+  mode: "chain" | "open";
+  /** Chaining: each bucket's keys; open addressing: one item or none (value −2 is a
+   * tombstone). */
+  buckets: Item[][];
+  /** The buckets visited for the current key, in order. */
+  probe: number[];
+  key: number | null;
+  /** "k mod m = b" for the current key. */
+  home: number | null;
 };
 
 /** One frame. Snapshots, not diffs: scrubbing is O(1). */
@@ -133,7 +335,20 @@ export type SceneKind =
   | "buckets"
   | "merge"
   | "heap"
-  | "monostack";
+  | "monostack"
+  | "list"
+  | "slots"
+  | "tree"
+  | "hash"
+  | "bits-array"
+  | "graph"
+  | "grid"
+  | "dp"
+  | "timeline"
+  | "decision"
+  | "board"
+  | "string"
+  | "plane";
 
 /** How a topic's input is shaped. Inputs are always one flat list of integers (the DB and
  * the sample driver see only that):
@@ -141,16 +356,33 @@ export type SceneKind =
  * - `target`: `[target, ...values]`;
  * - `sorted-target`: `[target, ...values]` with the values ascending;
  * - `count`: `[n]` (disks, the size of a problem). */
-export type InputKind = "values" | "target" | "sorted-target" | "count";
+export type InputKind = "values" | "target" | "sorted-target" | "count" | "codec";
+
+/** A "your own" field label (`learn.input.field.<key>`). */
+export type FieldKey = keyof Locale["input"]["field"];
+
+/** How a structured input (operations, text, a graph, a grid…) is typed and stored: one
+ * text per field in the UI, one flat integer list everywhere else. */
+export type InputCodec = {
+  fields: readonly FieldKey[];
+  /** The flat input as one text per field. */
+  format: (input: readonly number[]) => string[];
+  /** The texts as a flat input, or a reason to refuse them. */
+  parse: (texts: readonly string[]) => { values: number[] } | { error: InputError };
+  /** Checks beyond the flat limits (shape, references), or null. */
+  check?: (input: readonly number[]) => InputError | null;
+};
 
 export type InputSpec = {
   kind: InputKind;
   /** The `learn.input.target.<label>` name of the first number for target kinds. */
-  targetLabel?: "target" | "k" | "days" | "limit";
+  targetLabel?: FieldKey;
   /** Picks a target for a preset (target kinds), from the values and a seeded random. */
   pickTarget?: (values: number[], next: () => number) => number;
   /** Extra checks for a typed-in target, as an error, or null when fine. */
   checkTarget?: (target: number, values: readonly number[]) => { min: number; max: number } | null;
+  /** The structured input of `codec` topics. */
+  codec?: InputCodec;
 };
 
 export type CounterSpec = { slot: keyof Counters; label: CounterLabel };
@@ -161,13 +393,17 @@ export type TracerDef = {
   subject: string;
   scene: SceneKind;
   /** Topics in the same subject and group can be compared on one input: "sort" (values
-   * to sort), "find" (a value to look for). */
-  compareGroup?: "sort" | "find";
+   * to sort), "find" (a value to look for), "grid" (a map: the pathfinding race). */
+  compareGroup?: "sort" | "find" | "grid";
   /** The array scene keeps room above the row for a lifted key (insertion-style sorts). */
   lifts?: boolean;
   /** The topic.toml `[input]` limits (Vitest checks they match). */
   limits: LearnInput;
   input: InputSpec;
+  /** Named presets, each a generator from a seeded random (`learn.input.presets.<id>`).
+   * Topics without them use the four sort presets. A `random` preset, when present, also
+   * makes the 20 random cases of cases.json. */
+  presets?: Readonly<Record<string, (next: () => number) => number[]>>;
   /** Every `@step` id the tracer emits; both samples must carry each once. */
   markers: readonly string[];
   /** Every narration key the tracer can emit (full keys under `learn.narration`). */

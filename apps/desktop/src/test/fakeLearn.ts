@@ -38,7 +38,7 @@ export function fakeCatalog(lang: Lang): LearnSubject[] {
       name: lang === "es" ? "Ordenación" : "Sorting",
       blurb: lang === "es" ? "Burbuja, inserción, rápida" : "Bubble, insertion, quick",
       icon: "chart-column",
-      topics: SORTING.map((t) => ({ id: t.id, subject: "sorting", title: t[lang], tags: ["comparison-sort"] })),
+      topics: SORTING.map((t) => ({ id: t.id, subject: "sorting", title: t[lang], tags: ["comparison-sort"], problems: t.problems })),
     },
     {
       id: "graphs",
@@ -102,4 +102,11 @@ export function topicLimits(subject: string, id: string) {
   const table = /\[input\]([\s\S]*?)(?:\n\[|$)/.exec(text.replace(/\r\n/g, "\n"))?.[1] ?? "";
   const num = (k: string) => Number(new RegExp(`^${k}\\s*=\\s*(-?\\d+)`, "m").exec(table)?.[1]);
   return { min_len: num("min_len"), max_len: num("max_len"), min: num("min"), max: num("max") };
+}
+
+/** topic.toml's `presets` list. */
+export function topicPresets(subject: string, id: string): string[] {
+  const text = topicFile(subject, id, "topic.toml").replace(/\r\n/g, "\n");
+  const line = /^presets\s*=\s*\[(.*)\]/m.exec(text)?.[1] ?? "";
+  return [...line.matchAll(/"([^"]+)"/g)].map((m) => m[1]!);
 }

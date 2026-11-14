@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Text abcabcab, windows of 3 letters, base 26 mod 101. What is the hash of the first window, abc?",
+    "prompt_es": "Texto abcabcab, ventanas de 3 letras, base 26 mod 101. ¿Cuál es el hash de la primera ventana, abc?",
+    "options": [
+      { "en": "3", "es": "3" },
+      { "en": "28", "es": "28" },
+      { "en": "70", "es": "70" }
+    ],
+    "answer": 1,
+    "explain_en": "Adding letter by letter: 0, then 0 · 26 + 1 = 1, then 1 · 26 + 2 = 28. All of it stays below 101.",
+    "explain_es": "Letra a letra: 0, luego 0 · 26 + 1 = 1, luego 1 · 26 + 2 = 28. Todo queda por debajo de 101."
+  },
+  {
+    "prompt_en": "Before shifting, the leading letter is removed by subtracting code × power. What is power for windows of 3 letters?",
+    "prompt_es": "Antes de desplazar, la primera letra se quita restando code × power. ¿Cuánto vale power para ventanas de 3 letras?",
+    "options": [
+      { "en": "26", "es": "26" },
+      { "en": "3", "es": "3" },
+      { "en": "70, that is 26² mod 101", "es": "70, es decir 26² mod 101" }
+    ],
+    "answer": 2,
+    "explain_en": "The leading letter of a 3-letter window sits two places up, so its weight is 26² = 676, and 676 mod 101 = 70.",
+    "explain_es": "La primera letra de una ventana de 3 está dos posiciones arriba, así que su peso es 26² = 676, y 676 mod 101 = 70."
+  },
+  {
+    "prompt_en": "The output is [28, 21, 40, 28, 21, 40]. What do the two 28s tell you for sure?",
+    "prompt_es": "La salida es [28, 21, 40, 28, 21, 40]. ¿Qué te dicen con seguridad los dos 28?",
+    "options": [
+      { "en": "Only that the windows may be equal: compare their letters to be sure", "es": "Solo que las ventanas pueden ser iguales: compara sus letras para estar seguro" },
+      { "en": "That the windows are certainly equal", "es": "Que las ventanas son seguro iguales" },
+      { "en": "Nothing: equal windows can get different hashes", "es": "Nada: ventanas iguales pueden tener hashes distintos" }
+    ],
+    "answer": 0,
+    "explain_en": "Here both windows really are abc, but with only 101 hash values different windows can collide. Equal windows, on the other hand, always hash the same.",
+    "explain_es": "Aquí las dos ventanas son de verdad abc, pero con solo 101 valores de hash ventanas distintas pueden colisionar. En cambio, ventanas iguales siempre dan el mismo hash."
+  }
+]

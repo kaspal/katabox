@@ -3,9 +3,17 @@
 import type { LearnInput } from "@/bindings";
 import type { TracerDef } from "./types";
 
+/** The four presets of value topics (sorts, searches). */
 export const PRESETS = ["random", "nearly-sorted", "reversed", "few-unique"] as const;
-export type PresetId = (typeof PRESETS)[number];
-export const isPreset = (s: string): s is PresetId => (PRESETS as readonly string[]).includes(s);
+type SortPreset = (typeof PRESETS)[number];
+/** A preset id: one of PRESETS, or a topic's own (TracerDef.presets). */
+export type PresetId = string;
+const isSortPreset = (s: string): s is SortPreset => (PRESETS as readonly string[]).includes(s);
+
+/** The presets a topic can offer, in order. */
+export function presetIds(def: TracerDef): string[] {
+  return def.presets ? Object.keys(def.presets) : [...PRESETS];
+}
 
 /** mulberry32: small, fast and the same on every machine (cases.json depends on it). */
 export function rng(seed: number): () => number {
@@ -30,7 +38,7 @@ export function randomValues(seed: number, len: number, lim: LearnInput): number
 }
 
 /** Preset `id` with `len` values (clamped to the topic's limits), from `seed`. */
-export function preset(id: PresetId, seed: number, len: number, lim: LearnInput): number[] {
+export function preset(id: SortPreset, seed: number, len: number, lim: LearnInput): number[] {
   const n = Math.min(Math.max(len, lim.min_len), lim.max_len);
   const next = rng(seed);
   switch (id) {
@@ -71,9 +79,14 @@ export const hasTarget = (def: TracerDef) => def.input.kind === "target" || def.
 /** A preset input for the topic: `len` is the length of the whole flat input. */
 export function presetInput(def: TracerDef, id: PresetId, seed: number, len: number): number[] {
   const lim = def.limits;
+  if (def.presets) {
+    const make = def.presets[id] ?? Object.values(def.presets)[0]!;
+    return make(rng(seed));
+  }
+  const sp: SortPreset = isSortPreset(id) ? id : "random";
   if (def.input.kind === "count") return [int(rng(seed), lim.min, lim.max)];
-  if (!hasTarget(def)) return preset(id, seed, len, lim);
-  const values = preset(id, seed, len - 1, valueLimits(def));
+  if (!hasTarget(def)) return preset(sp, seed, len, lim);
+  const values = preset(sp, seed, len - 1, valueLimits(def));
   if (def.input.kind === "sorted-target") values.sort((a, b) => a - b);
   const next = rng(seed ^ 0x5bd1e995);
   const target = def.input.pickTarget ? def.input.pickTarget(values, next) : values[int(next, 0, values.length - 1)]!;
@@ -85,11 +98,22 @@ export type InputError =
   | { code: "nan"; token: string }
   | { code: "range"; value: number; min: number; max: number }
   | { code: "unsorted" }
-  | { code: "target"; min: number; max: number };
+  | { code: "target"; min: number; max: number }
+  /** A structured input that cannot be read or does not make sense
+   * (`learn.input.errors.custom.<key>`). */
+  | { code: "custom"; key: string; params?: Record<string, string | number> };
 
 /** Check a whole flat input against the topic's limits and shape. */
 export function checkInput(def: TracerDef, input: readonly number[]): InputError | null {
   const lim = def.limits;
+  if (def.input.kind === "codec") {
+    if (input.length < lim.min_len || input.length > lim.max_len) {
+      return { code: "custom", key: "size" };
+    }
+    const out = input.find((v) => v < lim.min || v > lim.max);
+    if (out !== undefined) return { code: "range", value: out, min: lim.min, max: lim.max };
+    return def.input.codec!.check?.(input) ?? null;
+  }
   const vl = valueLimits(def);
   const values = hasTarget(def) ? input.slice(1) : input;
   if (hasTarget(def) && input.length === 0) return { code: "count", min: vl.min_len, max: vl.max_len };
@@ -109,7 +133,7 @@ export function checkInput(def: TracerDef, input: readonly number[]): InputError
 }
 
 /** Integers separated by commas, spaces or semicolons. */
-function tokens(text: string): { values: number[] } | { error: InputError } {
+export function tokens(text: string): { values: number[] } | { error: InputError } {
   const parts = text.split(/[\s,;]+/).filter((t) => t !== "");
   for (const token of parts) {
     if (!/^-?\d+$/.test(token)) return { error: { code: "nan", token } };
@@ -117,12 +141,36 @@ function tokens(text: string): { values: number[] } | { error: InputError } {
   return { values: parts.map(Number) };
 }
 
-/** Parse "your own" input: the values, and the target for target kinds. */
-export function parseCustom(
-  def: TracerDef,
-  text: string,
-  targetText = "",
-): { values: number[] } | { error: InputError } {
+/** The "your own" fields of a topic with their texts for `input`. */
+export function fieldsOf(def: TracerDef, input: readonly number[]): { key: string; text: string }[] {
+  switch (def.input.kind) {
+    case "codec": {
+      const texts = def.input.codec!.format(input);
+      return def.input.codec!.fields.map((key, k) => ({ key, text: texts[k] ?? "" }));
+    }
+    case "count":
+      return [{ key: "count", text: String(input[0] ?? "") }];
+    case "target":
+    case "sorted-target":
+      return [
+        { key: "values", text: input.slice(1).join(", ") },
+        { key: def.input.targetLabel ?? "target", text: String(input[0] ?? "") },
+      ];
+    default:
+      return [{ key: "values", text: input.join(", ") }];
+  }
+}
+
+/** Parse "your own" input: one text per field (see `fieldsOf`). */
+export function parseCustom(def: TracerDef, texts: readonly string[]): { values: number[] } | { error: InputError } {
+  if (def.input.kind === "codec") {
+    const r = def.input.codec!.parse(texts);
+    if ("error" in r) return r;
+    const e = checkInput(def, r.values);
+    return e ? { error: e } : r;
+  }
+  const text = texts[0] ?? "";
+  const targetText = texts[1] ?? "";
   const r = tokens(text);
   if ("error" in r) return r;
   let input = r.values;
