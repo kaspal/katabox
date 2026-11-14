@@ -154,3 +154,10 @@
     animation: none;
   }
 }
+
+/* The welcome tour's current target (onboarding/Tour.tsx). Unlayered, so it wins over a
+   component's own `outline-none` utility. */
+[data-tour-active] {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}

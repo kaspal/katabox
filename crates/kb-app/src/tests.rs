@@ -1434,3 +1434,32 @@ async fn diagnostics_name_versions_but_no_paths_or_user() {
     }
     assert!(!text.contains(":\\") && !text.contains("/home/"), "{text}");
 }
+
+#[tokio::test]
+async fn finishing_the_welcome_sets_the_start_floor_and_picks_a_problem() {
+    let p = paths("onboarding");
+    let app = App::open(&p).await.unwrap();
+    let placement = app.placement_problems(kb_store::UiLang::En).await.unwrap();
+    assert_eq!(placement.len(), 3);
+    assert!(
+        placement
+            .iter()
+            .all(|x| x.mode == kb_core::ProblemMode::Function)
+    );
+    // Nothing solved: the placement starts the user at fundamentals.
+    let ids = placement.iter().map(|x| x.id.clone()).collect();
+    let start = app
+        .finish_onboarding(Some(ids), kb_store::UiLang::En)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(start.pattern, "fundamentals");
+    let floor = app.start_floor().await.unwrap().unwrap();
+    assert_eq!(floor.pattern, "fundamentals");
+    assert_eq!(
+        app.get_setting(crate::practice::ONBOARDING_SETTING)
+            .await
+            .unwrap(),
+        Some(serde_json::Value::Bool(true))
+    );
+}

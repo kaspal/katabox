@@ -1,4 +1,5 @@
 import { Suspense, lazy, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Gauge, Loader2, Monitor, Moon, Sun, Upload } from "lucide-react";
@@ -23,6 +24,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { UI_LANGS, type UiLangCode } from "@/i18n";
 import { THEMES, usePrefs, type ThemePref } from "@/lib/prefs";
 import { api } from "@/lib/api";
+import { useOnboardingDone } from "@/onboarding/state";
 import { copyText, diagnosticsText, recentErrors } from "@/lib/diagnostics";
 import { queryKeys, useAppInfo, useCalibration } from "@/lib/queries";
 import { usePracticePrefs } from "@/lib/practice";
@@ -310,6 +312,8 @@ function DataSection() {
 function PracticeSection() {
   const { t } = useTranslation();
   const prefs = usePracticePrefs();
+  const onboarding = useOnboardingDone();
+  const navigate = useNavigate();
   const toggle = (label: string, value: boolean, set: (v: boolean) => void) => (
     <Row label={label}>
       <ToggleGroup
@@ -335,6 +339,18 @@ function PracticeSection() {
         {toggle(t("practice.settings.daily"), prefs.daily, prefs.setDaily)}
         {toggle(t("practice.settings.review"), prefs.review, prefs.setReview)}
         {toggle(t("practice.settings.learnReview"), prefs.learnReview, prefs.setLearnReview)}
+        <Row label={t("welcome.again.label")}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              onboarding.setDone(false);
+              void navigate({ to: "/" });
+            }}
+          >
+            {t("welcome.again.button")}
+          </Button>
+        </Row>
       </dl>
     </Section>
   );

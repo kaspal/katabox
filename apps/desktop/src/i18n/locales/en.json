@@ -2648,5 +2648,52 @@
       "more_one": "and {{count}} more",
       "more_other": "and {{count}} more"
     }
+  },
+  "welcome": {
+    "skip": "Skip the welcome",
+    "levelTitle": "How much have you practised?",
+    "levelIntro": "This sets where KataBox starts you. You can change course any time.",
+    "newTitle": "New to this",
+    "newText": "Start at the fundamentals: reading input, loops, simple data structures.",
+    "practisedTitle": "I've practised before",
+    "practisedText": "Try three short problems (two easy, one medium). Your result sets the starting pattern and difficulty.",
+    "placement": {
+      "label": "Placement",
+      "progress": "Placement: problem {{k}} of {{total}}",
+      "hint": "Solve it if you can, or move on.",
+      "next": "Next problem",
+      "finish": "Finish placement"
+    },
+    "tour": {
+      "count": "{{k}} of {{total}}",
+      "skip": "Skip tour",
+      "back": "Back",
+      "next": "Next",
+      "done": "Done",
+      "run": {
+        "title": "Run",
+        "text": "Runs your code on the public tests and your own tests. Nothing is recorded. Ctrl+' from the editor."
+      },
+      "submit": {
+        "title": "Submit",
+        "text": "Judges your code on every test, hidden ones too, and records the result. Ctrl+Enter from the editor."
+      },
+      "hints": {
+        "title": "Hints",
+        "text": "Stuck? Hints come in three steps, from a nudge to the full idea."
+      },
+      "results": {
+        "title": "Results and debugger",
+        "text": "Results appear here. On a failing test, Debug this case steps through your code line by line."
+      },
+      "learn": {
+        "title": "Learn",
+        "text": "Animated lessons for every algorithm and data structure, linked to the problems that use them."
+      }
+    },
+    "again": {
+      "label": "Welcome",
+      "button": "Show the welcome again"
+    }
   }
 }

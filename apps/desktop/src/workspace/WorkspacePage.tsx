@@ -29,6 +29,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ErrorNotice } from "@/components/ErrorNotice";
+import { PlacementBanner } from "@/onboarding/PlacementBanner";
+import { Tour } from "@/onboarding/Tour";
 import { InstallDialog } from "@/languages/InstallDialog";
 import { DifficultyLabel, ModeLabel } from "@/components/Semantic";
 import { api } from "@/lib/api";
@@ -347,6 +349,8 @@ export function WorkspacePage() {
           if (l !== language) void changeLanguage(l);
         }}
       />
+      <PlacementBanner problemId={problemId} />
+      <Tour />
       <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
         {!focus && (
           <Button asChild variant="ghost" size="icon" className="size-8">
@@ -435,6 +439,7 @@ export function WorkspacePage() {
             <ScriptModeToggle mode={scriptMode} onChange={setScriptMode} disabled={busy} />
           )}
           <ShortcutButton
+            tour="run"
             label={t("workspace.run")}
             keys={KEYS.run}
             onClick={() => void run()}
@@ -443,6 +448,7 @@ export function WorkspacePage() {
             icon={judge.busy === "run" ? <Loader2 className="animate-spin" aria-hidden /> : <Play aria-hidden />}
           />
           <ShortcutButton
+            tour="submit"
             label={t("workspace.submit")}
             keys={KEYS.submit}
             onClick={() => void submit()}
@@ -634,6 +640,7 @@ export function WorkspacePage() {
 }
 
 function ShortcutButton({
+  tour,
   label,
   keys,
   icon,
@@ -641,6 +648,8 @@ function ShortcutButton({
   disabled,
   variant = "default",
 }: {
+  /** The tour's anchor (onboarding/Tour.tsx). */
+  tour?: string;
   label: string;
   keys: string;
   icon: React.ReactNode;
@@ -651,7 +660,7 @@ function ShortcutButton({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button size="sm" variant={variant} onClick={onClick} disabled={disabled} aria-keyshortcuts={keys}>
+        <Button size="sm" variant={variant} onClick={onClick} disabled={disabled} aria-keyshortcuts={keys} data-tour={tour}>
           {icon}
           {label}
         </Button>

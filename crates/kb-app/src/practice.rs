@@ -9,7 +9,8 @@ use std::collections::{HashMap, HashSet};
 
 use kb_core::{Day, Difficulty, Verdict};
 use kb_store::{ActivityRow, ProblemFilter, ProblemStatus, ProblemSummary, ReviewRow, UiLang};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 use crate::{App, AppError, AppErrorCode, Result};
@@ -52,6 +53,99 @@ pub const WEAKEST_WEIGHT: u64 = 3;
 /// Settings toggles (Settings → Practice); both default to on.
 pub const REVIEW_SETTING: &str = "practice.review";
 pub const DAILY_SETTING: &str = "practice.daily";
+/// Where practice starts (features-content M2): set by the welcome flow's level choice
+/// or placement, as `{"pattern": …, "difficulty": …}`.
+pub const START_SETTING: &str = "practice.start";
+/// The welcome flow has been finished or skipped (machine-local, not exported).
+pub const ONBOARDING_SETTING: &str = "onboarding.done";
+
+/// The start floor: problems in earlier patterns of the track, or easier ones in this
+/// pattern, are left out of the start, the daily problem and next-problem's move to
+/// another pattern, as long as unsolved problems remain at or past the floor.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct StartFloor {
+    pub pattern: String,
+    pub difficulty: Difficulty,
+}
+
+fn difficulty_rank(d: Difficulty) -> u8 {
+    match d {
+        Difficulty::Easy => 0,
+        Difficulty::Medium => 1,
+        Difficulty::Hard => 2,
+    }
+}
+
+/// Whether `p` is at or past the floor.
+fn past_floor(p: &ProblemSummary, floor: &StartFloor) -> bool {
+    let (a, b) = (track_index(&p.pattern), track_index(&floor.pattern));
+    a > b || (a == b && difficulty_rank(p.difficulty) >= difficulty_rank(floor.difficulty))
+}
+
+/// `all` limited by the floor (always keeping `keep`, the current problem). Without a
+/// floor, or when nothing unsolved is left past it, `all` unchanged.
+pub fn apply_floor(
+    all: Vec<ProblemSummary>,
+    floor: Option<&StartFloor>,
+    keep: &str,
+) -> Vec<ProblemSummary> {
+    let Some(floor) = floor else { return all };
+    let open_past = all
+        .iter()
+        .any(|p| past_floor(p, floor) && !solved(p) && p.id != keep);
+    if !open_past {
+        return all;
+    }
+    all.into_iter()
+        .filter(|p| p.id == keep || past_floor(p, floor))
+        .collect()
+}
+
+/// Parse the `practice.start` setting (anything else: no floor).
+pub fn parse_floor(v: Option<&Value>) -> Option<StartFloor> {
+    serde_json::from_value(v?.clone()).ok()
+}
+
+/// The placement (welcome flow, "practised"): two easy problems, then a medium one, from
+/// the first patterns of the track after fundamentals; function mode only.
+pub fn placement_problems(all: &[ProblemSummary]) -> Vec<ProblemSummary> {
+    let mut pool: Vec<&ProblemSummary> = all
+        .iter()
+        .filter(|p| p.mode == kb_core::ProblemMode::Function && p.pattern != "fundamentals")
+        .collect();
+    pool.sort_by(|a, b| {
+        pattern_order(&a.pattern, &b.pattern)
+            .then_with(|| a.rank.cmp(&b.rank))
+            .then_with(|| a.id.cmp(&b.id))
+    });
+    let mut out: Vec<ProblemSummary> = Vec::new();
+    // Two easies from different patterns, then the first medium.
+    for p in pool.iter().filter(|p| p.difficulty == Difficulty::Easy) {
+        if out.len() < 2 && !out.iter().any(|o| o.pattern == p.pattern) {
+            out.push((*p).clone());
+        }
+    }
+    if let Some(m) = pool.iter().find(|p| p.difficulty == Difficulty::Medium) {
+        out.push((*m).clone());
+    }
+    out
+}
+
+/// The floor from a placement: how many of its problems are solved (0-1: fundamentals,
+/// easy; 2: arrays and hashing, easy; 3: two pointers, medium). `None` (no placement:
+/// "new to this", or the placement skipped) starts at fundamentals.
+pub fn placement_floor(solved_count: Option<usize>) -> StartFloor {
+    let (pattern, difficulty) = match solved_count {
+        Some(3..) => ("two-pointers", Difficulty::Medium),
+        Some(2) => ("arrays-hashing", Difficulty::Easy),
+        _ => ("fundamentals", Difficulty::Easy),
+    };
+    StartFloor {
+        pattern: pattern.into(),
+        difficulty,
+    }
+}
 
 fn track_index(pattern: &str) -> usize {
     PATTERN_TRACK
@@ -550,14 +644,16 @@ impl App {
         current: &str,
         lang: UiLang,
     ) -> Result<Option<ProblemSummary>> {
-        let all = self.all_problems(lang).await?;
+        let floor = self.start_floor().await?;
+        let all = apply_floor(self.all_problems(lang).await?, floor.as_ref(), current);
         Ok(next_problem(&all, current).cloned())
     }
 
     /// Today's daily problem (picked on the first call of the day, then kept all day).
     pub async fn daily_problem(&self, today: &str, lang: UiLang) -> Result<Option<DailyProblem>> {
         let day = parse_day(today)?;
-        let all = self.all_problems(lang).await?;
+        let floor = self.start_floor().await?;
+        let all = apply_floor(self.all_problems(lang).await?, floor.as_ref(), "");
         let pick = match self.store.user.daily_pick(day).await? {
             Some(p) if all.iter().any(|x| x.id == p.problem_id) => p,
             // No pick yet, or the picked problem left the pack: pick (again).
@@ -583,6 +679,52 @@ impl App {
             solved: pick.solved,
             streak: self.streak(today).await?,
         }))
+    }
+
+    /// The start floor (`practice.start`), if set.
+    pub async fn start_floor(&self) -> Result<Option<StartFloor>> {
+        Ok(parse_floor(
+            self.store.user.get_setting(START_SETTING).await?.as_ref(),
+        ))
+    }
+
+    /// The three placement problems of the welcome flow.
+    pub async fn placement_problems(&self, lang: UiLang) -> Result<Vec<ProblemSummary>> {
+        Ok(placement_problems(&self.all_problems(lang).await?))
+    }
+
+    /// Finish the welcome flow: the floor from the placement (`None`: "new to this" or a
+    /// skipped placement), saved with `onboarding.done`. Returns the problem to start on.
+    pub async fn finish_onboarding(
+        &self,
+        placement: Option<Vec<String>>,
+        lang: UiLang,
+    ) -> Result<Option<ProblemSummary>> {
+        let all = self.all_problems(lang).await?;
+        let solved_count = placement.map(|ids| {
+            all.iter()
+                .filter(|p| ids.contains(&p.id) && solved(p))
+                .count()
+        });
+        let floor = placement_floor(solved_count);
+        let value = serde_json::to_value(&floor)
+            .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))?;
+        self.store.user.set_setting(START_SETTING, &value).await?;
+        self.store
+            .user
+            .set_setting(ONBOARDING_SETTING, &Value::Bool(true))
+            .await?;
+        let floored = apply_floor(all, Some(&floor), "");
+        let start = floored
+            .iter()
+            .filter(|p| !solved(p))
+            .min_by(|a, b| {
+                pattern_order(&a.pattern, &b.pattern)
+                    .then_with(|| a.rank.cmp(&b.rank))
+                    .then_with(|| a.id.cmp(&b.id))
+            })
+            .cloned();
+        Ok(start)
     }
 
     pub async fn streak(&self, today: &str) -> Result<u32> {
@@ -825,6 +967,90 @@ mod tests {
                 .collect();
             assert_eq!(keys, PATTERN_TRACK, "pattern.* order in {lang}.json");
         }
+    }
+
+    fn pd(id: &str, pattern: &str, rank: u8, d: Difficulty, solved_: bool) -> ProblemSummary {
+        ProblemSummary {
+            difficulty: d,
+            ..p(id, pattern, rank, solved_)
+        }
+    }
+
+    #[test]
+    fn the_start_floor_leaves_earlier_patterns_out_until_nothing_is_left_past_it() {
+        let all = vec![
+            pd("f1", "fundamentals", 1, Difficulty::Easy, false),
+            pd("a1", "arrays-hashing", 1, Difficulty::Easy, false),
+            pd("t1", "two-pointers", 1, Difficulty::Easy, false),
+            pd("t2", "two-pointers", 2, Difficulty::Medium, false),
+            pd("g1", "graphs", 1, Difficulty::Hard, false),
+        ];
+        let floor = placement_floor(Some(3));
+        assert_eq!(
+            (floor.pattern.as_str(), floor.difficulty),
+            ("two-pointers", Difficulty::Medium)
+        );
+        let ids = |v: Vec<ProblemSummary>| v.into_iter().map(|p| p.id).collect::<Vec<_>>();
+        assert_eq!(
+            ids(apply_floor(all.clone(), Some(&floor), "")),
+            ["t2", "g1"]
+        );
+        // The current problem always stays, so "next" works from below the floor.
+        assert_eq!(
+            ids(apply_floor(all.clone(), Some(&floor), "f1")),
+            ["f1", "t2", "g1"]
+        );
+        // A brand-new user with this floor starts at t2, and the daily problem too.
+        let floored = apply_floor(all.clone(), Some(&floor), "");
+        assert_eq!(start_here(&floored).unwrap().id, "t2");
+        assert_eq!(
+            daily_pick(&floored, day("2026-11-14"), "i").unwrap().id,
+            "t2"
+        );
+        // Everything past the floor solved: the floor no longer limits anything.
+        let done: Vec<ProblemSummary> = all
+            .iter()
+            .map(|x| {
+                pd(
+                    &x.id,
+                    &x.pattern,
+                    x.rank,
+                    x.difficulty,
+                    x.id == "t2" || x.id == "g1",
+                )
+            })
+            .collect();
+        assert_eq!(apply_floor(done.clone(), Some(&floor), "").len(), 5);
+        assert_eq!(apply_floor(all.clone(), None, "").len(), 5);
+        // "New to this" and a skipped placement start at fundamentals.
+        assert_eq!(placement_floor(None).pattern, "fundamentals");
+        assert_eq!(placement_floor(Some(1)).pattern, "fundamentals");
+        assert_eq!(placement_floor(Some(2)).pattern, "arrays-hashing");
+        assert_eq!(
+            parse_floor(Some(
+                &serde_json::json!({"pattern": "graphs", "difficulty": "hard"})
+            ))
+            .unwrap()
+            .pattern,
+            "graphs"
+        );
+        assert_eq!(parse_floor(Some(&serde_json::json!("nope"))), None);
+    }
+
+    #[test]
+    fn placement_is_two_easies_from_different_patterns_then_a_medium() {
+        let mut prog = pd("prog", "arrays-hashing", 0, Difficulty::Easy, false);
+        prog.mode = kb_core::ProblemMode::Program;
+        let all = vec![
+            pd("f1", "fundamentals", 1, Difficulty::Easy, false),
+            prog,
+            pd("a2", "arrays-hashing", 2, Difficulty::Easy, false),
+            pd("a1", "arrays-hashing", 1, Difficulty::Easy, false),
+            pd("s1", "sorting", 1, Difficulty::Easy, false),
+            pd("a4", "arrays-hashing", 4, Difficulty::Medium, false),
+        ];
+        let ids: Vec<String> = placement_problems(&all).into_iter().map(|p| p.id).collect();
+        assert_eq!(ids, ["a1", "s1", "a4"]);
     }
 
     #[test]

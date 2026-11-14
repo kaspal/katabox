@@ -131,6 +131,29 @@ async learnByPattern(uiLang: UiLang) : Promise<Result<PatternTopics[], AppError>
 }
 },
 /**
+ * The welcome flow's three placement problems.
+ */
+async placementProblems(uiLang: UiLang) : Promise<Result<ProblemSummary[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("placement_problems", { uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Finish the welcome flow: sets where practice starts (from the placement's solves, or
+ * fundamentals) and returns the problem to open first.
+ */
+async finishOnboarding(placement: string[] | null, uiLang: UiLang) : Promise<Result<ProblemSummary | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("finish_onboarding", { placement, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Home's "Review a topic": a viewed topic (`learn.viewed`, in order) with an unsolved
  * linked problem.
  */

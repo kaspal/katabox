@@ -94,6 +94,9 @@ export const api = {
   // Learn (ADR 0029)
   learnCatalog: (lang: UiLang): Promise<LearnSubject[]> => call(commands.learnCatalog(lang)),
   learnPaths: (lang: UiLang): Promise<LearnPath[]> => call(commands.learnPaths(lang)),
+  placementProblems: (lang: UiLang): Promise<ProblemSummary[]> => call(commands.placementProblems(lang)),
+  finishOnboarding: (placement: string[] | null, lang: UiLang): Promise<ProblemSummary | null> =>
+    call(commands.finishOnboarding(placement, lang)),
   learnByPattern: (lang: UiLang): Promise<PatternTopics[]> => call(commands.learnByPattern(lang)),
   topicToReview: (viewed: string[], lang: UiLang): Promise<TopicReview | null> =>
     call(commands.topicToReview(viewed, lang)),

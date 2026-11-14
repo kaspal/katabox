@@ -2648,5 +2648,52 @@
       "more_one": "y {{count}} más",
       "more_other": "y {{count}} más"
     }
+  },
+  "welcome": {
+    "skip": "Omitir la bienvenida",
+    "levelTitle": "¿Cuánto has practicado?",
+    "levelIntro": "Así KataBox sabe por dónde empezar. Puedes cambiar de rumbo cuando quieras.",
+    "newTitle": "Empiezo de cero",
+    "newText": "Empieza por los fundamentos: leer la entrada, bucles y estructuras de datos sencillas.",
+    "practisedTitle": "Ya he practicado",
+    "practisedText": "Haz tres problemas cortos (dos fáciles y uno medio). Tu resultado fija el patrón y la dificultad de partida.",
+    "placement": {
+      "label": "Prueba de nivel",
+      "progress": "Prueba de nivel: problema {{k}} de {{total}}",
+      "hint": "Resuélvelo si puedes o pasa al siguiente.",
+      "next": "Siguiente problema",
+      "finish": "Terminar la prueba"
+    },
+    "tour": {
+      "count": "{{k}} de {{total}}",
+      "skip": "Saltar el recorrido",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "done": "Hecho",
+      "run": {
+        "title": "Ejecutar",
+        "text": "Ejecuta tu código con las pruebas públicas y las tuyas. No se guarda nada. Ctrl+' desde el editor."
+      },
+      "submit": {
+        "title": "Enviar",
+        "text": "Evalúa tu código con todas las pruebas, también las ocultas, y guarda el resultado. Ctrl+Enter desde el editor."
+      },
+      "hints": {
+        "title": "Pistas",
+        "text": "¿Atascado? Las pistas llegan en tres pasos, de un empujoncito a la idea completa."
+      },
+      "results": {
+        "title": "Resultados y depurador",
+        "text": "Aquí aparecen los resultados. En una prueba que falla, Depurar este caso recorre tu código línea a línea."
+      },
+      "learn": {
+        "title": "Aprender",
+        "text": "Lecciones animadas de cada algoritmo y estructura de datos, enlazadas con los problemas que los usan."
+      }
+    },
+    "again": {
+      "label": "Bienvenida",
+      "button": "Mostrar de nuevo la bienvenida"
+    }
   }
 }

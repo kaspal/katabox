@@ -100,7 +100,12 @@ export function ResultsPane({
   }, [customError]);
 
   return (
-    <Tabs value={tab} onValueChange={(v) => onTab(v as ResultsTab)} className="flex h-full min-h-0 flex-col gap-0">
+    <Tabs
+      value={tab}
+      onValueChange={(v) => onTab(v as ResultsTab)}
+      className="flex h-full min-h-0 flex-col gap-0"
+      data-tour="results"
+    >
       <div className="flex items-center gap-3 px-2 pt-2">
         <TabsList className="h-8">
           <TabsTrigger value="testcases" className="px-2 text-xs">

@@ -94,7 +94,12 @@ export function ProblemPane({
           return (
             <Tooltip key={tab}>
               <TooltipTrigger asChild>
-                <TabsTrigger value={tab} aria-label={label} className="group min-w-0 gap-1 px-2 text-xs">
+                <TabsTrigger
+                  value={tab}
+                  aria-label={label}
+                  className="group min-w-0 gap-1 px-2 text-xs"
+                  data-tour={tab === "hints" ? "hints" : undefined}
+                >
                   <Icon aria-hidden className="size-3.5 shrink-0" />
                   {/* Narrow panes show icons only, except the active tab's name (aria-selected: the tooltip owns data-state). */}
                   <span

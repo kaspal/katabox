@@ -424,6 +424,18 @@ export function createFakeApi(
       ).map((p) => ({ ...p, title: p.title[lang] }));
     }),
     learnCatalog: vi.fn(async (lang: "en" | "es") => fakeCatalog(lang)),
+    placementProblems: vi.fn(async (lang: "en" | "es") =>
+      PROBLEMS.filter((p) => p.mode === "function")
+        .slice(0, 3)
+        .map((p) => ({ ...p, title: p.title[lang] })),
+    ),
+    finishOnboarding: vi.fn(async (placement: string[] | null, lang: "en" | "es") => {
+      settings.set("onboarding.done", true);
+      const solved = (placement ?? []).filter((id) => PROBLEMS.find((p) => p.id === id)?.status === "solved").length;
+      settings.set("practice.start", { pattern: solved >= 3 ? "two-pointers" : "fundamentals", difficulty: "easy" });
+      const start = PROBLEMS.find((p) => p.status !== "solved" && p.mode === "function");
+      return start ? { ...start, title: start.title[lang] } : null;
+    }),
     learnByPattern: vi.fn(async (lang: "en" | "es") => {
       const topics = fakeCatalog(lang).flatMap((s) => s.topics);
       const patterns = new Map(PROBLEMS.map((p) => [p.id, p.pattern]));
