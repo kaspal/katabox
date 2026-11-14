@@ -10,7 +10,7 @@ La **pasada 1** hace un DFS sobre todos los nodos, empezando una búsqueda nueva
 
 ### La entrada por defecto
 
-Ocho nodos, dirigido: tres bucles unidos en un solo sentido, `0 → 1 → 2 → 0`, `3 → 4 → 5 → 3`, `6 → 7 → 6`, más los enlaces `2 → 3` y `5 → 6`. La pasada 1 empieza en 0 y baja por `0, 1, 2, 3, 4, 5, 6, 7`; los nodos terminan en el orden 7, 6, 5, 4, 3, 2, 1, 0. La pasada 2 toma primero 0: en el grafo invertido, 0 llega a 2 y después a 1, que forman la componente 0. El siguiente sin etiqueta es 3: llega a 5 y a 4, pero su enlace invertido hacia 2 lleva a un nodo ya etiquetado y se detiene ahí, así que `{3, 4, 5}` es la componente 1. Por último, 6 llega a 7: componente 2.
+Ocho nodos, dirigido: tres bucles unidos en un solo sentido, `0 → 1 → 2 → 0`, `3 → 4 → 5 → 3`, `6 → 7 → 6`, más las aristas `2 → 3` y `5 → 6`. La pasada 1 empieza en 0 y baja por `0, 1, 2, 3, 4, 5, 6, 7`; los nodos terminan en el orden 7, 6, 5, 4, 3, 2, 1, 0. La pasada 2 toma primero 0: en el grafo invertido, 0 llega a 2 y después a 1, que forman la componente 0. El siguiente sin etiqueta es 3: llega a 5 y a 4, pero su arista invertida hacia 2 lleva a un nodo ya etiquetado y se detiene ahí, así que `{3, 4, 5}` es la componente 1. Por último, 6 llega a 7: componente 2.
 
 La salida es `[0, 0, 0, 1, 1, 1, 2, 2]`, la etiqueta de componente de cada nodo.
 

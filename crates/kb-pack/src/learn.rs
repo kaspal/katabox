@@ -9,7 +9,9 @@ use std::path::{Path, PathBuf};
 
 use kb_core::{Language, TestCase, TestKind, Verdict};
 use kb_judge::{JudgeEnv, Problem, ProblemMode};
-use kb_store::{LearnComplexity, LearnInput, LearnPack, PackQuizQuestion, PackSubject, PackTopic};
+use kb_store::{
+    LearnComplexity, LearnInput, LearnPack, PackPath, PackQuizQuestion, PackSubject, PackTopic,
+};
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
@@ -41,6 +43,24 @@ pub fn learn_dir_for(problems: &Path) -> PathBuf {
 #[serde(deny_unknown_fields)]
 struct SubjectsToml {
     subject: Vec<SubjectToml>,
+}
+
+/// `content/learn/paths.toml` (Phase 6): learning paths, in display order.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PathsToml {
+    path: Vec<PathToml>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PathToml {
+    id: String,
+    title: String,
+    title_es: String,
+    blurb: String,
+    blurb_es: String,
+    topics: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -246,6 +266,60 @@ pub fn read_learn(learn: &Path, problems: &Path) -> Result<Learn, Vec<String>> {
             }
         }
     }
+    // Learning paths (optional file): known topics, each once per path.
+    let path_file = learn.join("paths.toml");
+    if path_file.is_file() {
+        match fs::read_to_string(&path_file)
+            .map_err(|e| e.to_string())
+            .and_then(|s| toml::from_str::<PathsToml>(&s).map_err(|e| e.to_string()))
+        {
+            Err(e) => errors.push(format!("paths.toml: {e}")),
+            Ok(file) => {
+                let ids: BTreeSet<&str> = topics.iter().map(|t| t.topic.id.as_str()).collect();
+                let mut seen_paths = BTreeSet::new();
+                for (k, p) in file.path.into_iter().enumerate() {
+                    if !kebab(&p.id) || !seen_paths.insert(p.id.clone()) {
+                        errors.push(format!(
+                            "paths.toml: path id {:?} is not unique kebab-case",
+                            p.id
+                        ));
+                    }
+                    for (what, v) in [
+                        ("title", &p.title),
+                        ("title_es", &p.title_es),
+                        ("blurb", &p.blurb),
+                        ("blurb_es", &p.blurb_es),
+                    ] {
+                        if v.trim().is_empty() {
+                            errors.push(format!("paths.toml: {}: empty {what}", p.id));
+                        }
+                    }
+                    if p.topics.is_empty() {
+                        errors.push(format!("paths.toml: {}: no topics", p.id));
+                    }
+                    let mut in_path = BTreeSet::new();
+                    for t in &p.topics {
+                        if !ids.contains(t.as_str()) {
+                            errors.push(format!("paths.toml: {}: unknown topic {t}", p.id));
+                        }
+                        if !in_path.insert(t.as_str()) {
+                            errors.push(format!("paths.toml: {}: {t} listed twice", p.id));
+                        }
+                    }
+                    pack.paths.push(PackPath {
+                        id: p.id,
+                        ord: k as u32 + 1,
+                        title_en: p.title,
+                        title_es: p.title_es,
+                        blurb_en: p.blurb,
+                        blurb_es: p.blurb_es,
+                        topics: p.topics,
+                    });
+                }
+            }
+        }
+    }
+
     // Tracers live in the app (ADR 0029); check each topic has one when the app is here.
     if let Some(tracers) = tracers_dir(learn) {
         for t in &topics {
@@ -849,6 +923,45 @@ mod tests {
 
     fn has(errors: &[String], needle: &str) -> bool {
         errors.iter().any(|e| e.contains(needle))
+    }
+
+    #[test]
+    fn learning_paths_are_checked() {
+        let path = |id: &str, title: &str, topics: &str| {
+            format!(
+                "[[path]]\nid = \"{id}\"\ntitle = \"{title}\"\ntitle_es = \"T\"\nblurb = \"b\"\n\
+                 blurb_es = \"b\"\ntopics = [{topics}]\n"
+            )
+        };
+        let write = |t: &Path, body: String| {
+            fs::write(
+                t.parent().unwrap().parent().unwrap().join("paths.toml"),
+                body,
+            )
+            .unwrap()
+        };
+        let e = broken("path-ok", |t| {
+            write(t, path("start", "Start", "\"quick-sort\""))
+        });
+        assert!(e.is_empty(), "{e:?}");
+        let e = broken("path-unknown", |t| {
+            write(t, path("start", "Start", "\"heap-sort\""))
+        });
+        assert!(has(&e, "unknown topic heap-sort"), "{e:?}");
+        let e = broken("path-twice", |t| {
+            write(t, path("start", "Start", "\"quick-sort\", \"quick-sort\""))
+        });
+        assert!(has(&e, "quick-sort listed twice"), "{e:?}");
+        let e = broken("path-id", |t| {
+            write(t, path("Start Here", "Start", "\"quick-sort\""))
+        });
+        assert!(has(&e, "not unique kebab-case"), "{e:?}");
+        let e = broken("path-title", |t| {
+            write(t, path("start", " ", "\"quick-sort\""))
+        });
+        assert!(has(&e, "empty title"), "{e:?}");
+        let e = broken("path-none", |t| write(t, path("start", "Start", "")));
+        assert!(has(&e, "no topics"), "{e:?}");
     }
 
     #[test]

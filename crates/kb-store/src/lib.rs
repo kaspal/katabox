@@ -30,8 +30,9 @@ pub use content::{
     build, build_with_learn,
 };
 pub use learn::{
-    LearnComplexity, LearnInput, LearnPack, LearnSample, LearnSubject, LearnTopic,
-    LearnTopicSummary, PackQuizOption, PackQuizQuestion, PackSubject, PackTopic, QuizQuestion,
+    LearnComplexity, LearnInput, LearnPack, LearnPath, LearnSample, LearnSubject, LearnTopic,
+    LearnTopicSummary, PackPath, PackQuizOption, PackQuizQuestion, PackSubject, PackTopic,
+    QuizQuestion,
 };
 pub use modes::{AcceptedSolution, SessionRow, SubmitFact};
 pub use practice::{ActivityRow, DailyPick, INSTALL_ID_SETTING, ListRow, ReviewRow};

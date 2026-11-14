@@ -24,6 +24,7 @@ export const queryKeys = {
   calibration: ["calibration"] as const,
   learnCatalog: (lang: string) => ["learn_catalog", lang] as const,
   learnTopic: (id: string, lang: string) => ["learn_topic", id, lang] as const,
+  learnPaths: (lang: string) => ["learn_paths", lang] as const,
   learnSearch: (q: string, lang: string) => ["learn_search", q, lang] as const,
 };
 
@@ -74,6 +75,16 @@ export function useLearnCatalog() {
   return useQuery({
     queryKey: queryKeys.learnCatalog(lang),
     queryFn: () => api.learnCatalog(lang),
+    staleTime: Infinity,
+  });
+}
+
+/** The learning paths on Learn home (Phase 6); content only. */
+export function useLearnPaths() {
+  const { lang } = usePrefs();
+  return useQuery({
+    queryKey: queryKeys.learnPaths(lang),
+    queryFn: () => api.learnPaths(lang),
     staleTime: Infinity,
   });
 }

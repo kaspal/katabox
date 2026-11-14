@@ -103,7 +103,8 @@ export function CodeTab({
               <span className="w-9 flex-none select-none pr-3 text-right text-muted-foreground" aria-hidden>
                 {k + 1}
               </span>
-              <span className="whitespace-pre">
+              {/* Long lines wrap instead of scrolling sideways. */}
+              <span className="min-w-0 flex-1 whitespace-pre-wrap [overflow-wrap:anywhere]">
                 {on && <span className="sr-only">{t("learn.code.current")}: </span>}
                 {highlighted?.[k]
                   ? highlighted[k]!.map((r, i) =>

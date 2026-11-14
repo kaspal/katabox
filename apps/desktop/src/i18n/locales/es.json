@@ -272,6 +272,9 @@
       "hint": "JS revisa JavaScript sin tipos (no hacen falta anotaciones); TS revisa TypeScript estricto. Ejecutar y Enviar funcionan igual en ambos casos.",
       "js": "Revisión de JavaScript",
       "ts": "Revisión de TypeScript"
+    },
+    "animated": {
+      "label": "Míralo animado"
     }
   },
   "progress": {
@@ -881,7 +884,12 @@
       "viewed": "{{count}} vistos",
       "coming_soon": "Próximamente",
       "progress": "{{viewed}} de {{total}} temas vistos",
-      "loading": "Cargando temas…"
+      "loading": "Cargando temas…",
+      "paths": "Rutas de aprendizaje",
+      "path_progress": "{{viewed}} de {{total}} temas vistos",
+      "path_start": "Empezar: {{topic}}",
+      "path_next": "Siguiente: {{topic}}",
+      "path_again": "Repasar: {{topic}}"
     },
     "picker": {
       "label": "Temas",

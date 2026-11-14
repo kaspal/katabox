@@ -211,6 +211,7 @@ describe("Workspace: problem pane", () => {
     await editor();
     await user.click(screen.getByRole("tab", { name: "Editorial" }));
     expect(await screen.findByTestId("editorial-locked")).toHaveTextContent("(0/3)");
+    expect(screen.queryByTestId("see-it-animated")).toBeNull();
     for (let i = 0; i < 3; i++) {
       fake.state.nextReport = makeReport("wrong_answer");
       await user.click(screen.getByRole("button", { name: "Submit" }));
@@ -237,6 +238,9 @@ describe("Workspace: problem pane", () => {
     const { user } = await openWorkspace();
     await user.click(screen.getByRole("tab", { name: "Editorial" }));
     expect(await screen.findByTestId("editorial-unlocked")).toHaveTextContent("you solved this problem");
+    const animated = await screen.findByTestId("see-it-animated");
+    expect(within(animated).getByRole("link", { name: "Quick Sort" })).toHaveAttribute("href", "/learn/sorting/quick-sort");
+    expect(within(animated).getByRole("link", { name: "Bubble Sort" })).toBeInTheDocument();
   });
 
   it("compares two snapshots and restores one into the editor", async () => {

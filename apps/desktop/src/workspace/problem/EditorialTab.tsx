@@ -6,8 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { usePrefs } from "@/lib/prefs";
 import { Markdown } from "@/workspace/problem/Markdown";
+import { SeeItAnimated } from "@/workspace/problem/SeeItAnimated";
 
-/** Locked until solved or after enough failed submissions (decided in kb-app). */
+/** Locked until solved or after enough failed submissions (decided in kb-app). The
+ * "See it animated" Learn links name the technique, so they unlock with it. */
 export function EditorialTab({ problemId }: { problemId: string }) {
   const { t } = useTranslation();
   const { lang } = usePrefs();
@@ -41,6 +43,7 @@ export function EditorialTab({ problemId }: { problemId: string }) {
         <BookOpenCheck aria-hidden className="size-4" />
         {e.reason === "accepted" ? t("workspace.editorial.unlockedSolved") : t("workspace.editorial.unlockedAttempts")}
       </p>
+      <SeeItAnimated problemId={problemId} />
       <Markdown text={e.text ?? ""} />
     </div>
   );

@@ -20,7 +20,7 @@ use kb_app::{
 use kb_app::{LanguageCount, LearnTopicView};
 use kb_core::debug::EvalResult;
 use kb_core::{JudgeEvent, Language, Report};
-use kb_store::{AcceptedSolution, ActivityRow, LearnSubject, LearnTopicSummary};
+use kb_store::{AcceptedSolution, ActivityRow, LearnPath, LearnSubject, LearnTopicSummary};
 use kb_store::{
     Draft, ProblemFilter, ProblemSummary, ProblemView, Snapshot, SubmissionSummary, UiLang,
 };
@@ -61,6 +61,13 @@ async fn list_problems(
 #[specta::specta]
 async fn learn_catalog(state: State<'_, AppState>, ui_lang: UiLang) -> Res<Vec<LearnSubject>> {
     state.app()?.learn_catalog(ui_lang).await
+}
+
+/// The learning paths on Learn home (Phase 6).
+#[tauri::command]
+#[specta::specta]
+async fn learn_paths(state: State<'_, AppState>, ui_lang: UiLang) -> Res<Vec<LearnPath>> {
+    state.app()?.learn_paths(ui_lang).await
 }
 
 /// One Learn topic page with its linked problems.
@@ -729,6 +736,7 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         list_problems,
         get_problem,
         learn_catalog,
+        learn_paths,
         learn_topic,
         search_learn,
         editorial,

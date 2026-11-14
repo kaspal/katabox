@@ -143,6 +143,17 @@ CREATE TABLE learn_quiz (
     json     TEXT NOT NULL
 ) WITHOUT ROWID;
 
+-- Learning paths (schema 7): ordered topic lists shown on Learn home.
+CREATE TABLE learn_paths (
+    id       TEXT PRIMARY KEY,
+    ord      INTEGER NOT NULL,
+    title_en TEXT NOT NULL,
+    title_es TEXT NOT NULL,
+    blurb_en TEXT NOT NULL,
+    blurb_es TEXT NOT NULL,
+    topics   TEXT NOT NULL  -- JSON array of topic ids, in study order
+) WITHOUT ROWID;
+
 CREATE VIRTUAL TABLE learn_fts USING fts5 (
     topic_id UNINDEXED,
     lang UNINDEXED,

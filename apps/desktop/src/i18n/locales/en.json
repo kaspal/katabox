@@ -272,6 +272,9 @@
       "hint": "JS checks plain JavaScript (no type annotations needed); TS checks strict TypeScript. Run and Submit work the same either way.",
       "js": "JavaScript checking",
       "ts": "TypeScript checking"
+    },
+    "animated": {
+      "label": "See it animated"
     }
   },
   "progress": {
@@ -881,7 +884,12 @@
       "viewed": "{{count}} viewed",
       "coming_soon": "Coming soon",
       "progress": "{{viewed}} of {{total}} topics viewed",
-      "loading": "Loading topics…"
+      "loading": "Loading topics…",
+      "paths": "Learning paths",
+      "path_progress": "{{viewed}} of {{total}} topics viewed",
+      "path_start": "Start: {{topic}}",
+      "path_next": "Next: {{topic}}",
+      "path_again": "Review: {{topic}}"
     },
     "picker": {
       "label": "Topics",

@@ -9,9 +9,9 @@ presets = ["random"]
 default = [10]
 
 [complexity]
-best = "O(2ⁿ)"
-average = "O(2ⁿ)"
-worst = "O(2ⁿ)"
+best = "—"
+average = "—"
+worst = "—"
 space = "O(1)"
 stable = true
 in_place = true

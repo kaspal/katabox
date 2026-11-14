@@ -98,6 +98,17 @@ async learnCatalog(uiLang: UiLang) : Promise<Result<LearnSubject[], AppError>> {
 }
 },
 /**
+ * The learning paths on Learn home (Phase 6).
+ */
+async learnPaths(uiLang: UiLang) : Promise<Result<LearnPath[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("learn_paths", { uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * One Learn topic page with its linked problems.
  */
 async learnTopic(id: string, uiLang: UiLang) : Promise<Result<LearnTopicView, AppError>> {
@@ -1293,6 +1304,10 @@ export type LearnComplexity = { best: string; average: string; worst: string; sp
  * The limits of "your own" input, also the tracer's cap.
  */
 export type LearnInput = { min_len: number; max_len: number; min: number; max: number }
+/**
+ * A learning path in one UI language.
+ */
+export type LearnPath = { id: string; title: string; blurb: string; topics: string[] }
 export type LearnSample = { language: Language; source: string }
 /**
  * A subject in the catalogue, with its topics (possibly none yet: "Coming soon").
@@ -1302,7 +1317,11 @@ export type LearnSubject = { id: string; name: string; blurb: string; icon: stri
  * Everything the topic page shows, in one UI language.
  */
 export type LearnTopic = { id: string; subject: string; subject_name: string; title: string; tags: string[]; complexity: LearnComplexity; problems: string[]; presets: string[]; input: LearnInput; default_input: number[]; theory: string; samples: LearnSample[]; quiz: QuizQuestion[] }
-export type LearnTopicSummary = { id: string; subject: string; title: string; tags: string[] }
+export type LearnTopicSummary = { id: string; subject: string; title: string; tags: string[]; 
+/**
+ * Linked catalogue problems: a problem page links back here ("See it animated").
+ */
+problems: string[] }
 /**
  * A Learn topic page (ADR 0029): the topic, and its linked problems in display order
  * (ids the catalogue no longer has are left out).

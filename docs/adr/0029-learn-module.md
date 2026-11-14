@@ -162,8 +162,8 @@ Date: 2026-11-14 · Status: accepted (maintainer sign-off on the section, `motio
 
 ### Dependencies
 - **`motion`** (motion.dev, MIT, pinned to 14.8.0), only in the lazy Learn chunk.
-- **Not added yet:** `d3-hierarchy` and `d3-force`, until the tree and graph phases
-  need them.
+- **`d3-hierarchy` 3.1.2 and `d3-force` 3.0.0** (ISC, exact pins), added in Phases 2-4
+  for tree layouts and graph layouts; only in the lazy Learn chunk.
 - **Reused:** code highlighting uses the app's Lezer highlighter (styles/syntax.css).
 
 ### Phase 1 additions (Foundations, Sorting, Searching, compare mode)
@@ -208,6 +208,31 @@ Date: 2026-11-14 · Status: accepted (maintainer sign-off on the section, `motio
   - **Not viewing:** compare mode never marks a topic viewed or saves the Continue
     position, and it adds no setting.
 
+### Phases 2-6 additions (data structures, graphs, grids, DP, greedy, backtracking, strings, math)
+- **New scenes**, one per data shape: list, slots, tree (d3-hierarchy, with optional
+  extra `links` for tries and automata), hash, bit array, graph (d3-force, positions
+  fixed once per input), grid, DP table, timeline, decision outline, board, string rows
+  and plane. Each draws only `--viz-*` tokens and gives the stage a text summary.
+- **Inputs stay a flat number list in content.db.** Richer inputs are codecs in the
+  TypeScript tracer definition (`engine/codecs.ts`, `graph.ts`, `grid.ts`, `shapes.ts`):
+  operations, text, graphs `[n, directed, u, v, w…]`, map-style grids, intervals,
+  items, matrices, points. The language drivers decode them with matching helpers
+  (`kb_ops`, `kb_text`, `kb_graph`, `kb_grid`, …), so samples read natural input.
+- **Limits keep animations short:** every preset and random case must pass the input
+  check, and a worst-case input per topic stays under half the step cap (Vitest).
+  Grids are capped at 12×16, bitmask TSP at 5 cities.
+- **The `scc` topic uses Kosaraju** (two DFS passes); its theory names Tarjan as the
+  alternative.
+- **Learning paths (content.db schema 7):** `content/learn/paths.toml` lists ordered
+  topic ids with titles and blurbs in both languages; kb-pack checks ids, texts and
+  known topics, and the build writes them to a `learn_paths` table. Learn home shows each
+  path's progress (topics viewed) and links to the first unviewed topic. Progress comes
+  from the existing `learn.viewed` setting, so there is no new user data.
+- **"See it animated":** topic summaries carry their linked problems, and a problem's
+  Editorial tab lists the topics that link to it. The links name the technique, so they
+  show only once the editorial is unlocked (and never in review or mock interviews).
+- **Terms:** `docs/learn-glossary.md` fixes the English-Spanish vocabulary.
+
 ## Consequences
 - **A new topic needs four things:**
   - a package in `content/learn`;
@@ -219,4 +244,4 @@ Date: 2026-11-14 · Status: accepted (maintainer sign-off on the section, `motio
   file without a leading `import`. The program-mode check no longer uses `node --check`
   (ADR 0028, `fix/ts-program-check`), so the import's position no longer matters; it
   stays first.
-- **Paths through topics are left for Phase 6.**
+- **A new path is a `paths.toml` entry**; kb-pack refuses unknown or repeated topics.

@@ -38,7 +38,7 @@ export function fakeCatalog(lang: Lang): LearnSubject[] {
       name: lang === "es" ? "Ordenación" : "Sorting",
       blurb: lang === "es" ? "Burbuja, inserción, rápida" : "Bubble, insertion, quick",
       icon: "chart-column",
-      topics: SORTING.map((t) => ({ id: t.id, subject: "sorting", title: t[lang], tags: ["comparison-sort"] })),
+      topics: SORTING.map((t) => ({ id: t.id, subject: "sorting", title: t[lang], tags: ["comparison-sort"], problems: t.problems })),
     },
     {
       id: "graphs",

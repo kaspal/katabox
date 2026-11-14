@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
-import type { LearnSubject } from "@/bindings";
+import type { LearnPath, LearnSubject } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { ErrorNotice } from "@/components/ErrorNotice";
-import { useLearnCatalog, useLearnSearch } from "@/lib/queries";
+import { useLearnCatalog, useLearnPaths, useLearnSearch } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { useLastTopic, useViewed } from "./engine/progress";
 import { subjectIcon } from "./icons";
@@ -77,9 +77,49 @@ function SubjectCard({ s, viewed }: { s: LearnSubject; viewed: string[] }) {
   );
 }
 
+/** A learning path: its progress and a link to the first topic not viewed yet. */
+function PathCard({ path, subjects, viewed }: { path: LearnPath; subjects: LearnSubject[]; viewed: string[] }) {
+  const { t } = useTranslation();
+  const subjectOf = (id: string) => subjects.find((s) => s.topics.some((tp) => tp.id === id));
+  const titleOf = (id: string) => subjectOf(id)?.topics.find((tp) => tp.id === id)?.title ?? id;
+  const topics = path.topics.filter((id) => subjectOf(id));
+  const seen = topics.filter((id) => viewed.includes(id)).length;
+  const next = topics.find((id) => !viewed.includes(id)) ?? topics[0];
+  const subject = next ? subjectOf(next) : undefined;
+  return (
+    <article className="flex flex-col gap-2.5 rounded-xl border bg-card p-4" data-path={path.id}>
+      <h3 className="text-[15px] font-semibold">{path.title}</h3>
+      <p className="text-[13px] leading-snug text-muted-foreground">{path.blurb}</p>
+      <p className="text-xs text-muted-foreground">{t("learn.home.path_progress", { viewed: seen, total: topics.length })}</p>
+      <div
+        role="progressbar"
+        aria-label={t("learn.home.progress", { viewed: seen, total: topics.length })}
+        aria-valuemin={0}
+        aria-valuemax={topics.length}
+        aria-valuenow={seen}
+        className="h-1.5 overflow-hidden rounded-full bg-muted"
+      >
+        <div className="h-full rounded-full bg-primary" style={{ width: `${topics.length ? (seen / topics.length) * 100 : 0}%` }} />
+      </div>
+      {next && subject && (
+        <Button asChild variant={seen === 0 ? "default" : "outline"} size="sm" className="h-auto max-w-full self-start whitespace-normal py-1.5 text-left">
+          <Link to="/learn/$subject/$topic" params={{ subject: subject.id, topic: next }}>
+            {seen === topics.length
+              ? t("learn.home.path_again", { topic: titleOf(next) })
+              : seen === 0
+                ? t("learn.home.path_start", { topic: titleOf(next) })
+                : t("learn.home.path_next", { topic: titleOf(next) })}
+          </Link>
+        </Button>
+      )}
+    </article>
+  );
+}
+
 export function LearnHome() {
   const { t } = useTranslation();
   const catalog = useLearnCatalog();
+  const paths = useLearnPaths();
   const { viewed } = useViewed();
   const [last] = useLastTopic();
   const [q, setQ] = useState("");
@@ -169,6 +209,19 @@ export function LearnHome() {
                 {t("learn.home.resume")}
               </Link>
             </Button>
+          </div>
+        </section>
+      )}
+
+      {(paths.data?.length ?? 0) > 0 && subjects.length > 0 && (
+        <section aria-labelledby="learn-paths">
+          <h2 id="learn-paths" className="mb-3.5 text-lg font-semibold">
+            {t("learn.home.paths")}
+          </h2>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3.5" data-testid="paths">
+            {paths.data!.map((p) => (
+              <PathCard key={p.id} path={p} subjects={subjects} viewed={viewed} />
+            ))}
           </div>
         </section>
       )}

@@ -14,7 +14,7 @@ La salida da los puentes como pares ordenados `(menor, mayor)`, después un sepa
 
 ### La entrada por defecto
 
-Siete nodos, no dirigido: un triángulo `0 – 1 – 2`, el enlace `2 – 3`, un triángulo `3 – 4 – 5` y una cola `5 – 6`. El DFS entra en los nodos en orden de número, así que `tin` va de 0 a 6. En el nodo 2, la arista de retroceso hacia 0 da `low[2] = 0`; en el nodo 5, la arista de retroceso hacia 3 da `low[5] = 3`, y eso se propaga a `low[4] = 3` y `low[3] = 3`. El nodo 6 es una hoja con `low[6] = 6`.
+Siete nodos, no dirigido: un triángulo `0 – 1 – 2`, la arista `2 – 3`, un triángulo `3 – 4 – 5` y una cola `5 – 6`. El DFS entra en los nodos en orden de número, así que `tin` va de 0 a 6. En el nodo 2, la arista de retroceso hacia 0 da `low[2] = 0`; en el nodo 5, la arista de retroceso hacia 3 da `low[5] = 3`, y eso se propaga a `low[4] = 3` y `low[3] = 3`. El nodo 6 es una hoja con `low[6] = 6`.
 
 De vuelta en 5: `low[6] = 6 > tin[5] = 5`, así que `5 – 6` es un puente y 5 un vértice de corte. En 3: `low[4] = 3 >= tin[3]`, así que 3 es un vértice de corte, aunque `3 – 4` no es un puente. En 2: `low[3] = 3 > tin[2] = 2`, así que `2 – 3` es un puente y 2 un vértice de corte. La raíz 0 tiene un solo hijo en el DFS, así que no es vértice de corte. La salida es `[2, 3, 5, 6, -1, 2, 3, 5]`.
 

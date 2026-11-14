@@ -408,6 +408,14 @@ export function createFakeApi(
       ).map((p) => ({ ...p, title: p.title[lang] }));
     }),
     learnCatalog: vi.fn(async (lang: "en" | "es") => fakeCatalog(lang)),
+    learnPaths: vi.fn(async (lang: "en" | "es") => [
+      {
+        id: "start-here",
+        title: lang === "es" ? "Empieza aquí" : "Start here",
+        blurb: lang === "es" ? "Primeros pasos" : "First steps",
+        topics: ["bubble-sort", "insertion-sort", "quick-sort"],
+      },
+    ]),
     learnTopic: vi.fn(async (id: string, lang: "en" | "es") => {
       const topic = fakeTopic(id, lang);
       if (!topic) throw { code: "not_found", message: `not found: topic ${id}` };
