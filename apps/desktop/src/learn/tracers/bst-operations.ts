@@ -7,7 +7,7 @@ import { BTree } from "../engine/bst";
 import { decodeOps, opsCodec, type OpSpec } from "../engine/codecs";
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"bst-operations">;
 const KEYS = [
@@ -28,7 +28,7 @@ const KEYS = [
   "bst-operations.copy",
   "bst-operations.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["descend", "root", "attach-left", "attach-right", "search", "result", "missing", "visit", "splice", "successor", "copy"] as const;
 export const OPS: OpSpec[] = [

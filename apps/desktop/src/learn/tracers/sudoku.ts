@@ -6,11 +6,11 @@
 import { fail } from "../engine/codecs";
 import { type InputError } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"sudoku">;
 const KEYS = ["sudoku.ready", "sudoku.place", "sudoku.undo", "sudoku.done", "sudoku.impossible"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["place", "undo"] as const;
 

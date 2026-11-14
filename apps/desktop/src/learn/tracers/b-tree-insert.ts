@@ -5,7 +5,7 @@
 // at the same depth. Output: the keys level by level, each node followed by a 0. The
 // left half of a split keeps the node's identity, so the split animates.
 import { Recorder } from "../engine/recorder";
-import type { ForestNode, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { ForestNode, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"b-tree-insert">;
 const KEYS = [
@@ -17,7 +17,7 @@ const KEYS = [
   "b-tree-insert.new_root",
   "b-tree-insert.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["descend", "add-key", "split", "absorb", "new-root"] as const;
 export const MAX_KEYS = 2;

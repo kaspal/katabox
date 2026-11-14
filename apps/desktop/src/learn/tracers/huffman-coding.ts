@@ -5,11 +5,11 @@
 // Output: the total encoded length in bits (Σ frequency × depth), then each symbol's
 // code length.
 import { Recorder } from "../engine/recorder";
-import type { ForestNode, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { ForestNode, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"huffman-coding">;
 const KEYS = ["huffman-coding.ready", "huffman-coding.merge", "huffman-coding.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["merge"] as const;
 const LETTERS = "abcdefghijklmnop";

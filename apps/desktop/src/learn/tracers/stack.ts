@@ -4,7 +4,7 @@
 import { decodeOps, opsCodec, type OpSpec } from "../engine/codecs";
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"stack">;
 const KEYS = [
@@ -16,7 +16,7 @@ const KEYS = [
   "stack.peek_empty",
   "stack.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["push", "pop", "peek"] as const;
 export const OPS: OpSpec[] = [
@@ -80,7 +80,7 @@ function trace(input: readonly number[]): Step[] {
       }
     }
   }
-  r.snap({ ...r.steps[r.steps.length - 1]!, narration: say("stack.done", { count: out.length }), marker: null, result: out.map((it) => it.value) });
+  r.snap({ ...r.steps[r.steps.length - 1]!, narration: say("stack.done", { num: out.length }), marker: null, result: out.map((it) => it.value) });
   return r.steps;
 }
 

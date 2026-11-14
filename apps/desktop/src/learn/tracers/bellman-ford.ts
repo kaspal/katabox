@@ -5,7 +5,7 @@
 // negative cycle, else [0] followed by the distances (999 when unreachable).
 import { decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"bellman-ford">;
 const KEYS = [
@@ -17,7 +17,7 @@ const KEYS = [
   "bellman-ford.negative_cycle",
   "bellman-ford.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["relax", "settled", "negative-cycle"] as const;
 export const INF = 999;

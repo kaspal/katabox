@@ -6,11 +6,11 @@
 import { encodeText } from "../engine/codecs";
 import { textWordsCodec } from "../engine/shapes";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"word-break">;
 const KEYS = ["word-break.ready", "word-break.end", "word-break.fits", "word-break.none", "word-break.done", "word-break.fail"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["fits"] as const;
 
@@ -41,7 +41,7 @@ function trace(input: readonly number[]): Step[] {
     });
   };
 
-  snap(say("word-break.ready", { text, count: words.length }), null);
+  snap(say("word-break.ready", { text, num: words.length }), null);
   for (let end = 1; end <= n; end++) {
     ok[end] = 0;
     snap(say("word-break.end", { end, prefix: text.slice(0, end) }), null, end);

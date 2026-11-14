@@ -5,7 +5,7 @@
 import { SORT_INPUT } from "../engine/cases";
 import { bufferedMerge } from "../engine/merge";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"merge-sort">;
 const KEYS = [
@@ -20,7 +20,7 @@ const KEYS = [
   "merge-sort.take",
   "merge-sort.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["base", "split", "copy", "pick", "take-left", "take-right"] as const;
 

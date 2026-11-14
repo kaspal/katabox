@@ -1,7 +1,7 @@
 // Convex hull, Andrew's monotone chain. Mirrors content/learn/math-geometry/convex-hull/sample.{py,ts}.
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 import { MAX_COORD, cross, pointsCodec, pts, type P } from "./geometry";
 
 type HullKey = NarrationKey<"convex-hull">;
@@ -11,7 +11,7 @@ function hullTrace(input: readonly number[]): Step[] {
   const all = pts(input);
   const unique = [...new Map(all.map((p) => [`${p[0]},${p[1]}`, p])).values()].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const r = new Recorder([]);
-  const say = (key: (typeof HULL_KEYS)[number], params?: Record<string, number>) => ({ key, params });
+  const say = (key: (typeof HULL_KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
   let chain: P[] = [];
   let lowerDone: P[] = [];
   const snap = (narration: ReturnType<typeof say>, marker: string | null, o: { turn?: [P, P, P]; turnRole?: Role; current?: P; closed?: boolean } = {}) => {

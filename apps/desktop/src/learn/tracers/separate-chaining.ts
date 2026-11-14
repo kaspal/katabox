@@ -3,7 +3,7 @@
 // is appended. Colliding keys share a bucket's list. Output: each bucket's length, then
 // its keys.
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"separate-chaining">;
 const KEYS = [
@@ -15,7 +15,7 @@ const KEYS = [
   "separate-chaining.insert",
   "separate-chaining.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["hash", "scan", "insert"] as const;
 export const M = 7;

@@ -4,11 +4,11 @@
 // emptied in value order. No value is ever compared with another.
 import { BucketBoard, fixBucketDepth } from "../engine/buckets";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"counting-sort">;
 const KEYS = ["counting-sort.ready", "counting-sort.count", "counting-sort.write", "counting-sort.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["count", "write"] as const;
 
@@ -28,7 +28,7 @@ function trace(values: readonly number[]): Step[] {
     r.snap({
       ...board.frame(v),
       pointers: [{ label: "v", at: p, tone: "i" }],
-      narration: say("counting-sort.count", { v, count: board.buckets[v]!.length }),
+      narration: say("counting-sort.count", { v, num: board.buckets[v]!.length }),
       marker: "count",
       vars: { v, k: null, count: board.buckets[v]!.length },
     });

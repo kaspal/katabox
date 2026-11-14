@@ -6,7 +6,7 @@
 // values; the tail's back link is drawn as an arc.
 import { listData, type LNode } from "../engine/list";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"floyd-cycle">;
 const KEYS = [
@@ -18,7 +18,7 @@ const KEYS = [
   "floyd-cycle.walk",
   "floyd-cycle.found",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params });
 
 export const MARKERS = ["move", "meet", "no-cycle", "reset", "walk", "found"] as const;
 

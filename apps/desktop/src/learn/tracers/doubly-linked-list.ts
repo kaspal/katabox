@@ -6,7 +6,7 @@ import { decodeOps, opsCodec, type OpSpec } from "../engine/codecs";
 import { int } from "../engine/inputs";
 import { chain, listData, type LNode } from "../engine/list";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"doubly-linked-list">;
 const KEYS = [
@@ -18,7 +18,7 @@ const KEYS = [
   "doubly-linked-list.unlink_back",
   "doubly-linked-list.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["link-front", "link-back", "empty-front", "empty-back", "unlink-front", "unlink-back"] as const;
 export const OPS: OpSpec[] = [

@@ -2,7 +2,7 @@
 // position in turn until the target turns up; the order of the values does not matter.
 import { pickSearchTarget, SEARCH_INPUT } from "../engine/search";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"linear-search">;
 const KEYS = [
@@ -12,7 +12,7 @@ const KEYS = [
   "linear-search.found",
   "linear-search.missing",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["check", "found", "missing"] as const;
 

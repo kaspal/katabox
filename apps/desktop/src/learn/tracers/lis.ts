@@ -4,11 +4,11 @@
 // the j, so the chain can be read back from the best end (the first one, on ties).
 // Output: the length, then the subsequence.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"lis">;
 const KEYS = ["lis.ready", "lis.start", "lis.extend", "lis.trace", "lis.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["extend", "trace"] as const;
 

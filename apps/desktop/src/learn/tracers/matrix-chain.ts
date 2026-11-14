@@ -5,11 +5,11 @@
 // part, and dims[i] · dims[k + 1] · dims[j + 1] to multiply the two results. The table
 // fills diagonal by diagonal. Output: [the cheapest cost for the whole chain].
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"matrix-chain">;
 const KEYS = ["matrix-chain.ready", "matrix-chain.span", "matrix-chain.split", "matrix-chain.worse", "matrix-chain.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["split"] as const;
 

@@ -10,7 +10,7 @@
 import { decodeOps, opsCodec, type OpSpec } from "../engine/codecs";
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"dynamic-array-ops">;
 const KEYS = [
@@ -23,7 +23,7 @@ const KEYS = [
   "dynamic-array-ops.empty",
   "dynamic-array-ops.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["grow", "shift-right", "write", "shift-left", "shrink"] as const;
 export const OPS: OpSpec[] = [

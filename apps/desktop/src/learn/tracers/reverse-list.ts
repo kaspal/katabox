@@ -4,7 +4,7 @@
 // arrows flip one by one; at the end prev is the new head.
 import { listData, type LNode } from "../engine/list";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, PointerTone, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, PointerTone, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"reverse-list">;
 const KEYS = [
@@ -14,7 +14,7 @@ const KEYS = [
   "reverse-list.advance",
   "reverse-list.new_head",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params });
 
 export const MARKERS = ["save", "flip", "advance", "new-head"] as const;
 

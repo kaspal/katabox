@@ -5,7 +5,7 @@
 import { decodeOps, opsCodec, type OpSpec } from "../engine/codecs";
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Pointer, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"binary-heap">;
 const KEYS = [
@@ -22,7 +22,7 @@ const KEYS = [
   "binary-heap.swap_down",
   "binary-heap.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["append", "compare-up", "swap-up", "empty", "take", "move-last", "compare-down", "swap-down"] as const;
 export const OPS: OpSpec[] = [

@@ -2,7 +2,7 @@
 // line for line (`@step` markers).
 import { Recorder } from "../engine/recorder";
 import { SORT_INPUT } from "../engine/cases";
-import { sortCounters, type NarrationKey, type Step, type TracerDef } from "../engine/types";
+import { type NarrationKey, type NarrationParams, sortCounters, type Step, type TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"bubble-sort">;
 const KEYS = [
@@ -15,7 +15,7 @@ const KEYS = [
   "bubble-sort.no_swaps",
   "bubble-sort.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["pass", "compare", "swap", "check"] as const;
 

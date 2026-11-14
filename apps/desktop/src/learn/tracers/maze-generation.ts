@@ -9,11 +9,11 @@ import { fail } from "../engine/codecs";
 import { DIRS } from "../engine/grid";
 import { tokens, type InputError } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"maze-generation">;
 const KEYS = ["maze-generation.ready", "maze-generation.carve", "maze-generation.back", "maze-generation.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["carve", "back"] as const;
 export const MIN_K = 2;

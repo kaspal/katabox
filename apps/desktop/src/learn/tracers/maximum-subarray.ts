@@ -4,11 +4,11 @@
 // or below cannot help what follows, so restart at the current value; otherwise extend.
 // Remember the best run seen. Output: the best sum, its first and its last index.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Pointer, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"maximum-subarray">;
 const KEYS = ["maximum-subarray.ready", "maximum-subarray.restart", "maximum-subarray.extend", "maximum-subarray.record", "maximum-subarray.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["restart", "extend", "record"] as const;
 

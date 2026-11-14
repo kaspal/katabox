@@ -4,11 +4,11 @@
 import { bstFrom } from "../engine/bst";
 import { SORT_INPUT } from "../engine/cases";
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"level-order">;
 const KEYS = ["level-order.ready", "level-order.visit", "level-order.enqueue", "level-order.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["visit", "enqueue"] as const;
 

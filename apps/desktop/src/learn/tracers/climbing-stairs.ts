@@ -3,11 +3,11 @@
 // step i came from step i − 1 or from step i − 2, so ways[i] = ways[i − 1] + ways[i − 2],
 // with ways[0] = 1 (standing still is one way). Output: the whole table, ways[0..n].
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"climbing-stairs">;
 const KEYS = ["climbing-stairs.ready", "climbing-stairs.one", "climbing-stairs.two", "climbing-stairs.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["one", "two"] as const;
 

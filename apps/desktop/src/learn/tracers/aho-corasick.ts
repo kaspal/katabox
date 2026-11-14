@@ -8,11 +8,11 @@
 import { textWordsCodec } from "../engine/shapes";
 import { encodeText } from "../engine/codecs";
 import { Recorder } from "../engine/recorder";
-import type { ForestNode, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { ForestNode, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"aho-corasick">;
 const KEYS = ["aho-corasick.ready", "aho-corasick.built", "aho-corasick.link", "aho-corasick.read", "aho-corasick.follow", "aho-corasick.hit", "aho-corasick.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["link", "follow", "hit"] as const;
 
@@ -74,7 +74,7 @@ function trace(input: readonly number[]): Step[] {
     });
   };
 
-  snap(say("aho-corasick.ready", { count: patterns.length }), null);
+  snap(say("aho-corasick.ready", { num: patterns.length }), null);
   snap(say("aho-corasick.built", { nodes: go.length }), null);
   const queue = [...go[0]!.values()];
   for (const id of queue) linked.add(id);

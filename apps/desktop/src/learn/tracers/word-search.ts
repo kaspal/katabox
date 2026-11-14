@@ -5,11 +5,11 @@
 import { fail } from "../engine/codecs";
 import { type InputError } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"word-search">;
 const KEYS = ["word-search.ready", "word-search.step", "word-search.back", "word-search.found", "word-search.missing"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["step", "back"] as const;
 const DIRS: [number, number][] = [

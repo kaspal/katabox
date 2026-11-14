@@ -4,11 +4,11 @@
 // room for the rest. Output: how many, then their input positions in increasing order.
 import { intervalsCodec } from "../engine/shapes";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"activity-selection">;
 const KEYS = ["activity-selection.ready", "activity-selection.sorted", "activity-selection.take", "activity-selection.clash", "activity-selection.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["take", "clash"] as const;
 export const MAX_TIME = 24;
@@ -46,7 +46,7 @@ function trace(input: readonly number[]): Step[] {
     }
   }
   const chosen = iv.filter((b) => roles[b.id] === "sorted").map((b) => b.id);
-  snap(say("activity-selection.done", { count: chosen.length, n: iv.length }), null);
+  snap(say("activity-selection.done", { num: chosen.length, n: iv.length }), null);
   r.steps[r.steps.length - 1]!.result = [chosen.length, ...chosen];
   return r.steps;
 }

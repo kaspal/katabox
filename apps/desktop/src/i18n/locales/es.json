@@ -1690,7 +1690,7 @@
         "ready": "Mueve {{n}} discos de la varilla 1 a la 3, de uno en uno y sin poner nunca un disco grande sobre uno pequeño. Hacen falta {{minimum}} movimientos.",
         "call": "hanoi({{n}}): para mover {{n}} discos de {{source}} a {{target}}, primero aparta los {{smaller}} más pequeños a la varilla {{spare}}.",
         "empty": "hanoi(0): no hay discos que mover, así que vuelve enseguida.",
-        "move": "Movimiento {{count}}: el disco {{disk}} pasa de la varilla {{source}} a la {{target}}.",
+        "move": "Movimiento {{num}}: el disco {{disk}} pasa de la varilla {{source}} a la {{target}}.",
         "done": "Hecho: {{moves}} movimientos (2ⁿ − 1 para n = {{n}}) y {{calls}} llamadas.",
         "call_one": "hanoi(1): un solo disco, así que pasa directamente de la varilla {{source}} a la {{target}} (las llamadas con 0 discos de alrededor vuelven enseguida)."
       },
@@ -1701,8 +1701,8 @@
         "xor": "x ^ y = {{result}}: un 1 donde x e y son distintos.",
         "left": "x << 1 = {{result}}: cada bit pasa una posición a la izquierda, lo que duplica x.",
         "right": "x >> 1 = {{result}}: cada bit pasa una posición a la derecha y el último se pierde: x a la mitad, redondeado hacia abajo.",
-        "clear": "{{before}} − 1 = {{minus}} invierte el 1 más bajo y los 0 que tiene debajo, así que {{before}} & {{minus}} = {{after}} borra justo ese bit. Cuenta: {{count}}.",
-        "count": "x llegó a 0: {{x}} tiene {{count}} bits a 1. El bucle dio una vuelta por cada 1, no por cada bit.",
+        "clear": "{{before}} − 1 = {{minus}} invierte el 1 más bajo y los 0 que tiene debajo, así que {{before}} & {{minus}} = {{after}} borra justo ese bit. Cuenta: {{num}}.",
+        "count": "x llegó a 0: {{x}} tiene {{num}} bits a 1. El bucle dio una vuelta por cada 1, no por cada bit.",
         "done": "Hecho: {{ops}} operaciones de bits, cada una un solo paso de la máquina."
       },
       "prefix-sums": {
@@ -1777,7 +1777,7 @@
       },
       "counting-sort": {
         "ready": "{{n}} números enteros de 0 a {{max}}: una cubeta por valor, así que nunca se comparan dos valores.",
-        "count": "{{v}} entra en la cubeta {{v}}, que ya tiene {{count}}.",
+        "count": "{{v}} entra en la cubeta {{v}}, que ya tiene {{num}}.",
         "write": "La cubeta {{v}} entrega un {{v}}: escríbelo en la posición {{k}} (quedan {{left}} en la cubeta).",
         "done": "Ordenado con {{n}} recuentos y {{n}} escrituras, usando {{buckets}} cubetas."
       },
@@ -1789,12 +1789,12 @@
         "done": "Ordenado tras {{passes}} pasadas sobre {{n}} valores, sin comparar nunca dos valores."
       },
       "bucket-sort": {
-        "ready": "Reparte {{n}} valores en {{count}} cubetas por tramos, ordena cada cubeta y lee las cubetas en orden.",
+        "ready": "Reparte {{n}} valores en {{num}} cubetas por tramos, ordena cada cubeta y lee las cubetas en orden.",
         "scatter": "{{v}} cae en el tramo {{range}}: a esa cubeta.",
         "sort": "Ordena la cubeta {{range}}: {{size}} valor(es), poco trabajo.",
         "sort_empty": "La cubeta {{range}} está vacía: nada que ordenar.",
         "gather": "Escribe {{v}} en la posición {{k}}.",
-        "done": "Ordenado: {{n}} valores a través de {{count}} cubetas."
+        "done": "Ordenado: {{n}} valores a través de {{num}} cubetas."
       },
       "tim-sort": {
         "ready": "Un Tim sort simplificado: la ordenación por inserción crea tramos de {{run}} y luego se mezclan por parejas ({{n}} valores).",
@@ -1849,7 +1849,7 @@
         "upper_right": "a[{{mid}}] = {{value}} ≤ {{target}}: el primer valor > {{target}} está más a la derecha.",
         "upper_left": "a[{{mid}}] = {{value}} > {{target}}: la posición {{mid}} puede ser la respuesta; quédate con la mitad izquierda, incluida.",
         "upper_done": "Cota superior = {{upper}}: la primera posición con un valor > {{target}} ({{n}} si no hay ninguna).",
-        "done": "{{target}} aparece {{count}} vez/veces: de la posición {{lower}} hasta {{upper}}, sin incluirla."
+        "done": "{{target}} aparece {{num}} vez/veces: de la posición {{lower}} hasta {{upper}}, sin incluirla."
       },
       "binary-search-answer": {
         "ready": "Envía {{n}} paquetes en orden en {{days}} días como mucho. La capacidad diaria mínima está entre {{lo}} (el paquete más pesado) y {{hi}} (todos juntos).",
@@ -1902,7 +1902,7 @@
         "pop_empty": "pop con la pila vacía: no hay nada que sacar, así que la respuesta es −1.",
         "peek": "peek: la cima es {{value}}; se queda en la pila.",
         "peek_empty": "peek con la pila vacía: −1.",
-        "done": "Hecho. La fila de salida tiene los {{count}} valores devueltos, en orden."
+        "done": "Hecho. La fila de salida tiene los {{num}} valores devueltos, en orden."
       },
       "queue-ring-buffer": {
         "ready": "Una cola en un arreglo fijo de {{capacity}} huecos. head es el frente; la cola está en head + size, dando la vuelta.",
@@ -1910,7 +1910,7 @@
         "enqueue": "enqueue {{value}}: se escribe al final, en el hueco {{at}}.",
         "empty": "dequeue con la cola vacía: −1.",
         "dequeue": "dequeue: saca {{value}} del hueco {{at}}; head pasa a {{head}} (vuelve al principio al llegar al final).",
-        "done": "Hecho: {{count}} dequeue. Nunca se desplazó nada: solo se movieron head y la cola."
+        "done": "Hecho: {{num}} dequeue. Nunca se desplazó nada: solo se movieron head y la cola."
       },
       "deque-monotonic-queue": {
         "ready": "Busca el máximo de cada ventana de {{k}} valores entre {{n}}. La bicola guarda posiciones con valores decrecientes del frente al final.",
@@ -2061,12 +2061,12 @@
       "trie": {
         "ready": "Inserta {{n}} palabras en un trie y luego cuenta las que empiezan por «{{prefix}}».",
         "new_node": "Aún no hay arista para {{letter}}: añade un nodo para «{{path}}».",
-        "follow": "Sigue {{letter}}; ahora pasan {{count}} palabra(s) por este nodo.",
+        "follow": "Sigue {{letter}}; ahora pasan {{num}} palabra(s) por este nodo.",
         "mark_end": "«{{word}}» termina aquí: marca el nodo.",
         "walk": "Sigue {{letter}}: «{{path}}».",
         "missing": "No hay arista para {{letter}}: ninguna palabra empieza por «{{prefix}}».",
-        "count_word": "{{count}} palabra(s) empiezan por «{{prefix}}», y «{{prefix}}» es una palabra.",
-        "count_only": "{{count}} palabra(s) empiezan por «{{prefix}}»; no es una palabra completa."
+        "count_word": "{{num}} palabra(s) empiezan por «{{prefix}}», y «{{prefix}}» es una palabra.",
+        "count_only": "{{num}} palabra(s) empiezan por «{{prefix}}»; no es una palabra completa."
       },
       "union-find": {
         "ready": "{{n}} elementos, cada uno en su propio conjunto: cada elemento es su propia raíz.",
@@ -2200,7 +2200,7 @@
         "new": "{{s}} aún no tiene etiqueta: empieza ahí el componente #{{c}}.",
         "pop": "Saca {{u}} de la pila y mira sus vecinos.",
         "fill": "{{v}} recibe también la etiqueta #{{c}}, desde {{u}}, y va a la pila.",
-        "done": "{{count}} componente(s) entre {{n}} nodos."
+        "done": "{{num}} componente(s) entre {{n}} nodos."
       },
       "bipartite-check": {
         "ready": "Intenta repartir {{n}} nodos en dos lados, A y B, de modo que toda arista cruce de un lado al otro.",
@@ -2264,7 +2264,7 @@
         "reverse": "Pasada 2: invierte todas las aristas y empieza por el último nodo en terminar.",
         "start": "{{u}} aún no tiene componente: empieza ahí la componente #{{c}}.",
         "assign": "{{u}} se une a la componente #{{c}}.",
-        "done": "{{count}} componente(s) entre {{n}} nodos."
+        "done": "{{num}} componente(s) entre {{n}} nodos."
       },
       "bridges-articulation": {
         "ready": "Encuentra los puentes y vértices de corte de {{n}} nodos. Bajo cada nodo: su número de entrada / su valor low.",
@@ -2353,7 +2353,7 @@
         "take": "Casa {{house}}: tomarla da {{take}}, saltarla da {{skip}}. Tómala.",
         "skip": "Casa {{house}}: tomarla da {{take}}, saltarla da {{skip}}. Sáltala.",
         "trace": "Desde el final: la casa {{house}} ({{value}}) se tomó.",
-        "done": "Mejor botín {{best}}, de {{count}} casa(s)."
+        "done": "Mejor botín {{best}}, de {{num}} casa(s)."
       },
       "maximum-subarray": {
         "ready": "Encuentra el tramo de los {{n}} valores con la mayor suma.",
@@ -2365,8 +2365,8 @@
       "coin-change": {
         "ready": "Menos monedas para {{amount}} con {{kinds}} valor(es) de moneda, cada uno tantas veces como haga falta. ∞ significa que no se puede formar.",
         "total": "Total {{total}}: prueba a terminar con cada moneda.",
-        "improve": "Terminar con un {{coin}}: fewest[{{from}}] + 1 = {{count}} moneda(s), lo mejor por ahora para {{total}}.",
-        "done": "{{amount}} necesita {{count}} moneda(s).",
+        "improve": "Terminar con un {{coin}}: fewest[{{from}}] + 1 = {{num}} moneda(s), lo mejor por ahora para {{total}}.",
+        "done": "{{amount}} necesita {{num}} moneda(s).",
         "impossible": "{{amount}} no se puede formar con estas monedas: la respuesta es -1."
       },
       "knapsack-01": {
@@ -2374,14 +2374,14 @@
         "skip": "Objeto {{item}} con capacidad {{c}}: empieza sin él, con la celda de arriba: {{value}}.",
         "take": "Objeto {{item}} con capacidad {{c}}: meterlo da {{value}}, más que {{without}} sin él.",
         "trace": "Desde la esquina: el objeto {{item}} se metió (peso {{weight}}); quedan {{left}} de capacidad.",
-        "done": "Mejor valor {{best}}, con {{count}} objeto(s)."
+        "done": "Mejor valor {{best}}, con {{num}} objeto(s)."
       },
       "rod-cutting": {
         "ready": "Una barra de longitud {{n}} y un precio para cada longitud de trozo. Los trozos pueden repetirse.",
         "length": "Longitud {{length}}: prueba cada longitud para el primer trozo.",
         "improve": "Primer trozo {{cut}} y luego lo mejor para {{rest}}: {{value}}, lo mejor por ahora.",
         "trace": "Corta un trozo de {{piece}}; quedan {{left}}.",
-        "done": "Una barra de {{n}} gana como mucho {{best}}, en {{count}} trozo(s)."
+        "done": "Una barra de {{n}} gana como mucho {{best}}, en {{num}} trozo(s)."
       },
       "lis": {
         "ready": "Encuentra la subsecuencia estrictamente creciente más larga de {{n}} valores (no hace falta que estén juntos).",
@@ -2400,7 +2400,7 @@
       "edit-distance": {
         "ready": "Menos ediciones de una letra (insertar, borrar, sustituir) para convertir \"{{a}}\" en \"{{b}}\". Fila 0 y columna 0: construir desde nada o hasta nada.",
         "same": "Las dos letras son \"{{letter}}\": no hace falta editar, {{value}} como en la diagonal.",
-        "change": "\"{{x}}\" ≠ \"{{y}}\": 1 + lo más barato entre sustituir ({{replace}}), borrar ({{remove}}) e insertar ({{insert}}) = {{value}}.",
+        "change": "\"{{x}}\" ≠ \"{{y}}\": 1 + lo más barato entre sustituir ({{replaced}}), borrar ({{remove}}) e insertar ({{insert}}) = {{value}}.",
         "done": "\"{{a}}\" se convierte en \"{{b}}\" con {{value}} edición(es)."
       },
       "grid-paths": {
@@ -2411,7 +2411,7 @@
         "done": "{{ways}} camino(s) llegan a la celda de abajo a la derecha."
       },
       "word-break": {
-        "ready": "¿Se puede cortar \"{{text}}\" en las {{count}} palabra(s) del diccionario?",
+        "ready": "¿Se puede cortar \"{{text}}\" en las {{num}} palabra(s) del diccionario?",
         "end": "¿Se pueden cortar las primeras {{end}} letras, \"{{prefix}}\"?",
         "fits": "\"{{word}}\" acaba aquí y las letras antes de {{start}} se pueden cortar: sí hasta {{end}}.",
         "none": "Ninguna palabra acaba en {{end}} tras un buen corte: no.",
@@ -2436,14 +2436,14 @@
         "sorted": "Ordénalas por hora de fin: la que acaba antes deja más sitio.",
         "take": "La actividad {{k}} ({{start}}–{{end}}) empieza con la sala libre: tómala.",
         "clash": "La actividad {{k}} empieza a las {{start}}, pero la sala está ocupada hasta las {{free}}: sáltala.",
-        "done": "Caben {{count}} de {{n}} actividades."
+        "done": "Caben {{num}} de {{n}} actividades."
       },
       "merge-intervals": {
         "ready": "Fusiona {{n}} intervalos allí donde se solapen o se toquen.",
         "sorted": "Ordénalos por inicio.",
         "open": "{{start}}–{{end}} empieza después de que acabe el último fusionado: abre uno nuevo.",
         "extend": "{{start}}–{{end}} se solapa con el último fusionado: ahora acaba en {{to}}.",
-        "done": "{{n}} intervalos quedaron en {{count}}."
+        "done": "{{n}} intervalos quedaron en {{num}}."
       },
       "jump-game": {
         "ready": "Desde cada una de las {{n}} casillas puedes saltar hacia delante hasta su número. ¿Llegas a la última?",
@@ -2467,32 +2467,32 @@
       },
       "subsets": {
         "ready": "Enumera los {{total}} subconjuntos de {{n}} valores: en cada llamada, guarda lo elegido y luego prueba a añadir cada valor posterior.",
-        "record": "Anota {{set}} (subconjunto {{count}}).",
+        "record": "Anota {{set}} (subconjunto {{num}}).",
         "choose": "Añade {{value}} (posición {{k}}) y baja un nivel.",
         "undo": "Vuelve a quitar {{value}} y prueba el siguiente valor.",
-        "done": "{{count}} subconjuntos de {{n}} valores: cada valor está dentro o fuera."
+        "done": "{{num}} subconjuntos de {{n}} valores: cada valor está dentro o fuera."
       },
       "permutations": {
         "ready": "Enumera todos los órdenes de {{n}} valores: llena los huecos uno a uno con cualquier valor aún sin usar.",
         "choose": "Pon {{value}} en el hueco {{at}}.",
-        "record": "Una fila completa: {{perm}} (orden {{count}}).",
+        "record": "Una fila completa: {{perm}} (orden {{num}}).",
         "undo": "Retira {{value}} y prueba el siguiente valor sin usar.",
-        "done": "{{count}} órdenes de {{n}} valores."
+        "done": "{{num}} órdenes de {{n}} valores."
       },
       "combination-sum": {
         "ready": "Todas las formas de sumar {{target}} con {{n}} candidatos, cada uno usable varias veces, en orden no decreciente.",
         "choose": "Añade {{value}}: faltan {{left}}.",
-        "found": "Justo el objetivo: {{combo}} (forma {{count}}).",
+        "found": "Justo el objetivo: {{combo}} (forma {{num}}).",
         "prune": "{{value}} supera los {{left}} que faltan, y todos los candidatos siguientes también: corta esta rama.",
-        "done": "{{count}} forma(s) de sumar {{target}}."
+        "done": "{{num}} forma(s) de sumar {{target}}."
       },
       "n-queens": {
         "ready": "Coloca {{n}} reinas en un tablero de {{n}} × {{n}} sin que se ataquen: una por fila, de arriba abajo.",
         "place": "Fila {{row}}: la columna {{col}} no está atacada, coloca una reina.",
-        "solution": "Todas las filas llenas: solución {{count}}.",
+        "solution": "Todas las filas llenas: solución {{num}}.",
         "dead_end": "Fila {{row}}: todas las columnas están atacadas. Callejón sin salida: vuelve arriba.",
         "remove": "Quita la reina de la fila {{row}}, columna {{col}}, y prueba la siguiente columna.",
-        "done": "Un tablero de {{n}} × {{n}} tiene {{count}} solución(es)."
+        "done": "Un tablero de {{n}} × {{n}} tiene {{num}} solución(es)."
       },
       "sudoku": {
         "ready": "Rellena el sudoku de {{size}} × {{size}}: {{empty}} celda(s) vacía(s); primero la primera vacía, dígitos en orden.",
@@ -2515,14 +2515,14 @@
         "scan": "Ahora recorre el texto; si no coincide, desliza el patrón hasta su borde en lugar de empezar de cero.",
         "skip": "\"{{letter}}\" en {{i}} no coincide: conserva {{k}} letra(s) coincidentes del borde.",
         "match": "Coincidencia en {{at}}.",
-        "done": "{{count}} coincidencia(s) con {{reads}} comparaciones; el recorrido nunca retrocede en el texto."
+        "done": "{{num}} coincidencia(s) con {{reads}} comparaciones; el recorrido nunca retrocede en el texto."
       },
       "z-function": {
         "ready": "Busca \"{{pattern}}\" en \"{{text}}\" con la función Z de patrón | texto.",
         "reuse": "{{i}} está dentro de la caja Z: empieza desde z[{{from}}], {{value}}.",
         "extend": "Una letra más coincide con el principio: z[{{i}}] = {{value}}.",
         "box": "La caja Z llega ahora a [{{left}}, {{right}}).",
-        "done": "{{count}} coincidencia(s): donde z vale la longitud del patrón."
+        "done": "{{num}} coincidencia(s): donde z vale la longitud del patrón."
       },
       "rabin-karp": {
         "ready": "El hash del patrón es {{target}}; la primera ventana de {{m}} letra(s) da {{window}}.",
@@ -2530,7 +2530,7 @@
         "match": "Ventana en {{at}}: mismo hash {{hash}} y mismas letras. Coincidencia.",
         "collision": "Ventana en {{at}}: mismo hash {{hash}} pero letras distintas, una colisión.",
         "roll": "Desliza: sale \"{{out}}\", entra \"{{into}}\". Nuevo hash {{hash}}.",
-        "done": "{{count}} coincidencia(s) y {{collisions}} colisión(es)."
+        "done": "{{num}} coincidencia(s) y {{collisions}} colisión(es)."
       },
       "manacher": {
         "ready": "Palíndromo más largo en \"{{text}}\": las barras entre letras permiten tratar igual longitudes pares e impares.",
@@ -2540,7 +2540,7 @@
         "done": "Palíndromo más largo: \"{{word}}\", {{length}} letra(s) desde la posición {{start}}."
       },
       "aho-corasick": {
-        "ready": "Cuenta {{count}} patrones en una sola pasada por el texto. Primero, un trie con los patrones.",
+        "ready": "Cuenta {{num}} patrones en una sola pasada por el texto. Primero, un trie con los patrones.",
         "built": "El trie tiene {{nodes}} nodo(s). Ahora los enlaces de fallo, nivel a nivel.",
         "link": "El nodo \"{{letter}}\" falla hacia \"{{to}}\": el sufijo más largo que también está en el trie.",
         "read": "Lee \"{{letter}}\" y sigue su arista.",
@@ -2582,7 +2582,7 @@
         "prime": "{{p}} sigue sin tachar, así que es primo: tacha sus múltiplos desde {{start}} (los menores ya están tachados).",
         "cross": "Tacha {{m}} (múltiplo de {{p}}).",
         "again": "{{m}} ya lo tachó un primo menor.",
-        "done": "{{count}} primos hasta {{n}}, tras {{crossed}} tachados."
+        "done": "{{num}} primos hasta {{n}}, tras {{crossed}} tachados."
       },
       "convex-hull": {
         "ready": "Rodea los {{n}} puntos con la valla convexa más pequeña.",

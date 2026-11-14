@@ -5,11 +5,11 @@
 // node: r and its tree's root, so two nodes in one tree show the same note.
 import { decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"kruskal">;
 const KEYS = ["kruskal.ready", "kruskal.consider", "kruskal.skip", "kruskal.join", "kruskal.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["consider", "skip", "join"] as const;
 const codec = graphCodec({ directed: false, weighted: true, wMin: 1, wMax: 9 });

@@ -1,7 +1,7 @@
 // Modular inverse by the extended Euclidean algorithm. Mirrors
 // content/learn/math-geometry/modular-inverse/sample.{py,ts}. Output: [inverse] or [-1].
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type InvKey = NarrationKey<"modular-inverse">;
 const INV_KEYS = ["modular-inverse.ready", "modular-inverse.divide", "modular-inverse.done", "modular-inverse.none"] as const satisfies readonly InvKey[];
@@ -12,7 +12,7 @@ function invTrace(input: readonly number[]): Step[] {
   let [oldR, rr] = [a % m, m];
   let [oldX, x] = [1, 0];
   const rows: (number | null)[][] = [[oldR, oldX, null]];
-  const say = (key: (typeof INV_KEYS)[number], params?: Record<string, number>) => ({ key, params });
+  const say = (key: (typeof INV_KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
   const snap = (narration: ReturnType<typeof say>, marker: string | null) =>
     r.snap({
       narration,

@@ -6,11 +6,11 @@
 import { bstFrom, type BTree } from "../engine/bst";
 import { SORT_INPUT } from "../engine/cases";
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"tree-traversals">;
 const KEYS = ["tree-traversals.ready", "tree-traversals.pre", "tree-traversals.in", "tree-traversals.post", "tree-traversals.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["pre", "in", "post"] as const;
 

@@ -5,7 +5,7 @@
 // window, and the front is always the window's maximum. Each position enters and leaves
 // once: O(n).
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"deque-monotonic-queue">;
 const KEYS = [
@@ -16,7 +16,7 @@ const KEYS = [
   "deque-monotonic-queue.emit",
   "deque-monotonic-queue.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["pop-back", "push-back", "pop-front", "emit"] as const;
 

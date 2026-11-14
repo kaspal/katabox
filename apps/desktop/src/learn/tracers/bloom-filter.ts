@@ -5,7 +5,7 @@
 import { decodeOps, opsCodec, type OpSpec } from "../engine/codecs";
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"bloom-filter">;
 const KEYS = [
@@ -17,7 +17,7 @@ const KEYS = [
   "bloom-filter.no",
   "bloom-filter.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params });
 
 export const MARKERS = ["set", "check", "answer"] as const;
 export const OPS: OpSpec[] = [

@@ -3,7 +3,7 @@
 // label to everything reachable from it. Output: each node's component number.
 import { adjacency, decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"connected-components">;
 const KEYS = [
@@ -13,7 +13,7 @@ const KEYS = [
   "connected-components.fill",
   "connected-components.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["new", "fill"] as const;
 const codec = graphCodec({ directed: false, weighted: false });
@@ -69,7 +69,7 @@ function trace(input: readonly number[]): Step[] {
     }
     count++;
   }
-  snap(say("connected-components.done", { count, n: g.n }), null, null);
+  snap(say("connected-components.done", { num: count, n: g.n }), null, null);
   r.steps[r.steps.length - 1]!.result = label;
   return r.steps;
 }

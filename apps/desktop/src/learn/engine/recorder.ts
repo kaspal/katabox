@@ -1,6 +1,16 @@
 // A small helper tracers share: it owns the items, the counters and the sorted set, and
 // records a snapshot per step.
+import { RESERVED_NARRATION_PARAMS } from "./types";
 import type { Item, Narration, Pointer, Role, SceneData, Step, VarValue } from "./types";
+
+/** A narration param named like an i18next option would be read as that option. */
+function checkParams(n: Narration) {
+  for (const name of RESERVED_NARRATION_PARAMS) {
+    if (n.params && Object.hasOwn(n.params, name)) {
+      throw new Error(`narration ${n.key}: param "${name}" is an i18next option name`);
+    }
+  }
+}
 
 export type Frame = SceneData & {
   roles?: Record<number, Role>;
@@ -44,6 +54,7 @@ export class Recorder {
   }
 
   snap(f: Frame) {
+    checkParams(f.narration);
     const roles: Record<number, Role> = {};
     this.items.forEach((it, p) => {
       if (this.sorted.has(it.id)) roles[p] = "sorted";

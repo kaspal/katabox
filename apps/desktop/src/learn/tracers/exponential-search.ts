@@ -4,7 +4,7 @@
 // unknown.
 import { pickSearchTarget, SEARCH_INPUT } from "../engine/search";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Pointer, Step, TracerDef } from "../engine/types";
 import { ptrs } from "./binary-search";
 
 type Key = NarrationKey<"exponential-search">;
@@ -21,7 +21,7 @@ const KEYS = [
   "exponential-search.go_left",
   "exponential-search.missing",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["first", "double", "range", "mid", "found", "compare", "missing"] as const;
 

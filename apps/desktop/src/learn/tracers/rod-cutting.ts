@@ -5,11 +5,11 @@
 // gives the pieces. Output: the best total, then the piece lengths.
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"rod-cutting">;
 const KEYS = ["rod-cutting.ready", "rod-cutting.length", "rod-cutting.improve", "rod-cutting.trace", "rod-cutting.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["improve", "trace"] as const;
 
@@ -55,7 +55,7 @@ function trace(prices: readonly number[]): Step[] {
     snap(say("rod-cutting.trace", { piece: first[length]!, left: length - first[length]! }), "trace", null, [], first[length]!);
     length -= first[length]!;
   }
-  snap(say("rod-cutting.done", { n, best: best[n]!, count: pieces.length }), null);
+  snap(say("rod-cutting.done", { n, best: best[n]!, num: pieces.length }), null);
   r.steps[r.steps.length - 1]!.result = [best[n]!, ...pieces];
   return r.steps;
 }

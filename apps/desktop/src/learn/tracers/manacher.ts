@@ -6,11 +6,11 @@
 // first one, on ties).
 import { decodeText, encodeText, textCodec } from "../engine/codecs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"manacher">;
 const KEYS = ["manacher.ready", "manacher.mirror", "manacher.grow", "manacher.reach", "manacher.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["mirror", "grow"] as const;
 

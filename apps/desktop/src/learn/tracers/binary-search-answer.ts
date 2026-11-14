@@ -4,7 +4,7 @@
 // days?" is no, no, …, yes, yes as c grows, so binary search finds the first yes. Each
 // tried capacity shows its day groups, labelled by day number.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Pointer, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"binary-search-answer">;
 const KEYS = [
@@ -14,7 +14,7 @@ const KEYS = [
   "binary-search-answer.too_small",
   "binary-search-answer.answer",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["try", "check", "answer"] as const;
 

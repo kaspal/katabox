@@ -21,7 +21,33 @@ type Narrations = Locale["narration"];
 export type TopicId = keyof Narrations;
 /** A narration key of one topic, typed from the English locale. */
 export type NarrationKey<T extends TopicId> = `${T}.${keyof Narrations[T] & string}`;
-export type Narration = { key: string; params?: Record<string, string | number> };
+/** Names i18next reads in `t()`'s options as options, not as values: `replace` is the
+ * interpolation map (it blanks every placeholder), `count` picks a plural form, `context` a
+ * variant, and so on. Narration params never use them: the type refuses them in a `say`
+ * call, `Recorder.snap` throws on them, and a test renders every step in both languages. */
+export const RESERVED_NARRATION_PARAMS = [
+  "replace",
+  "count",
+  "context",
+  "lng",
+  "lngs",
+  "ns",
+  "defaultValue",
+  "returnObjects",
+  "returnDetails",
+  "ordinal",
+  "postProcess",
+  "interpolation",
+  "joinArrays",
+  "keySeparator",
+  "nsSeparator",
+  "skipInterpolation",
+  "fallbackLng",
+] as const;
+type ReservedParam = (typeof RESERVED_NARRATION_PARAMS)[number];
+/** Narration params: any name except i18next's reserved option names. */
+export type NarrationParams<V = string | number> = Record<string, V> & { [K in ReservedParam]?: never };
+export type Narration = { key: string; params?: NarrationParams };
 /** A counter label (`learn.stage.<label>`). */
 export type CounterLabel = keyof Locale["stage"]["counter"];
 /** A legend label (`learn.roles.<label>`). */

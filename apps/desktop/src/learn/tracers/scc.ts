@@ -4,11 +4,11 @@
 // and labels it. Output: each node's component number (in the order pass 2 finds them).
 import { adjacency, decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"scc">;
 const KEYS = ["scc.ready", "scc.enter", "scc.finish", "scc.reverse", "scc.start", "scc.assign", "scc.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["finish", "assign"] as const;
 const codec = graphCodec({ directed: true, weighted: false });
@@ -95,7 +95,7 @@ function trace(input: readonly number[]): Step[] {
     }
   }
   current = null;
-  snap(say("scc.done", { count, n: g.n }), null);
+  snap(say("scc.done", { num: count, n: g.n }), null);
   r.steps[r.steps.length - 1]!.result = label;
   return r.steps;
 }

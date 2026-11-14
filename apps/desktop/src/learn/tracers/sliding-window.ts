@@ -3,7 +3,7 @@
 // moves one step at a time; whenever the sum goes over, the left edge moves until it fits
 // again. Each edge only moves forward, so the work is linear.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Pointer, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"sliding-window">;
 const KEYS = [
@@ -14,7 +14,7 @@ const KEYS = [
   "sliding-window.not_best",
   "sliding-window.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["grow", "shrink", "check"] as const;
 

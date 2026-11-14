@@ -6,7 +6,7 @@
 import { decodeText, encodeText, fail } from "../engine/codecs";
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { ForestNode, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { ForestNode, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"trie">;
 const KEYS = [
@@ -19,7 +19,7 @@ const KEYS = [
   "trie.count_word",
   "trie.count_only",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params });
 
 export const MARKERS = ["new-node", "follow", "mark-end", "missing", "walk", "count"] as const;
 
@@ -61,7 +61,7 @@ function trace(input: readonly number[]): Step[] {
       node = cur.children.get(c)!;
       nodes.get(node)!.words++;
       r.comparisons++;
-      snap(say("trie.follow", { letter: c, count: nodes.get(node)!.words }), "follow", { [node]: "compare" }, path);
+      snap(say("trie.follow", { letter: c, num: nodes.get(node)!.words }), "follow", { [node]: "compare" }, path);
     }
     nodes.get(node)!.end = true;
     snap(say("trie.mark_end", { word }), "mark-end", { [node]: "sorted" }, word);
@@ -82,7 +82,7 @@ function trace(input: readonly number[]): Step[] {
   }
   const n = nodes.get(node)!;
   const count = n.words;
-  snap(say(n.end ? "trie.count_word" : "trie.count_only", { prefix, count }), "count", { [node]: "sorted" }, path);
+  snap(say(n.end ? "trie.count_word" : "trie.count_only", { prefix, num: count }), "count", { [node]: "sorted" }, path);
   r.steps[r.steps.length - 1]!.result = [count, n.end ? 1 : 0];
   return r.steps;
 }

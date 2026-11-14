@@ -5,11 +5,11 @@
 // Output: matches, collisions, then the match positions.
 import { decodeText, encodeText, textCodec } from "../engine/codecs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"rabin-karp">;
 const KEYS = ["rabin-karp.ready", "rabin-karp.window", "rabin-karp.match", "rabin-karp.collision", "rabin-karp.roll", "rabin-karp.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["match", "collision", "roll"] as const;
 export const BASE = 26;
@@ -43,7 +43,7 @@ function trace(input: readonly number[]): Step[] {
     });
   };
   if (m > n) {
-    snap(say("rabin-karp.done", { count: 0, collisions: 0 }), null);
+    snap(say("rabin-karp.done", { num: 0, collisions: 0 }), null);
     r.steps[r.steps.length - 1]!.result = [0, 0];
     return r.steps;
   }
@@ -76,7 +76,7 @@ function trace(input: readonly number[]): Step[] {
       snap(say("rabin-karp.roll", { out, into, hash: window }), "roll", "pivot");
     }
   }
-  snap(say("rabin-karp.done", { count: hits.length, collisions }), null);
+  snap(say("rabin-karp.done", { num: hits.length, collisions }), null);
   r.steps[r.steps.length - 1]!.result = [hits.length, collisions, ...hits];
   return r.steps;
 }

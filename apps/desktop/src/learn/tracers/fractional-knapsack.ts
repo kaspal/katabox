@@ -6,11 +6,11 @@
 import { int } from "../engine/inputs";
 import { itemsCodec } from "../engine/shapes";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"fractional-knapsack">;
 const KEYS = ["fractional-knapsack.ready", "fractional-knapsack.sorted", "fractional-knapsack.take", "fractional-knapsack.part", "fractional-knapsack.done", "fractional-knapsack.all"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["take", "part"] as const;
 const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));

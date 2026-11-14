@@ -5,7 +5,7 @@
 // Weights are never negative. Output: each node's distance (-1 when unreachable).
 import { adjacency, decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"dijkstra">;
 const KEYS = [
@@ -16,7 +16,7 @@ const KEYS = [
   "dijkstra.no_better",
   "dijkstra.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["pop", "stale", "relax"] as const;
 const codec = graphCodec({ directed: false, weighted: true, wMin: 1, wMax: 9 });

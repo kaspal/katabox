@@ -4,12 +4,12 @@
 // solution; then the last queen is removed and the next column tried. Every solution is
 // counted. Output: the number of solutions, then the first one's columns, row by row.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 import { Outline } from "./outline";
 
 type Key = NarrationKey<"n-queens">;
 const KEYS = ["n-queens.ready", "n-queens.place", "n-queens.solution", "n-queens.dead_end", "n-queens.remove", "n-queens.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["place", "solution", "remove"] as const;
 
@@ -46,7 +46,7 @@ function trace(input: readonly number[]): Step[] {
       found.push([...cols]);
       outline.mark(line, "sorted");
       r.writes++;
-      snap(say("n-queens.solution", { count: found.length }), "solution");
+      snap(say("n-queens.solution", { num: found.length }), "solution");
       return;
     }
     let tried = 0;
@@ -72,7 +72,7 @@ function trace(input: readonly number[]): Step[] {
 
   snap(say("n-queens.ready", { n }), null);
   place(outline.open(0, "∅"));
-  snap(say("n-queens.done", { n, count: found.length }), null);
+  snap(say("n-queens.done", { n, num: found.length }), null);
   r.steps[r.steps.length - 1]!.result = [found.length, ...(found[0] ?? [])];
   return r.steps;
 }

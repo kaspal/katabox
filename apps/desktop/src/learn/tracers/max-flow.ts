@@ -5,11 +5,11 @@
 // sink is unreachable. Output: [the maximum flow]. Edge labels show flow / capacity.
 import { decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"max-flow">;
 const KEYS = ["max-flow.ready", "max-flow.search", "max-flow.reach", "max-flow.path", "max-flow.augment", "max-flow.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["reach", "augment"] as const;
 export const MAX_FLOW_NODES = 8;

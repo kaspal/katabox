@@ -4,11 +4,11 @@
 // weight, then the nodes in the order they joined (only 0's component).
 import { adjacency, decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"prim">;
 const KEYS = ["prim.ready", "prim.pop", "prim.skip", "prim.take", "prim.push", "prim.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["pop", "skip", "take", "push"] as const;
 const codec = graphCodec({ directed: false, weighted: true, wMin: 1, wMax: 9 });

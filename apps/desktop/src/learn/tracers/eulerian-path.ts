@@ -6,7 +6,7 @@
 import { decodeGraph, encodeGraph, graphCodec, graphData } from "../engine/graph";
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"eulerian-path">;
 const KEYS = [
@@ -17,7 +17,7 @@ const KEYS = [
   "eulerian-path.done",
   "eulerian-path.missed",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["walk", "back"] as const;
 const codec = graphCodec({ directed: false, weighted: false, maxNodes: 8, maxEdges: 14 });

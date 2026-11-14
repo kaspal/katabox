@@ -5,11 +5,11 @@
 // shape. Output: [the ways to reach the bottom-right cell].
 import { blocksCodec } from "../engine/shapes";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"grid-paths">;
 const KEYS = ["grid-paths.ready", "grid-paths.blocked", "grid-paths.start", "grid-paths.add", "grid-paths.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["blocked", "add"] as const;
 export const enc = (map: string) => {

@@ -4,10 +4,10 @@
 // right, down, left. Output: [the cost of the path found] or [-1].
 import { DIRS, decodeGrid, gridData, type Grid } from "../engine/grid";
 import { Recorder } from "../engine/recorder";
-import type { Role, Step } from "../engine/types";
+import type { NarrationParams, Role, Step } from "../engine/types";
 
 export type Kind = "bfs" | "dijkstra" | "astar" | "greedy";
-type Say = (key: string, params?: Record<string, number>) => { key: never; params?: Record<string, number> };
+type Say = (key: string, params?: NarrationParams<number>) => { key: never; params?: NarrationParams<number> };
 
 export const cost = (v: number) => (v >= 2 ? v : 1);
 

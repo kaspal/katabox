@@ -4,11 +4,11 @@
 // Touching intervals (3–5 and 5–7) merge. Output: the merged intervals, flat.
 import { intervalsCodec } from "../engine/shapes";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"merge-intervals">;
 const KEYS = ["merge-intervals.ready", "merge-intervals.sorted", "merge-intervals.open", "merge-intervals.extend", "merge-intervals.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["extend", "open"] as const;
 export const MAX_TIME = 24;
@@ -55,7 +55,7 @@ function trace(input: readonly number[]): Step[] {
       snap(say("merge-intervals.open", { start: b.start, end: b.end }), "open", b.id);
     }
   }
-  snap(say("merge-intervals.done", { n: iv.length, count: merged.length }), null);
+  snap(say("merge-intervals.done", { n: iv.length, num: merged.length }), null);
   r.steps[r.steps.length - 1]!.result = merged.flatMap((m) => [m.start, m.end]);
   return r.steps;
 }

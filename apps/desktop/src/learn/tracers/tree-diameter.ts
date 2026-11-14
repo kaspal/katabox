@@ -4,7 +4,7 @@
 // gives each node's parent (node k's parent is smaller than k), so it is always a tree.
 import { int, tokens } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { ForestNode, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { ForestNode, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"tree-diameter">;
 const KEYS = [
@@ -15,7 +15,7 @@ const KEYS = [
   "tree-diameter.second_bfs",
   "tree-diameter.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["first-bfs", "visit", "reach", "second-bfs"] as const;
 

@@ -5,11 +5,11 @@
 // about log n rounds. Output: the starting positions of the suffixes in sorted order.
 import { decodeText, encodeText, textCodec } from "../engine/codecs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"suffix-array">;
 const KEYS = ["suffix-array.ready", "suffix-array.sort", "suffix-array.double", "suffix-array.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["sort", "double"] as const;
 

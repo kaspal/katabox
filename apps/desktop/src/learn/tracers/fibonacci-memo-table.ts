@@ -4,7 +4,7 @@
 // two before it. The two rows of the table fill with the same numbers, in different
 // orders. Output: fib(n), then the bottom-up table.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"fibonacci-memo-table">;
 const KEYS = [
@@ -16,7 +16,7 @@ const KEYS = [
   "fibonacci-memo-table.fill",
   "fibonacci-memo-table.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["hit", "store", "fill"] as const;
 

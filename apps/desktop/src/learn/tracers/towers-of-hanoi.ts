@@ -2,7 +2,7 @@
 // call is a frame on the stack (including the n = 0 calls that just return); every move
 // carries disk n from its source peg to its target peg.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, StackEntry, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, StackEntry, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"towers-of-hanoi">;
 const KEYS = [
@@ -13,7 +13,7 @@ const KEYS = [
   "towers-of-hanoi.move",
   "towers-of-hanoi.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["check", "move"] as const;
 
@@ -66,7 +66,7 @@ function trace(input: readonly number[]): Step[] {
     pegs[target - 1]!.push(disk);
     moves.push(source, target);
     r.moves++;
-    snap(say("towers-of-hanoi.move", { disk, source, target, count: r.moves }), "move", disk);
+    snap(say("towers-of-hanoi.move", { disk, source, target, num: r.moves }), "move", disk);
     hanoi(n - 1, spare, target, source);
     stack.pop();
   };

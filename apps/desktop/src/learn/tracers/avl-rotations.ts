@@ -5,7 +5,7 @@
 // final tree in pre-order. Rotations are drawn as moves: nodes keep their identity.
 import { SORT_INPUT } from "../engine/cases";
 import { Recorder } from "../engine/recorder";
-import type { ForestNode, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { ForestNode, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"avl-rotations">;
 const KEYS = [
@@ -18,7 +18,7 @@ const KEYS = [
   "avl-rotations.rotate_left",
   "avl-rotations.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["place", "balance", "rotate-right", "rotate-left"] as const;
 

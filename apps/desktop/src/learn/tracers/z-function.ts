@@ -5,11 +5,11 @@
 // pattern's length, the pattern occurs. Output: how many, then their positions.
 import { decodeText, encodeText, textCodec } from "../engine/codecs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"z-function">;
 const KEYS = ["z-function.ready", "z-function.reuse", "z-function.extend", "z-function.box", "z-function.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["reuse", "extend"] as const;
 
@@ -72,7 +72,7 @@ function trace(input: readonly number[]): Step[] {
   }
   const hits: number[] = [];
   for (let i = m + 1; i < n; i++) if (z[i] === m) hits.push(i - m - 1);
-  snap(say("z-function.done", { count: hits.length }), null);
+  snap(say("z-function.done", { num: hits.length }), null);
   r.steps[r.steps.length - 1]!.result = [hits.length, ...hits];
   return r.steps;
 }

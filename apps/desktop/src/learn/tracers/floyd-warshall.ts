@@ -4,7 +4,7 @@
 // final matrix row by row (999 = no path).
 import { decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"floyd-warshall">;
 const KEYS = [
@@ -14,7 +14,7 @@ const KEYS = [
   "floyd-warshall.improve_new",
   "floyd-warshall.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["pivot", "improve"] as const;
 export const INF = 999;

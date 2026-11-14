@@ -7,7 +7,7 @@ import { decodeOps, opsCodec, type OpSpec } from "../engine/codecs";
 import { int } from "../engine/inputs";
 import { listData, type LNode } from "../engine/list";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"lru-cache">;
 const KEYS = [
@@ -19,7 +19,7 @@ const KEYS = [
   "lru-cache.evict",
   "lru-cache.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["miss", "hit", "refresh", "put", "evict"] as const;
 export const OPS: OpSpec[] = [

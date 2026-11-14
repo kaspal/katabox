@@ -5,11 +5,11 @@
 // for the amount] or [-1].
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"coin-change">;
 const KEYS = ["coin-change.ready", "coin-change.total", "coin-change.improve", "coin-change.done", "coin-change.impossible"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["improve"] as const;
 export const INF = 999;
@@ -39,12 +39,12 @@ function trace(input: readonly number[]): Step[] {
       if (coin <= total && fewest[total - coin]! + 1 < fewest[total]!) {
         fewest[total] = fewest[total - coin]! + 1;
         r.writes++;
-        snap(say("coin-change.improve", { total, coin, from: total - coin, count: fewest[total]! }), "improve", total, [total - coin], j);
+        snap(say("coin-change.improve", { total, coin, from: total - coin, num: fewest[total]! }), "improve", total, [total - coin], j);
       }
     });
   }
   const answer = fewest[amount]! < INF ? fewest[amount]! : -1;
-  snap(answer === -1 ? say("coin-change.impossible", { amount }) : say("coin-change.done", { amount, count: answer }), null);
+  snap(answer === -1 ? say("coin-change.impossible", { amount }) : say("coin-change.done", { amount, num: answer }), null);
   r.steps[r.steps.length - 1]!.result = [answer];
   return r.steps;
 }

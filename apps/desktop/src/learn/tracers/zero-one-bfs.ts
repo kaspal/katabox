@@ -4,11 +4,11 @@
 // A node can be improved and queued again. Output: each node's distance (-1 unreachable).
 import { adjacency, decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"zero-one-bfs">;
 const KEYS = ["zero-one-bfs.ready", "zero-one-bfs.pop", "zero-one-bfs.front", "zero-one-bfs.back", "zero-one-bfs.no_better", "zero-one-bfs.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["pop", "front", "back"] as const;
 const codec = graphCodec({ directed: false, weighted: true, wMin: 0, wMax: 1 });

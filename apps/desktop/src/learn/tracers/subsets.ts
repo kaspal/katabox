@@ -4,12 +4,12 @@
 // once, in this order: [], [a], [a, b], …. Output: how many, then each subset as its size
 // followed by its values.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 import { Outline } from "./outline";
 
 type Key = NarrationKey<"subsets">;
 const KEYS = ["subsets.ready", "subsets.record", "subsets.choose", "subsets.undo", "subsets.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["record", "choose", "undo"] as const;
 const show = (xs: readonly number[]) => `{${xs.join(", ")}}`;
@@ -33,7 +33,7 @@ function trace(values: readonly number[]): Step[] {
     out.push([...chosen]);
     outline.mark(line, "sorted");
     r.writes++;
-    snap(say("subsets.record", { set: show(chosen), count: out.length }), "record");
+    snap(say("subsets.record", { set: show(chosen), num: out.length }), "record");
     for (let k = start; k < values.length; k++) {
       chosen.push(values[k]!);
       r.moves++;
@@ -47,7 +47,7 @@ function trace(values: readonly number[]): Step[] {
 
   snap(say("subsets.ready", { n: values.length, total: 2 ** values.length }), null);
   grow(0, 0);
-  snap(say("subsets.done", { count: out.length, n: values.length }), null);
+  snap(say("subsets.done", { num: out.length, n: values.length }), null);
   r.steps[r.steps.length - 1]!.result = [out.length, ...out.flatMap((s) => [s.length, ...s])];
   return r.steps;
 }

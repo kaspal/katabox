@@ -4,11 +4,11 @@
 // is prime. Output: how many primes up to n, then the primes. The numbers are drawn ten
 // to a row.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"sieve-eratosthenes">;
 const KEYS = ["sieve-eratosthenes.ready", "sieve-eratosthenes.prime", "sieve-eratosthenes.cross", "sieve-eratosthenes.again", "sieve-eratosthenes.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["prime", "cross"] as const;
 
@@ -52,7 +52,7 @@ function trace(input: readonly number[]): Step[] {
   }
   finished = true;
   const primes = isPrime.flatMap((b, k) => (b ? [k] : []));
-  snap(say("sieve-eratosthenes.done", { n, count: primes.length, crossed: r.comparisons }), null);
+  snap(say("sieve-eratosthenes.done", { n, num: primes.length, crossed: r.comparisons }), null);
   r.steps[r.steps.length - 1]!.result = [primes.length, ...primes];
   return r.steps;
 }

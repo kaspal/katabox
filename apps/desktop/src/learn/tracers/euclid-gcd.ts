@@ -1,7 +1,7 @@
 // Euclid's GCD. Mirrors content/learn/math-geometry/euclid-gcd/sample.{py,ts}: replace
 // (a, b) by (b, a mod b) until b is 0. A table of the steps. Output: [gcd, divisions].
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type GcdKey = NarrationKey<"euclid-gcd">;
 const GCD_KEYS = ["euclid-gcd.ready", "euclid-gcd.divide", "euclid-gcd.done"] as const satisfies readonly GcdKey[];
@@ -10,7 +10,7 @@ function gcdTrace(input: readonly number[]): Step[] {
   let [a = 1, b = 1] = input;
   const r = new Recorder([]);
   const rows: (number | null)[][] = [];
-  const say = (key: (typeof GCD_KEYS)[number], params?: Record<string, number>) => ({ key, params });
+  const say = (key: (typeof GCD_KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
   const snap = (narration: ReturnType<typeof say>, marker: string | null) =>
     r.snap({
       narration,

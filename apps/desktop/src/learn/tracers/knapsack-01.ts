@@ -6,11 +6,11 @@
 import { fail } from "../engine/codecs";
 import { int, tokens, type InputError } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"knapsack-01">;
 const KEYS = ["knapsack-01.ready", "knapsack-01.skip", "knapsack-01.take", "knapsack-01.trace", "knapsack-01.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["skip", "take", "trace"] as const;
 export const MAX_CAPACITY = 12;
@@ -77,7 +77,7 @@ function trace(input: readonly number[]): Step[] {
     path.push([i - 1, c]);
   }
   chosen.reverse();
-  snap(say("knapsack-01.done", { best: best[n]![capacity]!, count: chosen.length }), null);
+  snap(say("knapsack-01.done", { best: best[n]![capacity]!, num: chosen.length }), null);
   r.steps[r.steps.length - 1]!.result = [best[n]![capacity]!, ...chosen];
   return r.steps;
 }

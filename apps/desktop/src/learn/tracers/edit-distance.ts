@@ -5,11 +5,11 @@
 // cheapest of replace (diagonal), delete (up) and insert (left). Output: [the distance].
 import { decodeText, encodeText, textCodec } from "../engine/codecs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"edit-distance">;
 const KEYS = ["edit-distance.ready", "edit-distance.same", "edit-distance.change", "edit-distance.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["same", "change"] as const;
 
@@ -37,7 +37,7 @@ function trace(input: readonly number[]): Step[] {
       } else {
         const options = [cost[i - 1]![j - 1]!, cost[i - 1]![j]!, cost[i]![j - 1]!];
         cost[i]![j] = 1 + Math.min(...options);
-        snap(say("edit-distance.change", { x: a[i - 1]!, y: b[j - 1]!, replace: options[0]!, remove: options[1]!, insert: options[2]!, value: cost[i]![j]! }), "change", [i, j], [
+        snap(say("edit-distance.change", { x: a[i - 1]!, y: b[j - 1]!, replaced: options[0]!, remove: options[1]!, insert: options[2]!, value: cost[i]![j]! }), "change", [i, j], [
           [i - 1, j - 1],
           [i - 1, j],
           [i, j - 1],

@@ -1,7 +1,7 @@
 // Fast modular power by squaring. Mirrors content/learn/math-geometry/fast-power/sample.{py,ts}:
 // one row per bit of the exponent. Output: [base^exp mod m].
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type PowKey = NarrationKey<"fast-power">;
 const POW_KEYS = ["fast-power.ready", "fast-power.multiply", "fast-power.square", "fast-power.done"] as const satisfies readonly PowKey[];
@@ -13,7 +13,7 @@ function powTrace(input: readonly number[]): Step[] {
   let result = 1 % mod;
   let base = base0 % mod;
   let exp = exp0;
-  const say = (key: (typeof POW_KEYS)[number], params?: Record<string, number>) => ({ key, params });
+  const say = (key: (typeof POW_KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
   const snap = (narration: ReturnType<typeof say>, marker: string | null, hot: [number, number] | null = null) =>
     r.snap({
       narration,

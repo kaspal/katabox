@@ -1,7 +1,7 @@
 // Pascal's triangle. Mirrors content/learn/math-geometry/pascal-ncr/sample.{py,ts}: each
 // inner entry is the sum of the two above. Output: row n, C(n, 0..n).
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type PascalKey = NarrationKey<"pascal-ncr">;
 const PASCAL_KEYS = ["pascal-ncr.ready", "pascal-ncr.add", "pascal-ncr.row", "pascal-ncr.done"] as const satisfies readonly PascalKey[];
@@ -11,7 +11,7 @@ function pascalTrace(input: readonly number[]): Step[] {
   const r = new Recorder([]);
   const cells: (number | null)[][] = Array.from({ length: n + 1 }, () => new Array(n + 1).fill(null));
   cells[0]![0] = 1;
-  const say = (key: (typeof PASCAL_KEYS)[number], params?: Record<string, number>) => ({ key, params });
+  const say = (key: (typeof PASCAL_KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
   const snap = (narration: ReturnType<typeof say>, marker: string | null, hot: [number, number] | null = null, deps: [number, number][] = []) =>
     r.snap({
       narration,

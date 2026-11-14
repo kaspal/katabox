@@ -4,7 +4,7 @@
 // side (0 or 1), or [-1]. Sides are also written under the nodes (A / B).
 import { adjacency, decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"bipartite-check">;
 const KEYS = [
@@ -15,7 +15,7 @@ const KEYS = [
   "bipartite-check.clash",
   "bipartite-check.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["start", "colour", "clash"] as const;
 const codec = graphCodec({ directed: false, weighted: false });

@@ -6,12 +6,12 @@
 // followed by its values.
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 import { Outline } from "./outline";
 
 type Key = NarrationKey<"combination-sum">;
 const KEYS = ["combination-sum.ready", "combination-sum.choose", "combination-sum.found", "combination-sum.prune", "combination-sum.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["found", "prune", "choose"] as const;
 const show = (xs: readonly number[]) => (xs.length ? xs.join(" + ") : "∅");
@@ -38,7 +38,7 @@ function trace(input: readonly number[]): Step[] {
       out.push([...chosen]);
       outline.mark(line, "sorted");
       r.writes++;
-      snap(say("combination-sum.found", { combo: show(chosen), count: out.length }), "found");
+      snap(say("combination-sum.found", { combo: show(chosen), num: out.length }), "found");
       return;
     }
     for (let k = start; k < candidates.length; k++) {
@@ -60,7 +60,7 @@ function trace(input: readonly number[]): Step[] {
 
   snap(say("combination-sum.ready", { target, n: candidates.length }), null);
   search(0, target, 0);
-  snap(say("combination-sum.done", { count: out.length, target }), null);
+  snap(say("combination-sum.done", { num: out.length, target }), null);
   r.steps[r.steps.length - 1]!.result = [out.length, ...out.flatMap((c) => [c.length, ...c])];
   return r.steps;
 }

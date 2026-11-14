@@ -5,7 +5,7 @@
 // else 0. Colours are also written under the nodes, so they never rely on colour alone.
 import { adjacency, decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"cycle-detection">;
 const KEYS = [
@@ -17,7 +17,7 @@ const KEYS = [
   "cycle-detection.cycle",
   "cycle-detection.no_cycle",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["grey", "back-edge", "black"] as const;
 const codec = graphCodec({ directed: true, weighted: false });

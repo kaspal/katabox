@@ -2,7 +2,7 @@
 // content/learn/math-geometry/segment-intersection/sample.{py,ts}.
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 import { MAX_COORD, cross, pointsCodec, pts, type P } from "./geometry";
 
 type SegKey = NarrationKey<"segment-intersection">;
@@ -12,7 +12,7 @@ const NAMES = ["P1", "P2", "P3", "P4"];
 function segTrace(input: readonly number[]): Step[] {
   const [p1, p2, p3, p4] = pts(input) as [P, P, P, P];
   const r = new Recorder([]);
-  const say = (key: (typeof SEG_KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+  const say = (key: (typeof SEG_KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
   const checks: [P, P, P, string][] = [
     [p3, p4, p1, "P1"],
     [p3, p4, p2, "P2"],

@@ -5,7 +5,7 @@
 import { decodeOps, opsCodec, type OpSpec } from "../engine/codecs";
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Pointer, Role, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Pointer, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"queue-ring-buffer">;
 const KEYS = [
@@ -16,7 +16,7 @@ const KEYS = [
   "queue-ring-buffer.dequeue",
   "queue-ring-buffer.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["full", "enqueue", "empty", "dequeue"] as const;
 export const OPS: OpSpec[] = [
@@ -79,7 +79,7 @@ function trace(input: readonly number[]): Step[] {
       snap(say("queue-ring-buffer.dequeue", { value: it.value, at, head }), "dequeue", {}, true);
     }
   }
-  snap(say("queue-ring-buffer.done", { count: out.length }), null);
+  snap(say("queue-ring-buffer.done", { num: out.length }), null);
   r.steps[r.steps.length - 1]!.result = out.map((c) => c.value);
   return r.steps;
 }

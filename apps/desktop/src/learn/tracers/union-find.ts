@@ -5,7 +5,7 @@
 import { decodeOps, opsCodec, type OpSpec } from "../engine/codecs";
 import { int } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { ForestNode, Item, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { ForestNode, Item, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"union-find">;
 const KEYS = [
@@ -17,7 +17,7 @@ const KEYS = [
   "union-find.link",
   "union-find.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["climb", "compress", "same", "link"] as const;
 export const OPS: OpSpec[] = [

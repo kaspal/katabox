@@ -3,12 +3,12 @@
 // so equal values give repeated orderings); a full row is one permutation. Output: how
 // many, then each permutation's values in turn.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 import { Outline } from "./outline";
 
 type Key = NarrationKey<"permutations">;
 const KEYS = ["permutations.ready", "permutations.choose", "permutations.record", "permutations.undo", "permutations.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params: params as Record<string, number> });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params: params as NarrationParams<number> });
 
 export const MARKERS = ["record", "choose", "undo"] as const;
 const show = (xs: readonly number[]) => `[${xs.join(", ")}]`;
@@ -35,7 +35,7 @@ function trace(values: readonly number[]): Step[] {
       out.push([...chosen]);
       outline.mark(line, "sorted");
       r.writes++;
-      snap(say("permutations.record", { perm: show(chosen), count: out.length }), "record");
+      snap(say("permutations.record", { perm: show(chosen), num: out.length }), "record");
       return;
     }
     for (let k = 0; k < n; k++) {
@@ -55,7 +55,7 @@ function trace(values: readonly number[]): Step[] {
 
   snap(say("permutations.ready", { n }), null);
   place(0);
-  snap(say("permutations.done", { count: out.length, n }), null);
+  snap(say("permutations.done", { num: out.length, n }), null);
   r.steps[r.steps.length - 1]!.result = [out.length, ...out.flat()];
   return r.steps;
 }

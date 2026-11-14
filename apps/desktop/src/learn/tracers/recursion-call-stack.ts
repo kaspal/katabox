@@ -4,7 +4,7 @@
 // halves' results and pops the frame.
 import { Recorder } from "../engine/recorder";
 import { placeTrees } from "../engine/tree";
-import type { NarrationKey, Role, StackEntry, Step, TracerDef, TreeNode, VarValue } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, StackEntry, Step, TracerDef, TreeNode, VarValue } from "../engine/types";
 
 type Key = NarrationKey<"recursion-call-stack">;
 const KEYS = [
@@ -16,7 +16,7 @@ const KEYS = [
   "recursion-call-stack.combine",
   "recursion-call-stack.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params });
 
 export const MARKERS = ["check", "leaf", "split", "combine"] as const;
 

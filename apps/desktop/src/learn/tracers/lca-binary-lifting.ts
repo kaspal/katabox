@@ -8,7 +8,7 @@
 import { fail } from "../engine/codecs";
 import { int, tokens, type InputError } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { ForestNode, Item, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { ForestNode, Item, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"lca-binary-lifting">;
 const KEYS = [
@@ -21,7 +21,7 @@ const KEYS = [
   "lca-binary-lifting.answer",
   "lca-binary-lifting.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["table", "lift", "same", "jump", "answer"] as const;
 export const MAX_NODES = 12;

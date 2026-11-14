@@ -3,7 +3,7 @@
 // Sort puts one pivot in its final place; if that place is k - 1 we are done, otherwise
 // only the side holding position k - 1 is searched again.
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Pointer, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"quickselect">;
 const KEYS = [
@@ -19,7 +19,7 @@ const KEYS = [
   "quickselect.go_left",
   "quickselect.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["pivot", "compare", "swap", "place", "found", "side"] as const;
 

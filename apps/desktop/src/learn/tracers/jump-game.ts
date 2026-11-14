@@ -3,11 +3,11 @@
 // square reachable so far; a square beyond reach means you are stuck. Output: [1 if the
 // last square can be reached, else 0; the farthest square reached].
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Pointer, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Pointer, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"jump-game">;
 const KEYS = ["jump-game.ready", "jump-game.step", "jump-game.farther", "jump-game.stuck", "jump-game.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["stuck", "farther"] as const;
 

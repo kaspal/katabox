@@ -4,11 +4,11 @@
 // (best[i − 2] + its value). Tracing back from the end recovers the houses taken.
 // Output: the best total, then the houses taken (0-based, left to right).
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"house-robber">;
 const KEYS = ["house-robber.ready", "house-robber.first", "house-robber.take", "house-robber.skip", "house-robber.trace", "house-robber.done"] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["choose", "trace"] as const;
 
@@ -55,7 +55,7 @@ function trace(values: readonly number[]): Step[] {
     }
   }
   chosen.reverse();
-  snap(say("house-robber.done", { best: best[n]!, count: chosen.length }), null);
+  snap(say("house-robber.done", { best: best[n]!, num: chosen.length }), null);
   r.steps[r.steps.length - 1]!.result = [best[n]!, ...chosen];
   return r.steps;
 }

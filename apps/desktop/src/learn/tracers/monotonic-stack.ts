@@ -4,7 +4,7 @@
 // value pops (and answers) every smaller one on top, then waits itself. Each position is
 // pushed and popped at most once: linear time.
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Role, StackEntry, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Role, StackEntry, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"monotonic-stack">;
 const KEYS = [
@@ -15,7 +15,7 @@ const KEYS = [
   "monotonic-stack.push",
   "monotonic-stack.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["compare", "pop", "push"] as const;
 

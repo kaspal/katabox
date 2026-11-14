@@ -5,7 +5,7 @@
 import { decodeText, encodeText } from "../engine/codecs";
 import { int, tokens } from "../engine/inputs";
 import { Recorder } from "../engine/recorder";
-import type { Item, NarrationKey, Step, TracerDef } from "../engine/types";
+import type { Item, NarrationKey, NarrationParams, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"rolling-hash">;
 const KEYS = [
@@ -15,7 +15,7 @@ const KEYS = [
   "rolling-hash.shift_in",
   "rolling-hash.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number | string>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams) => ({ key, params });
 
 export const MARKERS = ["add", "remove", "shift-in"] as const;
 const BASE = 26;

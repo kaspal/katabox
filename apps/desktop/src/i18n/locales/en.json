@@ -1690,7 +1690,7 @@
         "ready": "Move {{n}} disks from peg 1 to peg 3, one at a time, never a bigger disk on a smaller one. It takes {{minimum}} moves.",
         "call": "hanoi({{n}}): to move {{n}} disks from {{source}} to {{target}}, first move the {{smaller}} smaller ones out of the way, to peg {{spare}}.",
         "empty": "hanoi(0): no disks to move, so it returns at once.",
-        "move": "Move {{count}}: disk {{disk}} goes from peg {{source}} to peg {{target}}.",
+        "move": "Move {{num}}: disk {{disk}} goes from peg {{source}} to peg {{target}}.",
         "done": "Done: {{moves}} moves (2ⁿ − 1 for n = {{n}}) and {{calls}} calls.",
         "call_one": "hanoi(1): a single disk, so move it straight from peg {{source}} to peg {{target}} (the calls with 0 disks around it just return)."
       },
@@ -1701,8 +1701,8 @@
         "xor": "x ^ y = {{result}}: a 1 where x and y differ.",
         "left": "x << 1 = {{result}}: every bit moves one place left, which doubles x.",
         "right": "x >> 1 = {{result}}: every bit moves one place right and the last one drops off: x halved, rounded down.",
-        "clear": "{{before}} − 1 = {{minus}} flips the lowest 1 bit and the 0s below it, so {{before}} & {{minus}} = {{after}} clears just that bit. Count: {{count}}.",
-        "count": "x reached 0: {{x}} has {{count}} bits set to 1. The loop ran once per 1 bit, not once per bit.",
+        "clear": "{{before}} − 1 = {{minus}} flips the lowest 1 bit and the 0s below it, so {{before}} & {{minus}} = {{after}} clears just that bit. Count: {{num}}.",
+        "count": "x reached 0: {{x}} has {{num}} bits set to 1. The loop ran once per 1 bit, not once per bit.",
         "done": "Done: {{ops}} bit operations, each a single machine step."
       },
       "prefix-sums": {
@@ -1777,7 +1777,7 @@
       },
       "counting-sort": {
         "ready": "{{n}} whole numbers from 0 to {{max}}: one bucket per value, so no value is compared with another.",
-        "count": "{{v}} goes into bucket {{v}}, which now holds {{count}}.",
+        "count": "{{v}} goes into bucket {{v}}, which now holds {{num}}.",
         "write": "Bucket {{v}} hands out a {{v}}: write it at position {{k}} ({{left}} left in the bucket).",
         "done": "Sorted with {{n}} counts and {{n}} writes, over {{buckets}} buckets."
       },
@@ -1789,12 +1789,12 @@
         "done": "Sorted after {{passes}} passes over {{n}} values, without comparing two values."
       },
       "bucket-sort": {
-        "ready": "Scatter {{n}} values into {{count}} buckets by range, sort each bucket, and read the buckets in order.",
+        "ready": "Scatter {{n}} values into {{num}} buckets by range, sort each bucket, and read the buckets in order.",
         "scatter": "{{v}} falls in the range {{range}}: into that bucket.",
         "sort": "Sort bucket {{range}}: {{size}} value(s), a quick job.",
         "sort_empty": "Bucket {{range}} is empty: nothing to sort.",
         "gather": "Write {{v}} at position {{k}}.",
-        "done": "Sorted: {{n}} values through {{count}} buckets."
+        "done": "Sorted: {{n}} values through {{num}} buckets."
       },
       "tim-sort": {
         "ready": "A simplified Tim sort: insertion sort makes runs of {{run}}, then runs are merged in pairs ({{n}} values).",
@@ -1849,7 +1849,7 @@
         "upper_right": "a[{{mid}}] = {{value}} ≤ {{target}}: the first value > {{target}} is further right.",
         "upper_left": "a[{{mid}}] = {{value}} > {{target}}: position {{mid}} may be the answer; keep the left half including it.",
         "upper_done": "Upper bound = {{upper}}: the first position whose value is > {{target}} ({{n}} if none).",
-        "done": "{{target}} appears {{count}} time(s): positions {{lower}} up to, not including, {{upper}}."
+        "done": "{{target}} appears {{num}} time(s): positions {{lower}} up to, not including, {{upper}}."
       },
       "binary-search-answer": {
         "ready": "Ship {{n}} parcels in order within {{days}} days. The smallest daily capacity is between {{lo}} (the heaviest parcel) and {{hi}} (all of them).",
@@ -1902,7 +1902,7 @@
         "pop_empty": "pop on an empty stack: nothing to take, so the answer is −1.",
         "peek": "peek: the top is {{value}}; it stays on the stack.",
         "peek_empty": "peek on an empty stack: −1.",
-        "done": "Done. The output row holds the {{count}} values returned, in order."
+        "done": "Done. The output row holds the {{num}} values returned, in order."
       },
       "queue-ring-buffer": {
         "ready": "A queue in a fixed array of {{capacity}} slots. head is the front; the tail is head + size, wrapping around.",
@@ -1910,7 +1910,7 @@
         "enqueue": "enqueue {{value}}: write it at the tail, slot {{at}}.",
         "empty": "dequeue on an empty queue: −1.",
         "dequeue": "dequeue: take {{value}} from slot {{at}}; head moves on to {{head}} (wrapping at the end).",
-        "done": "Done: {{count}} dequeues. Nothing was ever shifted: only head and tail moved."
+        "done": "Done: {{num}} dequeues. Nothing was ever shifted: only head and tail moved."
       },
       "deque-monotonic-queue": {
         "ready": "Find the maximum of every window of {{k}} values among {{n}}. The deque keeps positions whose values decrease from front to back.",
@@ -2061,12 +2061,12 @@
       "trie": {
         "ready": "Insert {{n}} words into a trie, then count the words that start with \"{{prefix}}\".",
         "new_node": "No edge for {{letter}} yet: add a node for \"{{path}}\".",
-        "follow": "Follow {{letter}}; {{count}} word(s) now pass through this node.",
+        "follow": "Follow {{letter}}; {{num}} word(s) now pass through this node.",
         "mark_end": "\"{{word}}\" ends here: mark the node.",
         "walk": "Follow {{letter}}: \"{{path}}\".",
         "missing": "No edge for {{letter}}: no word starts with \"{{prefix}}\".",
-        "count_word": "{{count}} word(s) start with \"{{prefix}}\", and \"{{prefix}}\" is a word itself.",
-        "count_only": "{{count}} word(s) start with \"{{prefix}}\"; it is not a whole word."
+        "count_word": "{{num}} word(s) start with \"{{prefix}}\", and \"{{prefix}}\" is a word itself.",
+        "count_only": "{{num}} word(s) start with \"{{prefix}}\"; it is not a whole word."
       },
       "union-find": {
         "ready": "{{n}} elements, each in a set of its own: every element is its own root.",
@@ -2200,7 +2200,7 @@
         "new": "{{s}} has no label yet: start component #{{c}} there.",
         "pop": "Pop {{u}} from the stack and look at its neighbours.",
         "fill": "{{v}} gets label #{{c}} too, from {{u}}, and goes on the stack.",
-        "done": "{{count}} component(s) among {{n}} nodes."
+        "done": "{{num}} component(s) among {{n}} nodes."
       },
       "bipartite-check": {
         "ready": "Try to split {{n}} nodes into two sides, A and B, so that every edge goes across.",
@@ -2264,7 +2264,7 @@
         "reverse": "Pass 2: reverse every edge, then start from the last node to finish.",
         "start": "{{u}} has no component yet: start component #{{c}} there.",
         "assign": "{{u}} joins component #{{c}}.",
-        "done": "{{count}} component(s) among {{n}} nodes."
+        "done": "{{num}} component(s) among {{n}} nodes."
       },
       "bridges-articulation": {
         "ready": "Find the bridges and cut vertices of {{n}} nodes. Under each node: its entry number / its low value.",
@@ -2353,7 +2353,7 @@
         "take": "House {{house}}: taking it gives {{take}}, skipping gives {{skip}}. Take it.",
         "skip": "House {{house}}: taking it gives {{take}}, skipping gives {{skip}}. Skip it.",
         "trace": "Back from the end: house {{house}} ({{value}}) was taken.",
-        "done": "Best loot {{best}}, from {{count}} house(s)."
+        "done": "Best loot {{best}}, from {{num}} house(s)."
       },
       "maximum-subarray": {
         "ready": "Find the run of {{n}} values with the biggest sum.",
@@ -2365,8 +2365,8 @@
       "coin-change": {
         "ready": "Fewest coins for {{amount}} using {{kinds}} coin value(s), each as often as needed. ∞ means cannot be made.",
         "total": "Total {{total}}: try ending with each coin.",
-        "improve": "End with a {{coin}}: fewest[{{from}}] + 1 = {{count}} coin(s), the best so far for {{total}}.",
-        "done": "{{amount}} needs {{count}} coin(s).",
+        "improve": "End with a {{coin}}: fewest[{{from}}] + 1 = {{num}} coin(s), the best so far for {{total}}.",
+        "done": "{{amount}} needs {{num}} coin(s).",
         "impossible": "{{amount}} cannot be made with these coins: the answer is -1."
       },
       "knapsack-01": {
@@ -2374,14 +2374,14 @@
         "skip": "Item {{item}} at capacity {{c}}: start without it, from the cell above: {{value}}.",
         "take": "Item {{item}} at capacity {{c}}: packing it gives {{value}}, more than {{without}} without it.",
         "trace": "Back from the corner: item {{item}} was packed (weight {{weight}}), {{left}} capacity left.",
-        "done": "Best value {{best}}, with {{count}} item(s) packed."
+        "done": "Best value {{best}}, with {{num}} item(s) packed."
       },
       "rod-cutting": {
         "ready": "A rod of length {{n}}, and a price for every piece length. Pieces can repeat.",
         "length": "Length {{length}}: try every length for the first piece.",
         "improve": "First piece {{cut}}, then the best for {{rest}}: {{value}}, the best so far.",
         "trace": "Cut a piece of {{piece}}; {{left}} left.",
-        "done": "A rod of {{n}} earns at most {{best}}, in {{count}} piece(s)."
+        "done": "A rod of {{n}} earns at most {{best}}, in {{num}} piece(s)."
       },
       "lis": {
         "ready": "Find the longest strictly increasing subsequence of {{n}} values (not necessarily side by side).",
@@ -2400,7 +2400,7 @@
       "edit-distance": {
         "ready": "Fewest single-letter edits (insert, delete, replace) to turn \"{{a}}\" into \"{{b}}\". Row 0 and column 0: build from or to nothing.",
         "same": "Both letters are \"{{letter}}\": no edit needed, {{value}} as on the diagonal.",
-        "change": "\"{{x}}\" ≠ \"{{y}}\": 1 + the cheapest of replace ({{replace}}), delete ({{remove}}) and insert ({{insert}}) = {{value}}.",
+        "change": "\"{{x}}\" ≠ \"{{y}}\": 1 + the cheapest of replace ({{replaced}}), delete ({{remove}}) and insert ({{insert}}) = {{value}}.",
         "done": "\"{{a}}\" becomes \"{{b}}\" in {{value}} edit(s)."
       },
       "grid-paths": {
@@ -2411,7 +2411,7 @@
         "done": "{{ways}} path(s) reach the bottom-right cell."
       },
       "word-break": {
-        "ready": "Can \"{{text}}\" be cut into the {{count}} dictionary word(s)?",
+        "ready": "Can \"{{text}}\" be cut into the {{num}} dictionary word(s)?",
         "end": "Can the first {{end}} letters, \"{{prefix}}\", be cut?",
         "fits": "\"{{word}}\" ends here and letters before {{start}} can be cut: yes up to {{end}}.",
         "none": "No word ends at {{end}} after a good cut: no.",
@@ -2436,14 +2436,14 @@
         "sorted": "Sort them by end time: the one that ends first leaves the most room.",
         "take": "Activity {{k}} ({{start}}–{{end}}) starts after the room is free: take it.",
         "clash": "Activity {{k}} starts at {{start}}, but the room is busy until {{free}}: skip it.",
-        "done": "{{count}} of {{n}} activities fit."
+        "done": "{{num}} of {{n}} activities fit."
       },
       "merge-intervals": {
         "ready": "Merge {{n}} intervals wherever they overlap or touch.",
         "sorted": "Sort them by start.",
         "open": "{{start}}–{{end}} starts after the last merged interval ends: open a new one.",
         "extend": "{{start}}–{{end}} overlaps the last merged interval: it now ends at {{to}}.",
-        "done": "{{n}} intervals became {{count}}."
+        "done": "{{n}} intervals became {{num}}."
       },
       "jump-game": {
         "ready": "From each of {{n}} squares you may jump forward up to its number. Can you reach the last square?",
@@ -2467,32 +2467,32 @@
       },
       "subsets": {
         "ready": "List all {{total}} subsets of {{n}} values: at each call, keep what is chosen, then try adding each later value.",
-        "record": "Record {{set}} (subset {{count}}).",
+        "record": "Record {{set}} (subset {{num}}).",
         "choose": "Add {{value}} (position {{k}}) and go deeper.",
         "undo": "Take {{value}} back out and try the next value.",
-        "done": "{{count}} subsets of {{n}} values: every value is either in or out."
+        "done": "{{num}} subsets of {{n}} values: every value is either in or out."
       },
       "permutations": {
         "ready": "List every order of {{n}} values: fill the places one by one with any value not used yet.",
         "choose": "Put {{value}} in place {{at}}.",
-        "record": "A full row: {{perm}} (order {{count}}).",
+        "record": "A full row: {{perm}} (order {{num}}).",
         "undo": "Take {{value}} back and try the next unused value.",
-        "done": "{{count}} orders of {{n}} values."
+        "done": "{{num}} orders of {{n}} values."
       },
       "combination-sum": {
         "ready": "Every way to make {{target}} from {{n}} candidates, each usable many times, in non-decreasing order.",
         "choose": "Add {{value}}: {{left}} left to make.",
-        "found": "Exactly the target: {{combo}} (way {{count}}).",
+        "found": "Exactly the target: {{combo}} (way {{num}}).",
         "prune": "{{value}} is more than the {{left}} left, and every later candidate is too: stop this branch.",
-        "done": "{{count}} way(s) to make {{target}}."
+        "done": "{{num}} way(s) to make {{target}}."
       },
       "n-queens": {
         "ready": "Place {{n}} queens on a {{n}} × {{n}} board so that none attacks another: one per row, top to bottom.",
         "place": "Row {{row}}: column {{col}} is not attacked, place a queen.",
-        "solution": "All rows filled: solution {{count}}.",
+        "solution": "All rows filled: solution {{num}}.",
         "dead_end": "Row {{row}}: every column is attacked. Dead end: go back up.",
         "remove": "Remove the queen from row {{row}}, column {{col}}, and try the next column.",
-        "done": "A {{n}} × {{n}} board has {{count}} solution(s)."
+        "done": "A {{n}} × {{n}} board has {{num}} solution(s)."
       },
       "sudoku": {
         "ready": "Fill the {{size}} × {{size}} Sudoku: {{empty}} empty cell(s), first empty cell first, digits in order.",
@@ -2515,14 +2515,14 @@
         "scan": "Now scan the text; on a mismatch, slide the pattern to its border instead of starting over.",
         "skip": "\"{{letter}}\" at {{i}} does not match: keep {{k}} matched letter(s) from the border.",
         "match": "Match at {{at}}.",
-        "done": "{{count}} match(es) with {{reads}} comparisons; the scan never moves back in the text."
+        "done": "{{num}} match(es) with {{reads}} comparisons; the scan never moves back in the text."
       },
       "z-function": {
         "ready": "Search \"{{pattern}}\" in \"{{text}}\" with the Z-function of pattern | text.",
         "reuse": "{{i}} is inside the Z-box: start from z[{{from}}], {{value}}.",
         "extend": "One more letter agrees with the start: z[{{i}}] = {{value}}.",
         "box": "The Z-box now reaches [{{left}}, {{right}}).",
-        "done": "{{count}} match(es): wherever z equals the pattern's length."
+        "done": "{{num}} match(es): wherever z equals the pattern's length."
       },
       "rabin-karp": {
         "ready": "The pattern's hash is {{target}}; the first window of {{m}} letter(s) hashes to {{window}}.",
@@ -2530,7 +2530,7 @@
         "match": "Window at {{at}}: same hash {{hash}} and same letters. Match.",
         "collision": "Window at {{at}}: same hash {{hash}} but different letters, a collision.",
         "roll": "Slide: drop \"{{out}}\", add \"{{into}}\". New hash {{hash}}.",
-        "done": "{{count}} match(es) and {{collisions}} collision(s)."
+        "done": "{{num}} match(es) and {{collisions}} collision(s)."
       },
       "manacher": {
         "ready": "Longest palindrome in \"{{text}}\": bars between the letters let one rule handle even and odd lengths.",
@@ -2540,7 +2540,7 @@
         "done": "Longest palindrome: \"{{word}}\", {{length}} letter(s) from position {{start}}."
       },
       "aho-corasick": {
-        "ready": "Count {{count}} patterns in one pass over the text. First, a trie of the patterns.",
+        "ready": "Count {{num}} patterns in one pass over the text. First, a trie of the patterns.",
         "built": "The trie has {{nodes}} node(s). Now the failure links, level by level.",
         "link": "Node \"{{letter}}\" fails to \"{{to}}\": the longest suffix that is also in the trie.",
         "read": "Read \"{{letter}}\" and follow its edge.",
@@ -2582,7 +2582,7 @@
         "prime": "{{p}} is still open, so it is prime: cross out its multiples from {{start}} (smaller ones are already gone).",
         "cross": "Cross out {{m}} (a multiple of {{p}}).",
         "again": "{{m}} was already crossed out by a smaller prime.",
-        "done": "{{count}} primes up to {{n}}, after {{crossed}} crossings."
+        "done": "{{num}} primes up to {{n}}, after {{crossed}} crossings."
       },
       "convex-hull": {
         "ready": "Wrap the {{n}} points in the smallest convex fence.",

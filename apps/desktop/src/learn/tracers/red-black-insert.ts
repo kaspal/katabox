@@ -6,7 +6,7 @@
 // (1 red, 0 black). Red nodes are drawn in the "red" role and labelled under the node (a translated note).
 import { SORT_INPUT } from "../engine/cases";
 import { Recorder } from "../engine/recorder";
-import type { ForestNode, NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { ForestNode, NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"red-black-insert">;
 const KEYS = [
@@ -18,7 +18,7 @@ const KEYS = [
   "red-black-insert.root_black",
   "red-black-insert.done",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["place", "rotate-left", "rotate-right", "flip", "root-black"] as const;
 

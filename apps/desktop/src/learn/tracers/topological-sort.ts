@@ -4,7 +4,7 @@
 // cycle, the nodes on it never reach zero and the order comes out short.
 import { adjacency, decodeGraph, encodeGraph, graphCodec, graphData, randomGraph } from "../engine/graph";
 import { Recorder } from "../engine/recorder";
-import type { NarrationKey, Role, Step, TracerDef } from "../engine/types";
+import type { NarrationKey, NarrationParams, Role, Step, TracerDef } from "../engine/types";
 
 type Key = NarrationKey<"topological-sort">;
 const KEYS = [
@@ -15,7 +15,7 @@ const KEYS = [
   "topological-sort.done",
   "topological-sort.stuck",
 ] as const satisfies readonly Key[];
-const say = (key: (typeof KEYS)[number], params?: Record<string, number>) => ({ key, params });
+const say = (key: (typeof KEYS)[number], params?: NarrationParams<number>) => ({ key, params });
 
 export const MARKERS = ["take", "lower", "ready"] as const;
 const codec = graphCodec({ directed: true, weighted: false });
