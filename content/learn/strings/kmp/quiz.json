@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input: the pattern is abab. What is its failure table?",
+    "prompt_es": "Entrada por defecto: el patrón es abab. ¿Cuál es su tabla de fallos?",
+    "options": [
+      { "en": "[0, 1, 2, 3]", "es": "[0, 1, 2, 3]" },
+      { "en": "[0, 0, 1, 2]", "es": "[0, 0, 1, 2]" },
+      { "en": "[1, 0, 1, 0]", "es": "[1, 0, 1, 0]" }
+    ],
+    "answer": 1,
+    "explain_en": "Each entry is the longest proper border of a prefix: a has none, ab none, aba has a (1), abab has ab (2).",
+    "explain_es": "Cada valor es el borde propio más largo de un prefijo: a no tiene, ab tampoco, aba tiene a (1) y abab tiene ab (2)."
+  },
+  {
+    "prompt_en": "Right after the match at position 0 in abababcabab, what does k become?",
+    "prompt_es": "Justo después de la coincidencia en la posición 0 de abababcabab, ¿cuánto pasa a valer k?",
+    "options": [
+      { "en": "0: the search starts over", "es": "0: la búsqueda vuelve a empezar" },
+      { "en": "4: the pattern length", "es": "4: la longitud del patrón" },
+      { "en": "2: the border ab is kept, so the overlapping match at 2 is found", "es": "2: se conserva el borde ab, así que se encuentra la coincidencia solapada en 2" }
+    ],
+    "answer": 2,
+    "explain_en": "After a match, k = fail[m - 1] = fail[3] = 2. The last two letters, ab, already start the next match.",
+    "explain_es": "Tras una coincidencia, k = fail[m - 1] = fail[3] = 2. Las dos últimas letras, ab, ya empiezan la coincidencia siguiente."
+  },
+  {
+    "prompt_en": "Why is the scan O(n + m) even though it has a loop inside a loop?",
+    "prompt_es": "¿Por qué el recorrido es O(n + m) aunque tenga un bucle dentro de otro?",
+    "options": [
+      { "en": "k grows at most once per letter, so in total it cannot fall more than n times", "es": "k crece como mucho una vez por letra, así que en total no puede caer más de n veces" },
+      { "en": "The inner loop runs at most once per letter", "es": "El bucle interior se ejecuta como mucho una vez por letra" },
+      { "en": "The failure table is sorted", "es": "La tabla de fallos está ordenada" }
+    ],
+    "answer": 0,
+    "explain_en": "One letter can trigger several falls, but every fall undoes an earlier growth, and there are at most n growths.",
+    "explain_es": "Una letra puede provocar varias caídas, pero cada caída deshace un crecimiento anterior, y hay como mucho n crecimientos."
+  }
+]

@@ -1,0 +1,28 @@
+id = "subsets"
+subject = "backtracking"
+order = 1
+title = "Subsets"
+title_es = "Subconjuntos"
+tags = ["backtracking", "recursion"]
+problems = ["outfit-picker", "menu-masks"]
+presets = ["random", "reversed", "nearly-sorted"]
+default = [1, 2, 3]
+
+[complexity]
+best = "O(n · 2ⁿ)"
+average = "O(n · 2ⁿ)"
+worst = "O(n · 2ⁿ)"
+space = "O(n) depth"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 4
+min = 1
+max = 9
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = subsets(a)"
+typescript = "a = subsets(a)"

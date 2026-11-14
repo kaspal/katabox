@@ -1,0 +1,26 @@
+[
+  {
+    "prompt_en": "Default input: text bcaxaavbcab, pattern bca. The window aav at position 4 has the same hash as bca, 21. What does the sample do with it?",
+    "prompt_es": "Entrada por defecto: texto bcaxaavbcab, patrón bca. La ventana aav de la posición 4 tiene el mismo hash que bca, 21. ¿Qué hace el ejemplo con ella?",
+    "options": [
+      { "en": "Compares the letters, finds they differ and counts a collision", "es": "Compara las letras, ve que son distintas y cuenta una colisión" },
+      { "en": "Records a match at position 4", "es": "Apunta una coincidencia en la posición 4" },
+      { "en": "Skips it without looking, since aav cannot hash to 21", "es": "La salta sin mirarla, porque aav no puede tener hash 21" }
+    ],
+    "answer": 0,
+    "explain_en": "aav is 0 · 676 + 0 · 26 + 21 = 21 mod 101, like bca. Equal hashes only mean maybe, so the letters are compared. The output is [2, 1, 0, 7]: one collision.",
+    "explain_es": "aav es 0 · 676 + 0 · 26 + 21 = 21 mod 101, como bca. Hashes iguales solo significan quizá, así que se comparan las letras. La salida es [2, 1, 0, 7]: una colisión."
+  },
+  {
+    "prompt_en": "When does Rabin-Karp approach its O(n · m) worst case?",
+    "prompt_es": "¿Cuándo se acerca Rabin-Karp a su peor caso O(n · m)?",
+    "options": [
+      { "en": "When the pattern has no repeated letters", "es": "Cuando el patrón no tiene letras repetidas" },
+      { "en": "When the text is longer than 101 letters", "es": "Cuando el texto tiene más de 101 letras" },
+      { "en": "When most windows share the pattern's hash, so each needs m letter comparisons", "es": "Cuando la mayoría de ventanas comparten el hash del patrón, así que cada una necesita m comparaciones de letras" }
+    ],
+    "answer": 2,
+    "explain_en": "Rolling is O(1) per window; the letter check is what costs m. A larger modulus or double hashing keeps false alarms rare.",
+    "explain_es": "Rodar cuesta O(1) por ventana; lo que cuesta m es comprobar las letras. Un módulo mayor o un doble hash hacen raras las falsas alarmas."
+  }
+]

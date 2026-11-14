@@ -1,0 +1,28 @@
+id = "rabin-karp"
+subject = "strings"
+order = 3
+title = "Rabin-Karp"
+title_es = "Rabin-Karp"
+tags = ["strings", "string-matching", "hashing"]
+problems = ["repeated-chunk"]
+presets = ["with-a-collision", "random", "repeats"]
+default = [1, 2, 0, 23, 0, 0, 21, 1, 2, 0, 1, -1, 1, 2, 0]
+
+[complexity]
+best = "O(n + m)"
+average = "O(n + m) expected"
+worst = "O(n · m) with many collisions"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 33
+min = -1
+max = 25
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = rabin_karp(*kb_text(a))"
+typescript = "a = rabinKarp(...(kbText(a) as [string, string]))"

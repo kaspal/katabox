@@ -70,6 +70,25 @@ export function TreeScene({ step, instant, def }: SceneProps) {
             </g>
           );
         })}
+        {step.links?.map((l, k) => {
+          if (!at.has(l.from) || !at.has(l.to)) return null;
+          const a = pos(l.from);
+          const b = pos(l.to);
+          const mx = (a.x + b.x) / 2 + (b.y - a.y) * 0.25;
+          const my = (a.y + b.y) / 2 - Math.abs(b.x - a.x) * 0.15;
+          return (
+            <path
+              key={`l${k}`}
+              data-testid="tree-link"
+              d={`M${a.x},${a.y} Q${mx},${my} ${b.x},${b.y}`}
+              fill="none"
+              stroke="var(--viz-compare)"
+              strokeWidth={1.2}
+              strokeDasharray="4 3"
+              opacity={0.75}
+            />
+          );
+        })}
         {nodes.map((n) => {
           if (!at.has(n.id)) return null;
           const { x, y } = pos(n.id);

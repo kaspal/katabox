@@ -1,0 +1,15 @@
+def z_search(text, pattern):
+    s = pattern + "|" + text
+    n = len(s)
+    z = [0] * n
+    left = right = 0
+    for i in range(1, n):
+        if i < right:
+            z[i] = min(right - i, z[i - left])  # @step reuse
+        while i + z[i] < n and s[z[i]] == s[i + z[i]]:
+            z[i] += 1  # @step extend
+        if i + z[i] > right:
+            left, right = i, i + z[i]
+    m = len(pattern)
+    hits = [i - m - 1 for i in range(m + 1, n) if z[i] == m]
+    return [len(hits)] + hits

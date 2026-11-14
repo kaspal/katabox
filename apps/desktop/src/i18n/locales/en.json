@@ -989,7 +989,18 @@
         "values_read": "values read",
         "merged_in": "merged in",
         "opened": "opened",
-        "merges": "merges"
+        "merges": "merges",
+        "recorded": "recorded",
+        "choices": "choices",
+        "undone": "undone",
+        "steps_taken": "steps",
+        "windows": "windows",
+        "rolls": "rolls",
+        "box_moves": "box moves",
+        "letters_read": "letters read",
+        "fail_links_followed": "failure links followed",
+        "rounds": "rounds",
+        "doublings": "doublings"
       },
       "rows": {
         "prefix": "Prefix sums",
@@ -1036,7 +1047,19 @@
         "chosen": "Chosen",
         "merged": "Merged",
         "weights": "Weights",
-        "trees_by_weight": "Trees by weight (lightest first)"
+        "trees_by_weight": "Trees by weight (lightest first)",
+        "decisions": "Decisions (one line per call)",
+        "candidates": "Candidates",
+        "word": "Word",
+        "text": "Text",
+        "pattern": "Pattern",
+        "failure": "Failure (border)",
+        "combined": "Pattern | text",
+        "z": "Z",
+        "with_bars": "Text with bars",
+        "radius": "Radius",
+        "rank": "Rank",
+        "suffixes": "Suffixes, sorted (start: suffix)"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -1075,7 +1098,9 @@
       },
       "summary_graph": "Graph with {{n}} nodes: {{nodes}}. Edges: {{edges}}.",
       "summary_grid": "A {{rows}} by {{cols}} grid: {{map}}.",
-      "summary_timeline": "Intervals: {{bars}}. Result: {{output}}."
+      "summary_timeline": "Intervals: {{bars}}. Result: {{output}}.",
+      "summary_board": "A {{rows}} by {{cols}} board: {{cells}}.",
+      "summary_strings": "{{rows}}."
     },
     "roles": {
       "idle": "Not yet placed",
@@ -1123,7 +1148,7 @@
       "fast": "Fast (2 steps)",
       "meeting": "Meeting point",
       "cycle_start": "Cycle start",
-      "used": "Just used",
+      "used": "Used",
       "written": "Just written",
       "evicted": "Evicted",
       "window_max": "Window maximum",
@@ -1216,7 +1241,18 @@
       "not_reached": "Not reached yet",
       "stuck_here": "Stuck here",
       "part_taken": "Taken in part",
-      "merged_pair": "Joined under the new node"
+      "merged_pair": "Joined under the new node",
+      "recorded": "Recorded",
+      "pruned": "Pruned",
+      "matched_so_far": "Matched so far",
+      "match": "Match",
+      "z_box": "Z-box",
+      "window": "Window",
+      "collision": "Same hash, different letters",
+      "palindrome_here": "Palindrome here",
+      "rightmost_palindrome": "Rightmost palindrome",
+      "failure_target": "Failure link target",
+      "left_behind": "Left behind"
     },
     "controls": {
       "label": "Playback",
@@ -1339,7 +1375,22 @@
         "shared-letters": "Shared letters",
         "nothing-shared": "Nothing shared",
         "near-miss": "A near miss",
-        "swapped-letters": "Swapped letters"
+        "swapped-letters": "Swapped letters",
+        "few-coins": "A few coins",
+        "no-way": "No way",
+        "four-by-four": "4 × 4",
+        "nine-by-nine": "9 × 9",
+        "winding-word": "A winding word",
+        "false-start": "False starts",
+        "overlaps": "Overlaps",
+        "no-border": "No border",
+        "repeats": "Repeats",
+        "one-letter": "One letter",
+        "with-a-collision": "With a collision",
+        "nested-mirrors": "Nested mirrors",
+        "even-length": "Even length",
+        "repeated-syllables": "Repeated syllables",
+        "no-overlap": "No overlap"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1395,7 +1446,10 @@
           "interval_range": "Each interval starts before it ends, between {{min}} and {{max}}.",
           "matrix_shape": "Write {{n}} rows of {{n}} distances.",
           "matrix_diagonal": "A city is 0 away from itself.",
-          "matrix_symmetric": "The distance from {{i}} to {{j}} must equal the way back."
+          "matrix_symmetric": "The distance from {{i}} to {{j}} must equal the way back.",
+          "sudoku_size": "A Sudoku here is 4 × 4 or 9 × 9.",
+          "sudoku_digit": "Use digits 1 to {{max}} and . for an empty cell.",
+          "sudoku_clash": "The givens already repeat {{digit}} in a row, column or box."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1426,7 +1480,8 @@
         "second": "Second word",
         "map": "Map (rows split by /; . open, # blocked)",
         "distances": "Distances (one row per city, rows split by commas)",
-        "intervals": "Intervals (start end, …)"
+        "intervals": "Intervals (start end, …)",
+        "word": "Word"
       }
     },
     "tabs": {
@@ -1516,7 +1571,12 @@
       "intervals": "Intervals",
       "bitmask": "Bitmask",
       "interval-dp": "Interval DP",
-      "huffman": "Huffman coding"
+      "huffman": "Huffman coding",
+      "backtracking": "Backtracking",
+      "string-matching": "String matching",
+      "palindrome": "Palindrome",
+      "suffix-array": "Suffix array",
+      "sorting": "Sorting"
     },
     "narration": {
       "bubble-sort": {
@@ -2347,6 +2407,95 @@
         "ready": "Build a prefix code for {{n}} symbols: the more frequent a symbol, the shorter its code.",
         "merge": "Join the two lightest trees, {{a}} and {{b}}, under a new node of {{sum}}.",
         "done": "{{bits}} bits in all, against {{fixed}} with a fixed-length code."
+      },
+      "subsets": {
+        "ready": "List all {{total}} subsets of {{n}} values: at each call, keep what is chosen, then try adding each later value.",
+        "record": "Record {{set}} (subset {{count}}).",
+        "choose": "Add {{value}} (position {{k}}) and go deeper.",
+        "undo": "Take {{value}} back out and try the next value.",
+        "done": "{{count}} subsets of {{n}} values: every value is either in or out."
+      },
+      "permutations": {
+        "ready": "List every order of {{n}} values: fill the places one by one with any value not used yet.",
+        "choose": "Put {{value}} in place {{at}}.",
+        "record": "A full row: {{perm}} (order {{count}}).",
+        "undo": "Take {{value}} back and try the next unused value.",
+        "done": "{{count}} orders of {{n}} values."
+      },
+      "combination-sum": {
+        "ready": "Every way to make {{target}} from {{n}} candidates, each usable many times, in non-decreasing order.",
+        "choose": "Add {{value}}: {{left}} left to make.",
+        "found": "Exactly the target: {{combo}} (way {{count}}).",
+        "prune": "{{value}} is more than the {{left}} left, and every later candidate is too: stop this branch.",
+        "done": "{{count}} way(s) to make {{target}}."
+      },
+      "n-queens": {
+        "ready": "Place {{n}} queens on a {{n}} × {{n}} board so that none attacks another: one per row, top to bottom.",
+        "place": "Row {{row}}: column {{col}} is not attacked, place a queen.",
+        "solution": "All rows filled: solution {{count}}.",
+        "dead_end": "Row {{row}}: every column is attacked. Dead end: go back up.",
+        "remove": "Remove the queen from row {{row}}, column {{col}}, and try the next column.",
+        "done": "A {{n}} × {{n}} board has {{count}} solution(s)."
+      },
+      "sudoku": {
+        "ready": "Fill the {{size}} × {{size}} Sudoku: {{empty}} empty cell(s), first empty cell first, digits in order.",
+        "place": "Row {{row}}, column {{col}}: {{digit}} is not in its row, column or box yet. Try it.",
+        "undo": "Nothing fits further on: take {{digit}} back out of row {{row}}, column {{col}}.",
+        "done": "Solved, with {{guesses}} guess(es) and {{undos}} undo(s).",
+        "impossible": "No digit fits somewhere whatever came before: this Sudoku has no solution."
+      },
+      "word-search": {
+        "ready": "Find \"{{word}}\" in the {{rows}} × {{cols}} grid, moving up, down, left or right, never reusing a cell.",
+        "step": "\"{{letter}}\" at ({{row}}, {{col}}): letter {{k}} matches, step onto it.",
+        "back": "No way on from \"{{letter}}\" at ({{row}}, {{col}}): step back.",
+        "found": "\"{{word}}\" found after {{tries}} cell check(s).",
+        "missing": "\"{{word}}\" is not in the grid."
+      },
+      "kmp": {
+        "ready": "Find \"{{pattern}}\" in \"{{text}}\". First the failure table: the longest border of each prefix.",
+        "fall": "Mismatch at {{i}}: fall back to the shorter border, {{k}}.",
+        "border": "fail[{{i}}] = {{k}}: the first {{k}} letter(s) also end here.",
+        "scan": "Now scan the text; on a mismatch, slide the pattern to its border instead of starting over.",
+        "skip": "\"{{letter}}\" at {{i}} does not match: keep {{k}} matched letter(s) from the border.",
+        "match": "Match at {{at}}.",
+        "done": "{{count}} match(es) with {{reads}} comparisons; the scan never moves back in the text."
+      },
+      "z-function": {
+        "ready": "Search \"{{pattern}}\" in \"{{text}}\" with the Z-function of pattern | text.",
+        "reuse": "{{i}} is inside the Z-box: start from z[{{from}}], {{value}}.",
+        "extend": "One more letter agrees with the start: z[{{i}}] = {{value}}.",
+        "box": "The Z-box now reaches [{{left}}, {{right}}).",
+        "done": "{{count}} match(es): wherever z equals the pattern's length."
+      },
+      "rabin-karp": {
+        "ready": "The pattern's hash is {{target}}; the first window of {{m}} letter(s) hashes to {{window}}.",
+        "window": "Window at {{at}}: hash {{hash}} ≠ {{target}}, so no need to compare letters.",
+        "match": "Window at {{at}}: same hash {{hash}} and same letters. Match.",
+        "collision": "Window at {{at}}: same hash {{hash}} but different letters, a collision.",
+        "roll": "Slide: drop \"{{out}}\", add \"{{into}}\". New hash {{hash}}.",
+        "done": "{{count}} match(es) and {{collisions}} collision(s)."
+      },
+      "manacher": {
+        "ready": "Longest palindrome in \"{{text}}\": bars between the letters let one rule handle even and odd lengths.",
+        "mirror": "{{i}} is inside the rightmost palindrome: its mirror {{mirror}} says at least {{value}}.",
+        "grow": "The letters on both sides agree: radius {{value}} at {{i}}.",
+        "reach": "The palindrome centred at {{center}} now reaches {{right}}.",
+        "done": "Longest palindrome: \"{{word}}\", {{length}} letter(s) from position {{start}}."
+      },
+      "aho-corasick": {
+        "ready": "Count {{count}} patterns in one pass over the text. First, a trie of the patterns.",
+        "built": "The trie has {{nodes}} node(s). Now the failure links, level by level.",
+        "link": "Node \"{{letter}}\" fails to \"{{to}}\": the longest suffix that is also in the trie.",
+        "read": "Read \"{{letter}}\" and follow its edge.",
+        "follow": "No \"{{letter}}\" edge here: follow the failure link.",
+        "hit": "\"{{word}}\" ends at {{end}}.",
+        "done": "{{reads}} letter(s) read, {{follows}} failure link(s) followed."
+      },
+      "suffix-array": {
+        "ready": "Sort the {{n}} suffixes of \"{{text}}\". Start by ranking each by its first letter.",
+        "sort": "Sort by the first {{two}} letters (rank of the first {{k}}, then of the next {{k}}): {{distinct}} different rank(s).",
+        "double": "Ranks still tie: double the length to {{k}}.",
+        "done": "All {{n}} suffixes are ordered after {{rounds}} round(s)."
       }
     },
     "compare": {

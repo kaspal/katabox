@@ -20,7 +20,7 @@ Whatever `length` is, that is a constant number of operations. The default text 
 
 ### Collisions
 
-The converse is not true. There are only 101 possible hashes but far more possible windows, so two different windows can share a hash. Equal hashes mean "maybe equal": compare the letters to be sure. Real code uses a large prime modulus (often around 10⁹) to make collisions rare. Rabin–Karp (coming soon) builds a full substring search on this.
+The converse is not true. There are only 101 possible hashes but far more possible windows, so two different windows can share a hash. Equal hashes mean "maybe equal": compare the letters to be sure. Real code uses a large prime modulus (often around 10⁹) to make collisions rare. [Rabin–Karp](learn:strings/rabin-karp) builds a full substring search on this.
 
 ## Steps
 
@@ -52,4 +52,4 @@ Use a rolling hash to compare many overlapping windows quickly: finding a patter
 
 - [Sliding window](learn:searching/sliding-window): the same "drop one, add one" update.
 - [Prefix sums](learn:foundations/prefix-sums): another way to get any range's value in `O(1)`.
-- Rabin–Karp (coming soon): substring search with a rolling hash.
+- [Rabin–Karp](learn:strings/rabin-karp): substring search with a rolling hash.

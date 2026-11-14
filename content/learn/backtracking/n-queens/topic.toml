@@ -1,0 +1,28 @@
+id = "n-queens"
+subject = "backtracking"
+order = 4
+title = "N-Queens"
+title_es = "N reinas"
+tags = ["backtracking"]
+problems = []
+presets = ["random"]
+default = [5]
+
+[complexity]
+best = "O(n!) bound"
+average = "far less than n! with pruning"
+worst = "O(n!)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 1
+max_len = 1
+min = 4
+max = 6
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = solve_queens(a[0])"
+typescript = "a = solveQueens(a[0])"

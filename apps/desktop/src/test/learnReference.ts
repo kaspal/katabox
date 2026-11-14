@@ -193,6 +193,13 @@ function gridCost(input: readonly number[], unit: boolean): number {
   return best === Infinity ? -1 : best;
 }
 
+
+/** Lexicographic order of number lists (a prefix comes first). */
+const lexi = (a: readonly number[], b: readonly number[]) => {
+  for (let k = 0; k < Math.min(a.length, b.length); k++) if (a[k] !== b[k]) return a[k]! - b[k]!;
+  return a.length - b.length;
+};
+
 export const REFERENCE: Record<string, (input: readonly number[]) => number[]> = {
   "big-o-growth": ([n]) => [1, log2(n!), n!, n! * log2(n!), n! * n!, 2 ** n!],
   "recursion-call-stack": (xs) => [sum(xs)],
@@ -1058,6 +1065,163 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
     }
     return out;
   },
+  // Backtracking and strings.
+  subsets: (values) => {
+    // Every bitmask, as position lists, in lexicographic order (the depth-first order).
+    const lists = Array.from({ length: 1 << values.length }, (_, m) => values.map((_, k) => k).filter((k) => m & (1 << k))).sort(lexi);
+    return [lists.length, ...lists.flatMap((l) => [l.length, ...l.map((k) => values[k]!)])];
+  },
+  permutations: (values) => {
+    // Next-permutation on positions, starting from 0, 1, 2, ….
+    const n = values.length;
+    const p = values.map((_, k) => k);
+    const out: number[] = [];
+    let count = 0;
+    for (;;) {
+      out.push(...p.map((k) => values[k]!));
+      count++;
+      let i = n - 2;
+      while (i >= 0 && p[i]! > p[i + 1]!) i--;
+      if (i < 0) break;
+      let j = n - 1;
+      while (p[j]! < p[i]!) j--;
+      [p[i], p[j]] = [p[j]!, p[i]!];
+      p.splice(i + 1, n - i - 1, ...p.slice(i + 1).reverse());
+    }
+    return [count, ...out];
+  },
+  "combination-sum": ([target, ...raw]) => {
+    // Every vector of counts per candidate (sorted, each position distinct).
+    const c = [...raw].sort((a, b) => a - b);
+    const found: number[][] = [];
+    const counts = new Array<number>(c.length).fill(0);
+    const walk = (k: number, sum: number) => {
+      if (k === c.length) {
+        if (sum === target) found.push(counts.flatMap((n, j) => new Array<number>(n).fill(j)));
+        return;
+      }
+      for (let n = 0; sum + n * c[k]! <= target!; n++) {
+        counts[k] = n;
+        walk(k + 1, sum + n * c[k]!);
+      }
+      counts[k] = 0;
+    };
+    walk(0, 0);
+    found.sort(lexi);
+    return [found.length, ...found.flatMap((f) => [f.length, ...f.map((j) => c[j]!)])];
+  },
+  "n-queens": ([n]) => {
+    // Every column permutation; keep those with no shared diagonal.
+    const sols: number[][] = [];
+    const perm = (left: number[], acc: number[]) => {
+      if (!left.length) {
+        if (acc.every((a, i) => acc.every((b, j) => i === j || Math.abs(a - b) !== Math.abs(i - j)))) sols.push(acc);
+        return;
+      }
+      left.forEach((x, k) => perm([...left.slice(0, k), ...left.slice(k + 1)], [...acc, x]));
+    };
+    perm(Array.from({ length: n! }, (_, k) => k), []);
+    return [sols.length, ...(sols[0] ?? [])];
+  },
+  sudoku: ([size, ...cells]) => {
+    // All completions; the smallest in reading order is what a first-cell, first-digit search finds.
+    const box = Math.round(Math.sqrt(size!));
+    const g = [...cells];
+    const sols: number[][] = [];
+    const fits = (at: number, d: number) =>
+      g.every((v, k) => {
+        if (v !== d || k === at) return true;
+        const [r1, c1, r2, c2] = [Math.floor(at / size!), at % size!, Math.floor(k / size!), k % size!];
+        return r1 !== r2 && c1 !== c2 && (Math.floor(r1 / box) !== Math.floor(r2 / box) || Math.floor(c1 / box) !== Math.floor(c2 / box));
+      });
+    const go = () => {
+      if (sols.length > 50) return;
+      const at = g.indexOf(0);
+      if (at < 0) {
+        sols.push([...g]);
+        return;
+      }
+      for (let d = 1; d <= size!; d++)
+        if (fits(at, d)) {
+          g[at] = d;
+          go();
+          g[at] = 0;
+        }
+    };
+    go();
+    return sols.length ? sols.sort(lexi)[0]! : [-1];
+  },
+  "word-search": ([rows, cols, ...rest]) => {
+    // Every matching path, in (start cell, direction) order; the first one.
+    const cut = rest.indexOf(-1);
+    const letters = rest.slice(0, cut);
+    const word = rest.slice(cut + 1);
+    const paths: number[][] = [];
+    const extend = (path: number[]) => {
+      if (paths.length) return;
+      if (path.length === word.length) {
+        paths.push(path);
+        return;
+      }
+      const last = path[path.length - 1]!;
+      for (const [dr, dc] of [[-1, 0], [0, 1], [1, 0], [0, -1]] as const) {
+        const r = Math.floor(last / cols!) + dr;
+        const c = (last % cols!) + dc;
+        const k = r * cols! + c;
+        if (r >= 0 && r < rows! && c >= 0 && c < cols! && !path.includes(k) && letters[k] === word[path.length]) extend([...path, k]);
+      }
+    };
+    for (let k = 0; k < rows! * cols! && !paths.length; k++) if (letters[k] === word[0]) extend([k]);
+    return paths.length ? [1, ...paths[0]!.flatMap((k) => [Math.floor(k / cols!), k % cols!])] : [0];
+  },
+  kmp: (input) => {
+    const [text, pattern] = words(input) as [string, string];
+    const hits: number[] = [];
+    for (let i = 0; i + pattern.length <= text.length; i++) if (text.startsWith(pattern, i)) hits.push(i);
+    return [hits.length, ...hits];
+  },
+  "z-function": (input) => REFERENCE.kmp!(input),
+  "rabin-karp": (input) => {
+    // Hash every window from scratch.
+    const [text, pattern] = words(input) as [string, string];
+    const hash = (w: string) => [...w].reduce((h, ch) => (h * 26 + ch.charCodeAt(0) - 97) % 101, 0);
+    const hits: number[] = [];
+    let collisions = 0;
+    for (let i = 0; i + pattern.length <= text.length; i++) {
+      const w = text.slice(i, i + pattern.length);
+      if (hash(w) !== hash(pattern)) continue;
+      if (w === pattern) hits.push(i);
+      else collisions++;
+    }
+    return [hits.length, collisions, ...hits];
+  },
+  manacher: (input) => {
+    // Every substring; the first longest palindrome.
+    const [text] = words(input) as [string];
+    let best = [1, 0];
+    for (let len = text.length; len > 1 && best[0] === 1; len--)
+      for (let i = 0; i + len <= text.length; i++) {
+        const w = text.slice(i, i + len);
+        if (w === [...w].reverse().join("")) {
+          best = [len, i];
+          break;
+        }
+      }
+    return best;
+  },
+  "aho-corasick": (input) => {
+    // Count each pattern separately, overlaps included.
+    const [text, ...pats] = words(input);
+    return pats.map((p) => {
+      let n = 0;
+      for (let i = 0; i + p.length <= text!.length; i++) if (text!.startsWith(p, i)) n++;
+      return n;
+    });
+  },
+  "suffix-array": (input) => {
+    const [text] = words(input) as [string];
+    return [...Array(text.length).keys()].sort((a, b) => (text.slice(a) < text.slice(b) ? -1 : 1));
+  },
   "bubble-sort": sorted,
   "insertion-sort": sorted,
   "quick-sort": sorted,
@@ -1153,6 +1317,78 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  subsets: {
+    input: [1],
+    markers: [null, "record", "choose", "record", "undo", null],
+    py: [null, 5, 7, 5, 9, null],
+    ts: [null, 5, 7, 5, 9, null],
+  },
+  permutations: {
+    input: [1, 2],
+    markers: [null, "choose", "choose", "record", "undo", "undo", "choose", "choose", "record", "undo", "undo", null],
+    py: [null, 12, 12, 7, 14, 14, 12, 12, 7, 14, 14, null],
+    ts: [null, 14, 14, 8, 16, 16, 14, 14, 8, 16, 16, null],
+  },
+  "combination-sum": {
+    input: [4, 2, 3],
+    markers: [null, "choose", "choose", "found", "prune", "choose", "prune", null],
+    py: [null, 12, 12, 7, 11, 12, 11, null],
+    ts: [null, 14, 14, 7, 12, 14, 12, null],
+  },
+  "n-queens": {
+    input: [4],
+    markers: [null, "place", "place", null, "remove", "place", "place", null, "remove", "remove", "remove", "place", "place", "place", "place", "solution", "remove", "remove", "remove", "remove", "place", "place", "place", "place", "solution", "remove", "remove", "remove", "remove", "place", "place", "place", null, "remove", "remove", "place", null, "remove", "remove", null],
+    py: [null, 14, 14, null, 16, 14, 14, null, 16, 16, 16, 14, 14, 14, 14, 10, 16, 16, 16, 16, 14, 14, 14, 14, 10, 16, 16, 16, 16, 14, 14, 14, null, 16, 16, 14, null, 16, 16, null],
+    ts: [null, 15, 15, null, 17, 15, 15, null, 17, 17, 17, 15, 15, 15, 15, 10, 17, 17, 17, 17, 15, 15, 15, 15, 10, 17, 17, 17, 17, 15, 15, 15, null, 17, 17, 15, null, 17, 17, null],
+  },
+  sudoku: {
+    input: [4, 1, 2, 3, 4, 3, 4, 1, 2, 2, 1, 4, 3, 4, 3, 2, 0],
+    markers: [null, "place", null],
+    py: [null, 23, null],
+    ts: [null, 24, null],
+  },
+  "word-search": {
+    input: [1, 3, 0, 2, 0, -1, 0, 1],
+    markers: [null, "step", "back", "step", "back", null],
+    py: [null, 10, 17, 10, 17, null],
+    ts: [null, 7, 14, 7, 14, null],
+  },
+  kmp: {
+    input: [0, 1, -1, 0, 1, 0],
+    markers: [null, "border", "border", null, null],
+    py: [null, 10, 10, null, null],
+    ts: [null, 10, 10, null, null],
+  },
+  "z-function": {
+    input: [0, -1, 0],
+    markers: [null, null, "extend", null, null],
+    py: [null, null, 10, null, null],
+    ts: [null, null, 12, null, null],
+  },
+  "rabin-karp": {
+    input: [0, 1, -1, 1],
+    markers: [null, null, "roll", "match", null],
+    py: [null, null, 25, 21, null],
+    ts: [null, null, 29, 22, null],
+  },
+  manacher: {
+    input: [0, 0],
+    markers: [null, "grow", null, "grow", "grow", null, "mirror", null],
+    py: [null, 10, null, 10, 10, null, 8, null],
+    ts: [null, 12, null, 12, 12, null, 9, null],
+  },
+  "aho-corasick": {
+    input: [0, 1, -1, 0, 1, -1, 1],
+    markers: [null, null, "link", null, null, "hit", "hit", null],
+    py: [null, null, 23, null, null, 32, 32, null],
+    ts: [null, null, 24, null, null, 37, 37, null],
+  },
+  "suffix-array": {
+    input: [0, 1],
+    markers: [null, "sort", null],
+    py: [null, 9, null],
+    ts: [null, 9, null],
+  },
   lis: {
     input: [1, 2],
     markers: [null, null, null, "extend", "trace", "trace", null],
@@ -1729,6 +1965,12 @@ export const GOLDEN: Record<string, Golden> = {
 export const WORST: Record<string, number[]> = {
   "big-o-growth": [16],
   "towers-of-hanoi": [5],
+  "n-queens": [6],
+  sudoku: [9, 0, 5, 2, 0, 4, 8, 0, 7, 9, 1, 9, 7, 0, 0, 5, 0, 0, 0, 0, 0, 3, 7, 1, 9, 6, 0, 5, 0, 0, 0, 0, 7, 0, 2, 0, 0, 2, 6, 8, 9, 3, 0, 0, 0, 0, 0, 1, 5, 8, 2, 6, 0, 9, 4, 0, 0, 0, 6, 0, 0, 0, 0, 2, 5, 7, 0, 0, 0, 2, 9, 1, 0, 0, 0, 4, 0, 9, 0, 5, 0, 7],
+  "combination-sum": [12, 2, 3, 4, 5],
+  "word-search": [5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 1],
+  kmp: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 1],
+  "aho-corasick": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, -1, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 0, 0],
   lcs: [0, 1, 2, 3, 4, 0, 1, 2, -1, 2, 0, 1, 3, 4, 0, 2, 1],
   "edit-distance": [0, 1, 2, 3, 4, 0, 1, 2, -1, 2, 0, 1, 3, 4, 0, 2, 1],
   "grid-paths": [8, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

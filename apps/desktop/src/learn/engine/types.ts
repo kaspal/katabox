@@ -127,6 +127,14 @@ export type SceneData = {
   dp?: DPData;
   /** Intervals on a time line (Phase 8). */
   timeline?: TimelineData;
+  /** Backtracking: the decision outline (Phase 9). */
+  decision?: DecisionData;
+  /** A board (Phase 9). */
+  board?: BoardData;
+  /** Strings (Phase 9). */
+  strings?: StringData;
+  /** Extra dashed links on a forest (Aho-Corasick failure links), by node id. */
+  links?: { from: number; to: number }[];
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
    * not the final row). cases.json `output` comes from here, so it is the tracer's own. */
   result?: number[];
@@ -211,6 +219,30 @@ export type TimelineData = {
   outputLabel?: RowLabel;
 };
 
+/** Backtracking (Phase 9): the decision tree as an outline, one line per call. */
+export type DecisionData = { lines: { depth: number; text: string; role?: Role }[]; current?: number | null };
+
+/** A board (Phase 9): N-Queens, Sudoku, word search. Cells by index r * cols + c. */
+export type BoardData = {
+  rows: number;
+  cols: number;
+  cells: string[];
+  roles: Record<number, Role>;
+  /** Cells under attack (hatched). */
+  shade?: number[];
+  /** Givens (bold). */
+  given?: number[];
+  /** Sudoku box size: thicker lines every `boxes` cells. */
+  boxes?: number;
+  /** A path through cell centres (word search). */
+  path?: number[];
+  checker?: boolean;
+};
+
+/** Strings (Phase 9): rows of letters or numbers, each shifted by `offset` cells. */
+export type StringRow = { label: RowLabel; kind: "letters" | "numbers"; offset: number; cells: (string | number | null)[]; roles?: Record<number, Role> };
+export type StringData = { rows: StringRow[]; lines?: { text: string; note?: string; role?: Role }[]; linesLabel?: RowLabel };
+
 export type ForestNode = {
   id: number;
   parent: number | null;
@@ -273,7 +305,10 @@ export type SceneKind =
   | "graph"
   | "grid"
   | "dp"
-  | "timeline";
+  | "timeline"
+  | "decision"
+  | "board"
+  | "string";
 
 /** How a topic's input is shaped. Inputs are always one flat list of integers (the DB and
  * the sample driver see only that):

@@ -20,7 +20,7 @@ Sea cual sea `length`, son un número constante de operaciones. El texto por def
 
 ### Colisiones
 
-Lo contrario no es cierto. Solo hay 101 hashes posibles y muchísimas más ventanas posibles, así que dos ventanas distintas pueden compartir hash. Hashes iguales significan "quizá iguales": compara las letras para estar seguro. El código real usa un módulo primo grande (a menudo alrededor de 10⁹) para que las colisiones sean raras. Rabin–Karp (próximamente) construye sobre esto una búsqueda completa de subcadenas.
+Lo contrario no es cierto. Solo hay 101 hashes posibles y muchísimas más ventanas posibles, así que dos ventanas distintas pueden compartir hash. Hashes iguales significan "quizá iguales": compara las letras para estar seguro. El código real usa un módulo primo grande (a menudo alrededor de 10⁹) para que las colisiones sean raras. [Rabin–Karp](learn:strings/rabin-karp) construye sobre esto una búsqueda completa de subcadenas.
 
 ## Pasos
 
@@ -52,4 +52,4 @@ Usa un hash rodante para comparar rápido muchas ventanas que se solapan: buscar
 
 - [Ventana deslizante](learn:searching/sliding-window): la misma actualización de "quita uno, añade uno".
 - [Sumas prefijas](learn:foundations/prefix-sums): otra forma de obtener el valor de cualquier rango en `O(1)`.
-- Rabin–Karp (próximamente): búsqueda de subcadenas con un hash rodante.
+- [Rabin–Karp](learn:strings/rabin-karp): búsqueda de subcadenas con un hash rodante.

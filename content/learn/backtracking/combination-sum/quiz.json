@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input, target 8 with candidates 2, 3, 5. After choosing 2 and 2, the search tries 3 and has 1 left. What happens next in that call?",
+    "prompt_es": "Entrada por defecto, objetivo 8 con candidatos 2, 3, 5. Tras elegir 2 y 2, la búsqueda prueba el 3 y queda 1. ¿Qué pasa después en esa llamada?",
+    "options": [
+      { "en": "It tries 2 again, then gives up", "es": "Prueba otra vez el 2 y luego se rinde" },
+      { "en": "It records [2, 2, 3]", "es": "Apunta [2, 2, 3]" },
+      { "en": "Its loop starts at 3, which is bigger than 1, so it breaks at once", "es": "Su bucle empieza en el 3, que es mayor que 1, así que se corta enseguida" }
+    ],
+    "answer": 2,
+    "explain_en": "The call is search(1, 1): the start index skips 2, and 3 > 1 stops the loop before 5 is even looked at.",
+    "explain_es": "La llamada es search(1, 1): el índice de inicio salta el 2, y 3 > 1 detiene el bucle antes de mirar siquiera el 5."
+  },
+  {
+    "prompt_en": "Why is it safe to break instead of continue when a candidate exceeds what is left?",
+    "prompt_es": "¿Por qué es seguro usar break en vez de continue cuando un candidato supera lo que queda?",
+    "options": [
+      { "en": "The candidates are sorted, so every later one is at least as big", "es": "Los candidatos están ordenados, así que todos los siguientes son al menos igual de grandes" },
+      { "en": "Each candidate can only be used once", "es": "Cada candidato solo se puede usar una vez" },
+      { "en": "The target is always even", "es": "El objetivo siempre es par" }
+    ],
+    "answer": 0,
+    "explain_en": "Without the sort, a smaller candidate could still follow the big one, and breaking would lose combinations.",
+    "explain_es": "Sin ordenar, después del candidato grande aún podría venir uno más pequeño, y cortar perdería combinaciones."
+  },
+  {
+    "prompt_en": "What is the output for the default input?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto?",
+    "options": [
+      { "en": "[2, 3, 2, 3, 3, 2, 3, 5]", "es": "[2, 3, 2, 3, 3, 2, 3, 5]" },
+      { "en": "[3, 4, 2, 2, 2, 2, 3, 2, 3, 3, 2, 3, 5]", "es": "[3, 4, 2, 2, 2, 2, 3, 2, 3, 3, 2, 3, 5]" },
+      { "en": "[4, 4, 2, 2, 2, 2, 3, 2, 3, 3, 3, 3, 2, 3, 2, 3, 5]", "es": "[4, 4, 2, 2, 2, 2, 3, 2, 3, 3, 3, 3, 2, 3, 2, 3, 5]" }
+    ],
+    "answer": 1,
+    "explain_en": "Three combinations: 2 + 2 + 2 + 2, 2 + 3 + 3 and 3 + 5. The start index keeps 3 + 2 + 3 from being listed again.",
+    "explain_es": "Tres combinaciones: 2 + 2 + 2 + 2, 2 + 3 + 3 y 3 + 5. El índice de inicio evita que 3 + 2 + 3 se enumere otra vez."
+  }
+]

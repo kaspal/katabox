@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input tatatoma, round k = 1: which suffixes still share a rank afterwards?",
+    "prompt_es": "Entrada por defecto tatatoma, ronda k = 1: ¿qué sufijos siguen compartiendo rango después?",
+    "options": [
+      { "en": "None: one round always suffices", "es": "Ninguno: una ronda siempre basta" },
+      { "en": "1 and 3 (both start with at), and 0 and 2 (both start with ta)", "es": "1 y 3 (los dos empiezan por at), y 0 y 2 (los dos empiezan por ta)" },
+      { "en": "All the suffixes that start with t", "es": "Todos los sufijos que empiezan por t" }
+    ],
+    "answer": 1,
+    "explain_en": "With k = 1 the pairs cover two letters. Suffix 4 starts with to, so it already differs from 0 and 2; the two ties are broken in the round with k = 2.",
+    "explain_es": "Con k = 1 los pares cubren dos letras. El sufijo 4 empieza por to, así que ya se distingue de 0 y 2; los dos empates se rompen en la ronda con k = 2."
+  },
+  {
+    "prompt_en": "Why does the suffix a (position 7) come first, before atatoma?",
+    "prompt_es": "¿Por qué el sufijo a (posición 7) va el primero, antes que atatoma?",
+    "options": [
+      { "en": "Shorter suffixes are always placed first", "es": "Los sufijos más cortos siempre van primero" },
+      { "en": "Because its position is the largest", "es": "Porque su posición es la mayor" },
+      { "en": "It has nothing at i + k, so its second rank is -1, below every real rank", "es": "No tiene nada en i + k, así que su segundo rango es -1, menor que cualquier rango real" }
+    ],
+    "answer": 2,
+    "explain_en": "Both start with a, and -1 sorts before the rank of t. A shorter suffix is not always first: ma comes after atatoma.",
+    "explain_es": "Los dos empiezan por a, y -1 va antes que el rango de la t. Un sufijo más corto no siempre va primero: ma va después de atatoma."
+  },
+  {
+    "prompt_en": "Why does the sample cost O(n log² n)?",
+    "prompt_es": "¿Por qué el ejemplo cuesta O(n log² n)?",
+    "options": [
+      { "en": "k doubles each round, so there are at most log n rounds, and each is an O(n log n) comparison sort", "es": "k se duplica en cada ronda, así que hay como mucho log n rondas, y cada una es una ordenación por comparación O(n log n)" },
+      { "en": "Each round compares every pair of suffixes letter by letter", "es": "Cada ronda compara cada par de sufijos letra a letra" },
+      { "en": "The text is read log n times", "es": "El texto se lee log n veces" }
+    ],
+    "answer": 0,
+    "explain_en": "Each comparison looks at two numbers, so it is O(1); the log² comes from the number of rounds times the sort.",
+    "explain_es": "Cada comparación mira dos números, así que es O(1); el log² sale del número de rondas por la ordenación."
+  }
+]

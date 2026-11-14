@@ -198,6 +198,19 @@ export function sceneSummary(t: TFunction, step: Step): string {
     const output = (step.timeline.output ?? []).map((b) => `${b.start}–${b.end}`).join(", ") || "—";
     parts.push(t("learn.stage.summary_timeline", { bars, output }));
   }
+  if (step.board) {
+    const b = step.board;
+    const cells = Array.from({ length: b.rows }, (_, r) => b.cells.slice(r * b.cols, (r + 1) * b.cols).map((c) => c || ".").join("")).join(" / ");
+    parts.push(t("learn.stage.summary_board", { rows: b.rows, cols: b.cols, cells }));
+  }
+  if (step.strings) {
+    const rows = step.strings.rows.map((row) => `${t(`learn.stage.rows.${row.label}`)}: ${row.cells.map((c) => (c === null ? "_" : c)).join(row.kind === "letters" ? "" : " ")}`).join("; ");
+    parts.push(t("learn.stage.summary_strings", { rows }));
+  }
+  if (step.decision) {
+    const line = step.decision.current == null ? null : step.decision.lines[step.decision.current];
+    if (line) parts.push(t("learn.stage.fallback_row", { label: t("learn.stage.rows.decisions"), values: line.text }) + ".");
+  }
   if (step.bitArray) parts.push(t("learn.stage.summary_bits_array", { bits: step.bitArray.bits.join("") }));
   if (step.table) {
     const rows = step.table.rows.map((r) => `${r.key}: ${r.value}`).join(", ") || "—";

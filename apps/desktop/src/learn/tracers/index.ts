@@ -60,6 +60,18 @@ import { fractionalKnapsack } from "./fractional-knapsack";
 import { huffmanCoding } from "./huffman-coding";
 import { jumpGame } from "./jump-game";
 import { mergeIntervals } from "./merge-intervals";
+import { subsets } from "./subsets";
+import { permutations } from "./permutations";
+import { combinationSum } from "./combination-sum";
+import { nQueens } from "./n-queens";
+import { sudoku } from "./sudoku";
+import { wordSearch } from "./word-search";
+import { kmp } from "./kmp";
+import { zFunction } from "./z-function";
+import { rabinKarp } from "./rabin-karp";
+import { manacher } from "./manacher";
+import { ahoCorasick } from "./aho-corasick";
+import { suffixArray } from "./suffix-array";
 import { dynamicArrayOps } from "./dynamic-array-ops";
 import { stack } from "./stack";
 import { queueRingBuffer } from "./queue-ring-buffer";
@@ -193,4 +205,16 @@ export const TRACERS: Record<string, TracerDef> = {
   "huffman-coding": huffmanCoding,
   "jump-game": jumpGame,
   "merge-intervals": mergeIntervals,
+  subsets,
+  permutations,
+  "combination-sum": combinationSum,
+  "n-queens": nQueens,
+  sudoku,
+  "word-search": wordSearch,
+  kmp,
+  "z-function": zFunction,
+  "rabin-karp": rabinKarp,
+  manacher,
+  "aho-corasick": ahoCorasick,
+  "suffix-array": suffixArray,
 };

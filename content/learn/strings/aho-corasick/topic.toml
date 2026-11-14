@@ -1,0 +1,28 @@
+id = "aho-corasick"
+subject = "strings"
+order = 5
+title = "Aho-Corasick"
+title_es = "Aho-Corasick"
+tags = ["strings", "string-matching", "trie"]
+problems = []
+presets = ["overlaps", "random", "no-overlap"]
+default = [0, 1, 2, 0, 1, 2, 0, 1, -1, 0, 1, -1, 1, 2, -1, 0, 1, 2, -1, 2, 0, 1]
+
+[complexity]
+best = "O(n + m + z)"
+average = "O(n + m + z): text, patterns, matches"
+worst = "O(n + m + z)"
+space = "O(total pattern length)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 41
+min = -1
+max = 25
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = aho_corasick(kb_text(a)[0], kb_text(a)[1:])"
+typescript = "a = ahoCorasick(kbText(a)[0], kbText(a).slice(1))"

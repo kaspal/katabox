@@ -989,7 +989,18 @@
         "values_read": "valores leídos",
         "merged_in": "fusionados",
         "opened": "abiertos",
-        "merges": "uniones"
+        "merges": "uniones",
+        "recorded": "anotados",
+        "choices": "elecciones",
+        "undone": "deshechos",
+        "steps_taken": "pasos",
+        "windows": "ventanas",
+        "rolls": "deslizamientos",
+        "box_moves": "movimientos de caja",
+        "letters_read": "letras leídas",
+        "fail_links_followed": "enlaces de fallo seguidos",
+        "rounds": "rondas",
+        "doublings": "duplicaciones"
       },
       "rows": {
         "prefix": "Sumas prefijas",
@@ -1036,7 +1047,19 @@
         "chosen": "Elegidas",
         "merged": "Fusionados",
         "weights": "Pesos",
-        "trees_by_weight": "Árboles por peso (el más ligero primero)"
+        "trees_by_weight": "Árboles por peso (el más ligero primero)",
+        "decisions": "Decisiones (una línea por llamada)",
+        "candidates": "Candidatos",
+        "word": "Palabra",
+        "text": "Texto",
+        "pattern": "Patrón",
+        "failure": "Fallo (borde)",
+        "combined": "Patrón | texto",
+        "z": "Z",
+        "with_bars": "Texto con barras",
+        "radius": "Radio",
+        "rank": "Rango",
+        "suffixes": "Sufijos ordenados (inicio: sufijo)"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -1075,7 +1098,9 @@
       },
       "summary_graph": "Grafo de {{n}} nodos: {{nodes}}. Aristas: {{edges}}.",
       "summary_grid": "Una cuadrícula de {{rows}} por {{cols}}: {{map}}.",
-      "summary_timeline": "Intervalos: {{bars}}. Resultado: {{output}}."
+      "summary_timeline": "Intervalos: {{bars}}. Resultado: {{output}}.",
+      "summary_board": "Un tablero de {{rows}} por {{cols}}: {{cells}}.",
+      "summary_strings": "{{rows}}."
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -1123,7 +1148,7 @@
       "fast": "Rápido (2 pasos)",
       "meeting": "Punto de encuentro",
       "cycle_start": "Inicio del ciclo",
-      "used": "Recién usado",
+      "used": "Usado",
       "written": "Recién escrito",
       "evicted": "Expulsado",
       "window_max": "Máximo de la ventana",
@@ -1216,7 +1241,18 @@
       "not_reached": "Aún no alcanzada",
       "stuck_here": "Atascado aquí",
       "part_taken": "Tomado en parte",
-      "merged_pair": "Unido bajo el nodo nuevo"
+      "merged_pair": "Unido bajo el nodo nuevo",
+      "recorded": "Anotado",
+      "pruned": "Podado",
+      "matched_so_far": "Coincide hasta aquí",
+      "match": "Coincidencia",
+      "z_box": "Caja Z",
+      "window": "Ventana",
+      "collision": "Mismo hash, letras distintas",
+      "palindrome_here": "Palíndromo aquí",
+      "rightmost_palindrome": "Palíndromo más a la derecha",
+      "failure_target": "Destino del enlace de fallo",
+      "left_behind": "Dejado atrás"
     },
     "controls": {
       "label": "Reproducción",
@@ -1339,7 +1375,22 @@
         "shared-letters": "Letras compartidas",
         "nothing-shared": "Nada en común",
         "near-miss": "Por poco",
-        "swapped-letters": "Letras cambiadas"
+        "swapped-letters": "Letras cambiadas",
+        "few-coins": "Pocas monedas",
+        "no-way": "No hay forma",
+        "four-by-four": "4 × 4",
+        "nine-by-nine": "9 × 9",
+        "winding-word": "Una palabra con curvas",
+        "false-start": "Comienzos falsos",
+        "overlaps": "Solapamientos",
+        "no-border": "Sin borde",
+        "repeats": "Repeticiones",
+        "one-letter": "Una sola letra",
+        "with-a-collision": "Con una colisión",
+        "nested-mirrors": "Espejos anidados",
+        "even-length": "Longitud par",
+        "repeated-syllables": "Sílabas repetidas",
+        "no-overlap": "Sin solapes"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1395,7 +1446,10 @@
           "interval_range": "Cada intervalo empieza antes de terminar, entre {{min}} y {{max}}.",
           "matrix_shape": "Escribe {{n}} filas de {{n}} distancias.",
           "matrix_diagonal": "Una ciudad está a 0 de sí misma.",
-          "matrix_symmetric": "La distancia de {{i}} a {{j}} debe ser igual a la de vuelta."
+          "matrix_symmetric": "La distancia de {{i}} a {{j}} debe ser igual a la de vuelta.",
+          "sudoku_size": "Aquí un sudoku es de 4 × 4 o de 9 × 9.",
+          "sudoku_digit": "Usa dígitos del 1 al {{max}} y . para una celda vacía.",
+          "sudoku_clash": "Los datos ya repiten el {{digit}} en una fila, columna o caja."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1426,7 +1480,8 @@
         "second": "Segunda palabra",
         "map": "Mapa (filas separadas por /; . libre, # bloqueada)",
         "distances": "Distancias (una fila por ciudad, filas separadas por comas)",
-        "intervals": "Intervalos (inicio fin, …)"
+        "intervals": "Intervalos (inicio fin, …)",
+        "word": "Palabra"
       }
     },
     "tabs": {
@@ -1516,7 +1571,12 @@
       "intervals": "Intervalos",
       "bitmask": "Máscara de bits",
       "interval-dp": "PD sobre intervalos",
-      "huffman": "Codificación de Huffman"
+      "huffman": "Codificación de Huffman",
+      "backtracking": "Vuelta atrás",
+      "string-matching": "Búsqueda de patrones",
+      "palindrome": "Palíndromo",
+      "suffix-array": "Arreglo de sufijos",
+      "sorting": "Ordenación"
     },
     "narration": {
       "bubble-sort": {
@@ -2347,6 +2407,95 @@
         "ready": "Construye un código de prefijos para {{n}} símbolos: cuanto más frecuente un símbolo, más corto su código.",
         "merge": "Une los dos árboles más ligeros, {{a}} y {{b}}, bajo un nodo nuevo de {{sum}}.",
         "done": "{{bits}} bits en total, frente a {{fixed}} con un código de longitud fija."
+      },
+      "subsets": {
+        "ready": "Enumera los {{total}} subconjuntos de {{n}} valores: en cada llamada, guarda lo elegido y luego prueba a añadir cada valor posterior.",
+        "record": "Anota {{set}} (subconjunto {{count}}).",
+        "choose": "Añade {{value}} (posición {{k}}) y baja un nivel.",
+        "undo": "Vuelve a quitar {{value}} y prueba el siguiente valor.",
+        "done": "{{count}} subconjuntos de {{n}} valores: cada valor está dentro o fuera."
+      },
+      "permutations": {
+        "ready": "Enumera todos los órdenes de {{n}} valores: llena los huecos uno a uno con cualquier valor aún sin usar.",
+        "choose": "Pon {{value}} en el hueco {{at}}.",
+        "record": "Una fila completa: {{perm}} (orden {{count}}).",
+        "undo": "Retira {{value}} y prueba el siguiente valor sin usar.",
+        "done": "{{count}} órdenes de {{n}} valores."
+      },
+      "combination-sum": {
+        "ready": "Todas las formas de sumar {{target}} con {{n}} candidatos, cada uno usable varias veces, en orden no decreciente.",
+        "choose": "Añade {{value}}: faltan {{left}}.",
+        "found": "Justo el objetivo: {{combo}} (forma {{count}}).",
+        "prune": "{{value}} supera los {{left}} que faltan, y todos los candidatos siguientes también: corta esta rama.",
+        "done": "{{count}} forma(s) de sumar {{target}}."
+      },
+      "n-queens": {
+        "ready": "Coloca {{n}} reinas en un tablero de {{n}} × {{n}} sin que se ataquen: una por fila, de arriba abajo.",
+        "place": "Fila {{row}}: la columna {{col}} no está atacada, coloca una reina.",
+        "solution": "Todas las filas llenas: solución {{count}}.",
+        "dead_end": "Fila {{row}}: todas las columnas están atacadas. Callejón sin salida: vuelve arriba.",
+        "remove": "Quita la reina de la fila {{row}}, columna {{col}}, y prueba la siguiente columna.",
+        "done": "Un tablero de {{n}} × {{n}} tiene {{count}} solución(es)."
+      },
+      "sudoku": {
+        "ready": "Rellena el sudoku de {{size}} × {{size}}: {{empty}} celda(s) vacía(s); primero la primera vacía, dígitos en orden.",
+        "place": "Fila {{row}}, columna {{col}}: el {{digit}} aún no está en su fila, columna ni caja. Pruébalo.",
+        "undo": "Más adelante no cabe nada: quita el {{digit}} de la fila {{row}}, columna {{col}}.",
+        "done": "Resuelto, con {{guesses}} intento(s) y {{undos}} vuelta(s) atrás.",
+        "impossible": "En alguna celda no cabe ningún dígito, haya lo que haya antes: este sudoku no tiene solución."
+      },
+      "word-search": {
+        "ready": "Busca \"{{word}}\" en la cuadrícula de {{rows}} × {{cols}}, moviéndote arriba, abajo, a izquierda o derecha, sin repetir celda.",
+        "step": "\"{{letter}}\" en ({{row}}, {{col}}): la letra {{k}} coincide, avanza a ella.",
+        "back": "No hay salida desde \"{{letter}}\" en ({{row}}, {{col}}): retrocede.",
+        "found": "\"{{word}}\" encontrada tras comprobar {{tries}} celda(s).",
+        "missing": "\"{{word}}\" no está en la cuadrícula."
+      },
+      "kmp": {
+        "ready": "Busca \"{{pattern}}\" en \"{{text}}\". Primero la tabla de fallos: el borde más largo de cada prefijo.",
+        "fall": "No coincide en {{i}}: retrocede al borde más corto, {{k}}.",
+        "border": "fail[{{i}}] = {{k}}: las primeras {{k}} letra(s) también acaban aquí.",
+        "scan": "Ahora recorre el texto; si no coincide, desliza el patrón hasta su borde en lugar de empezar de cero.",
+        "skip": "\"{{letter}}\" en {{i}} no coincide: conserva {{k}} letra(s) coincidentes del borde.",
+        "match": "Coincidencia en {{at}}.",
+        "done": "{{count}} coincidencia(s) con {{reads}} comparaciones; el recorrido nunca retrocede en el texto."
+      },
+      "z-function": {
+        "ready": "Busca \"{{pattern}}\" en \"{{text}}\" con la función Z de patrón | texto.",
+        "reuse": "{{i}} está dentro de la caja Z: empieza desde z[{{from}}], {{value}}.",
+        "extend": "Una letra más coincide con el principio: z[{{i}}] = {{value}}.",
+        "box": "La caja Z llega ahora a [{{left}}, {{right}}).",
+        "done": "{{count}} coincidencia(s): donde z vale la longitud del patrón."
+      },
+      "rabin-karp": {
+        "ready": "El hash del patrón es {{target}}; la primera ventana de {{m}} letra(s) da {{window}}.",
+        "window": "Ventana en {{at}}: hash {{hash}} ≠ {{target}}, no hace falta comparar letras.",
+        "match": "Ventana en {{at}}: mismo hash {{hash}} y mismas letras. Coincidencia.",
+        "collision": "Ventana en {{at}}: mismo hash {{hash}} pero letras distintas, una colisión.",
+        "roll": "Desliza: sale \"{{out}}\", entra \"{{into}}\". Nuevo hash {{hash}}.",
+        "done": "{{count}} coincidencia(s) y {{collisions}} colisión(es)."
+      },
+      "manacher": {
+        "ready": "Palíndromo más largo en \"{{text}}\": las barras entre letras permiten tratar igual longitudes pares e impares.",
+        "mirror": "{{i}} está dentro del palíndromo más a la derecha: su espejo {{mirror}} garantiza al menos {{value}}.",
+        "grow": "Las letras a ambos lados coinciden: radio {{value}} en {{i}}.",
+        "reach": "El palíndromo centrado en {{center}} llega ahora a {{right}}.",
+        "done": "Palíndromo más largo: \"{{word}}\", {{length}} letra(s) desde la posición {{start}}."
+      },
+      "aho-corasick": {
+        "ready": "Cuenta {{count}} patrones en una sola pasada por el texto. Primero, un trie con los patrones.",
+        "built": "El trie tiene {{nodes}} nodo(s). Ahora los enlaces de fallo, nivel a nivel.",
+        "link": "El nodo \"{{letter}}\" falla hacia \"{{to}}\": el sufijo más largo que también está en el trie.",
+        "read": "Lee \"{{letter}}\" y sigue su arista.",
+        "follow": "Aquí no hay arista \"{{letter}}\": sigue el enlace de fallo.",
+        "hit": "\"{{word}}\" acaba en {{end}}.",
+        "done": "{{reads}} letra(s) leída(s), {{follows}} enlace(s) de fallo seguido(s)."
+      },
+      "suffix-array": {
+        "ready": "Ordena los {{n}} sufijos de \"{{text}}\". Empieza dando a cada uno el rango de su primera letra.",
+        "sort": "Ordena por las primeras {{two}} letras (rango de las primeras {{k}} y luego de las {{k}} siguientes): {{distinct}} rango(s) distinto(s).",
+        "double": "Aún hay empates: duplica la longitud a {{k}}.",
+        "done": "Los {{n}} sufijos quedan ordenados tras {{rounds}} ronda(s)."
       }
     },
     "compare": {

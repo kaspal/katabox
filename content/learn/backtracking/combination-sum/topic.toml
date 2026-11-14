@@ -1,0 +1,28 @@
+id = "combination-sum"
+subject = "backtracking"
+order = 3
+title = "Combination sum"
+title_es = "Suma de combinaciones"
+tags = ["backtracking"]
+problems = ["coin-bag-combos", "postage-stamps"]
+presets = ["few-coins", "random", "no-way"]
+default = [8, 2, 3, 5]
+
+[complexity]
+best = "output-sensitive"
+average = "exponential in the target"
+worst = "exponential in the target"
+space = "O(target) depth"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 5
+min = 2
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = combination_sum(a[0], a[1:])"
+typescript = "a = combinationSum(a[0], a.slice(1))"
