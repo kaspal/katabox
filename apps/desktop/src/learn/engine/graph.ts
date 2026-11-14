@@ -18,6 +18,8 @@ export type GraphOptions = {
   minNodes?: number;
   maxNodes?: number;
   maxEdges?: number;
+  /** Directed graphs: whether u → v and v → u may both appear (max flow says no). */
+  antiparallel?: boolean;
 };
 
 export const MAX_NODES = 12;
@@ -65,6 +67,7 @@ export function graphCodec(opts: GraphOptions): InputCodec {
       if (u === v) return { code: "custom", key: "self_loop", params: { node: u } };
       const key = g.directed ? `${u}>${v}` : `${Math.min(u, v)}-${Math.max(u, v)}`;
       if (seen.has(key)) return { code: "custom", key: "duplicate_edge", params: { u, v } };
+      if (g.directed && opts.antiparallel === false && seen.has(`${v}>${u}`)) return { code: "custom", key: "antiparallel", params: { u, v } };
       seen.add(key);
       if (w < wMin || w > wMax) return { code: "custom", key: "weight_range", params: { min: wMin, max: wMax } };
     }

@@ -974,7 +974,11 @@
         "edges_removed": "edges removed",
         "labelled": "labelled",
         "relaxed": "relaxed",
-        "edges_checked": "edges checked"
+        "edges_checked": "edges checked",
+        "joined": "joined",
+        "bridges_found": "bridges",
+        "paths": "paths",
+        "placed": "placed"
       },
       "rows": {
         "prefix": "Prefix sums",
@@ -984,7 +988,7 @@
         "stack": "Stack",
         "queue": "Queue",
         "ring": "Ring buffer",
-        "deque": "Deque (positions)",
+        "deque": "Deque",
         "output": "Output",
         "map": "Map: key → value",
         "list": "List",
@@ -995,7 +999,9 @@
         "array": "Array",
         "pq": "Priority queue (distance·node)",
         "matrix": "Matrix",
-        "adjacency": "Adjacency list"
+        "adjacency": "Adjacency list",
+        "sorted_edges": "Edges by weight (label: u-v)",
+        "path": "Path (reversed)"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -1068,7 +1074,7 @@
       "current": "Current value",
       "stack_top": "Top of the stack",
       "answered": "Answered",
-      "pushed": "Just pushed",
+      "pushed": "Pushed",
       "peeked": "Read by peek",
       "linking": "Linking",
       "visiting": "Visiting",
@@ -1142,7 +1148,22 @@
       "relaxed": "Distance lowered",
       "no_better": "No better",
       "settled": "Settled",
-      "still_lowers": "Still lowers"
+      "still_lowers": "Still lowers",
+      "through_node": "Through node k",
+      "endpoints": "i and j",
+      "joined": "Joined the tree",
+      "in_tree": "In the tree",
+      "skipped": "Skipped",
+      "scc_a": "Component 0, 3, 6…",
+      "scc_b": "Component 1, 4, 7…",
+      "scc_c": "Component 2, 5, 8…",
+      "critical": "Bridge or cut vertex",
+      "source_or_sink": "Source or sink",
+      "augmenting": "Augmenting path",
+      "full": "Full (no spare capacity)",
+      "odd_degree": "Odd degree",
+      "just_walked": "Just walked",
+      "used_or_placed": "Used / on the path"
     },
     "controls": {
       "label": "Playback",
@@ -1214,7 +1235,23 @@
         "detour-wins": "The detour wins",
         "stale-entries": "Stale entries",
         "negative-edge": "A negative edge",
-        "negative-cycle": "A negative cycle"
+        "negative-cycle": "A negative cycle",
+        "shortcuts": "Shortcuts",
+        "one-way-ring": "A one-way ring",
+        "free-shortcut": "A free shortcut",
+        "all-free": "Mostly free",
+        "cheap-ring": "A cheap ring",
+        "two-islands": "Two islands",
+        "equal-weights": "Equal weights",
+        "three-loops": "Three loops",
+        "one-way-chain": "A one-way chain",
+        "two-rings": "Two rings",
+        "a-tree": "A tree",
+        "take-it-back": "Take flow back",
+        "two-lanes": "Two lanes",
+        "house-of-cards": "A house",
+        "detour-loop": "A loop on the way",
+        "too-many-odd": "Too many odd nodes"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1253,7 +1290,8 @@
           "duplicate_edge": "The edge {{u}} {{v}} appears twice.",
           "weight_range": "Weights go from {{min}} to {{max}}.",
           "edge_weighted": "\"{{edge}}\": write an edge as u v w (two nodes and a weight).",
-          "edge_pair": "\"{{edge}}\": write an edge as u v (two nodes)."
+          "edge_pair": "\"{{edge}}\": write an edge as u v (two nodes).",
+          "antiparallel": "Edges {{u}} {{v}} and {{v}} {{u}} cannot both be used here."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1349,7 +1387,11 @@
       "cycle": "Cycle",
       "topological-sort": "Topological sort",
       "shortest-path": "Shortest path",
-      "bipartite": "Bipartite"
+      "bipartite": "Bipartite",
+      "minimum-spanning-tree": "Minimum spanning tree",
+      "strongly-connected-components": "Strongly connected components",
+      "network-flow": "Network flow",
+      "dynamic-programming": "Dynamic programming"
     },
     "narration": {
       "bubble-sort": {
@@ -1942,6 +1984,71 @@
         "check": "One more pass: if any edge still lowers a distance, there is a negative cycle.",
         "negative_cycle": "{{u}} → {{v}} (weight {{w}}) still lowers a distance: a negative cycle is reachable, so the answer is 1.",
         "done": "No edge lowers anything: the distances are final after {{relaxed}} update(s) and {{checked}} edge checks."
+      },
+      "floyd-warshall": {
+        "ready": "{{n}} nodes, {{m}} directed edges. The matrix starts with the direct edges; ∞ means no path yet.",
+        "pivot": "Now allow paths through node {{k}}: row {{k}} and column {{k}} are the ways in and out.",
+        "improve": "{{i}} → {{k}} → {{j}} costs {{d}}, better than {{old}}.",
+        "improve_new": "{{i}} → {{k}} → {{j}} costs {{d}}: the first path from {{i}} to {{j}}.",
+        "done": "Every node has been a middle stop: the matrix holds all shortest distances ({{checks}} checks, {{improved}} improvements)."
+      },
+      "zero-one-bfs": {
+        "ready": "Distances from node 0 over {{n}} nodes; every edge weighs 0 or 1. A deque replaces the priority queue.",
+        "pop": "Take {{u}} from the front (distance {{d}}).",
+        "front": "{{u}} → {{v}} is free: {{v}} gets {{d}} and goes to the front.",
+        "back": "{{u}} → {{v}} costs 1: {{v}} gets {{d}} and goes to the back.",
+        "no_better": "{{u}} → {{v}} would give {{via}}: not better than {{best}}.",
+        "done": "{{reached}} of {{n}} nodes reached after {{pops}} pop(s)."
+      },
+      "prim": {
+        "ready": "Grow a minimum spanning tree from node 0 over {{n}} nodes. The queue holds (weight·node) for edges leaving the tree.",
+        "pop": "Pop the cheapest entry: node {{v}} for {{w}}.",
+        "skip": "{{v}} is already in the tree: skip this entry.",
+        "take": "{{v}} joins the tree for {{w}}. Total {{total}}.",
+        "push": "Edge {{u}} – {{v}} ({{w}}) now leaves the tree: push it.",
+        "done": "The tree spans {{size}} of {{n}} nodes and weighs {{total}}."
+      },
+      "kruskal": {
+        "ready": "Sort the {{m}} edges by weight and take each one that joins two different trees.",
+        "consider": "Next cheapest: {{u}} – {{v}} ({{w}}). Find both ends' roots.",
+        "skip": "{{u}} and {{v}} are already in one tree (root {{root}}): this edge would close a cycle.",
+        "join": "Different trees: take {{u}} – {{v}} and merge them. Total {{total}}.",
+        "done": "{{taken}} edge(s) taken, total weight {{total}}, across {{n}} nodes."
+      },
+      "scc": {
+        "ready": "Find the strongly connected components of {{n}} nodes: groups where every node can reach every other.",
+        "enter": "Pass 1: enter {{u}}.",
+        "finish": "Pass 1: {{u}} is finished, number {{k}} in the finish order.",
+        "reverse": "Pass 2: reverse every edge, then start from the last node to finish.",
+        "start": "{{u}} has no component yet: start component #{{c}} there.",
+        "assign": "{{u}} joins component #{{c}}.",
+        "done": "{{count}} component(s) among {{n}} nodes."
+      },
+      "bridges-articulation": {
+        "ready": "Find the bridges and cut vertices of {{n}} nodes. Under each node: its entry number / its low value.",
+        "enter": "Enter {{u}} with number {{t}}.",
+        "back": "{{u}} – {{v}} goes back up to number {{t}}: {{u}}'s low becomes {{low}}.",
+        "low": "Back from {{v}}: {{u}}'s low becomes {{low}}.",
+        "bridge": "{{v}}'s subtree reaches no higher than {{low}}, below {{u}} ({{t}}): {{u}} – {{v}} is a bridge.",
+        "cut": "{{v}}'s subtree cannot get above {{u}} (low {{low}} ≥ {{t}}): {{u}} is a cut vertex.",
+        "root_cut": "The root {{u}} has {{children}} separate subtrees: it is a cut vertex.",
+        "done": "{{bridges}} bridge(s) and {{cuts}} cut vertex(es)."
+      },
+      "max-flow": {
+        "ready": "Send as much as possible from node {{source}} to node {{sink}}. Each edge shows flow / capacity.",
+        "search": "Look for a path with spare capacity (current flow {{flow}}).",
+        "reach": "{{u}} → {{v}} has {{spare}} spare: {{v}} is reached.",
+        "path": "Found a path of {{len}} edge(s); its bottleneck is {{push}}.",
+        "augment": "Push {{push}} along {{u}} → {{v}}, and allow {{push}} back the other way.",
+        "done": "No path with spare capacity is left: the maximum flow is {{flow}} ({{paths}} path(s))."
+      },
+      "eulerian-path": {
+        "ready": "Draw all {{m}} edges in one stroke? {{odd}} node(s) have an odd degree.",
+        "odd": "{{odd}} odd-degree nodes: a path needs 0 or 2, so there is none.",
+        "walk": "Walk the unused edge {{u}} – {{v}}.",
+        "back": "{{u}} has no unused edges: move it to the path.",
+        "done": "All {{m}} edges used once, from {{start}} to {{end}}.",
+        "missed": "{{left}} edge(s) were never reached: the graph is in pieces, so there is no path."
       }
     },
     "compare": {

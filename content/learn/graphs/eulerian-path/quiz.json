@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph. The degrees are 3, 3, 4, 2, 2. Where does the walk start?",
+    "prompt_es": "Grafo por defecto. Los grados son 3, 3, 4, 2, 2. ¿Dónde empieza el recorrido?",
+    "options": [
+      { "en": "Node 2, the highest degree", "es": "En el nodo 2, el de mayor grado" },
+      { "en": "Node 0, the first odd-degree node", "es": "En el nodo 0, el primer nodo de grado impar" },
+      { "en": "Node 4, the last node", "es": "En el nodo 4, el último nodo" }
+    ],
+    "answer": 1,
+    "explain_en": "Nodes 0 and 1 have odd degree, so the path must start at one and end at the other. The sample takes the first, node 0.",
+    "explain_es": "Los nodos 0 y 1 tienen grado impar, así que el camino tiene que empezar en uno y acabar en el otro. El ejemplo toma el primero, el nodo 0."
+  },
+  {
+    "prompt_en": "The path is built by popping nodes off the stack. Which node is popped first?",
+    "prompt_es": "El camino se construye sacando nodos de la pila. ¿Qué nodo sale primero?",
+    "options": [
+      { "en": "0, the start", "es": "0, el de partida" },
+      { "en": "4", "es": "4" },
+      { "en": "1, where all seven edges run out", "es": "1, donde se acaban las siete aristas" }
+    ],
+    "answer": 2,
+    "explain_en": "The walk pushes 0, 1, 2, 3, 0, 2, 4, 1 and uses every edge. Node 1 has nothing left, so it is popped first: it is the end of the path, which is why the result is reversed at the end.",
+    "explain_es": "El recorrido mete 0, 1, 2, 3, 0, 2, 4, 1 y usa todas las aristas. Al nodo 1 no le queda nada, así que sale el primero: es el final del camino, y por eso el resultado se invierte al terminar."
+  },
+  {
+    "prompt_en": "A graph has four odd-degree nodes. What does the sample return?",
+    "prompt_es": "Un grafo tiene cuatro nodos de grado impar. ¿Qué devuelve el ejemplo?",
+    "options": [
+      { "en": "[-1]: a path can have at most two odd ends", "es": "[-1]: un camino puede tener como mucho dos extremos impares" },
+      { "en": "A circuit through every node", "es": "Un circuito que pasa por todos los nodos" },
+      { "en": "The longest path it can find", "es": "El camino más largo que pueda encontrar" }
+    ],
+    "answer": 0,
+    "explain_en": "Every node inside the walk uses its edges in pairs, so only the start and the end can be odd. With four odd nodes no Eulerian path exists.",
+    "explain_es": "Cada nodo intermedio del recorrido usa sus aristas por parejas, así que solo el inicio y el final pueden ser impares. Con cuatro nodos impares no existe camino euleriano."
+  }
+]

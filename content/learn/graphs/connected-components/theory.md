@@ -31,7 +31,7 @@ The output is `[0, 0, 0, 1, 1, 1, 2, 2, 2, 2]`: three components.
 
 - **Forgetting isolated nodes.** A node with no edges is a component of its own; the scan over every node catches it.
 - **Labelling on pop.** Then a node with several labelled neighbours is pushed several times; harmless for the answer, wasteful for memory.
-- **Using it on directed graphs.** Following arrows one way finds what a node reaches, not a component; mutual reachability needs strongly connected components (coming soon).
+- **Using it on directed graphs.** Following arrows one way finds what a node reaches, not a component; mutual reachability needs [strongly connected components](learn:graphs/scc).
 
 ## When to use it
 

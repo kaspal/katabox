@@ -134,6 +134,31 @@ const arcsOf = (g: ReturnType<typeof graphOf>, unit = false) =>
     return g.directed ? [[u, v, c] as [number, number, number]] : [[u, v, c] as [number, number, number], [v, u, c] as [number, number, number]];
   });
 
+
+/** Pieces of an undirected graph, leaving out one node and/or one edge (brute force). */
+function piecesWithout(n: number, edges: readonly [number, number, number][], skipNode = -1, skipEdge = -1): number {
+  const label = new Array<number>(n).fill(-1);
+  let count = 0;
+  for (let s = 0; s < n; s++) {
+    if (s === skipNode || label[s] !== -1) continue;
+    label[s] = count;
+    const todo = [s];
+    while (todo.length) {
+      const x = todo.pop()!;
+      edges.forEach(([u, v], k) => {
+        if (k === skipEdge || u === skipNode || v === skipNode) return;
+        const y = u === x ? v : v === x ? u : -1;
+        if (y >= 0 && label[y] === -1) {
+          label[y] = count;
+          todo.push(y);
+        }
+      });
+    }
+    count++;
+  }
+  return count;
+}
+
 export const REFERENCE: Record<string, (input: readonly number[]) => number[]> = {
   "big-o-growth": ([n]) => [1, log2(n!), n!, n! * log2(n!), n! * n!, 2 ** n!],
   "recursion-call-stack": (xs) => [sum(xs)],
@@ -541,6 +566,137 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
     if (d.some((row, k) => d[0]![k] !== null && row[k]! < 0)) return [1];
     return [0, ...d[0]!.map((x) => x ?? 999)];
   },
+  // Graphs, part 2.
+  "floyd-warshall": (input) => {
+    // Bellman-Ford from every source (weights are positive here).
+    const g = graphOf(input);
+    return Array.from({ length: g.n }, (_, s) => {
+      const d = new Array<number>(g.n).fill(999);
+      d[s] = 0;
+      for (let round = 0; round < g.n; round++) for (const [u, v, w] of g.edges) if (d[u]! + w < d[v]!) d[v] = d[u]! + w;
+      return d;
+    }).flat();
+  },
+  "zero-one-bfs": (input) => {
+    const g = graphOf(input);
+    return allPairs(g.n, arcsOf(g))[0]!.map((d) => d ?? -1);
+  },
+  prim: (input) => {
+    // O(n²) Prim: each round adds the outside node with the cheapest edge into the tree
+    // (ties: smaller node), which is the order a (weight, node) heap pops them.
+    const g = graphOf(input);
+    const inTree = new Set([0]);
+    const order = [0];
+    let total = 0;
+    for (;;) {
+      let best: [number, number] | null = null;
+      for (const [u, v, w] of g.edges)
+        for (const [a, b] of [[u, v], [v, u]] as const)
+          if (inTree.has(a) && !inTree.has(b) && (!best || w < best[0] || (w === best[0] && b < best[1]))) best = [w, b];
+      if (!best) break;
+      inTree.add(best[1]);
+      order.push(best[1]);
+      total += best[0];
+    }
+    return [total, ...order];
+  },
+  kruskal: (input) => {
+    // The same greedy choice, with component labels relabelled on every merge.
+    const g = graphOf(input);
+    const comp = Array.from({ length: g.n }, (_, k) => k);
+    let total = 0;
+    const used: number[] = [];
+    for (const [u, v, w] of [...g.edges].sort((a, b) => a[2] - b[2] || a[0] - b[0] || a[1] - b[1])) {
+      if (comp[u] === comp[v]) continue;
+      const from = comp[u];
+      for (let k = 0; k < g.n; k++) if (comp[k] === from) comp[k] = comp[v]!;
+      total += w;
+      used.push(u, v);
+    }
+    return [total, ...used];
+  },
+  scc: (input) => {
+    // Membership from mutual reachability; numbering in the order Kosaraju's second pass
+    // meets components: by the reversed finish order of an iterative DFS.
+    const g = graphOf(input);
+    const reach = allPairs(g.n, arcsOf(g, true));
+    const seen = new Set<number>();
+    const finished: number[] = [];
+    for (let s = 0; s < g.n; s++) {
+      if (seen.has(s)) continue;
+      seen.add(s);
+      const stack: [number, number][] = [[s, 0]];
+      while (stack.length) {
+        const top = stack[stack.length - 1]!;
+        const list = g.nbrs(top[0]);
+        if (top[1] === list.length) {
+          finished.push(top[0]);
+          stack.pop();
+        } else {
+          const v = list[top[1]++]!;
+          if (!seen.has(v)) {
+            seen.add(v);
+            stack.push([v, 0]);
+          }
+        }
+      }
+    }
+    const label = new Array<number>(g.n).fill(-1);
+    let count = 0;
+    for (const u of finished.reverse()) {
+      if (label[u] !== -1) continue;
+      for (let v = 0; v < g.n; v++) if (reach[u]![v] !== null && reach[v]![u] !== null) label[v] = count;
+      count++;
+    }
+    return label;
+  },
+  "bridges-articulation": (input) => {
+    // Brute force: an edge is a bridge, a node a cut vertex, when removing it adds pieces.
+    const g = graphOf(input);
+    const base = piecesWithout(g.n, g.edges);
+    const bridges = g.edges
+      .filter((_, k) => piecesWithout(g.n, g.edges, -1, k) > base)
+      .map(([u, v]) => [Math.min(u, v), Math.max(u, v)] as [number, number])
+      .sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cuts = Array.from({ length: g.n }, (_, x) => x).filter((x) => piecesWithout(g.n, g.edges, x) > base - (g.nbrs(x).length === 0 ? 1 : 0));
+    return [...bridges.flat(), -1, ...cuts];
+  },
+  "max-flow": (input) => {
+    // Max flow = min cut: try every set S with the source and without the sink.
+    const g = graphOf(input);
+    const t = g.n - 1;
+    let best = Infinity;
+    for (let mask = 0; mask < 1 << g.n; mask++) {
+      if (!(mask & 1) || mask & (1 << t)) continue;
+      const cut = g.edges.reduce((sum, [u, v, c]) => sum + (mask & (1 << u) && !(mask & (1 << v)) ? c : 0), 0);
+      best = Math.min(best, cut);
+    }
+    return [best];
+  },
+  "eulerian-path": (input) => {
+    // Degrees and reachability decide existence; the recursive Hierholzer gives the path.
+    const g = graphOf(input);
+    const deg = Array.from({ length: g.n }, (_, x) => g.nbrs(x).length);
+    const odd = deg.flatMap((d, x) => (d % 2 ? [x] : []));
+    if (odd.length !== 0 && odd.length !== 2) return [-1];
+    const adj: [number, number][][] = Array.from({ length: g.n }, () => []);
+    g.edges.forEach(([u, v], k) => {
+      adj[u]!.push([v, k]);
+      adj[v]!.push([u, k]);
+    });
+    const used = new Set<number>();
+    const path: number[] = [];
+    const walk = (u: number): void => {
+      for (const [v, k] of adj[u]!) {
+        if (used.has(k)) continue;
+        used.add(k);
+        walk(v);
+      }
+      path.push(u);
+    };
+    walk(odd.length ? odd[0]! : g.edges[0]![0]);
+    return used.size === g.edges.length ? path.reverse() : [-1];
+  },
   "bubble-sort": sorted,
   "insertion-sort": sorted,
   "quick-sort": sorted,
@@ -636,6 +792,54 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  "floyd-warshall": {
+    input: [3, 1, 0, 1, 1, 1, 2, 1],
+    markers: [null, "pivot", "pivot", "improve", "pivot", null],
+    py: [null, 9, 9, 13, 9, null],
+    ts: [null, 7, 7, 11, 7, null],
+  },
+  "zero-one-bfs": {
+    input: [3, 0, 0, 1, 0, 1, 2, 1],
+    markers: [null, "pop", "front", "pop", null, "back", "pop", null, null],
+    py: [null, 9, 14, 9, null, 16, 9, null, null],
+    ts: [null, 6, 11, 6, null, 13, 6, null, null],
+  },
+  prim: {
+    input: [2, 0, 0, 1, 5],
+    markers: [null, "pop", "take", "push", "pop", "take", null],
+    py: [null, 9, 14, 17, 9, 14, null],
+    ts: [null, 9, 15, 18, 9, 15, null],
+  },
+  kruskal: {
+    input: [3, 0, 0, 1, 1, 1, 2, 1, 0, 2, 1],
+    markers: [null, "consider", "join", "consider", "join", "consider", "skip", null],
+    py: [null, 12, 16, 12, 16, 12, 14, null],
+    ts: [null, 15, 20, 15, 20, 15, 17, null],
+  },
+  scc: {
+    input: [2, 1, 0, 1, 1],
+    markers: [null, null, null, "finish", "finish", null, null, "assign", null, "assign", null],
+    py: [null, null, null, 10, 10, null, null, 23, null, 23, null],
+    ts: [null, null, null, 9, 9, null, null, 17, null, 17, null],
+  },
+  "bridges-articulation": {
+    input: [2, 0, 0, 1, 1],
+    markers: [null, "enter", "enter", "low", "bridge", null],
+    py: [null, 9, 9, 20, 22, null],
+    ts: [null, 8, 8, 18, 20, null],
+  },
+  "max-flow": {
+    input: [2, 1, 0, 1, 4],
+    markers: [null, null, "reach", null, "augment", null, null],
+    py: [null, null, 17, null, 27, null, null],
+    ts: [null, null, 15, null, 24, null, null],
+  },
+  "eulerian-path": {
+    input: [2, 0, 0, 1, 1],
+    markers: [null, "walk", "back", "back", null],
+    py: [null, 20, 22, 22, null],
+    ts: [null, 20, 22, 22, null],
+  },
   "graph-representations": {
     input: [2, 0, 0, 1, 5],
     markers: [null, "list", "matrix", "list-back", null],
@@ -1020,6 +1224,14 @@ export const GOLDEN: Record<string, Golden> = {
 export const WORST: Record<string, number[]> = {
   "big-o-growth": [16],
   "towers-of-hanoi": [5],
+  "floyd-warshall": [6, 1, 0, 1, 9, 0, 2, 8, 0, 4, 7, 1, 2, 6, 1, 3, 5, 1, 5, 4, 2, 0, 3, 2, 3, 9, 2, 4, 8, 3, 1, 7, 3, 4, 6, 3, 5, 5, 4, 0, 4, 4, 2, 3, 4, 5, 9],
+  "zero-one-bfs": [12, 0, 0, 1, 0, 0, 2, 1, 1, 3, 0, 2, 3, 1, 3, 4, 0, 4, 5, 1, 5, 6, 0, 6, 7, 1, 7, 8, 0, 8, 9, 1, 9, 10, 0, 10, 11, 1, 0, 11, 0, 1, 5, 1, 2, 7, 0, 3, 9, 1, 4, 10, 0, 6, 11, 1, 1, 8, 0, 2, 10, 1],
+  prim: [12, 0, 0, 1, 1, 0, 2, 6, 1, 3, 2, 2, 3, 7, 3, 4, 3, 4, 5, 8, 5, 6, 4, 6, 7, 9, 7, 8, 5, 8, 9, 1, 9, 10, 6, 10, 11, 2, 0, 11, 7, 1, 5, 3, 2, 7, 8, 3, 9, 4, 4, 10, 9, 6, 11, 5, 1, 8, 1, 2, 10, 6],
+  kruskal: [12, 0, 0, 1, 1, 0, 2, 6, 1, 3, 2, 2, 3, 7, 3, 4, 3, 4, 5, 8, 5, 6, 4, 6, 7, 9, 7, 8, 5, 8, 9, 1, 9, 10, 6, 10, 11, 2, 0, 11, 7, 1, 5, 3, 2, 7, 8, 3, 9, 4, 4, 10, 9, 6, 11, 5, 1, 8, 1, 2, 10, 6],
+  scc: [12, 1, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
+  "bridges-articulation": [12, 0, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
+  "max-flow": [8, 1, 0, 1, 1, 0, 2, 5, 0, 3, 9, 1, 4, 4, 2, 4, 8, 2, 5, 3, 3, 5, 7, 4, 6, 2, 5, 6, 6, 1, 7, 1, 4, 7, 5, 5, 7, 9, 6, 7, 4, 3, 6, 8],
+  "eulerian-path": [8, 0, 0, 1, 1, 1, 2, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 0, 1, 0, 2, 1, 2, 4, 1, 4, 6, 1, 6, 0, 1, 1, 3, 1, 3, 5, 1],
   "graph-representations": [12, 1, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
   bfs: [12, 0, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
   dfs: [12, 0, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],

@@ -39,11 +39,11 @@ La matriz tiene 25 celdas. Diez guardan un peso, por ejemplo `[0][1] = [1][0] = 
 
 ## Cuándo usarlo
 
-Elige la lista de adyacencia por defecto: la mayoría de los algoritmos de grafos visitan todos los vecinos de un nodo, y la lista lo hace en un tiempo proporcional a las aristas que existen. Elige la matriz cuando el grafo es pequeño o denso, o cuando preguntas sin parar "¿está `u` unido a `v`?", como en Floyd-Warshall (próximamente).
+Elige la lista de adyacencia por defecto: la mayoría de los algoritmos de grafos visitan todos los vecinos de un nodo, y la lista lo hace en un tiempo proporcional a las aristas que existen. Elige la matriz cuando el grafo es pequeño o denso, o cuando preguntas sin parar "¿está `u` unido a `v`?", como en [Floyd-Warshall](learn:graphs/floyd-warshall).
 
 ## Temas relacionados
 
 - [Tabla hash: encadenamiento](learn:hashing/separate-chaining): otro arreglo de listas.
 - [Búsqueda en anchura (BFS)](learn:graphs/bfs): el primer recorrido sobre una lista de adyacencia.
 - [Búsqueda en profundidad (DFS)](learn:graphs/dfs): el otro recorrido básico.
-- Floyd-Warshall (próximamente): caminos más cortos entre todos los pares sobre una matriz.
+- [Floyd-Warshall](learn:graphs/floyd-warshall): caminos más cortos entre todos los pares sobre una matriz.

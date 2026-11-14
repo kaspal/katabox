@@ -39,11 +39,11 @@ The matrix has 25 cells. Ten of them hold a weight, for example `[0][1] = [1][0]
 
 ## When to use it
 
-Pick the adjacency list by default: most graph algorithms visit every neighbour of a node, and the list does that in time proportional to the edges that exist. Pick the matrix when the graph is small or dense, or when you constantly ask "is `u` joined to `v`?", as in Floyd-Warshall (coming soon).
+Pick the adjacency list by default: most graph algorithms visit every neighbour of a node, and the list does that in time proportional to the edges that exist. Pick the matrix when the graph is small or dense, or when you constantly ask "is `u` joined to `v`?", as in [Floyd-Warshall](learn:graphs/floyd-warshall).
 
 ## Related topics
 
 - [Hash table: separate chaining](learn:hashing/separate-chaining): another array of lists.
 - [Breadth-first search](learn:graphs/bfs): the first walk over an adjacency list.
 - [Depth-first search](learn:graphs/dfs): the other basic walk.
-- Floyd-Warshall (coming soon): all-pairs shortest paths on a matrix.
+- [Floyd-Warshall](learn:graphs/floyd-warshall): all-pairs shortest paths on a matrix.

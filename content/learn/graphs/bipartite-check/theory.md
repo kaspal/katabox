@@ -42,4 +42,4 @@ Use it to split people into two teams with every rivalry across them, to check w
 - [Breadth-first search](learn:graphs/bfs): the walk that spreads the colours.
 - [Connected components](learn:graphs/connected-components): the same outer loop over every piece.
 - [Cycle detection](learn:graphs/cycle-detection): finding any cycle, not just odd ones.
-- Max flow (coming soon): matching the two sides of a bipartite graph.
+- [Maximum flow (Edmonds-Karp)](learn:graphs/max-flow): matching the two sides of a bipartite graph.

@@ -28,6 +28,14 @@ import { connectedComponents } from "./connected-components";
 import { bipartiteCheck } from "./bipartite-check";
 import { dijkstra } from "./dijkstra";
 import { bellmanFord } from "./bellman-ford";
+import { floydWarshall } from "./floyd-warshall";
+import { zeroOneBfs } from "./zero-one-bfs";
+import { prim } from "./prim";
+import { kruskal } from "./kruskal";
+import { scc } from "./scc";
+import { bridgesArticulation } from "./bridges-articulation";
+import { maxFlow } from "./max-flow";
+import { eulerianPath } from "./eulerian-path";
 import { dynamicArrayOps } from "./dynamic-array-ops";
 import { stack } from "./stack";
 import { queueRingBuffer } from "./queue-ring-buffer";
@@ -129,4 +137,12 @@ export const TRACERS: Record<string, TracerDef> = {
   "bipartite-check": bipartiteCheck,
   dijkstra,
   "bellman-ford": bellmanFord,
+  "floyd-warshall": floydWarshall,
+  "zero-one-bfs": zeroOneBfs,
+  prim,
+  kruskal,
+  scc,
+  "bridges-articulation": bridgesArticulation,
+  "max-flow": maxFlow,
+  "eulerian-path": eulerianPath,
 };

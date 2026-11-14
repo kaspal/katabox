@@ -31,7 +31,7 @@ La salida es `[0, 0, 0, 1, 1, 1, 2, 2, 2, 2]`: tres componentes.
 
 - **Olvidar los nodos aislados.** Un nodo sin aristas es una componente por sí solo; el recorrido por todos los nodos lo encuentra.
 - **Etiquetar al sacar.** Así un nodo con varios vecinos etiquetados se apila varias veces; no cambia la respuesta, pero desperdicia memoria.
-- **Usarlo en grafos dirigidos.** Seguir las flechas en un sentido encuentra lo que alcanza un nodo, no una componente; la alcanzabilidad mutua necesita las componentes fuertemente conexas (próximamente).
+- **Usarlo en grafos dirigidos.** Seguir las flechas en un sentido encuentra lo que alcanza un nodo, no una componente; la alcanzabilidad mutua necesita las [componentes fuertemente conexas](learn:graphs/scc).
 
 ## Cuándo usarlo
 

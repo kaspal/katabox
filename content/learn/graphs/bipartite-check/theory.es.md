@@ -42,4 +42,4 @@ La salida es `[0, 1, 0, 1, 1, 0, 1, 0]`: el lado A es {0, 2, 5, 7} y el lado B e
 - [Búsqueda en anchura (BFS)](learn:graphs/bfs): el recorrido que extiende los colores.
 - [Componentes conexas](learn:graphs/connected-components): el mismo bucle exterior sobre cada trozo.
 - [Detección de ciclos](learn:graphs/cycle-detection): encontrar cualquier ciclo, no solo los impares.
-- Flujo máximo (próximamente): emparejar los dos lados de un grafo bipartito.
+- [Flujo máximo (Edmonds-Karp)](learn:graphs/max-flow): emparejar los dos lados de un grafo bipartito.

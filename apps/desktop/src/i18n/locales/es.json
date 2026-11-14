@@ -974,7 +974,11 @@
         "edges_removed": "aristas quitadas",
         "labelled": "etiquetados",
         "relaxed": "mejorados",
-        "edges_checked": "aristas revisadas"
+        "edges_checked": "aristas revisadas",
+        "joined": "unidos",
+        "bridges_found": "puentes",
+        "paths": "caminos",
+        "placed": "colocados"
       },
       "rows": {
         "prefix": "Sumas prefijas",
@@ -984,7 +988,7 @@
         "stack": "Pila",
         "queue": "Cola",
         "ring": "Búfer circular",
-        "deque": "Bicola (posiciones)",
+        "deque": "Bicola",
         "output": "Salida",
         "map": "Mapa: clave → valor",
         "list": "Lista",
@@ -995,7 +999,9 @@
         "array": "Arreglo",
         "pq": "Cola de prioridad (distancia·nodo)",
         "matrix": "Matriz",
-        "adjacency": "Lista de adyacencia"
+        "adjacency": "Lista de adyacencia",
+        "sorted_edges": "Aristas por peso (etiqueta: u-v)",
+        "path": "Camino (al revés)"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -1068,7 +1074,7 @@
       "current": "Valor actual",
       "stack_top": "Cima de la pila",
       "answered": "Respondido",
-      "pushed": "Recién apilado",
+      "pushed": "Añadido a la cola",
       "peeked": "Leído por peek",
       "linking": "Enlazando",
       "visiting": "Visitando",
@@ -1142,7 +1148,22 @@
       "relaxed": "Distancia reducida",
       "no_better": "No mejora",
       "settled": "Fijado",
-      "still_lowers": "Aún reduce"
+      "still_lowers": "Aún reduce",
+      "through_node": "Por el nodo k",
+      "endpoints": "i y j",
+      "joined": "Se unió al árbol",
+      "in_tree": "En el árbol",
+      "skipped": "Descartado",
+      "scc_a": "Componente 0, 3, 6…",
+      "scc_b": "Componente 1, 4, 7…",
+      "scc_c": "Componente 2, 5, 8…",
+      "critical": "Puente o vértice de corte",
+      "source_or_sink": "Fuente o sumidero",
+      "augmenting": "Camino de aumento",
+      "full": "Lleno (sin capacidad libre)",
+      "odd_degree": "Grado impar",
+      "just_walked": "Recién recorrida",
+      "used_or_placed": "Usada / en el camino"
     },
     "controls": {
       "label": "Reproducción",
@@ -1214,7 +1235,23 @@
         "detour-wins": "El rodeo gana",
         "stale-entries": "Entradas viejas",
         "negative-edge": "Una arista negativa",
-        "negative-cycle": "Un ciclo negativo"
+        "negative-cycle": "Un ciclo negativo",
+        "shortcuts": "Atajos",
+        "one-way-ring": "Un anillo de un sentido",
+        "free-shortcut": "Un atajo gratis",
+        "all-free": "Casi todo gratis",
+        "cheap-ring": "Un anillo barato",
+        "two-islands": "Dos islas",
+        "equal-weights": "Pesos iguales",
+        "three-loops": "Tres bucles",
+        "one-way-chain": "Una cadena de un sentido",
+        "two-rings": "Dos anillos",
+        "a-tree": "Un árbol",
+        "take-it-back": "Devolver flujo",
+        "two-lanes": "Dos carriles",
+        "house-of-cards": "Una casa",
+        "detour-loop": "Un bucle en el camino",
+        "too-many-odd": "Demasiados nodos impares"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1253,7 +1290,8 @@
           "duplicate_edge": "La arista {{u}} {{v}} aparece dos veces.",
           "weight_range": "Los pesos van de {{min}} a {{max}}.",
           "edge_weighted": "\"{{edge}}\": escribe una arista como u v w (dos nodos y un peso).",
-          "edge_pair": "\"{{edge}}\": escribe una arista como u v (dos nodos)."
+          "edge_pair": "\"{{edge}}\": escribe una arista como u v (dos nodos).",
+          "antiparallel": "Aquí no se pueden usar a la vez las aristas {{u}} {{v}} y {{v}} {{u}}."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1349,7 +1387,11 @@
       "cycle": "Ciclo",
       "topological-sort": "Orden topológico",
       "shortest-path": "Camino más corto",
-      "bipartite": "Bipartito"
+      "bipartite": "Bipartito",
+      "minimum-spanning-tree": "Árbol de expansión mínima",
+      "strongly-connected-components": "Componentes fuertemente conexas",
+      "network-flow": "Flujo en redes",
+      "dynamic-programming": "Programación dinámica"
     },
     "narration": {
       "bubble-sort": {
@@ -1942,6 +1984,71 @@
         "check": "Una pasada más: si alguna arista aún reduce una distancia, hay un ciclo negativo.",
         "negative_cycle": "{{u}} → {{v}} (peso {{w}}) aún reduce una distancia: hay un ciclo negativo alcanzable, así que la respuesta es 1.",
         "done": "Ninguna arista reduce nada: las distancias son definitivas tras {{relaxed}} actualización(es) y {{checked}} revisiones de aristas."
+      },
+      "floyd-warshall": {
+        "ready": "{{n}} nodos, {{m}} aristas dirigidas. La matriz empieza con las aristas directas; ∞ significa que aún no hay camino.",
+        "pivot": "Ahora se permiten caminos que pasan por el nodo {{k}}: la fila {{k}} y la columna {{k}} son las entradas y salidas.",
+        "improve": "{{i}} → {{k}} → {{j}} cuesta {{d}}, mejor que {{old}}.",
+        "improve_new": "{{i}} → {{k}} → {{j}} cuesta {{d}}: el primer camino de {{i}} a {{j}}.",
+        "done": "Cada nodo ha sido parada intermedia: la matriz tiene todas las distancias mínimas ({{checks}} comprobaciones, {{improved}} mejoras)."
+      },
+      "zero-one-bfs": {
+        "ready": "Distancias desde el nodo 0 sobre {{n}} nodos; cada arista pesa 0 o 1. Una bicola sustituye a la cola de prioridad.",
+        "pop": "Saca {{u}} del frente (distancia {{d}}).",
+        "front": "{{u}} → {{v}} es gratis: {{v}} recibe {{d}} y va al frente.",
+        "back": "{{u}} → {{v}} cuesta 1: {{v}} recibe {{d}} y va al final.",
+        "no_better": "{{u}} → {{v}} daría {{via}}: no mejora {{best}}.",
+        "done": "Se alcanzaron {{reached}} de {{n}} nodos tras {{pops}} extracción(es)."
+      },
+      "prim": {
+        "ready": "Haz crecer un árbol de expansión mínima desde el nodo 0 sobre {{n}} nodos. La cola guarda (peso·nodo) de las aristas que salen del árbol.",
+        "pop": "Saca la entrada más barata: el nodo {{v}} por {{w}}.",
+        "skip": "{{v}} ya está en el árbol: descarta esta entrada.",
+        "take": "{{v}} se une al árbol por {{w}}. Total {{total}}.",
+        "push": "La arista {{u}} – {{v}} ({{w}}) sale ahora del árbol: añádela a la cola.",
+        "done": "El árbol abarca {{size}} de {{n}} nodos y pesa {{total}}."
+      },
+      "kruskal": {
+        "ready": "Ordena las {{m}} aristas por peso y toma cada una que una dos árboles distintos.",
+        "consider": "Siguiente más barata: {{u}} – {{v}} ({{w}}). Busca la raíz de cada extremo.",
+        "skip": "{{u}} y {{v}} ya están en un mismo árbol (raíz {{root}}): esta arista cerraría un ciclo.",
+        "join": "Árboles distintos: toma {{u}} – {{v}} y únelos. Total {{total}}.",
+        "done": "{{taken}} arista(s) tomadas, peso total {{total}}, entre {{n}} nodos."
+      },
+      "scc": {
+        "ready": "Encuentra las componentes fuertemente conexas de {{n}} nodos: grupos donde cada nodo llega a todos los demás.",
+        "enter": "Pasada 1: entra en {{u}}.",
+        "finish": "Pasada 1: {{u}} termina, número {{k}} en el orden de finalización.",
+        "reverse": "Pasada 2: invierte todas las aristas y empieza por el último nodo en terminar.",
+        "start": "{{u}} aún no tiene componente: empieza ahí la componente #{{c}}.",
+        "assign": "{{u}} se une a la componente #{{c}}.",
+        "done": "{{count}} componente(s) entre {{n}} nodos."
+      },
+      "bridges-articulation": {
+        "ready": "Encuentra los puentes y vértices de corte de {{n}} nodos. Bajo cada nodo: su número de entrada / su valor low.",
+        "enter": "Entra en {{u}} con el número {{t}}.",
+        "back": "{{u}} – {{v}} sube hasta el número {{t}}: el low de {{u}} pasa a {{low}}.",
+        "low": "De vuelta desde {{v}}: el low de {{u}} pasa a {{low}}.",
+        "bridge": "El subárbol de {{v}} no sube más allá de {{low}}, por debajo de {{u}} ({{t}}): {{u}} – {{v}} es un puente.",
+        "cut": "El subárbol de {{v}} no puede subir por encima de {{u}} (low {{low}} ≥ {{t}}): {{u}} es un vértice de corte.",
+        "root_cut": "La raíz {{u}} tiene {{children}} subárboles separados: es un vértice de corte.",
+        "done": "{{bridges}} puente(s) y {{cuts}} vértice(s) de corte."
+      },
+      "max-flow": {
+        "ready": "Envía todo lo posible del nodo {{source}} al nodo {{sink}}. Cada arista muestra flujo / capacidad.",
+        "search": "Busca un camino con capacidad libre (flujo actual {{flow}}).",
+        "reach": "{{u}} → {{v}} tiene {{spare}} libre: se alcanza {{v}}.",
+        "path": "Hay un camino de {{len}} arista(s); su cuello de botella es {{push}}.",
+        "augment": "Empuja {{push}} por {{u}} → {{v}} y permite devolver {{push}} en sentido contrario.",
+        "done": "No queda camino con capacidad libre: el flujo máximo es {{flow}} ({{paths}} camino(s))."
+      },
+      "eulerian-path": {
+        "ready": "¿Se pueden dibujar las {{m}} aristas de un solo trazo? {{odd}} nodo(s) tienen grado impar.",
+        "odd": "{{odd}} nodos de grado impar: un camino necesita 0 o 2, así que no existe.",
+        "walk": "Recorre la arista sin usar {{u}} – {{v}}.",
+        "back": "A {{u}} no le quedan aristas sin usar: pásalo al camino.",
+        "done": "Las {{m}} aristas usadas una vez, de {{start}} a {{end}}.",
+        "missed": "{{left}} arista(s) no se alcanzaron nunca: el grafo está en trozos, así que no hay camino."
       }
     },
     "compare": {

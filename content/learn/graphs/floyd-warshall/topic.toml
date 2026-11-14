@@ -1,0 +1,28 @@
+id = "floyd-warshall"
+subject = "graphs"
+order = 10
+title = "Floyd-Warshall"
+title_es = "Floyd-Warshall"
+tags = ["graph", "shortest-path", "dynamic-programming"]
+problems = ["ferry-timetable"]
+presets = ["shortcuts", "random", "one-way-ring"]
+default = [5, 1, 0, 1, 4, 1, 2, 3, 0, 2, 9, 2, 3, 1, 3, 0, 2, 1, 4, 7, 3, 4, 2]
+
+[complexity]
+best = "O(n³)"
+average = "O(n³)"
+worst = "O(n³)"
+space = "O(n²)"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 47
+min = 0
+max = 9
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = floyd_warshall(a[0], kb_edges(a))"
+typescript = "a = floydWarshall(a[0], kbEdges(a))"

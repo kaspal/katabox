@@ -1,0 +1,28 @@
+id = "kruskal"
+subject = "graphs"
+order = 13
+title = "Kruskal's minimum spanning tree"
+title_es = "Árbol de expansión mínima de Kruskal"
+tags = ["graph", "minimum-spanning-tree", "union-find"]
+problems = ["village-cables"]
+presets = ["cheap-ring", "random", "equal-weights"]
+default = [6, 0, 0, 1, 4, 1, 2, 2, 2, 3, 5, 3, 4, 1, 4, 5, 3, 5, 0, 2, 0, 3, 8, 1, 4, 6]
+
+[complexity]
+best = "O(m log m)"
+average = "O(m log m)"
+worst = "O(m log m)"
+space = "O(n + m)"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 62
+min = 0
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = kruskal(a[0], kb_edges(a))"
+typescript = "a = kruskal(a[0], kbEdges(a))"

@@ -34,6 +34,9 @@ describe("graph inputs", () => {
     expect(errKey(weighted.parse(["3", "0 1 12"]))).toBe("weight_range");
     expect(errKey(choose.parse(["3", "2", "0 1 1"]))).toBe("directed_flag");
     expect(plain.check!([3, 0, 0, 1, 1])).toMatchObject({ key: "directed_flag" });
+    const flow = graphCodec({ directed: true, weighted: true, antiparallel: false });
+    expect(errKey(flow.parse(["3", "0 1 2, 1 0 3"]))).toBe("antiparallel");
+    expect(flow.parse(["3", "0 1 2, 1 2 3"])).toHaveProperty("values");
   });
 
   it("builds adjacency lists in kb_graph's order", () => {

@@ -39,4 +39,4 @@ Usa BFS para el menor número de movimientos, saltos o pasos entre dos estados: 
 - [Cola y búfer circular](learn:linear/queue-ring-buffer): la cola que mueve la búsqueda.
 - [Recorrido por niveles](learn:trees/level-order): el mismo recorrido en un árbol, donde a cada nodo se llega por un solo camino.
 - [Caminos más cortos de Dijkstra](learn:graphs/dijkstra): caminos más cortos cuando las aristas tienen peso.
-- BFS 0-1 (próximamente): BFS con una bicola cuando los pesos solo son 0 o 1.
+- [BFS 0-1](learn:graphs/zero-one-bfs): BFS con una bicola cuando los pesos solo son 0 o 1.

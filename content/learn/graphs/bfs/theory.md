@@ -39,4 +39,4 @@ Use BFS for the fewest moves, hops or steps between two states: shortest routes 
 - [Queue and circular buffer](learn:linear/queue-ring-buffer): the queue that drives the search.
 - [Level order](learn:trees/level-order): the same walk on a tree, where every node has one route.
 - [Dijkstra's shortest paths](learn:graphs/dijkstra): shortest paths when edges have weights.
-- 0-1 BFS (coming soon): BFS with a deque when weights are only 0 or 1.
+- [0-1 BFS](learn:graphs/zero-one-bfs): BFS with a deque when weights are only 0 or 1.

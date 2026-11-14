@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default network. Round 1 finds the path 0 → 1 → 3 → 5. How much flow does it add?",
+    "prompt_es": "Red por defecto. La ronda 1 encuentra el camino 0 → 1 → 3 → 5. ¿Cuánto flujo añade?",
+    "options": [
+      { "en": "5, the capacity of 0 → 1", "es": "5, la capacidad de 0 → 1" },
+      { "en": "4, the capacity of 3 → 5", "es": "4, la capacidad de 3 → 5" },
+      { "en": "3, the bottleneck 1 → 3", "es": "3, el cuello de botella 1 → 3" }
+    ],
+    "answer": 2,
+    "explain_en": "A path carries only as much as its smallest residual capacity: min(5, 3, 4) = 3. Afterwards 1 → 3 is full and 3 → 1 has 3 of reverse capacity.",
+    "explain_es": "Un camino solo lleva tanto como su menor capacidad residual: min(5, 3, 4) = 3. Después 1 → 3 está llena y 3 → 1 tiene 3 de capacidad inversa."
+  },
+  {
+    "prompt_en": "Why does every augmentation add capacity in the opposite direction?",
+    "prompt_es": "¿Por qué cada aumento añade capacidad en el sentido contrario?",
+    "options": [
+      { "en": "So that a later path can take flow back and send it another way", "es": "Para que un camino posterior pueda retirar flujo y mandarlo por otro lado" },
+      { "en": "To make the graph undirected", "es": "Para que el grafo sea no dirigido" },
+      { "en": "To double the total flow", "es": "Para duplicar el flujo total" }
+    ],
+    "answer": 0,
+    "explain_en": "Reverse capacity undoes earlier choices: pushing along v → u cancels flow that went u → v. Without it, a bad first path could leave the total below the maximum.",
+    "explain_es": "La capacidad inversa deshace elecciones anteriores: empujar por v → u anula el flujo que fue de u → v. Sin ella, un mal primer camino podría dejar el total por debajo del máximo."
+  },
+  {
+    "prompt_en": "What is the maximum flow of the default network, and which cut proves it?",
+    "prompt_es": "¿Cuál es el flujo máximo de la red por defecto y qué corte lo demuestra?",
+    "options": [
+      { "en": "11, the edges into the sink: 4 + 7", "es": "11, las aristas que entran en el sumidero: 4 + 7" },
+      { "en": "9, the edges out of the source: 5 + 4", "es": "9, las aristas que salen de la fuente: 5 + 4" },
+      { "en": "7, the largest single edge", "es": "7, la mayor arista individual" }
+    ],
+    "answer": 1,
+    "explain_en": "The three rounds add 3 + 2 + 4 = 9. Then both edges leaving node 0 are full, so the BFS reaches nothing else: those two edges are a cut of capacity 9.",
+    "explain_es": "Las tres rondas suman 3 + 2 + 4 = 9. Entonces las dos aristas que salen del nodo 0 están llenas y el BFS no llega a nada más: esas dos aristas son un corte de capacidad 9."
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph. Node 5 has a back edge to node 3. What is low[5]?",
+    "prompt_es": "Grafo por defecto. El nodo 5 tiene una arista de retroceso hacia el nodo 3. ¿Cuánto vale low[5]?",
+    "options": [
+      { "en": "5, its own entry time", "es": "5, su propio tiempo de entrada" },
+      { "en": "3, the entry time of node 3", "es": "3, el tiempo de entrada del nodo 3" },
+      { "en": "0, the root", "es": "0, la raíz" }
+    ],
+    "answer": 1,
+    "explain_en": "The nodes are entered in number order, so tin[3] = 3. The back edge lowers low[5] from 5 to 3; its child 6 cannot lower it further.",
+    "explain_es": "Los nodos se visitan en orden de número, así que tin[3] = 3. La arista de retroceso baja low[5] de 5 a 3; su hijo 6 no puede bajarlo más."
+  },
+  {
+    "prompt_en": "Node 3 is a cut vertex. Is the edge 3 – 4 a bridge?",
+    "prompt_es": "El nodo 3 es un vértice de corte. ¿Es la arista 3 – 4 un puente?",
+    "options": [
+      { "en": "Yes: every edge at a cut vertex is a bridge", "es": "Sí: toda arista de un vértice de corte es un puente" },
+      { "en": "Yes: 4 is a child of 3", "es": "Sí: 4 es hijo de 3" },
+      { "en": "No: low[4] = 3 is not greater than tin[3] = 3", "es": "No: low[4] = 3 no es mayor que tin[3] = 3" }
+    ],
+    "answer": 2,
+    "explain_en": "The subtree of 4 climbs back to 3 itself through the edge 5 – 3. That makes 3 a cut vertex (>=), but removing the edge 3 – 4 alone leaves 4 reachable through 5.",
+    "explain_es": "El subárbol de 4 vuelve a subir hasta el propio 3 por la arista 5 – 3. Eso hace de 3 un vértice de corte (>=), pero quitar solo la arista 3 – 4 deja 4 alcanzable a través de 5."
+  },
+  {
+    "prompt_en": "What is the output for the default graph?",
+    "prompt_es": "¿Cuál es la salida para el grafo por defecto?",
+    "options": [
+      { "en": "[2, 3, 5, 6, -1, 2, 3, 5]", "es": "[2, 3, 5, 6, -1, 2, 3, 5]" },
+      { "en": "[2, 3, 5, 6, -1, 0, 2, 3, 5]", "es": "[2, 3, 5, 6, -1, 0, 2, 3, 5]" },
+      { "en": "[2, 3, 3, 4, 5, 6, -1, 2, 3, 5]", "es": "[2, 3, 3, 4, 5, 6, -1, 2, 3, 5]" }
+    ],
+    "answer": 0,
+    "explain_en": "Two bridges, 2 – 3 and 5 – 6, then three cut vertices. The root 0 has only one DFS child, so it is not a cut vertex.",
+    "explain_es": "Dos puentes, 2 – 3 y 5 – 6, y después tres vértices de corte. La raíz 0 solo tiene un hijo en el DFS, así que no es vértice de corte."
+  }
+]

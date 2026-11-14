@@ -42,4 +42,4 @@ La salida es `[0, 0, 3, 1, 1, 3]`: no hay ciclo negativo, y las distancias son 0
 
 - [Caminos más cortos de Dijkstra](learn:graphs/dijkstra): más rápido, pero solo con pesos no negativos.
 - [Detección de ciclos](learn:graphs/cycle-detection): encontrar cualquier ciclo en un grafo dirigido.
-- Floyd-Warshall (próximamente): caminos más cortos entre cada par de nodos.
+- [Floyd-Warshall](learn:graphs/floyd-warshall): caminos más cortos entre cada par de nodos.

@@ -42,4 +42,4 @@ Use it when weights can be negative: refunds, currency exchange, or differences 
 
 - [Dijkstra's shortest paths](learn:graphs/dijkstra): faster, but non-negative weights only.
 - [Cycle detection](learn:graphs/cycle-detection): finding any cycle in a directed graph.
-- Floyd-Warshall (coming soon): shortest paths between every pair of nodes.
+- [Floyd-Warshall](learn:graphs/floyd-warshall): shortest paths between every pair of nodes.
