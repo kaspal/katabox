@@ -1,7 +1,9 @@
 //! The Learn correctness guarantee (ADR 0029): every topic's sample.py and sample.ts run
 //! in the sandbox, through the program-mode judge, on every case in cases.json (each
-//! preset plus 20 seeded random inputs). Each output must equal the tracer's final state,
-//! and that state must equal a plain sort. Needs the dev sandbox root:
+//! preset plus 20 seeded random inputs, or every n for a count input). Each output must
+//! equal what the tracer recorded, and for sorting topics that must equal a plain sort.
+//! `KB_LEARN_TOPICS=id,id` limits the run to those topics (an unknown id fails). Needs the
+//! dev sandbox root:
 //!
 //! ```text
 //! pwsh scripts/fetch-toolchains.ps1
@@ -13,7 +15,7 @@ use std::path::{Path, PathBuf};
 
 use kb_core::Language;
 use kb_pack::env_for;
-use kb_pack::learn::{SAMPLE_LANGUAGES, is_sort_of, read_learn, run_sample};
+use kb_pack::learn::{SAMPLE_LANGUAGES, TopicFilter, is_sort_of, read_learn, run_sample};
 
 fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -43,12 +45,42 @@ fn topics() -> Vec<kb_pack::learn::TopicDir> {
 #[test]
 fn every_sample_matches_its_tracer_and_a_plain_sort() {
     let env = env();
-    let topics = topics();
-    assert_eq!(topics.len(), 3);
-    for t in &topics {
-        assert!(t.cases.len() >= 24, "{}: 4 presets + 20 random", t.topic.id);
-        for c in &t.cases {
-            assert!(is_sort_of(&c.output, &c.input), "{} {}", t.topic.id, c.name);
+    let all = topics();
+    let filter = TopicFilter {
+        topics: std::env::var("KB_LEARN_TOPICS")
+            .map(|v| {
+                v.split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect()
+            })
+            .unwrap_or_default(),
+        subject: None,
+    };
+    let topics = filter
+        .select(&all)
+        .unwrap_or_else(|e| panic!("KB_LEARN_TOPICS: {e}"));
+    if filter.topics.is_empty() {
+        assert!(topics.len() >= 3, "at least the Phase 0 topics");
+    } else {
+        assert_eq!(topics.len(), filter.topics.len());
+    }
+    for t in topics {
+        let lim = t.topic.input;
+        if lim.max_len == 1 {
+            assert_eq!(
+                t.cases.len() as i64,
+                (lim.max - lim.min + 1) as i64,
+                "{}: every n",
+                t.topic.id
+            );
+        } else {
+            assert!(t.cases.len() >= 24, "{}: 4 presets + 20 random", t.topic.id);
+        }
+        if t.sorts {
+            for c in &t.cases {
+                assert!(is_sort_of(&c.output, &c.input), "{} {}", t.topic.id, c.name);
+            }
         }
         for language in SAMPLE_LANGUAGES {
             let started = std::time::Instant::now();

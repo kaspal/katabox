@@ -1,0 +1,28 @@
+id = "bit-manipulation"
+subject = "foundations"
+order = 4
+title = "Bit manipulation basics"
+title_es = "Manipulación de bits: lo básico"
+tags = ["bitwise"]
+problems = ["lonely-sock", "bit-counts", "menu-masks"]
+presets = ["random"]
+default = [44, 26]
+
+[complexity]
+best = "O(1)"
+average = "O(bits set)"
+worst = "O(word size)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 2
+min = 0
+max = 255
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = bit_ops(a[0], a[1])"
+typescript = "a = bitOps(a[0], a[1])"

@@ -7,6 +7,9 @@ import { REDUCED_MOTION } from "../engine/media";
 import { ArrayScene } from "./ArrayScene";
 import { BarsScene } from "./BarsScene";
 import { useTransitions } from "./common";
+import { TRACERS } from "../tracers";
+import { SCENES } from ".";
+import { caseInputs } from "../engine/cases";
 
 const step = (values: [number, number][], extra: Partial<Step> = {}): Step => ({
   items: values.map(([id, value]) => ({ id, value })),
@@ -34,7 +37,7 @@ describe("BarsScene", () => {
           { roles: { 0: "compare", 2: "pivot" }, range: [0, 2], pointers: [{ label: "j", at: 0, tone: "j" }] },
         )}
         instant={false}
-        movesLabel="swaps"
+        def={TRACERS["bubble-sort"]!}
         maxValue={99}
       />,
     );
@@ -64,11 +67,11 @@ describe("BarsScene", () => {
       [0, 5],
       [2, 1],
     ]);
-    const { rerender, container } = render(<BarsScene step={a} instant={false} movesLabel="swaps" maxValue={9} />);
+    const { rerender, container } = render(<BarsScene step={a} instant={false} def={TRACERS["bubble-sort"]!} maxValue={9} />);
     const first = container.querySelector('[data-id="0"]');
     const second = container.querySelector('[data-id="1"]');
     expect(first?.getAttribute("data-pos")).toBe("0");
-    rerender(<BarsScene step={b} instant={false} movesLabel="swaps" maxValue={9} />);
+    rerender(<BarsScene step={b} instant={false} def={TRACERS["bubble-sort"]!} maxValue={9} />);
     // The same nodes, at new positions: they slide rather than being redrawn.
     expect(container.querySelector('[data-id="0"]')).toBe(first);
     expect(container.querySelector('[data-id="1"]')).toBe(second);
@@ -89,7 +92,7 @@ describe("ArrayScene", () => {
           { roles: { 0: "swap", 1: "key" }, lifted: 1 },
         )}
         instant
-        movesLabel="shifts"
+        def={TRACERS["insertion-sort"]!}
         maxValue={99}
       />,
     );
@@ -123,6 +126,23 @@ describe("scene transitions", () => {
       expect(result.current.colors).toBe("none");
     } finally {
       window.matchMedia = original;
+    }
+  });
+});
+
+describe("every topic's scene", () => {
+  it.each(Object.values(TRACERS).map((d) => [d.id, d] as const))("%s renders its first, middle and last steps", (_, def) => {
+    const steps = def.trace(caseInputs(def)[0]!.input);
+    const Scene = SCENES[def.scene];
+    for (const k of [0, Math.floor(steps.length / 2), steps.length - 1]) {
+      const { container, unmount } = render(<Scene step={steps[k]!} instant def={def} maxValue={def.limits.max} />);
+      const svg = container.querySelector("svg[role=img]");
+      expect(svg, `${def.id} step ${k}`).not.toBeNull();
+      // A screen reader gets the summary (aria-label) and the text fallback; together they
+      // must describe the step (an empty first step may have nothing to list yet).
+      const said = `${svg!.getAttribute("aria-label")} ${screen.getByTestId("scene-fallback").textContent}`;
+      expect(said.trim().length, `${def.id} step ${k}`).toBeGreaterThan(10);
+      unmount();
     }
   });
 });

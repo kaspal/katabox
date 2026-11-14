@@ -3,7 +3,9 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleSource } from "@/test/fakeLearn";
-import { parseCustom, preset, PRESETS, rng } from "./inputs";
+import { TRACERS } from "../tracers";
+import { checkInput, parseCustom, preset, presetInput, PRESETS, rng } from "./inputs";
+import type { TracerDef } from "./types";
 import { playerKeyAction } from "./keys";
 import { parseSample } from "./markers";
 import { parseLast, parseViewed } from "./progress";
@@ -192,18 +194,56 @@ describe("playerKeyAction", () => {
   });
 });
 
+const SORT = TRACERS["bubble-sort"]!;
+/** A made-up target topic: [target, ...sorted values], target 1..99 and in range k ≤ n. */
+const TARGET: TracerDef = {
+  ...SORT,
+  limits: { min_len: 2, max_len: 6, min: 1, max: 99 },
+  input: {
+    kind: "sorted-target",
+    pickTarget: (v, next) => 1 + Math.floor(next() * v.length),
+    checkTarget: (t, v) => (t > v.length ? { min: 1, max: v.length } : null) },
+};
+const COUNT: TracerDef = { ...SORT, limits: { min_len: 1, max_len: 1, min: 1, max: 5 }, input: { kind: "count" } };
+
+describe("input kinds", () => {
+  it("puts the target first, and refuses unsorted values or a bad target", () => {
+    expect(parseCustom(TARGET, "1, 2, 3", "2")).toEqual({ values: [2, 1, 2, 3] });
+    expect(parseCustom(TARGET, "3, 1", "1")).toEqual({ error: { code: "unsorted" } });
+    expect(parseCustom(TARGET, "1, 2", "5")).toEqual({ error: { code: "target", min: 1, max: 2 } });
+    expect(parseCustom(TARGET, "1, 2", "x")).toEqual({ error: { code: "nan", token: "x" } });
+    expect(parseCustom(TARGET, "1, 2", "")).toEqual({ error: { code: "nan", token: "—" } });
+    // The count is of the values: the target is one of max_len.
+    expect(parseCustom(TARGET, "1 2 3 4 5 6", "1")).toEqual({ error: { code: "count", min: 1, max: 5 } });
+  });
+
+  it("presets fit the shape", () => {
+    for (const p of PRESETS) {
+      const xs = presetInput(TARGET, p, 4, 6);
+      expect(xs).toHaveLength(6);
+      const values = xs.slice(1);
+      expect(values).toEqual([...values].sort((a, b) => a - b));
+      expect(checkInput(TARGET, xs)).toBeNull();
+    }
+    const n = presetInput(COUNT, "random", 9, 1);
+    expect(n).toHaveLength(1);
+    expect(checkInput(COUNT, n)).toBeNull();
+    expect(checkInput(COUNT, [6])).toEqual({ code: "range", value: 6, min: 1, max: 5 });
+  });
+});
+
 describe("inputs", () => {
   it("parses commas, spaces and semicolons", () => {
-    expect(parseCustom("3, 1;2  9", LIM)).toEqual({ values: [3, 1, 2, 9] });
+    expect(parseCustom(SORT, "3, 1;2  9")).toEqual({ values: [3, 1, 2, 9] });
   });
 
   it("names the problem instead of clamping", () => {
-    expect(parseCustom("5", LIM)).toEqual({ error: { code: "count", min: 2, max: 16 } });
-    expect(parseCustom(Array(17).fill(1).join(","), LIM)).toEqual({ error: { code: "count", min: 2, max: 16 } });
-    expect(parseCustom("3, x, 4", LIM)).toEqual({ error: { code: "nan", token: "x" } });
-    expect(parseCustom("3, 2.5", LIM)).toEqual({ error: { code: "nan", token: "2.5" } });
-    expect(parseCustom("3, 120", LIM)).toEqual({ error: { code: "range", value: 120, min: 1, max: 99 } });
-    expect(parseCustom("0, 4", LIM)).toEqual({ error: { code: "range", value: 0, min: 1, max: 99 } });
+    expect(parseCustom(SORT, "5")).toEqual({ error: { code: "count", min: 2, max: 16 } });
+    expect(parseCustom(SORT, Array(17).fill(1).join(","))).toEqual({ error: { code: "count", min: 2, max: 16 } });
+    expect(parseCustom(SORT, "3, x, 4")).toEqual({ error: { code: "nan", token: "x" } });
+    expect(parseCustom(SORT, "3, 2.5")).toEqual({ error: { code: "nan", token: "2.5" } });
+    expect(parseCustom(SORT, "3, 120")).toEqual({ error: { code: "range", value: 120, min: 1, max: 99 } });
+    expect(parseCustom(SORT, "0, 4")).toEqual({ error: { code: "range", value: 0, min: 1, max: 99 } });
   });
 
   it("presets are seeded, sized and shaped", () => {
@@ -236,10 +276,10 @@ describe("markers", () => {
   });
 
   it("never shows a marker", () => {
-    for (const id of ["bubble-sort", "insertion-sort", "quick-sort"]) {
+    for (const def of Object.values(TRACERS)) {
       for (const ext of ["py", "ts"] as const) {
-        const shown = parseSample(sampleSource(id, ext)).lines.join(" | ");
-        expect(shown, `${id}.${ext}`).not.toContain("@step");
+        const shown = parseSample(sampleSource(def.subject, def.id, ext)).lines.join(" | ");
+        expect(shown, `${def.id}.${ext}`).not.toContain("@step");
       }
     }
   });

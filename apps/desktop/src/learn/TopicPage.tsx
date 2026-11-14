@@ -1,7 +1,7 @@
 // A Learn topic (ADR 0029, mockup "Main"): the picker, the stage and the Theory / Code /
 // Practice tabs, in resizable panels (stacked in narrow windows). Lazy-loaded with the
 // engine, the scenes, the tracers and motion.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { GitCompare, PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -93,7 +93,7 @@ function TopicView({
   const layoutTimer = useRef<number | undefined>(undefined);
   const [speed, setSpeed] = useLearnSpeed();
   const [last, setLast] = useLastTopic();
-  const trace = useTrace(def, topic.input, topic.default_input);
+  const trace = useTrace(def, topic.default_input);
   const maxValue = topic.input.max;
 
   // Resume where Continue left off, only for the default input.
@@ -133,7 +133,7 @@ function TopicView({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const values = useMemo(() => trace.steps[0]?.items.map((it) => it.value) ?? trace.values, [trace.steps, trace.values]);
+  const values = trace.values;
   if (!step) return null;
 
   const header = (
@@ -154,14 +154,21 @@ function TopicView({
             </li>
           ))}
           <li className="rounded-full bg-muted px-2 py-1 font-mono">
-            {t("learn.topic.average", { cost: topic.complexity.average })}
+            {topic.subject === "sorting"
+              ? t("learn.topic.average", { cost: topic.complexity.average })
+              : t("learn.topic.cost", { cost: topic.complexity.average })}
           </li>
-          <li className="rounded-full bg-muted px-2 py-1">
-            {topic.complexity.in_place ? t("learn.topic.in_place") : t("learn.topic.not_in_place")}
-          </li>
-          <li className="rounded-full bg-muted px-2 py-1">
-            {topic.complexity.stable ? t("learn.topic.stable") : t("learn.topic.not_stable")}
-          </li>
+          {/* Stability and in-place are sorting traits; other subjects leave them out. */}
+          {topic.subject === "sorting" && (
+            <>
+              <li className="rounded-full bg-muted px-2 py-1">
+                {topic.complexity.in_place ? t("learn.topic.in_place") : t("learn.topic.not_in_place")}
+              </li>
+              <li className="rounded-full bg-muted px-2 py-1">
+                {topic.complexity.stable ? t("learn.topic.stable") : t("learn.topic.not_stable")}
+              </li>
+            </>
+          )}
         </ul>
       </div>
       <div className="flex gap-2">

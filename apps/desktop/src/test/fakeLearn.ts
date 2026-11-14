@@ -90,5 +90,16 @@ export function fakeTopic(id: string, lang: Lang): LearnTopic | null {
   };
 }
 
+/** A file of a topic package, raw (samples for marker tests, topic.toml for limits). */
+export const topicFile = (subject: string, id: string, file: string) => read(subject, id, file);
+
 /** Raw sample text, for marker tests. */
-export const sampleSource = (id: string, ext: "py" | "ts") => read("sorting", id, `sample.${ext}`);
+export const sampleSource = (subject: string, id: string, ext: "py" | "ts") => read(subject, id, `sample.${ext}`);
+
+/** topic.toml's `[input]` table (the only TOML the tests need). */
+export function topicLimits(subject: string, id: string) {
+  const text = topicFile(subject, id, "topic.toml");
+  const table = /\[input\]([\s\S]*?)(?:\n\[|$)/.exec(text.replace(/\r\n/g, "\n"))?.[1] ?? "";
+  const num = (k: string) => Number(new RegExp(`^${k}\\s*=\\s*(-?\\d+)`, "m").exec(table)?.[1]);
+  return { min_len: num("min_len"), max_len: num("max_len"), min: num("min"), max: num("max") };
+}

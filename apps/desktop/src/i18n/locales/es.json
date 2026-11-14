@@ -904,15 +904,12 @@
       "not_stable": "No estable",
       "in_place": "En el sitio",
       "not_in_place": "Usa espacio extra",
-      "resize": "Cambiar el tamaño de los paneles"
+      "resize": "Cambiar el tamaño de los paneles",
+      "cost": "Coste: {{cost}}"
     },
     "stage": {
       "label": "Animación",
       "legend": "Leyenda",
-      "comparisons": "comparaciones",
-      "swaps": "intercambios",
-      "shifts": "desplazamientos",
-      "writes": "escrituras",
       "summary": "Valores en orden: {{values}}.",
       "summary_compare": "Comparando las posiciones {{positions}}.",
       "summary_move": "Moviendo las posiciones {{positions}}.",
@@ -922,7 +919,47 @@
       "fallback": "Valores por posición",
       "fallback_item": "Posición {{at}}: {{value}}, {{role}}",
       "positions": "Posiciones",
-      "pointers": "Punteros"
+      "pointers": "Punteros",
+      "counter": {
+        "comparisons": "comparaciones",
+        "swaps": "intercambios",
+        "shifts": "desplazamientos",
+        "writes": "escrituras",
+        "calls": "llamadas",
+        "depth": "profundidad de pila",
+        "moves": "movimientos",
+        "operations": "operaciones",
+        "additions": "sumas",
+        "queries": "consultas",
+        "appends": "inserciones",
+        "copies": "copias",
+        "per_append": "escrituras por inserción"
+      },
+      "rows": {
+        "prefix": "Sumas prefijas",
+        "buffer": "Búfer de mezcla",
+        "storage": "Almacenamiento nuevo"
+      },
+      "call_stack": "Pila de llamadas",
+      "stack_empty": "vacía",
+      "peg": "Varilla {{peg}}",
+      "growth_x": "n (tamaño de la entrada)",
+      "growth_y": "pasos",
+      "growth_probe": "Comparar en",
+      "growth_readout": "Con n = {{n}}, de menos a más pasos:",
+      "fallback_row": "{{label}}: {{values}}",
+      "fallback_bucket": "Cubeta {{label}}: {{values}}",
+      "fallback_peg": "Varilla {{peg}}, de abajo arriba: {{disks}}",
+      "fallback_bits": "{{label}} = {{value}}, en binario {{bits}}",
+      "fallback_stack": "Pila, de arriba abajo: {{entries}}",
+      "summary_pegs": "Varillas, de abajo arriba: {{pegs}}.",
+      "summary_bits": "{{rows}}.",
+      "summary_growth": "{{count}} de 6 curvas de crecimiento a la vista; la entrada es n = {{n}}.",
+      "summary_stack": "En ejecución: {{top}}.",
+      "summary_capacity": "Almacenamiento para {{capacity}} valores, {{size}} en uso.",
+      "fallback_growth": "{{label}}: {{count}} pasos con n = {{n}}",
+      "left_run": "izquierda",
+      "right_run": "derecha"
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -932,7 +969,14 @@
       "swap": "Intercambiando",
       "shift": "Desplazando",
       "sorted": "En su lugar definitivo",
-      "key": "Clave"
+      "key": "Clave",
+      "running": "En ejecución",
+      "waiting": "Esperando en la pila",
+      "returned": "Ya devolvió",
+      "moving": "Moviéndose",
+      "result": "Resultado",
+      "reading": "Leyendo",
+      "writing": "Escribiendo"
     },
     "controls": {
       "label": "Reproducción",
@@ -961,7 +1005,17 @@
         "count": "Escribe de {{min}} a {{max}} números.",
         "nan": "«{{token}}» no es un número entero.",
         "range": "{{value}} está fuera de rango: usa de {{min}} a {{max}}.",
-        "steps": "Esta entrada necesita más de {{max}} pasos. Prueba con menos valores."
+        "steps": "Esta entrada necesita más de {{max}} pasos. Prueba con menos valores.",
+        "unsorted": "Los valores deben estar en orden ascendente.",
+        "target": "Usa un objetivo de {{min}} a {{max}}."
+      },
+      "count": "n =",
+      "count_label": "n: un número entero de {{lo}} a {{hi}}",
+      "target": {
+        "target": "Objetivo",
+        "k": "k",
+        "days": "Días",
+        "limit": "Límite"
       }
     },
     "tabs": {
@@ -991,7 +1045,13 @@
       "comparison-sort": "Ordenación por comparación",
       "adjacent-swaps": "Intercambios de vecinos",
       "online": "En línea",
-      "divide-and-conquer": "Divide y vencerás"
+      "divide-and-conquer": "Divide y vencerás",
+      "growth-rates": "Ritmos de crecimiento",
+      "recursion": "Recursión",
+      "bitwise": "Operaciones de bits",
+      "prefix-sum": "Sumas prefijas",
+      "precomputation": "Precálculo",
+      "amortised-analysis": "Análisis amortizado"
     },
     "narration": {
       "bubble-sort": {
@@ -1023,6 +1083,59 @@
         "swap_self": "{{value}} ya está en el borde de la parte izquierda, así que i simplemente avanza.",
         "place": "Coloca el pivote {{pivot}} en el índice {{i}}. Todo lo que queda a su izquierda es menor; ya está en su lugar definitivo.",
         "done": "Ordenado: {{comparisons}} comparaciones y {{moves}} intercambios para {{n}} valores."
+      },
+      "big-o-growth": {
+        "ready": "Seis bucles, una entrada: n = {{n}}. Cada bucle cuenta sus propios pasos; fíjate en lo lejos que acaban unos de otros.",
+        "constant": "O(1): un paso, sea n tan grande como sea.",
+        "log": "i = {{i}} ≤ {{n}}, así que cuenta un paso ({{steps}} hasta ahora) y dobla i a {{next}}.",
+        "log_done": "i pasó de n tras {{steps}} duplicaciones: O(log n). Doblando se llega a n en muy pocos pasos.",
+        "linear": "O(n): un paso por valor, {{steps}} pasos para n = {{n}}.",
+        "nlogn": "O(n log n): un bucle que dobla dentro de un bucle sobre n: {{n}} × {{log}} = {{steps}} pasos.",
+        "quadratic": "O(n²): un paso por cada par (i, j): {{n}} × {{n}} = {{steps}} pasos.",
+        "exponential": "O(2ⁿ): un paso por cada subconjunto de n elementos: {{steps}} pasos. Cada elemento más duplica el trabajo.",
+        "done": "Con n = {{n}} los recuentos van de {{fastest}} a {{slowest}}. Mueve el control de n para comparar las curvas en cualquier n."
+      },
+      "recursion-call-stack": {
+        "ready": "Suma {{n}} valores con recursión: la llamada para un tramo suma los resultados de sus dos mitades.",
+        "call": "Llamada total({{lo}}, {{hi}}): entra un marco nuevo en la pila (profundidad {{depth}}). Hay más de un valor, así que hay que dividir.",
+        "check_leaf": "Llamada total({{lo}}, {{hi}}): entra un marco nuevo en la pila (profundidad {{depth}}). Un solo valor: es el caso base.",
+        "leaf": "Caso base: devuelve a[{{at}}] = {{value}}. El marco sale de la pila y quien llamó continúa.",
+        "split": "mid = {{mid}}: primero total({{lo}}, {{mid}}) y luego total({{next}}, {{hi}}). Mientras, este marco espera en la pila.",
+        "combine": "Han vuelto las dos mitades: {{left}} + {{right}} = {{result}}. total({{lo}}, {{hi}}) lo devuelve y su marco sale de la pila.",
+        "done": "La suma es {{sum}}, tras {{calls}} llamadas. La pila nunca tuvo más marcos que la profundidad del árbol."
+      },
+      "towers-of-hanoi": {
+        "ready": "Mueve {{n}} discos de la varilla 1 a la 3, de uno en uno y sin poner nunca un disco grande sobre uno pequeño. Hacen falta {{minimum}} movimientos.",
+        "call": "hanoi({{n}}): para mover {{n}} discos de {{source}} a {{target}}, primero aparta los {{smaller}} más pequeños a la varilla {{spare}}.",
+        "empty": "hanoi(0): no hay discos que mover, así que vuelve enseguida.",
+        "move": "Movimiento {{count}}: el disco {{disk}} pasa de la varilla {{source}} a la {{target}}.",
+        "done": "Hecho: {{moves}} movimientos (2ⁿ − 1 para n = {{n}}) y {{calls}} llamadas.",
+        "call_one": "hanoi(1): un solo disco, así que pasa directamente de la varilla {{source}} a la {{target}} (las llamadas con 0 discos de alrededor vuelven enseguida)."
+      },
+      "bit-manipulation": {
+        "ready": "x = {{x}} e y = {{y}}, en binario. Cada columna es una potencia de dos.",
+        "and": "x & y = {{result}}: un 1 solo donde x e y tienen un 1.",
+        "or": "x | y = {{result}}: un 1 donde x o y tengan un 1.",
+        "xor": "x ^ y = {{result}}: un 1 donde x e y son distintos.",
+        "left": "x << 1 = {{result}}: cada bit pasa una posición a la izquierda, lo que duplica x.",
+        "right": "x >> 1 = {{result}}: cada bit pasa una posición a la derecha y el último se pierde: x a la mitad, redondeado hacia abajo.",
+        "clear": "{{before}} − 1 = {{minus}} invierte el 1 más bajo y los 0 que tiene debajo, así que {{before}} & {{minus}} = {{after}} borra justo ese bit. Cuenta: {{count}}.",
+        "count": "x llegó a 0: {{x}} tiene {{count}} bits a 1. El bucle dio una vuelta por cada 1, no por cada bit.",
+        "done": "Hecho: {{ops}} operaciones de bits, cada una un solo paso de la máquina."
+      },
+      "prefix-sums": {
+        "ready": "Construye las sumas prefijas de {{n}} valores: p[i] es la suma de todo lo que queda a la izquierda de la posición i, así que p[0] = 0.",
+        "add": "p[{{next}}] = p[{{i}}] + a[{{i}}] = {{before}} + {{value}} = {{sum}}.",
+        "query": "Suma de las posiciones {{lo}} a {{hi}}: p[{{upper}}] − p[{{lo}}] = {{top}} − {{bottom}} = {{answer}}. Dos lecturas, mida lo que mida el tramo.",
+        "done": "Con {{additions}} sumas se construyó la fila una sola vez; desde ahora cada suma de un tramo cuesta una resta. Esta da {{answer}}."
+      },
+      "dynamic-array": {
+        "ready": "Añade {{n}} valores a un arreglo que empieza con sitio para uno.",
+        "room": "size {{size}} < capacidad {{capacity}}: hay sitio para {{v}}.",
+        "full": "size {{size}} = capacidad {{capacity}}: lleno. Reserva almacenamiento nuevo para {{bigger}} y copia todo antes de añadir {{v}}.",
+        "copy": "Copia a[{{i}}] = {{value}} al almacenamiento nuevo ({{copies}} copias hasta ahora).",
+        "write": "Escribe {{v}} en la posición {{at}}: size {{size}}, capacidad {{capacity}}.",
+        "done": "{{n}} inserciones costaron {{copies}} copias en total: unas {{cost}} escrituras por inserción. Doblar la capacidad lo mantiene por debajo de 3, lleguen los valores que lleguen."
       }
     }
   }

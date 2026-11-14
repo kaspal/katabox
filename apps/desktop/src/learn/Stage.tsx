@@ -8,13 +8,12 @@ import type { LearnInput } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { PRESETS, type PresetId } from "./engine/inputs";
+import { PRESETS, hasTarget, valueLimits, type PresetId } from "./engine/inputs";
 import type { TraceError } from "./engine/useTrace";
 import { SPEEDS, isSpeed, type Player } from "./engine/usePlayer";
 import type { Role, Step, TracerDef } from "./engine/types";
-import { ArrayScene } from "./scenes/ArrayScene";
-import { BarsScene } from "./scenes/BarsScene";
 import { outline, roleColor, roleName } from "./scenes/common";
+import { SCENES } from "./scenes";
 
 function Swatch({ role }: { role: Role }) {
   const o = outline(role);
@@ -45,6 +44,10 @@ function errorText(t: TFunction, e: TraceError): string {
       return t("learn.input.errors.range", { value: e.value, min: e.min, max: e.max });
     case "steps":
       return t("learn.input.errors.steps", { max: e.max });
+    case "unsorted":
+      return t("learn.input.errors.unsorted");
+    case "target":
+      return t("learn.input.errors.target", { min: e.min, max: e.max });
   }
 }
 
@@ -72,13 +75,18 @@ export function Stage({
   values: number[];
   error: TraceError | null;
   onPreset: (id: PresetId) => void;
-  onCustom: (text: string) => boolean;
+  onCustom: (text: string, target?: string) => boolean;
   onClearError: () => void;
 }) {
   const { t } = useTranslation();
-  const [custom, setCustom] = useState(() => values.join(", "));
+  const withTarget = hasTarget(def);
+  const count = def.input.kind === "count";
+  const shown = withTarget ? values.slice(1) : values;
+  const [custom, setCustom] = useState(() => shown.join(", "));
+  const [target, setTarget] = useState(() => (withTarget ? String(values[0]) : ""));
   const errorId = useId();
-  const Scene = def.scene === "array" ? ArrayScene : BarsScene;
+  const Scene = SCENES[def.scene];
+  const vl = valueLimits(def);
   const narration = t(`learn.narration.${step.narration.key}` as "learn.title", step.narration.params ?? {});
   const shortcuts = t("learn.controls.shortcuts");
 
@@ -115,28 +123,22 @@ export function Stage({
           {def.legend.map((role) => (
             <li key={role} className="flex items-center gap-1.5">
               <Swatch role={role} />
-              {roleName(t, role, def.movesLabel)}
+              {roleName(t, role, def)}
             </li>
           ))}
         </ul>
         <dl className="flex gap-4 font-mono" data-testid="counters">
-          {(
-            [
-              ["comparisons", step.counters.comparisons],
-              [def.movesLabel, step.counters.moves],
-              ["writes", step.counters.writes],
-            ] as const
-          ).map(([k, v]) => (
-            <div key={k} className="flex gap-1.5">
-              <dt>{t(`learn.stage.${k}`)}</dt>
-              <dd className="font-semibold text-foreground">{v}</dd>
+          {def.counters.map((c) => (
+            <div key={c.label} className="flex gap-1.5">
+              <dt>{t(`learn.stage.counter.${c.label}`)}</dt>
+              <dd className="font-semibold text-foreground">{step.counters[c.slot]}</dd>
             </div>
           ))}
         </dl>
       </div>
 
       <div className="px-2 pt-1.5">
-        <Scene step={step} instant={player.dragging} movesLabel={def.movesLabel} maxValue={maxValue} />
+        <Scene step={step} instant={player.dragging} def={def} maxValue={maxValue} />
       </div>
 
       <p
@@ -199,7 +201,7 @@ export function Stage({
 
       <div className="flex flex-wrap items-start gap-2 border-t pt-3 text-sm">
         <span className="mt-1.5 mr-1 text-muted-foreground">{t("learn.input.label")}</span>
-        {PRESETS.filter((p) => presets.includes(p)).map((p) => (
+        {PRESETS.filter((p) => presets.includes(p) && !(count && p !== "random")).map((p) => (
           <Button
             key={p}
             type="button"
@@ -209,6 +211,7 @@ export function Stage({
             onClick={() => {
               onPreset(p);
               setCustom("");
+              setTarget("");
             }}
             data-preset={p}
           >
@@ -219,12 +222,12 @@ export function Stage({
           className="ml-auto flex flex-col gap-1"
           onSubmit={(e) => {
             e.preventDefault();
-            onCustom(custom);
+            onCustom(custom, withTarget ? target : undefined);
           }}
         >
           <div className="flex items-center gap-1.5">
             <label htmlFor={`${errorId}-input`} className="text-muted-foreground">
-              {t("learn.input.custom")}
+              {count ? t("learn.input.count") : t("learn.input.custom")}
             </label>
             <input
               id={`${errorId}-input`}
@@ -233,17 +236,39 @@ export function Stage({
                 setCustom(e.target.value);
                 if (error) onClearError();
               }}
-              aria-label={t("learn.input.custom_label", {
-                min: input.min_len,
-                max: input.max_len,
-                lo: input.min,
-                hi: input.max,
-              })}
+              aria-label={
+                count
+                  ? t("learn.input.count_label", { lo: input.min, hi: input.max })
+                  : t("learn.input.custom_label", { min: vl.min_len, max: vl.max_len, lo: input.min, hi: input.max })
+              }
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? errorId : undefined}
-              placeholder={values.join(", ")}
-              className="h-8 w-56 rounded-md border bg-card px-2.5 font-mono text-xs aria-invalid:border-destructive"
+              placeholder={shown.join(", ")}
+              className={cn(
+                "h-8 rounded-md border bg-card px-2.5 font-mono text-xs aria-invalid:border-destructive",
+                count ? "w-16" : "w-56",
+              )}
             />
+            {withTarget && (
+              <>
+                <label htmlFor={`${errorId}-target`} className="text-muted-foreground">
+                  {t(`learn.input.target.${def.input.targetLabel ?? "target"}`)}
+                </label>
+                <input
+                  id={`${errorId}-target`}
+                  value={target}
+                  onChange={(e) => {
+                    setTarget(e.target.value);
+                    if (error) onClearError();
+                  }}
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? errorId : undefined}
+                  placeholder={String(values[0])}
+                  className="h-8 w-14 rounded-md border bg-card px-2 font-mono text-xs aria-invalid:border-destructive"
+                  data-testid="target-input"
+                />
+              </>
+            )}
             <Button type="submit" size="sm" variant="secondary">
               {t("learn.input.apply")}
             </Button>

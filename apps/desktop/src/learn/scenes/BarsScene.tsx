@@ -22,7 +22,7 @@ const INDEX_Y = BARS_H + 16;
 const POINTER_Y = BARS_H + 26;
 export const BARS_SCENE_HEIGHT = POINTER_Y + 34;
 
-export function BarsScene({ step, instant, movesLabel, maxValue }: SceneProps) {
+export function BarsScene({ step, instant, def, maxValue }: SceneProps) {
   const { t } = useTranslation();
   const [ref, width] = useWidth<HTMLDivElement>();
   const tr = useTransitions(instant);
@@ -96,7 +96,7 @@ export function BarsScene({ step, instant, movesLabel, maxValue }: SceneProps) {
         <IndexRow n={n} slot={slot} y={INDEX_Y} />
         <Pointers pointers={step.pointers} slot={slot} y={POINTER_Y} transition={tr.move} />
       </svg>
-      <SceneFallback t={t} step={step} movesLabel={movesLabel} />
+      <SceneFallback t={t} step={step} def={def} />
     </div>
   );
 }

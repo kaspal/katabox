@@ -150,7 +150,7 @@ pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
     let learn = crate::learn::learn_dir_for(dir);
     if learn.is_dir() {
         println!();
-        failed += crate::learn::run_samples(&learn, dir, &env);
+        failed += crate::learn::run_samples(&learn, dir, &env, &Default::default());
     }
     if failed == 0 {
         ExitCode::SUCCESS
@@ -160,7 +160,11 @@ pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
 }
 
 /// `validate --learn [--run]`: only the Learn topics next to `dir` (ADR 0029).
-pub fn validate_learn_only(dir: &Path, run_root: Option<&Path>) -> ExitCode {
+pub fn validate_learn_only(
+    dir: &Path,
+    run_root: Option<&Path>,
+    filter: &crate::learn::TopicFilter,
+) -> ExitCode {
     let learn = crate::learn::learn_dir_for(dir);
     let mut failed = crate::learn::validate_learn(&learn, dir);
     if failed == 0
@@ -174,7 +178,7 @@ pub fn validate_learn_only(dir: &Path, run_root: Option<&Path>) -> ExitCode {
             }
         };
         println!();
-        failed += crate::learn::run_samples(&learn, dir, &env);
+        failed += crate::learn::run_samples(&learn, dir, &env, filter);
     }
     if failed == 0 {
         ExitCode::SUCCESS

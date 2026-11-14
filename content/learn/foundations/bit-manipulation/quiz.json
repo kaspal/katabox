@@ -1,0 +1,39 @@
+[
+  {
+    "prompt_en": "x = 44 (00101100), so x − 1 = 43 (00101011). What is x & (x − 1)?",
+    "prompt_es": "x = 44 (00101100), así que x − 1 = 43 (00101011). ¿Cuánto vale x & (x − 1)?",
+    "options": [
+      { "en": "43", "es": "43" },
+      { "en": "40", "es": "40" },
+      { "en": "32", "es": "32" },
+      { "en": "0", "es": "0" }
+    ],
+    "answer": 1,
+    "explain_en": "Only the lowest 1 bit (worth 4) is cleared: 00101000 = 40. The next round clears the 8, then the 32, so 44 has 3 bits set.",
+    "explain_es": "Solo se borra el 1 más bajo (que vale 4): 00101000 = 40. La siguiente vuelta borra el 8 y luego el 32, así que 44 tiene 3 bits a 1."
+  },
+  {
+    "prompt_en": "How many times does the counting loop run for x = 128?",
+    "prompt_es": "¿Cuántas vueltas da el bucle de conteo con x = 128?",
+    "options": [
+      { "en": "8, one per bit of the byte", "es": "8, una por cada bit del byte" },
+      { "en": "7", "es": "7" },
+      { "en": "Once", "es": "Una" }
+    ],
+    "answer": 2,
+    "explain_en": "128 is 10000000: a single 1 bit. 128 & 127 = 0, so the loop stops after one round. It runs once per 1 bit, not once per column.",
+    "explain_es": "128 es 10000000: un solo bit a 1. 128 & 127 = 0, así que el bucle para tras una vuelta. Da una vuelta por cada bit a 1, no por cada columna."
+  },
+  {
+    "prompt_en": "x and y are equal. What is x ^ y?",
+    "prompt_es": "x e y son iguales. ¿Cuánto vale x ^ y?",
+    "options": [
+      { "en": "0", "es": "0" },
+      { "en": "x", "es": "x" },
+      { "en": "2 × x", "es": "2 × x" }
+    ],
+    "answer": 0,
+    "explain_en": "XOR puts a 1 only where the bits differ, and equal numbers differ nowhere. That is why XOR-ing a list cancels out every pair.",
+    "explain_es": "XOR pone un 1 solo donde los bits son distintos, y dos números iguales no se diferencian en nada. Por eso hacer XOR de una lista anula cada pareja."
+  }
+]

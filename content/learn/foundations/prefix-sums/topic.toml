@@ -1,0 +1,28 @@
+id = "prefix-sums"
+subject = "foundations"
+order = 5
+title = "Prefix sums"
+title_es = "Sumas prefijas"
+tags = ["prefix-sum", "precomputation"]
+problems = ["rainfall-totals", "mileage-log", "balance-point"]
+presets = ["random", "few-unique"]
+default = [3, -2, 7, 4, 1, 6, -5, 8]
+
+[complexity]
+best = "O(n) + O(1) per query"
+average = "O(n) build, O(1) per query"
+worst = "O(n) + O(1) per query"
+space = "O(n)"
+stable = true
+in_place = false
+
+[input]
+min_len = 1
+max_len = 12
+min = -9
+max = 30
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "p = prefix_sums(a); a = p + [range_sum(p, len(a) // 4, 3 * len(a) // 4)]"
+typescript = "const p = prefixSums(a); a = [...p, rangeSum(p, Math.floor(a.length / 4), Math.floor((3 * a.length) / 4))]"

@@ -1,0 +1,39 @@
+[
+  {
+    "prompt_en": "How many moves does hanoi need for 4 disks?",
+    "prompt_es": "¿Cuántos movimientos necesita hanoi con 4 discos?",
+    "options": [
+      { "en": "8", "es": "8" },
+      { "en": "16", "es": "16" },
+      { "en": "15", "es": "15" },
+      { "en": "12", "es": "12" }
+    ],
+    "answer": 2,
+    "explain_en": "2⁴ − 1 = 15: 7 moves to clear 3 disks onto the spare peg, 1 move for disk 4, and 7 more to put the 3 disks back on top.",
+    "explain_es": "2⁴ − 1 = 15: 7 movimientos para apartar 3 discos a la varilla libre, 1 para el disco 4 y otros 7 para volver a poner los 3 discos encima."
+  },
+  {
+    "prompt_en": "hanoi(3, 1, 3, 2) starts. Which call does it make first?",
+    "prompt_es": "Empieza hanoi(3, 1, 3, 2). ¿Qué llamada hace primero?",
+    "options": [
+      { "en": "hanoi(2, 1, 2, 3): move 2 disks to the spare peg", "es": "hanoi(2, 1, 2, 3): llevar 2 discos a la varilla libre" },
+      { "en": "hanoi(2, 1, 3, 2): move 2 disks to the target peg", "es": "hanoi(2, 1, 3, 2): llevar 2 discos a la varilla de destino" },
+      { "en": "None: it moves disk 3 at once", "es": "Ninguna: mueve el disco 3 enseguida" }
+    ],
+    "answer": 0,
+    "explain_en": "Disk 3 can only move once the two smaller disks are out of the way, so they go to peg 2 first, with peg 3 as their spare.",
+    "explain_es": "El disco 3 solo puede moverse cuando los dos discos pequeños están apartados, así que primero van a la varilla 2, con la 3 como varilla libre."
+  },
+  {
+    "prompt_en": "One more disk is added. What happens to the number of moves?",
+    "prompt_es": "Se añade un disco más. ¿Qué pasa con el número de movimientos?",
+    "options": [
+      { "en": "It grows by one", "es": "Crece en uno" },
+      { "en": "It roughly doubles", "es": "Más o menos se duplica" },
+      { "en": "It stays the same", "es": "Sigue igual" }
+    ],
+    "answer": 1,
+    "explain_en": "The old tower is moved twice, once off the new disk's path and once back on top, plus one move for the new disk: 2 × (2ⁿ − 1) + 1 = 2ⁿ⁺¹ − 1.",
+    "explain_es": "La torre anterior se mueve dos veces, una para apartarla y otra para ponerla encima, más un movimiento para el disco nuevo: 2 × (2ⁿ − 1) + 1 = 2ⁿ⁺¹ − 1."
+  }
+]

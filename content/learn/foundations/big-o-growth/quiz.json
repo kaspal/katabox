@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "n = 10. How many steps does the doubling loop count?",
+    "prompt_es": "n = 10. ¿Cuántos pasos cuenta el bucle que dobla?",
+    "options": [
+      { "en": "10", "es": "10" },
+      { "en": "5", "es": "5" },
+      { "en": "4", "es": "4" }
+    ],
+    "answer": 2,
+    "explain_en": "i takes the values 1, 2, 4 and 8; doubling again gives 16, which is past 10, so the loop stops after 4 steps.",
+    "explain_es": "i toma los valores 1, 2, 4 y 8; al doblar otra vez da 16, que pasa de 10, así que el bucle para tras 4 pasos."
+  },
+  {
+    "prompt_en": "At n = 3 the quadratic loop counts 9 steps and the exponential loop 8. What does that tell you?",
+    "prompt_es": "Con n = 3 el bucle cuadrático cuenta 9 pasos y el exponencial 8. ¿Qué te dice eso?",
+    "options": [
+      { "en": "O(n²) grows faster than O(2ⁿ)", "es": "O(n²) crece más deprisa que O(2ⁿ)" },
+      { "en": "Very little: from n = 5 on, 2ⁿ is always bigger", "es": "Muy poco: a partir de n = 5, 2ⁿ es siempre mayor" },
+      { "en": "The two curves are the same", "es": "Las dos curvas son la misma" }
+    ],
+    "answer": 1,
+    "explain_en": "Big-O describes growth for large n. 2ⁿ doubles with every extra item while n² only adds a little, so 2ⁿ overtakes it at n = 5 and never looks back.",
+    "explain_es": "Big-O describe el crecimiento para n grande. 2ⁿ se duplica con cada elemento más mientras que n² solo suma un poco, así que 2ⁿ lo adelanta en n = 5 y ya no vuelve a quedar detrás."
+  },
+  {
+    "prompt_en": "n goes from 10 to 11. Which count doubles?",
+    "prompt_es": "n pasa de 10 a 11. ¿Qué recuento se duplica?",
+    "options": [
+      { "en": "The exponential one", "es": "El exponencial" },
+      { "en": "The quadratic one", "es": "El cuadrático" },
+      { "en": "The linear one", "es": "El lineal" }
+    ],
+    "answer": 0,
+    "explain_en": "One more item doubles the number of subsets: 1 024 becomes 2 048. The quadratic count only goes from 100 to 121.",
+    "explain_es": "Un elemento más duplica el número de subconjuntos: 1 024 pasa a 2 048. El recuento cuadrático solo pasa de 100 a 121."
+  }
+]

@@ -904,15 +904,12 @@
       "not_stable": "Not stable",
       "in_place": "In place",
       "not_in_place": "Uses extra space",
-      "resize": "Resize panels"
+      "resize": "Resize panels",
+      "cost": "Cost: {{cost}}"
     },
     "stage": {
       "label": "Animation",
       "legend": "Legend",
-      "comparisons": "comparisons",
-      "swaps": "swaps",
-      "shifts": "shifts",
-      "writes": "array writes",
       "summary": "Values in order: {{values}}.",
       "summary_compare": "Comparing positions {{positions}}.",
       "summary_move": "Moving positions {{positions}}.",
@@ -922,7 +919,47 @@
       "fallback": "Values by position",
       "fallback_item": "Position {{at}}: {{value}}, {{role}}",
       "positions": "Positions",
-      "pointers": "Pointers"
+      "pointers": "Pointers",
+      "counter": {
+        "comparisons": "comparisons",
+        "swaps": "swaps",
+        "shifts": "shifts",
+        "writes": "array writes",
+        "calls": "calls",
+        "depth": "stack depth",
+        "moves": "moves",
+        "operations": "operations",
+        "additions": "additions",
+        "queries": "queries",
+        "appends": "appends",
+        "copies": "copies",
+        "per_append": "writes per append"
+      },
+      "rows": {
+        "prefix": "Prefix sums",
+        "buffer": "Merge buffer",
+        "storage": "New storage"
+      },
+      "call_stack": "Call stack",
+      "stack_empty": "empty",
+      "peg": "Peg {{peg}}",
+      "growth_x": "n (input size)",
+      "growth_y": "steps",
+      "growth_probe": "Compare at",
+      "growth_readout": "At n = {{n}}, fewest steps first:",
+      "fallback_row": "{{label}}: {{values}}",
+      "fallback_bucket": "Bucket {{label}}: {{values}}",
+      "fallback_peg": "Peg {{peg}}, bottom to top: {{disks}}",
+      "fallback_bits": "{{label}} = {{value}}, binary {{bits}}",
+      "fallback_stack": "Stack, top first: {{entries}}",
+      "summary_pegs": "Pegs, bottom to top: {{pegs}}.",
+      "summary_bits": "{{rows}}.",
+      "summary_growth": "{{count}} of 6 growth curves shown; the input is n = {{n}}.",
+      "summary_stack": "Running: {{top}}.",
+      "summary_capacity": "Storage for {{capacity}} values, {{size}} in use.",
+      "fallback_growth": "{{label}}: {{count}} steps at n = {{n}}",
+      "left_run": "left",
+      "right_run": "right"
     },
     "roles": {
       "idle": "Not yet placed",
@@ -932,7 +969,14 @@
       "swap": "Swapping",
       "shift": "Shifting",
       "sorted": "In final place",
-      "key": "Key"
+      "key": "Key",
+      "running": "Running now",
+      "waiting": "Waiting on the stack",
+      "returned": "Returned",
+      "moving": "Moving",
+      "result": "Result",
+      "reading": "Reading",
+      "writing": "Writing"
     },
     "controls": {
       "label": "Playback",
@@ -961,7 +1005,17 @@
         "count": "Enter {{min}} to {{max}} numbers.",
         "nan": "“{{token}}” is not a whole number.",
         "range": "{{value}} is out of range: use {{min}} to {{max}}.",
-        "steps": "This input needs more than {{max}} steps. Try fewer values."
+        "steps": "This input needs more than {{max}} steps. Try fewer values.",
+        "unsorted": "The values must be in ascending order.",
+        "target": "Use a target from {{min}} to {{max}}."
+      },
+      "count": "n =",
+      "count_label": "n: a whole number from {{lo}} to {{hi}}",
+      "target": {
+        "target": "Target",
+        "k": "k",
+        "days": "Days",
+        "limit": "Limit"
       }
     },
     "tabs": {
@@ -991,7 +1045,13 @@
       "comparison-sort": "Comparison sort",
       "adjacent-swaps": "Adjacent swaps",
       "online": "Online",
-      "divide-and-conquer": "Divide and conquer"
+      "divide-and-conquer": "Divide and conquer",
+      "growth-rates": "Growth rates",
+      "recursion": "Recursion",
+      "bitwise": "Bitwise operations",
+      "prefix-sum": "Prefix sums",
+      "precomputation": "Precomputation",
+      "amortised-analysis": "Amortised analysis"
     },
     "narration": {
       "bubble-sort": {
@@ -1023,6 +1083,59 @@
         "swap_self": "{{value}} is already at the edge of the left part, so i just moves on.",
         "place": "Put the pivot {{pivot}} at index {{i}}. Everything to its left is smaller; it is now in its final place.",
         "done": "Sorted: {{comparisons}} comparisons and {{moves}} swaps for {{n}} values."
+      },
+      "big-o-growth": {
+        "ready": "Six loops, one input: n = {{n}}. Each loop counts its own steps; watch how far apart the counts end up.",
+        "constant": "O(1): one step, however big n is.",
+        "log": "i = {{i}} ≤ {{n}}, so count a step ({{steps}} so far) and double i to {{next}}.",
+        "log_done": "i passed n after {{steps}} doublings: O(log n). Doubling reaches n in very few steps.",
+        "linear": "O(n): one step per value, {{steps}} steps for n = {{n}}.",
+        "nlogn": "O(n log n): a doubling loop inside a loop over n: {{n}} × {{log}} = {{steps}} steps.",
+        "quadratic": "O(n²): one step for every pair (i, j): {{n}} × {{n}} = {{steps}} steps.",
+        "exponential": "O(2ⁿ): one step per subset of n items: {{steps}} steps. Each extra item doubles the work.",
+        "done": "At n = {{n}} the counts run from {{fastest}} to {{slowest}}. Move the n slider to compare the curves at any n."
+      },
+      "recursion-call-stack": {
+        "ready": "Sum {{n}} values by recursion: the call for a range adds up the sums of its two halves.",
+        "call": "Call total({{lo}}, {{hi}}): a new frame goes on the stack (depth {{depth}}). More than one value, so it must split.",
+        "check_leaf": "Call total({{lo}}, {{hi}}): a new frame goes on the stack (depth {{depth}}). One value: this is the base case.",
+        "leaf": "Base case: return a[{{at}}] = {{value}}. The frame pops and its caller resumes.",
+        "split": "mid = {{mid}}: first total({{lo}}, {{mid}}), then total({{next}}, {{hi}}). Meanwhile this frame waits on the stack.",
+        "combine": "Both halves are back: {{left}} + {{right}} = {{result}}. total({{lo}}, {{hi}}) returns it and its frame pops.",
+        "done": "The sum is {{sum}}, after {{calls}} calls. The stack never held more frames than the tree is deep."
+      },
+      "towers-of-hanoi": {
+        "ready": "Move {{n}} disks from peg 1 to peg 3, one at a time, never a bigger disk on a smaller one. It takes {{minimum}} moves.",
+        "call": "hanoi({{n}}): to move {{n}} disks from {{source}} to {{target}}, first move the {{smaller}} smaller ones out of the way, to peg {{spare}}.",
+        "empty": "hanoi(0): no disks to move, so it returns at once.",
+        "move": "Move {{count}}: disk {{disk}} goes from peg {{source}} to peg {{target}}.",
+        "done": "Done: {{moves}} moves (2ⁿ − 1 for n = {{n}}) and {{calls}} calls.",
+        "call_one": "hanoi(1): a single disk, so move it straight from peg {{source}} to peg {{target}} (the calls with 0 disks around it just return)."
+      },
+      "bit-manipulation": {
+        "ready": "x = {{x}} and y = {{y}}, in binary. Each column is a power of two.",
+        "and": "x & y = {{result}}: a 1 only where both x and y have a 1.",
+        "or": "x | y = {{result}}: a 1 wherever x or y has a 1.",
+        "xor": "x ^ y = {{result}}: a 1 where x and y differ.",
+        "left": "x << 1 = {{result}}: every bit moves one place left, which doubles x.",
+        "right": "x >> 1 = {{result}}: every bit moves one place right and the last one drops off: x halved, rounded down.",
+        "clear": "{{before}} − 1 = {{minus}} flips the lowest 1 bit and the 0s below it, so {{before}} & {{minus}} = {{after}} clears just that bit. Count: {{count}}.",
+        "count": "x reached 0: {{x}} has {{count}} bits set to 1. The loop ran once per 1 bit, not once per bit.",
+        "done": "Done: {{ops}} bit operations, each a single machine step."
+      },
+      "prefix-sums": {
+        "ready": "Build the prefix sums of {{n}} values: p[i] is the sum of everything left of position i, so p[0] = 0.",
+        "add": "p[{{next}}] = p[{{i}}] + a[{{i}}] = {{before}} + {{value}} = {{sum}}.",
+        "query": "Sum of positions {{lo}} to {{hi}}: p[{{upper}}] − p[{{lo}}] = {{top}} − {{bottom}} = {{answer}}. Two reads, whatever the range's length.",
+        "done": "{{additions}} additions built the row once; from now on every range sum costs one subtraction. This one is {{answer}}."
+      },
+      "dynamic-array": {
+        "ready": "Append {{n}} values to an array that starts with room for one.",
+        "room": "size {{size}} < capacity {{capacity}}: there is room for {{v}}.",
+        "full": "size {{size}} = capacity {{capacity}}: full. Allocate new storage for {{bigger}} and copy everything across before adding {{v}}.",
+        "copy": "Copy a[{{i}}] = {{value}} into the new storage ({{copies}} copies so far).",
+        "write": "Write {{v}} at position {{at}}: size {{size}}, capacity {{capacity}}.",
+        "done": "{{n}} appends cost {{copies}} copies in all: about {{cost}} writes per append. Doubling keeps that below 3, however many values arrive."
       }
     }
   }

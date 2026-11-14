@@ -1,63 +1,61 @@
 // Tracers (ADR 0029): golden step sequences checked by hand, markers in sync with both
-// samples, narration keys complete in English and Spanish, stable item identity.
+// samples, outputs equal to an independent reference, narration keys complete in English
+// and Spanish, limits equal to topic.toml, stable item identity.
 import { describe, expect, it } from "vitest";
 import en from "@/i18n/locales/en.json";
 import es from "@/i18n/locales/es.json";
-import { sampleSource } from "@/test/fakeLearn";
+import { sampleSource, topicLimits } from "@/test/fakeLearn";
+import { GOLDEN, REFERENCE, WORST } from "@/test/learnReference";
 import { parseSample } from "../engine/markers";
 import { caseInputs } from "../engine/cases";
-import { MAX_STEPS, type Step } from "../engine/types";
+import { checkInput } from "../engine/inputs";
+import { MAX_STEPS, outputOf, type Step, type TracerDef } from "../engine/types";
 import { TRACERS } from ".";
 
-const lineOf = (id: string, ext: "py" | "ts") => parseSample(sampleSource(id, ext)).lineOf;
+const lineOf = (def: TracerDef, ext: "py" | "ts") => parseSample(sampleSource(def.subject, def.id, ext)).lineOf;
 const lines = (steps: Step[], map: Record<string, number>) =>
   steps.map((s) => (s.marker === null ? null : (map[s.marker] ?? -1)));
-
-/** For [3, 1, 2]: the marker behind each step and its line in sample.py / sample.ts,
- * worked out by hand from the samples. */
-const GOLDEN: Record<string, { markers: (string | null)[]; py: (number | null)[]; ts: (number | null)[] }> = {
-  "quick-sort": {
-    markers: [null, "pivot", "compare", "compare", "swap", "place", "base", "base", null],
-    py: [null, 10, 13, 13, 14, 16, 2, 2, null],
-    ts: [null, 9, 12, 12, 13, 17, 2, 2, null],
-  },
-  "bubble-sort": {
-    markers: [null, "pass", "compare", "swap", "compare", "swap", "check", "pass", "compare", "check", null],
-    py: [null, 3, 6, 7, 6, 7, 9, 3, 6, 9, null],
-    ts: [null, 3, 6, 7, 6, 7, 11, 3, 6, 11, null],
-  },
-  "insertion-sort": {
-    markers: [null, "take", "compare", "shift", "insert", "take", "compare", "shift", "compare", "insert", null],
-    py: [null, 3, 5, 6, 8, 3, 5, 6, 5, 8, null],
-    ts: [null, 3, 5, 6, 9, 3, 5, 6, 5, 9, null],
-  },
-};
 
 function lookup(obj: unknown, key: string): unknown {
   return key.split(".").reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k], obj);
 }
 const params = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]).sort();
 
+/** Every case input, plus the worst case and a few edge inputs that fit the topic. */
+function inputs(def: TracerDef): number[][] {
+  const extra: number[][] = [];
+  if (def.input.kind === "values") extra.push([5, 5, 5, 5], [2, 1]);
+  const all = [...caseInputs(def).map((c) => c.input), ...extra, ...(WORST[def.id] ? [WORST[def.id]!] : [])];
+  return all.filter((xs) => checkInput(def, xs) === null);
+}
+
 describe.each(Object.values(TRACERS))("$id tracer", (def) => {
   it("matches the hand-checked golden sequence and lines in both samples", () => {
-    const steps = def.trace([3, 1, 2]);
-    const g = GOLDEN[def.id]!;
-    expect(steps.map((s) => s.marker)).toEqual(g.markers);
-    expect(lines(steps, lineOf(def.id, "py"))).toEqual(g.py);
-    expect(lines(steps, lineOf(def.id, "ts"))).toEqual(g.ts);
+    const g = GOLDEN[def.id];
+    expect(g, "add a golden run to learnReference.ts").toBeDefined();
+    const steps = def.trace(g!.input);
+    expect(steps.map((s) => s.marker)).toEqual(g!.markers);
+    expect(lines(steps, lineOf(def, "py"))).toEqual(g!.py);
+    expect(lines(steps, lineOf(def, "ts"))).toEqual(g!.ts);
   });
 
   it("marks exactly its markers once in each sample", () => {
     for (const ext of ["py", "ts"] as const) {
-      expect(Object.keys(lineOf(def.id, ext)).sort(), ext).toEqual([...def.markers].sort());
+      expect(Object.keys(lineOf(def, ext)).sort(), ext).toEqual([...def.markers].sort());
     }
   });
 
-  it("ends sorted, emits only known markers and keys, and stays under the step cap", () => {
-    for (const { input } of [...caseInputs(), { input: [5, 5, 5, 5] }, { input: [2, 1] }]) {
+  it("has the limits of its topic.toml", () => {
+    expect(def.limits).toEqual(topicLimits(def.subject, def.id));
+  });
+
+  it("outputs the reference, emits only known markers and keys, and stays under the step cap", () => {
+    const reference = REFERENCE[def.id];
+    expect(reference, "add a reference to learnReference.ts").toBeDefined();
+    for (const input of inputs(def)) {
       const steps = def.trace(input);
-      expect(steps.length).toBeLessThanOrEqual(MAX_STEPS);
-      expect(steps[steps.length - 1]!.items.map((it) => it.value)).toEqual([...input].sort((a, b) => a - b));
+      expect(steps.length, `${input}`).toBeLessThanOrEqual(MAX_STEPS);
+      expect(outputOf(steps), `${input}`).toEqual(reference!(input));
       for (const s of steps) {
         if (s.marker !== null) expect(def.markers).toContain(s.marker);
         expect(def.narrationKeys).toContain(s.narration.key);
@@ -65,9 +63,11 @@ describe.each(Object.values(TRACERS))("$id tracer", (def) => {
     }
   });
 
-  it("the largest input stays well under the step cap", () => {
-    const worst = Array.from({ length: 16 }, (_, k) => 99 - k); // reversed, 16 values
-    expect(def.trace(worst).length).toBeLessThan(MAX_STEPS / 2);
+  it("the hardest inputs stay well under the step cap", () => {
+    const worst =
+      WORST[def.id] ??
+      (def.input.kind === "values" ? Array.from({ length: def.limits.max_len }, (_, k) => def.limits.max - k) : null);
+    if (worst) expect(def.trace(worst).length).toBeLessThan(MAX_STEPS / 2);
   });
 
   it("has every narration key in English and Spanish with the same parameters", () => {
@@ -80,7 +80,7 @@ describe.each(Object.values(TRACERS))("$id tracer", (def) => {
     }
   });
 
-  it("keeps each value's identity, equal values included", () => {
+  it.runIf(def.subject === "sorting" && def.input.kind === "values")("keeps each value's identity, equal values included", () => {
     const input = [7, 3, 7, 3, 7];
     const steps = def.trace(input);
     for (const s of steps) {

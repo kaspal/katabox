@@ -68,6 +68,10 @@ struct TopicToml {
     complexity: LearnComplexity,
     input: LearnInput,
     sample: SampleCalls,
+    /// The samples print the sorted input (checked on every case). Default: true in the
+    /// `sorting` subject, false elsewhere; quickselect, a sorting topic, sets false.
+    #[serde(default)]
+    sorts: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -109,6 +113,8 @@ pub struct TopicDir {
     pub topic: PackTopic,
     calls: SampleCalls,
     pub cases: Vec<Case>,
+    /// The samples print the sorted input (topic.toml `sorts`, or the subject's default).
+    pub sorts: bool,
 }
 
 /// Everything under `content/learn`, read and checked. `Err` lists every problem found.
@@ -453,6 +459,7 @@ fn read_topic(dir: &Path, subject: &str, problems: &Path) -> Result<TopicDir, Ve
     }
 
     // Cases.
+    let sorts = t.sorts.unwrap_or(subject == "sorting");
     let cases = match serde_json::from_str::<Cases>(&read("cases.json")?) {
         Ok(c) => c.cases,
         Err(e) => {
@@ -467,7 +474,7 @@ fn read_topic(dir: &Path, subject: &str, problems: &Path) -> Result<TopicDir, Ve
         if !fits(&c.input) {
             errors.push(format!("cases.json {:?}: input outside the limits", c.name));
         }
-        if subject == "sorting" && !is_sort_of(&c.output, &c.input) {
+        if sorts && !is_sort_of(&c.output, &c.input) {
             errors.push(format!(
                 "cases.json {:?}: the tracer's final state is not the sorted input",
                 c.name
@@ -499,6 +506,7 @@ fn read_topic(dir: &Path, subject: &str, problems: &Path) -> Result<TopicDir, Ve
         },
         calls: t.sample,
         cases,
+        sorts,
     })
 }
 
@@ -619,14 +627,56 @@ pub fn run_sample(t: &TopicDir, language: Language, env: &JudgeEnv) -> Result<()
     Err(format!("{:?} {detail}", report.verdict))
 }
 
-/// `validate --run` for topics: every sample in every language. Returns the failures.
-pub fn run_samples(learn: &Path, problems: &Path, env: &JudgeEnv) -> usize {
-    let topics = match read_learn(learn, problems) {
+/// Which topics `validate --learn --run` runs in the sandbox: every topic (the default),
+/// the listed ids, or one subject's topics (`--topics a,b`, `--subject s`).
+#[derive(Debug, Default, Clone)]
+pub struct TopicFilter {
+    pub topics: Vec<String>,
+    pub subject: Option<String>,
+}
+
+impl TopicFilter {
+    /// The selected topics, in catalogue order. An id or subject that matches nothing is
+    /// an error, so a typo never passes as "0 failed".
+    pub fn select<'a>(&self, all: &'a [TopicDir]) -> Result<Vec<&'a TopicDir>, String> {
+        let unknown: Vec<&str> = self
+            .topics
+            .iter()
+            .filter(|id| !all.iter().any(|t| &t.topic.id == *id))
+            .map(String::as_str)
+            .collect();
+        if !unknown.is_empty() {
+            return Err(format!("unknown topic id(s): {}", unknown.join(", ")));
+        }
+        if let Some(s) = &self.subject
+            && !all.iter().any(|t| &t.topic.subject == s)
+        {
+            return Err(format!("no topics in subject {s:?}"));
+        }
+        Ok(all
+            .iter()
+            .filter(|t| self.topics.is_empty() || self.topics.contains(&t.topic.id))
+            .filter(|t| self.subject.as_ref().is_none_or(|s| &t.topic.subject == s))
+            .collect())
+    }
+}
+
+/// `validate --run` for topics: every sample in every language, for the topics `filter`
+/// selects. Returns the failures.
+pub fn run_samples(learn: &Path, problems: &Path, env: &JudgeEnv, filter: &TopicFilter) -> usize {
+    let all = match read_learn(learn, problems) {
         Ok(l) => l.topics,
         Err(_) => return 1, // validate already printed why
     };
+    let topics = match filter.select(&all) {
+        Ok(t) => t,
+        Err(e) => {
+            println!("FAIL  {e}");
+            return 1;
+        }
+    };
     let mut failed = 0;
-    for t in &topics {
+    for t in topics {
         for l in SAMPLE_LANGUAGES {
             match run_sample(t, l, env) {
                 Ok(()) => println!(
@@ -662,9 +712,31 @@ mod tests {
         .unwrap_or_else(|e| panic!("{e:#?}"));
         assert_eq!(l.pack.subjects.len(), 13);
         let ids: Vec<_> = l.topics.iter().map(|t| t.topic.id.as_str()).collect();
-        assert_eq!(ids, ["bubble-sort", "insertion-sort", "quick-sort"]);
+        // Every topic shipped so far (read in folder order; the app orders by `order`).
+        let mut ids: Vec<_> = ids;
+        ids.sort_unstable();
+        for want in [
+            "big-o-growth",
+            "bit-manipulation",
+            "bubble-sort",
+            "dynamic-array",
+            "insertion-sort",
+            "prefix-sums",
+            "quick-sort",
+            "recursion-call-stack",
+            "towers-of-hanoi",
+        ] {
+            assert!(ids.binary_search(&want).is_ok(), "{want} is missing");
+        }
         for t in &l.topics {
-            assert!(t.cases.len() >= 24, "{}: presets + 20 random", t.topic.id);
+            let lim = t.topic.input;
+            if lim.max_len == 1 {
+                // A count input (n): one case per n.
+                let all = (lim.max - lim.min + 1) as usize;
+                assert_eq!(t.cases.len(), all, "{}: every n", t.topic.id);
+            } else {
+                assert!(t.cases.len() >= 24, "{}: presets + 20 random", t.topic.id);
+            }
         }
     }
 
@@ -824,6 +896,56 @@ mod tests {
             rewrite(&t.join("topic.toml"), "default = [38", "default = [380")
         });
         assert!(has(&e, "default input"), "{e:?}");
+    }
+
+    #[test]
+    fn the_topic_filter_selects_and_refuses_unknown_ids() {
+        let learn = read_learn(
+            &repo().join("content/learn"),
+            &repo().join("content/problems"),
+        )
+        .expect("bundled topics read");
+        let ids = |f: &TopicFilter| -> Vec<String> {
+            f.select(&learn.topics)
+                .unwrap()
+                .iter()
+                .map(|t| t.topic.id.clone())
+                .collect()
+        };
+        assert_eq!(ids(&TopicFilter::default()).len(), learn.topics.len());
+        let two = TopicFilter {
+            topics: vec!["quick-sort".into(), "bubble-sort".into()],
+            subject: None,
+        };
+        // Folder order, not the order given.
+        assert_eq!(ids(&two), ["bubble-sort", "quick-sort"]);
+        let sorting = TopicFilter {
+            topics: vec![],
+            subject: Some("sorting".into()),
+        };
+        let in_sorting = ids(&sorting);
+        assert!(in_sorting.contains(&"quick-sort".to_string()));
+        assert!(
+            learn
+                .topics
+                .iter()
+                .filter(|t| t.topic.subject == "sorting")
+                .count()
+                == in_sorting.len()
+        );
+        let typo = TopicFilter {
+            topics: vec!["bubble-sort".into(), "bubble-srot".into()],
+            subject: None,
+        };
+        assert_eq!(
+            typo.select(&learn.topics).unwrap_err(),
+            "unknown topic id(s): bubble-srot"
+        );
+        let nothing = TopicFilter {
+            topics: vec![],
+            subject: Some("astrology".into()),
+        };
+        assert!(nothing.select(&learn.topics).is_err());
     }
 
     #[test]

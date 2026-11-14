@@ -1,0 +1,28 @@
+id = "dynamic-array"
+subject = "foundations"
+order = 6
+title = "Amortised cost: the dynamic array"
+title_es = "Coste amortizado: el arreglo dinámico"
+tags = ["amortised-analysis"]
+problems = []
+presets = ["random"]
+default = [12, 7, 31, 5, 18, 9, 26]
+
+[complexity]
+best = "O(1)"
+average = "O(1) amortised"
+worst = "O(n) for one resize"
+space = "O(n)"
+stable = true
+in_place = false
+
+[input]
+min_len = 1
+max_len = 16
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = append_all(a)"
+typescript = "a = appendAll(a)"
