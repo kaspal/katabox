@@ -45,9 +45,14 @@ Date: 2026-11-14 · Status: accepted (maintainer sign-off on the judge mode, the
 ### Judging (`kb-judge/src/program.rs`)
 - **There is no harness. One check, then one run per test:**
   - Rust compiles once, through the binary cache.
-  - Python, TypeScript and PHP get one short sandboxed syntax check (`compile()`,
-    `node --check`, `php -l`), so a syntax error is a `CompilationError`, as in function
+  - Python, TypeScript and PHP get one short sandboxed syntax check (`compile()`, a
+    `node -e` check, `php -l`), so a syntax error is a `CompilationError`, as in function
     mode.
+  - The TypeScript check treats the file exactly as the run does: Node's own
+    `stripTypeScriptTypes` (strip-only mode), then a parse as an ES module
+    (`vm.SourceTextModule`, which never links or evaluates). Not `node --check`: it parses
+    a `.ts` file as CommonJS without stripping types, so annotated programs without a
+    leading `import` were false compilation errors (fixed in `fix/ts-program-check`).
   - Then each test is one sandboxed run of the user's file (`solution.<ext>`) with
     `spec.stdin` = the test's text. Progress is reported per test.
 - **Limits per run:**

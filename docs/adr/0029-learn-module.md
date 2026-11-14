@@ -173,9 +173,8 @@ Date: 2026-11-14 · Status: accepted (maintainer sign-off on the section, `motio
   - `pnpm learn:cases`;
   - `kb-pack validate --learn --run`.
 - **The sample check wraps the TypeScript sample with the driver's `import` first.**
-  That's because `node --check` only strips types from a `.ts` file that starts like an
-  ES module.
-  - The same quirk affects program-mode TypeScript solutions that have type annotations
-    and no leading `import`: they get a false compilation error.
-  - That's recorded for a separate fix.
+  This was first a workaround for `node --check`, which did not strip types from a `.ts`
+  file without a leading `import`. The program-mode check no longer uses `node --check`
+  (ADR 0028, `fix/ts-program-check`), so the import's position no longer matters; it
+  stays first.
 - **Paths through topics are left for Phase 6.**
