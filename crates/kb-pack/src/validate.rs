@@ -99,8 +99,30 @@ pub(crate) fn problem_dirs(dir: &Path) -> std::io::Result<Vec<PathBuf>> {
     Ok(dirs)
 }
 
-/// Every sandbox check (crate::checks) on every problem; prints one line per check.
-pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
+/// The problem folders named in `only` (every folder when it is empty). An id that names
+/// no problem is an error, so a typo never passes as "0 failed".
+pub fn select_problems(dirs: Vec<PathBuf>, only: &[String]) -> Result<Vec<PathBuf>, String> {
+    if only.is_empty() {
+        return Ok(dirs);
+    }
+    let name = |p: &PathBuf| p.file_name().map(|n| n.to_string_lossy().into_owned());
+    let unknown: Vec<&str> = only
+        .iter()
+        .filter(|id| !dirs.iter().any(|p| name(p).as_deref() == Some(id.as_str())))
+        .map(String::as_str)
+        .collect();
+    if !unknown.is_empty() {
+        return Err(format!("unknown problem id(s): {}", unknown.join(", ")));
+    }
+    Ok(dirs
+        .into_iter()
+        .filter(|p| name(p).is_some_and(|n| only.contains(&n)))
+        .collect())
+}
+
+/// Every sandbox check (crate::checks) on every problem, or only on the problems in `only`
+/// (then the Learn samples are skipped); prints one line per check.
+pub fn run_references(dir: &Path, root: &Path, only: &[String]) -> ExitCode {
     let env = match crate::checks::env_for(root) {
         Ok(e) => e,
         Err(e) => {
@@ -112,6 +134,13 @@ pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
         Ok(d) => d,
         Err(e) => {
             eprintln!("cannot read {}: {e}", dir.display());
+            return ExitCode::FAILURE;
+        }
+    };
+    let dirs = match select_problems(dirs, only) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("{e}");
             return ExitCode::FAILURE;
         }
     };
@@ -148,7 +177,7 @@ pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
         dirs.len()
     );
     let learn = crate::learn::learn_dir_for(dir);
-    if learn.is_dir() {
+    if only.is_empty() && learn.is_dir() {
         println!();
         failed += crate::learn::run_samples(&learn, dir, &env, &Default::default());
     }
@@ -775,6 +804,26 @@ fn unsafe_integer(value: &serde_json::Value) -> Option<String> {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+
+    #[test]
+    fn a_problem_filter_keeps_only_named_problems_and_refuses_typos() {
+        let dirs: Vec<PathBuf> = ["a/two-sum", "a/budget-pair", "a/tide-lows"]
+            .iter()
+            .map(PathBuf::from)
+            .collect();
+        assert_eq!(select_problems(dirs.clone(), &[]).unwrap(), dirs);
+        let only = ["tide-lows".to_string(), "two-sum".to_string()];
+        assert_eq!(
+            select_problems(dirs.clone(), &only).unwrap(),
+            [PathBuf::from("a/two-sum"), PathBuf::from("a/tide-lows")]
+        );
+        let typo = ["two-sun".to_string()];
+        assert!(
+            select_problems(dirs, &typo)
+                .unwrap_err()
+                .contains("two-sun")
+        );
+    }
 
     #[test]
     fn normalize_collapses_whitespace() {

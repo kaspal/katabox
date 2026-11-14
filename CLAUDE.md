@@ -34,7 +34,7 @@ cargo deny check licenses        # license check (hakoniwa is an approved LGPL e
 kb-sandbox probe                 # Linux: what this kernel supports (cargo run -p kb-runner --bin kb-sandbox -- probe)
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo run -p kb-pack -- validate # validate every problem, with each problem's compressed test size (budget 512 KB; --run: machine factor, then sandbox checks: validator, reference speed per language, 500-seed stress vs brute.py, naive.py TLE, naive.rs needs ≥ 1.5× the Rust CPU cap (ratio printed); Windows)
+cargo run -p kb-pack -- validate # validate every problem, with each problem's compressed test size (budget 512 KB; --run: machine factor, then sandbox checks: validator, reference speed per language, 500-seed stress vs brute.py, naive.py TLE, naive.rs needs ≥ 1.5× the Rust CPU cap (ratio printed); `--run --problems a,b` or `--from FILE` checks only those problems; Windows)
 cargo run -p kb-pack -- generate content/problems/<id> --size max --seeds 1,2  # write hidden tests from gen.py (sandbox; committed)
 cargo run --release -p kb-pack -- profile content/problems/<id>  # complexity profile: input hashes + reference times in every language into profile/reference.json (sandbox; committed; ADR 0024)
 cargo run --release -p kb-pack -- profile --inputs  # regenerate the gitignored profile input caches from gen.py and verify their hashes (sandbox; the build packs profiles only from these)

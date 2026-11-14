@@ -241,8 +241,11 @@ pub enum MessageCode {
     /// node shared by two parents (ADR 0025).
     NodeCycle,
     // Runtime, decided by the judge from the sandbox outcome.
-    /// The batch hit its CPU or wall-clock limit during this test.
+    /// The batch hit its CPU limit during this test.
     TimeLimit,
+    /// The batch hit its wall-clock limit during this test, before using its CPU limit:
+    /// the program waited (sleep, a blocked read) or the machine was too busy.
+    WallTimeLimit,
     /// The batch hit the sandbox's total output limit during this test.
     OutputLimit,
     /// The batch hit the memory limit during this test.

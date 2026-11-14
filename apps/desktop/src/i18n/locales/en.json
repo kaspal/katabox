@@ -431,6 +431,7 @@
       "too_much_output": "The test printed too much output.",
       "node_cycle": "The returned list or tree links back to a node it already contains (a cycle, or a node shared by two parents).",
       "time_limit": "The time limit was reached during this test.",
+      "wall_time_limit": "The program stopped responding: the wall-clock limit ended it before it used its CPU time (it waited, or the computer was very busy).",
       "output_limit": "The output limit was reached during this test.",
       "memory_limit": "The memory limit was reached during this test.",
       "process_exited": "The program exited or crashed during this test.",

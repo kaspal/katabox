@@ -88,4 +88,8 @@ pub enum ProfileStop {
 pub struct ProfileRun {
     pub points: Vec<ProfilePoint>,
     pub stopped: Option<ProfileStop>,
+    /// Time spent waiting for other sandbox users (the cross-process lock), in ms. The
+    /// profile's budget does not count it.
+    #[serde(default)]
+    pub queued_ms: u32,
 }

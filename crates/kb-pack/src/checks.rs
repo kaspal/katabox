@@ -122,7 +122,47 @@ pub fn env_for(root: &Path) -> Result<JudgeEnv, String> {
         .map_err(|e| format!("{}: {e}", root.display()))?;
     // Expected outputs and stress comparisons need a program's whole stdout (ADR 0028).
     env.full_program_output = true;
+    // Checks measure CPU time; the wall limit only has to catch hangs, so a busy machine
+    // can't end a CPU-bounded run early.
+    env.wall_factor = MEASURE_WALL_FACTOR;
     Ok(env)
+}
+
+/// kb-pack's wall-clock limit, in multiples of the CPU limit (the app uses 3).
+pub const MEASURE_WALL_FACTOR: u32 = 10;
+/// Runs stopped by the wall clock (not the CPU limit) are retried this many times before
+/// the check gives up as inconclusive.
+const WALL_RETRIES: u32 = 2;
+
+/// Whether a Time Limit Exceeded came from the wall clock, not the CPU limit.
+fn stopped_by_wall(r: &kb_judge::Report) -> bool {
+    r.verdict == Verdict::TimeLimitExceeded
+        && r.first_failure
+            .as_ref()
+            .and_then(|f| f.message.as_ref())
+            .is_some_and(|m| m.code == kb_core::MessageCode::WallTimeLimit)
+}
+
+/// `kb_judge::judge` for a timing check: a run the wall clock stopped says nothing about
+/// CPU time, so it is run again; if every try ends that way the check is inconclusive (an
+/// error), never a pass.
+fn judge_timed(
+    problem: &kb_judge::Problem,
+    lang: Language,
+    source: &str,
+    env: &JudgeEnv,
+) -> Result<kb_judge::Report, String> {
+    for _ in 0..=WALL_RETRIES {
+        let r = kb_judge::judge(problem, &problem.tests, lang, source, env)
+            .map_err(|e| e.to_string())?;
+        if !stopped_by_wall(&r) {
+            return Ok(r);
+        }
+    }
+    Err(format!(
+        "inconclusive: the wall clock stopped the run {} times before its CPU limit (the machine is too busy to measure)",
+        WALL_RETRIES + 1
+    ))
 }
 
 /// Run every sandbox check on one problem folder.
@@ -207,7 +247,7 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                 continue;
             }
         };
-        match kb_judge::judge(&problem, &problem.tests, lang, &src, env) {
+        match judge_timed(&problem, lang, &src, env) {
             Ok(r) if r.verdict.is_accepted() && limited_cpu(&problem, &r) <= budget_us => {
                 add(
                     Check::Reference(lang),
@@ -236,7 +276,7 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                 ),
             ),
             Ok(r) => add(Check::Reference(lang), false, describe_failure(&r)),
-            Err(e) => add(Check::Reference(lang), false, e.to_string()),
+            Err(e) => add(Check::Reference(lang), false, e),
         }
         references.push((lang, src));
     }
@@ -287,7 +327,7 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                     let mut relaxed = problem.clone();
                     relaxed.time_limit_ms =
                         relaxed_base_ms(problem.time_limit_ms, &def, env.time_scale, NAIVE_PROBE);
-                    match kb_judge::judge(&relaxed, &relaxed.tests, lang, &naive, env) {
+                    match judge_timed(&relaxed, lang, &naive, env) {
                         Ok(r) if r.verdict == Verdict::TimeLimitExceeded => {
                             naive_margin(&name, None, cap)
                         }
@@ -301,14 +341,14 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                                 describe_failure(&r)
                             ),
                         ),
-                        Err(e) => (false, e.to_string()),
+                        Err(e) => (false, e),
                     }
                 }
             };
             add(Check::Naive(lang), ok, detail);
             continue;
         }
-        let (ok, detail) = match kb_judge::judge(&problem, &problem.tests, lang, &naive, env) {
+        let (ok, detail) = match judge_timed(&problem, lang, &naive, env) {
             Ok(r) if r.verdict == Verdict::TimeLimitExceeded => {
                 let at = r
                     .first_failure
@@ -332,7 +372,7 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                     describe_failure(&r)
                 ),
             ),
-            Err(e) => (false, e.to_string()),
+            Err(e) => (false, e),
         };
         add(Check::Naive(lang), ok, detail);
     }

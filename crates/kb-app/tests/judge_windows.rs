@@ -26,6 +26,43 @@ fn submit_opts() -> kb_app::SubmitOptions {
     }
 }
 
+/// Test helper, off in normal runs: with `KB_TEST_BURN_THREADS=<n>` it keeps n threads
+/// busy until dropped, to reproduce timing behaviour on a loaded machine.
+struct CpuBurner(
+    Vec<std::thread::JoinHandle<()>>,
+    std::sync::Arc<std::sync::atomic::AtomicBool>,
+);
+
+impl CpuBurner {
+    fn from_env() -> Option<CpuBurner> {
+        let n: usize = std::env::var("KB_TEST_BURN_THREADS").ok()?.parse().ok()?;
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let threads = (0..n)
+            .map(|_| {
+                let stop = stop.clone();
+                std::thread::spawn(move || {
+                    let mut x = 1u64;
+                    while !stop.load(std::sync::atomic::Ordering::Relaxed) {
+                        x = std::hint::black_box(
+                            x.wrapping_mul(6364136223846793005).wrapping_add(1),
+                        );
+                    }
+                })
+            })
+            .collect();
+        Some(CpuBurner(threads, stop))
+    }
+}
+
+impl Drop for CpuBurner {
+    fn drop(&mut self) {
+        self.1.store(true, std::sync::atomic::Ordering::Relaxed);
+        for t in self.0.drain(..) {
+            let _ = t.join();
+        }
+    }
+}
+
 fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -682,6 +719,7 @@ async fn a_typescript_debug_session_on_two_sum() {
 #[tokio::test]
 async fn profiles_a_solution_and_estimates_the_class() {
     use kb_core::profile::ComplexityClass;
+    let _load = CpuBurner::from_env();
     let app = app("profile").await;
     // A fresh app measures the machine once first (ADR 0017); that is not the profile.
     app.recalibrate().await.unwrap();
@@ -697,7 +735,12 @@ async fn profiles_a_solution_and_estimates_the_class() {
             .profile_solution("balanced-streaks", Language::Python, &read("ref.py"))
             .await
             .unwrap();
-        assert!(started.elapsed() < std::time::Duration::from_secs(15));
+        // The profile's own time: waiting for other sandbox users (this file's tests
+        // run alongside) is not part of its budget.
+        let own = started
+            .elapsed()
+            .saturating_sub(std::time::Duration::from_millis(u64::from(view.queued_ms)));
+        assert!(own < std::time::Duration::from_secs(15), "{own:?}");
         if view.points.len() >= 4 || attempt == 3 {
             break view;
         }

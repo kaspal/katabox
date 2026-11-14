@@ -103,8 +103,9 @@ pub fn run_script(
     spec.read_only_dirs = vec![toolchain.to_path_buf()];
     spec.stdin = stdin.to_vec();
     spec.max_output_bytes = limits.max_output_bytes;
-    spec.wall_time = Duration::from_millis(u64::from(limits.cpu_time_ms) * 3);
-    let outcome = kb_runner::run(&spec)?;
+    spec.wall_time =
+        Duration::from_millis(u64::from(limits.cpu_time_ms) * u64::from(env.wall_factor.max(1)));
+    let outcome = crate::sandbox::run(&spec)?;
     Ok(ScriptOutput {
         stdout: outcome.stdout,
         stderr: String::from_utf8_lossy(&outcome.stderr).into_owned(),

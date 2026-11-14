@@ -26,6 +26,8 @@ pub type SizedInput = (u32, Map<String, Value>);
 pub const REPETITIONS: usize = 3;
 /// The whole profile's wall-clock budget (the build plan's goal is under 15 s).
 pub const BUDGET: Duration = Duration::from_secs(12);
+/// Wall-clock limit of a profile run, in multiples of its CPU cap (the app's runs use 3).
+pub const MEASURE_WALL_FACTOR: u32 = 10;
 /// No single size may use more CPU than this.
 pub const SIZE_CAP_MS: u32 = 5_000;
 
@@ -66,11 +68,20 @@ pub fn profile(
     env: &JudgeEnv,
     budget: Duration,
 ) -> Result<ProfileRun, JudgeError> {
+    // A measurement: the CPU cap per size decides a time limit, and the budget below
+    // bounds the wall time, so a busy machine must not end a size early on the wall clock.
+    let mut measuring = env.clone();
+    measuring.wall_factor = measuring.wall_factor.max(MEASURE_WALL_FACTOR);
+    let env = &measuring;
     let started = Instant::now();
+    let queued_at_start = crate::sandbox::queued();
+    // Time queued behind other sandbox users is not this profile's: leave it out.
+    let queued = || crate::sandbox::queued().saturating_sub(queued_at_start);
+    let queued_ms = || u32::try_from(queued().as_millis()).unwrap_or(u32::MAX);
     let mut points: Vec<ProfilePoint> = Vec::new();
     let mut last_wall = Duration::ZERO;
     for (k, (n, input)) in inputs.iter().enumerate() {
-        let spent = started.elapsed();
+        let spent = started.elapsed().saturating_sub(queued());
         let left = budget.saturating_sub(spent);
         if let Some(last) = points.last()
             && predict(last, last_wall, *n) > left
@@ -78,12 +89,14 @@ pub fn profile(
             return Ok(ProfileRun {
                 points,
                 stopped: Some(ProfileStop::Budget { n: *n }),
+                queued_ms: queued_ms(),
             });
         }
         if k > 0 && left < Duration::from_millis(200) {
             return Ok(ProfileRun {
                 points,
                 stopped: Some(ProfileStop::Budget { n: *n }),
+                queued_ms: queued_ms(),
             });
         }
         let cap_ms = (left.as_millis() as u32).clamp(500, SIZE_CAP_MS);
@@ -98,13 +111,17 @@ pub fn profile(
             })
             .collect();
         let run_started = Instant::now();
+        let queued_before = queued();
         let report = judge(&sized, &tests, lang, source, env)?;
-        last_wall = run_started.elapsed();
+        last_wall = run_started
+            .elapsed()
+            .saturating_sub(queued().saturating_sub(queued_before));
         if report.verdict == Verdict::CompilationError {
             let output = report.compile_output.map(|m| m.text).unwrap_or_default();
             return Ok(ProfileRun {
                 points,
                 stopped: Some(ProfileStop::Compile { output }),
+                queued_ms: queued_ms(),
             });
         }
         let stop = report.tests.iter().find_map(|t| match t.result.verdict {
@@ -117,12 +134,14 @@ pub fn profile(
             return Ok(ProfileRun {
                 points,
                 stopped: Some(stop),
+                queued_ms: queued_ms(),
             });
         }
         if report.tests.len() < REPETITIONS {
             return Ok(ProfileRun {
                 points,
                 stopped: Some(ProfileStop::TimeLimit { n: *n }),
+                queued_ms: queued_ms(),
             });
         }
         let samples: Vec<u32> = report
@@ -139,6 +158,7 @@ pub fn profile(
     Ok(ProfileRun {
         points,
         stopped: None,
+        queued_ms: queued_ms(),
     })
 }
 

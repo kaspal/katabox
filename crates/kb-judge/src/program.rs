@@ -156,7 +156,7 @@ fn check_syntax(
     let mut spec = SandboxSpec::new(&env.sandbox_root, program, &work.path, &CHECK_LIMITS);
     spec.args = args;
     spec.read_only_dirs = vec![toolchain.to_path_buf()];
-    let outcome = kb_runner::run(&spec)?;
+    let outcome = crate::sandbox::run(&spec)?;
     let info = CompileInfo {
         cached: false,
         time_us: u64::try_from(outcome.wall_time.as_micros()).unwrap_or(u64::MAX),
@@ -267,7 +267,8 @@ pub(crate) fn judge_program(
         spec.read_only_dirs = vec![read_only.clone()];
         spec.stdin = stdin.into_bytes();
         spec.max_output_bytes = PROGRAM_OUTPUT_BYTES;
-        let outcome = kb_runner::run(&spec)?;
+        spec.wall_time = spec.cpu_time * env.wall_factor.max(1);
+        let outcome = crate::sandbox::run(&spec)?;
 
         let cpu_us = u64::try_from((outcome.user_time + outcome.kernel_time).as_micros())
             .unwrap_or(u64::MAX);
@@ -280,11 +281,21 @@ pub(crate) fn judge_program(
         ));
 
         let (verdict, message, stop) = match outcome.termination {
-            Termination::CpuTimeLimit | Termination::WallTimeLimit => (
+            Termination::CpuTimeLimit => (
                 Verdict::TimeLimitExceeded,
                 Some(Message::new(
                     MessageCode::TimeLimit,
                     format!("time limit of {shown_limit_ms} ms exceeded"),
+                )),
+                true,
+            ),
+            Termination::WallTimeLimit => (
+                Verdict::TimeLimitExceeded,
+                Some(Message::new(
+                    MessageCode::WallTimeLimit,
+                    format!(
+                        "stopped by the wall-clock limit before using its {shown_limit_ms} ms of CPU time"
+                    ),
                 )),
                 true,
             ),

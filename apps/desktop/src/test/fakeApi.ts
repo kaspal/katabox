@@ -186,6 +186,7 @@ export function linearProfile(): ProfileView {
     reference_estimate: estimate,
     stopped: null,
     time_scale: 1,
+    queued_ms: 0,
   };
 }
 

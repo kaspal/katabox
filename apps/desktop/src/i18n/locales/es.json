@@ -431,6 +431,7 @@
       "too_much_output": "La prueba imprimió demasiada salida.",
       "node_cycle": "La lista o el árbol devuelto vuelve a un nodo que ya contiene (un ciclo, o un nodo compartido por dos padres).",
       "time_limit": "Se alcanzó el tiempo límite durante esta prueba.",
+      "wall_time_limit": "El programa dejó de responder: el límite de tiempo real lo detuvo antes de usar su tiempo de CPU (estaba esperando o el equipo estaba muy ocupado).",
       "output_limit": "Se alcanzó el límite de salida durante esta prueba.",
       "memory_limit": "Se alcanzó el límite de memoria durante esta prueba.",
       "process_exited": "El programa terminó o falló durante esta prueba.",

@@ -1,9 +1,10 @@
 //! KataBox problem packs.
 //!
-//! `kb-pack validate [DIR] [--run] [--learn [--topics ID,ID] [--subject ID]] [--root ROOT]` —
+//! `kb-pack validate [DIR] [--run [--problems ID,ID | --from FILE]] [--learn [--topics ID,ID] [--subject ID]] [--root ROOT]` —
 //! checks every problem folder under DIR and the Learn topics in content/learn (ADR 0029;
 //! `--learn`: only the topics; `--topics` / `--subject` limit the sandbox runs to those
-//! topics, and an unknown id is an error)
+//! topics, and an unknown id is an error; `--problems` / `--from` (one id per line) limit
+//! `--run` to those problems and skip the Learn samples)
 //! (default `content/problems`) against the package format in the plan: structure,
 //! metadata, test files, and that each reference solution matches its generated stub.
 //! `--run` adds the sandbox checks (ADR 0016): `validate.py` accepts every test; every
@@ -36,7 +37,7 @@ use kb_pack::{BuildOptions, build, run_references, validate_all, validate_learn_
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run] [--learn [--topics ID,ID] [--subject ID]] [--root ROOT]\n  \
+const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run [--problems ID,ID | --from FILE]] [--learn [--topics ID,ID] [--subject ID]] [--root ROOT]\n  \
                      kb-pack generate PROBLEM_DIR [--size max|small] --seeds 1,2 [--from N] [--root ROOT]\n  \
                      kb-pack profile PROBLEM_DIR [--root ROOT]\n  \
                      kb-pack profile --inputs [DIR] [--root ROOT]
@@ -67,9 +68,27 @@ fn validate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
     let mut run = false;
     let mut learn_only = false;
     let mut filter = kb_pack::TopicFilter::default();
+    let mut only: Vec<String> = Vec::new();
     while let Some(a) = args.next() {
         match a.as_str() {
             "--run" => run = true,
+            "--problems" => match args.next() {
+                Some(v) => only.extend(
+                    v.split(',')
+                        .map(|s| s.trim().to_string())
+                        .filter(|s| !s.is_empty()),
+                ),
+                None => return usage("--problems needs a value"),
+            },
+            "--from" => match args.next().map(std::fs::read_to_string) {
+                Some(Ok(text)) => only.extend(
+                    text.lines()
+                        .map(|l| l.trim().to_string())
+                        .filter(|l| !l.is_empty() && !l.starts_with('#')),
+                ),
+                Some(Err(e)) => return usage(&format!("--from: {e}")),
+                None => return usage("--from needs a file"),
+            },
             "--learn" => learn_only = true,
             "--topics" => match args.next() {
                 Some(v) => {
@@ -97,6 +116,9 @@ fn validate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
     if (!filter.topics.is_empty() || filter.subject.is_some()) && !learn_only {
         return usage("--topics and --subject need --learn");
     }
+    if !only.is_empty() && (learn_only || !run) {
+        return usage("--problems and --from need --run (and not --learn)");
+    }
     if learn_only {
         return validate_learn_only(&dir, run.then_some(root.as_path()), &filter);
     }
@@ -104,7 +126,7 @@ fn validate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
     if code != ExitCode::SUCCESS || !run {
         return code;
     }
-    run_references(&dir, &root)
+    run_references(&dir, &root, &only)
 }
 
 fn generate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {

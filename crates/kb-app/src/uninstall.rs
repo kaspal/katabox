@@ -66,7 +66,9 @@ pub async fn sandbox_roots(local_data: &Path, user_db: &Path) -> Vec<PathBuf> {
 pub async fn cleanup_sandbox(local_data: &Path, user_db: &Path) -> Result<CleanupReport> {
     let roots = sandbox_roots(local_data, user_db).await;
     let dirs: Vec<PathBuf> = roots.iter().flat_map(|r| grant_dirs(r)).collect();
-    kb_runner::cleanup(&dirs)
+    // Under the cross-process sandbox lock, so a running judge elsewhere finishes first.
+    kb_judge::sandbox::with_locks(&roots, || kb_runner::cleanup(&dirs))
+        .map_err(|e| AppError::new(AppErrorCode::Sandbox, format!("cleanup lock: {e}")))?
         .map_err(|e| AppError::new(AppErrorCode::Sandbox, format!("cleanup: {e}")))?;
     Ok(CleanupReport { roots, dirs })
 }

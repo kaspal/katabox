@@ -32,6 +32,8 @@ pub struct ProfileView {
     pub stopped: Option<ProfileStop>,
     /// The machine's time scale the reference times were multiplied by (ADR 0017).
     pub time_scale: f64,
+    /// Time the profile waited for other sandbox users, in ms (not counted in its budget).
+    pub queued_ms: u32,
 }
 
 /// The reference times (factor 1.0) at the machine's time scale.
@@ -103,6 +105,7 @@ impl App {
             reference,
             stopped: run.stopped,
             time_scale: scale,
+            queued_ms: run.queued_ms,
         })
     }
 }

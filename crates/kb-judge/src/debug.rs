@@ -249,7 +249,7 @@ fn run(
     spec.stdin = serde_json::to_vec(&request).map_err(|e| JudgeError::Internal(e.to_string()))?;
     // An explicit budget: the encoded trace, the records around it and the prints.
     spec.max_output_bytes = TRACE_BUDGET_BYTES + RECORD_ALLOWANCE + 2 * print_cap;
-    let outcome = kb_runner::run(&spec)?;
+    let outcome = crate::sandbox::run(&spec)?;
 
     let facts = RunFacts {
         termination: outcome.termination,

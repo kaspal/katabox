@@ -1444,9 +1444,14 @@ export type MessageCode =
  */
 "node_cycle" | 
 /**
- * The batch hit its CPU or wall-clock limit during this test.
+ * The batch hit its CPU limit during this test.
  */
 "time_limit" | 
+/**
+ * The batch hit its wall-clock limit during this test, before using its CPU limit:
+ * the program waited (sleep, a blocked read) or the machine was too busy.
+ */
+"wall_time_limit" | 
 /**
  * The batch hit the sandbox's total output limit during this test.
  */
@@ -1662,7 +1667,11 @@ stopped: ProfileStop | null;
 /**
  * The machine's time scale the reference times were multiplied by (ADR 0017).
  */
-time_scale: number }
+time_scale: number; 
+/**
+ * Time the profile waited for other sandbox users, in ms (not counted in its budget).
+ */
+queued_ms: number }
 /**
  * A public test as shown in the UI.
  */
