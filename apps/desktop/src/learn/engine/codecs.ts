@@ -4,7 +4,7 @@
 import { tokens, type InputError } from "./inputs";
 import type { FieldKey, InputCodec } from "./types";
 
-const fail = (key: string, params?: Record<string, string | number>): { error: InputError } => ({
+export const fail = (key: string, params?: Record<string, string | number>): { error: InputError } => ({
   error: { code: "custom", key, params },
 });
 

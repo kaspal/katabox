@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Keys 10, 22, 31, ... go into 7 buckets. When 31 arrives, which bucket does it go to, and what is already there?",
+    "prompt_es": "Las claves 10, 22, 31, ... van a 7 cubetas. Cuando llega 31, ¿a qué cubeta va y qué hay ya en ella?",
+    "options": [
+      { "en": "Bucket 3, which already holds 10", "es": "La cubeta 3, que ya tiene 10" },
+      { "en": "Bucket 1, which already holds 22", "es": "La cubeta 1, que ya tiene 22" },
+      { "en": "Bucket 4, which is empty", "es": "La cubeta 4, que está vacía" }
+    ],
+    "answer": 0,
+    "explain_en": "31 mod 7 = 3, and 10 mod 7 = 3 too. The scan compares 31 with 10, finds no duplicate, and appends 31 after it.",
+    "explain_es": "31 mod 7 = 3, y 10 mod 7 también es 3. El recorrido compara 31 con 10, no encuentra duplicado y añade 31 detrás."
+  },
+  {
+    "prompt_en": "After all nine keys (10, 22, 31, 15, 6, 28, 13, 40, 17), which bucket holds the longest chain?",
+    "prompt_es": "Tras las nueve claves (10, 22, 31, 15, 6, 28, 13, 40, 17), ¿qué cubeta tiene la cadena más larga?",
+    "options": [
+      { "en": "Bucket 6: 6, 13", "es": "La cubeta 6: 6, 13" },
+      { "en": "Bucket 1: 22, 15", "es": "La cubeta 1: 22, 15" },
+      { "en": "Bucket 3: 10, 31, 17", "es": "La cubeta 3: 10, 31, 17" }
+    ],
+    "answer": 2,
+    "explain_en": "10, 31 and 17 all leave remainder 3 when divided by 7. The other buckets hold at most two keys, and buckets 2 and 4 stay empty.",
+    "explain_es": "10, 31 y 17 dejan resto 3 al dividir entre 7. Las demás cubetas tienen como mucho dos claves, y las cubetas 2 y 4 quedan vacías."
+  },
+  {
+    "prompt_en": "If every key landed in the same bucket, what would one insert cost with n keys stored?",
+    "prompt_es": "Si todas las claves cayeran en la misma cubeta, ¿cuánto costaría una inserción con n claves guardadas?",
+    "options": [
+      { "en": "O(1): hashing is constant time", "es": "O(1): el hash es de tiempo constante" },
+      { "en": "O(n): the duplicate scan reads the whole chain", "es": "O(n): la búsqueda del duplicado lee toda la cadena" },
+      { "en": "O(log n)", "es": "O(log n)" }
+    ],
+    "answer": 1,
+    "explain_en": "The hash is still O(1), but the chain holds all n keys and the scan must read each one before appending. A good hash and resizing keep chains short.",
+    "explain_es": "El hash sigue siendo O(1), pero la cadena tiene las n claves y el recorrido debe leerlas todas antes de añadir. Un buen hash y el redimensionado mantienen las cadenas cortas."
+  }
+]

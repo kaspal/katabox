@@ -1,0 +1,28 @@
+id = "bloom-filter"
+subject = "hashing"
+order = 3
+title = "Bloom filter"
+title_es = "Filtro de Bloom"
+tags = ["hashing", "probabilistic"]
+problems = []
+presets = ["false-positive", "random"]
+default = [1, 7, 1, 12, 2, 7, 2, 23, 2, 5]
+
+[complexity]
+best = "O(k)"
+average = "O(k) per add or check"
+worst = "O(k)"
+space = "O(m) bits"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 24
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(kb_ops(a, [\"add\", \"check\"], 1))"
+typescript = "a = run(kbOps(a, [\"add\", \"check\"], 1))"

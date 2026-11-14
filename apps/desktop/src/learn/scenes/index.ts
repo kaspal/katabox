@@ -8,11 +8,13 @@ import { BucketsScene } from "./BucketsScene";
 import type { SceneProps } from "./common";
 import { GrowthScene } from "./GrowthScene";
 import { HanoiScene } from "./HanoiScene";
+import { BitArrayScene, HashScene } from "./HashScene";
 import { HeapScene } from "./HeapScene";
 import { ListScene } from "./ListScene";
 import { MonoStackScene } from "./MonoStackScene";
 import { RecursionScene } from "./RecursionScene";
 import { SlotsScene } from "./SlotsScene";
+import { TreeScene } from "./TreeScene";
 
 export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
   bars: BarsScene,
@@ -27,4 +29,7 @@ export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
   monostack: MonoStackScene,
   list: ListScene,
   slots: SlotsScene,
+  tree: TreeScene,
+  hash: HashScene,
+  "bits-array": BitArrayScene,
 };

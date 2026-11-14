@@ -937,7 +937,7 @@
         "distributed": "valores repartidos",
         "scattered": "valores repartidos",
         "comparisons_max": "comparaciones (como máximo)",
-        "probes": "valores revisados",
+        "probes": "sondeos",
         "capacities_tried": "capacidades probadas",
         "sums": "sumas revisadas",
         "edge_moves": "movimientos de los bordes",
@@ -954,7 +954,17 @@
         "puts": "escrituras",
         "moved_to_front": "pasados a reciente",
         "enqueued": "encolados",
-        "dequeued": "desencolados"
+        "dequeued": "desencolados",
+        "bits_set": "bits puestos",
+        "bits_checked": "bits revisados",
+        "letters_added": "letras añadidas",
+        "letters_removed": "letras quitadas",
+        "visits": "visitas",
+        "nodes_added": "nodos añadidos",
+        "edges_followed": "aristas seguidas",
+        "climbs": "subidas",
+        "compressed": "punteros acortados",
+        "links": "enlaces"
       },
       "rows": {
         "prefix": "Sumas prefijas",
@@ -967,7 +977,11 @@
         "deque": "Bicola (posiciones)",
         "output": "Salida",
         "map": "Mapa: clave → valor",
-        "list": "Lista"
+        "list": "Lista",
+        "order": "Orden de visita",
+        "bits": "Bits",
+        "found": "Respuestas",
+        "hashes": "Hash de cada ventana"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -991,7 +1005,13 @@
       "right_run": "derecha",
       "stack": "Pila",
       "summary_list": "Lista, desde la cabeza: {{values}}.",
-      "wraps": "vuelve al principio"
+      "wraps": "vuelve al principio",
+      "hash_formula": "clave {{key}}: {{key}} mod {{m}} = {{home}}",
+      "bloom_key": "clave {{key}} → bits {{positions}}",
+      "summary_tree": "Nodos del árbol, cada uno con su padre entre paréntesis: {{nodes}}.",
+      "summary_hash": "Cubetas: {{buckets}}.",
+      "summary_bits_array": "Bits: {{bits}}.",
+      "summary_empty": "Vacío por ahora: aún no hay nada guardado."
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -1043,7 +1063,28 @@
       "written": "Recién escrito",
       "evicted": "Expulsado",
       "window_max": "Máximo de la ventana",
-      "dropped": "Descartado"
+      "dropped": "Descartado",
+      "probing": "Sondeando",
+      "checked_bit": "Bit revisado",
+      "clear_bit": "Bit a 0 (luego: no)",
+      "in_queue": "En la cola",
+      "being_deleted": "Borrándose",
+      "removed": "Eliminado",
+      "sifting": "Moviéndose",
+      "comparing_with": "Comparado con",
+      "popped": "Sacado",
+      "new_node": "Nodo nuevo",
+      "following": "Siguiendo",
+      "walking": "Recorriendo",
+      "word_end": "Fin de palabra",
+      "no_edge": "Sin esa arista",
+      "start": "Inicio",
+      "climbing": "Subiendo",
+      "relinked": "Reenlazado",
+      "root": "Raíz",
+      "reached": "Alcanzado",
+      "farthest_so_far": "El más lejano hasta ahora",
+      "visited": "Visitado"
     },
     "controls": {
       "label": "Reproducción",
@@ -1075,7 +1116,23 @@
         "wrap-around": "Dar la vuelta",
         "full": "Llenarlo",
         "middle-inserts": "Inserciones en medio",
-        "front-deletes": "Borrados al principio"
+        "front-deletes": "Borrados al principio",
+        "cluster": "Un racimo",
+        "tombstone": "Borrar y luego buscar",
+        "false-positive": "Un falso positivo",
+        "repeat": "Una repetición",
+        "words": "Palabras",
+        "delete-with-two-children": "Borrar un nodo con dos hijos",
+        "skewed": "Torcido",
+        "heap-sort-order": "Sacarlos todos",
+        "rising-pushes": "Inserciones decrecientes",
+        "shared-prefixes": "Prefijos compartidos",
+        "missing-prefix": "Prefijo ausente",
+        "chain": "Cadenas",
+        "already-joined": "Ya unidos",
+        "path": "Un camino",
+        "star": "Una estrella",
+        "caterpillar": "Una oruga"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1094,7 +1151,13 @@
           "op_args": "{{op}} lleva {{count}} número(s).",
           "letters_only": "{{field}}: usa solo las letras de la a a la z.",
           "word_length": "{{field}}: de {{min}} a {{max}} letras.",
-          "capacity": "Usa una capacidad de {{min}} a {{max}}."
+          "capacity": "Usa una capacidad de {{min}} a {{max}}.",
+          "too_many_inserts": "Como mucho {{max}} inserciones, para que quede un hueco vacío.",
+          "window": "Usa una ventana de 1 a {{max}}.",
+          "word_count": "Escribe de {{min}} a {{max}} palabras.",
+          "node_count": "Usa de {{min}} a {{max}} elementos.",
+          "node_range": "Los elementos van del 0 al {{max}}.",
+          "parent": "El padre del nodo {{node}} debe estar entre 0 y {{max}}."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1110,7 +1173,9 @@
         "text": "Texto",
         "pattern": "Patrón",
         "words": "Palabras",
-        "cycle": "La cola apunta a"
+        "cycle": "La cola apunta a",
+        "length": "Ventana",
+        "parents": "Padres"
       }
     },
     "tabs": {
@@ -1166,7 +1231,16 @@
       "linked-list": "Lista enlazada",
       "pointers": "Punteros",
       "cache": "Caché",
-      "arrays": "Arreglos"
+      "arrays": "Arreglos",
+      "hashing": "Hashing",
+      "probabilistic": "Probabilístico",
+      "strings": "Cadenas",
+      "binary-tree": "Árbol binario",
+      "bst": "Árbol binario de búsqueda",
+      "bfs": "Búsqueda en anchura",
+      "trie": "Trie",
+      "union-find": "Unión-búsqueda",
+      "tree": "Árbol"
     },
     "narration": {
       "bubble-sort": {
@@ -1509,6 +1583,114 @@
         "shrink": "El último hueco queda libre: quedan {{size}} valores.",
         "empty": "remove con el arreglo vacío: no hay nada que hacer.",
         "done": "Hecho: {{size}} valores, tras {{shifts}} desplazamientos en total. Trabajar al final es barato; en medio cuesta un desplazamiento por cada valor de detrás."
+      },
+      "separate-chaining": {
+        "ready": "Inserta {{n}} claves en una tabla de {{m}} cubetas. Cada cubeta es una lista.",
+        "hash": "La clave {{key}} va a la cubeta {{key}} mod 7 = {{b}}.",
+        "scan_empty": "La cubeta {{b}} está vacía: nada que comparar.",
+        "scan": "Recorre la cubeta {{b}} ({{len}} clave(s)) buscando {{key}}: no está.",
+        "duplicate": "{{key}} ya está en la cubeta {{b}}: se omite.",
+        "insert": "Añade {{key}} al final de la cubeta {{b}}, que ahora tiene {{len}}.",
+        "done": "{{n}} claves guardadas; la cadena más larga tiene {{longest}}. Las cadenas cortas mantienen rápidas las búsquedas."
+      },
+      "open-addressing": {
+        "ready": "Una tabla de {{m}} huecos, una clave en cada uno. Las colisiones pasan al hueco siguiente (sondeo lineal).",
+        "hash": "Clave {{key}}: su hueco de origen es {{key}} mod 8 = {{home}}.",
+        "probe": "El hueco tiene {{was}}, no {{key}}: prueba el siguiente, el hueco {{slot}}.",
+        "place": "Pon {{key}} en el hueco {{slot}} tras {{probes}} sondeo(s).",
+        "found": "El hueco {{slot}} tiene {{key}}: encontrado (1).",
+        "not_found": "El hueco {{slot}} está vacío: {{key}} no está en la tabla (0).",
+        "tombstone": "Borra {{key}}: deja una lápida ✕ en el hueco {{slot}}, para que las búsquedas sigan sondeando más allá.",
+        "delete_missing": "{{key}} no está en la tabla: nada que borrar.",
+        "done": "Hecho: {{finds}} búsqueda(s), {{probes}} sondeo(s) más allá de huecos ocupados."
+      },
+      "bloom-filter": {
+        "ready": "Un filtro de Bloom: {{m}} bits y tres funciones hash. Responde «quizá» o «seguro que no».",
+        "set": "add {{key}}: pon a 1 el bit {{p}}.",
+        "check_set": "check {{key}}: el bit {{p}} está a 1; mira el siguiente.",
+        "check_clear": "check {{key}}: el bit {{p}} está a 0, así que {{key}} nunca se añadió.",
+        "maybe": "Todos los bits de {{key}} ({{positions}}) están a 1: quizá (1). Puede que los pusieran otras claves.",
+        "no": "check {{key}}: seguro que no (0).",
+        "done": "Hecho: {{checks}} comprobación(es). Un «no» siempre acierta; un «quizá» puede ser un falso positivo."
+      },
+      "rolling-hash": {
+        "ready": "Calcula el hash de cada ventana de {{length}} letras en un texto de {{n}}: base {{base}}, módulo {{mod}}.",
+        "add": "Añade {{letter}} ({{code}}): h = h × 26 + {{code}} (mod 101) = {{h}}.",
+        "remove": "Quita {{letter}}: resta {{code}} × {{power}} (su peso), h = {{h}}.",
+        "shift_in": "Desplaza y añade {{letter}} ({{code}}): h = {{h}}, el hash de la ventana siguiente.",
+        "done": "{{windows}} hashes de ventana, cada uno en O(1) tras la primera ventana, sea cual sea su longitud ({{length}})."
+      },
+      "tree-traversals": {
+        "ready": "Los {{n}} valores forman un árbol binario de búsqueda. Recórrelo en tres órdenes.",
+        "pre": "Preorden: escribe {{value}} antes que sus hijos (n.º {{k}}).",
+        "in": "Inorden: escribe {{value}} entre sus hijos (n.º {{k}}). Un ABB sale ordenado.",
+        "post": "Postorden: escribe {{value}} después de sus hijos (n.º {{k}}).",
+        "done": "Cada orden visitó los {{n}} nodos una vez: O(n)."
+      },
+      "level-order": {
+        "ready": "Visita el árbol de {{n}} valores nivel a nivel, empezando por la raíz, {{root}}.",
+        "visit": "Saca {{value}} del frente de la cola y escríbelo.",
+        "enqueue": "Pon el hijo {{value}} de {{parent}} al final de la cola.",
+        "done": "Los {{n}} nodos salieron en orden por niveles."
+      },
+      "bst-operations": {
+        "ready": "Haz {{n}} operaciones sobre un árbol binario de búsqueda vacío: las claves menores van a la izquierda y el resto a la derecha.",
+        "descend_left": "insert {{value}}: menor que {{at}}, ve a la izquierda.",
+        "descend_right": "insert {{value}}: no es menor que {{at}}, ve a la derecha.",
+        "root": "El árbol está vacío: {{value}} pasa a ser la raíz.",
+        "attach_left": "{{value}} pasa a ser el hijo izquierdo de {{parent}}.",
+        "attach_right": "{{value}} pasa a ser el hijo derecho de {{parent}}.",
+        "search_left": "find {{value}}: menor que {{at}}, ve a la izquierda.",
+        "search_right": "find {{value}}: mayor que {{at}}, ve a la derecha.",
+        "found": "find {{value}}: encontrado (1).",
+        "not_found": "find {{value}}: se salió del árbol, no encontrado (0).",
+        "missing": "delete {{value}}: no está en el árbol.",
+        "visit": "delete {{value}}: en {{at}}.",
+        "splice": "{{value}} tiene como mucho un hijo: su hijo ocupa su lugar.",
+        "successor": "Dos hijos: busca el sucesor, la clave más pequeña de la derecha. Ve a la izquierda, a {{at}}.",
+        "copy": "Copia el sucesor {{from}} sobre {{was}} y luego borra el sucesor de abajo.",
+        "done": "Hecho. La salida tiene las respuestas de find, 0 y después las {{size}} claves en orden."
+      },
+      "binary-heap": {
+        "ready": "Haz {{n}} operaciones sobre un montículo de mínimos: cada padre es como mucho igual que sus hijos, así que la raíz es el menor.",
+        "append": "push {{value}}: añádelo al final, en la posición {{at}}.",
+        "compare_up_stop": "{{value}} no es menor que su padre {{parent}}: se queda.",
+        "compare_up_swap": "{{value}} es menor que su padre {{parent}}: súbelo.",
+        "swap_up": "{{value}} sube a la posición {{at}}.",
+        "empty": "pop con el montículo vacío: −1.",
+        "take": "pop: la raíz, {{value}}, es el menor. Sácalo.",
+        "move_last": "Pasa el último valor, {{value}}, a la raíz.",
+        "compare_down_stop": "{{value}} no es mayor que su hijo menor {{child}}: el montículo está en orden.",
+        "compare_down_swap": "{{value}} es mayor que su hijo menor {{child}}: húndelo.",
+        "swap_down": "{{value}} baja a la posición {{at}}.",
+        "done": "Hecho: {{pops}} pop, quedan {{size}} valor(es). Cada push y pop tocó un solo camino: O(log n)."
+      },
+      "trie": {
+        "ready": "Inserta {{n}} palabras en un trie y luego cuenta las que empiezan por «{{prefix}}».",
+        "new_node": "Aún no hay arista para {{letter}}: añade un nodo para «{{path}}».",
+        "follow": "Sigue {{letter}}; ahora pasan {{count}} palabra(s) por este nodo.",
+        "mark_end": "«{{word}}» termina aquí: marca el nodo.",
+        "walk": "Sigue {{letter}}: «{{path}}».",
+        "missing": "No hay arista para {{letter}}: ninguna palabra empieza por «{{prefix}}».",
+        "count_word": "{{count}} palabra(s) empiezan por «{{prefix}}», y «{{prefix}}» es una palabra.",
+        "count_only": "{{count}} palabra(s) empiezan por «{{prefix}}»; no es una palabra completa."
+      },
+      "union-find": {
+        "ready": "{{n}} elementos, cada uno en su propio conjunto: cada elemento es su propia raíz.",
+        "climb": "find {{x}}: sube hasta {{at}}.",
+        "compress": "Haz que {{node}} apunte directamente a la raíz {{root}}, para que la próxima búsqueda sea más corta.",
+        "root": "find {{x}}: la raíz es {{root}}.",
+        "same": "union {{a}} {{b}}: los dos ya están bajo la raíz {{root}}.",
+        "link": "Enlaza la raíz {{child}} bajo la raíz {{root}} (el conjunto mayor); ahora tiene {{size}}.",
+        "done": "Quedan {{sets}} conjunto(s)."
+      },
+      "tree-diameter": {
+        "ready": "Un árbol de {{n}} nodos. Busca su camino más largo, contando aristas.",
+        "first_bfs": "Primer BFS desde el nodo 0: el nodo más lejano al que llega es un extremo de un camino más largo.",
+        "visit": "Visita el nodo {{node}} a distancia {{d}}; el más lejano hasta ahora es {{best}}.",
+        "reach": "Alcanza el nodo {{node}} a distancia {{d}}.",
+        "second_bfs": "El nodo {{end}} era el más lejano (distancia {{d}}). Segundo BFS desde ahí.",
+        "done": "El nodo más lejano desde {{a}} es {{b}}: el diámetro es de {{length}} arista(s)."
       }
     },
     "compare": {

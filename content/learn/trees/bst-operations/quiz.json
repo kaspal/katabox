@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "insert 50, 30, 70, 60, 80, then insert 65. Where is 65 attached?",
+    "prompt_es": "insert 50, 30, 70, 60, 80 y luego insert 65. ¿Dónde se engancha 65?",
+    "options": [
+      { "en": "As the left child of 80", "es": "Como hijo izquierdo de 80" },
+      { "en": "As the right child of 60", "es": "Como hijo derecho de 60" },
+      { "en": "As the left child of 70, above 60", "es": "Como hijo izquierdo de 70, encima de 60" }
+    ],
+    "answer": 1,
+    "explain_en": "65 is not smaller than 50 (right), smaller than 70 (left), not smaller than 60 (right), and 60 has no right child yet. New keys are always attached as leaves.",
+    "explain_es": "65 no es menor que 50 (derecha), es menor que 70 (izquierda), no es menor que 60 (derecha), y 60 aún no tiene hijo derecho. Las claves nuevas siempre se enganchan como hojas."
+  },
+  {
+    "prompt_en": "delete 50: the root has two children. Which key takes its place?",
+    "prompt_es": "delete 50: la raíz tiene dos hijos. ¿Qué clave ocupa su lugar?",
+    "options": [
+      { "en": "30, its left child", "es": "30, su hijo izquierdo" },
+      { "en": "70, its right child", "es": "70, su hijo derecho" },
+      { "en": "60, the smallest key on its right", "es": "60, la clave menor de su derecha" }
+    ],
+    "answer": 2,
+    "explain_en": "The successor is found by going right to 70, then left to 60, which has no left child. 60 is copied into the root and the old 60 node is spliced out, so its child 65 moves up under 70.",
+    "explain_es": "El sucesor se encuentra yendo a la derecha hasta 70 y luego a la izquierda hasta 60, que no tiene hijo izquierdo. 60 se copia en la raíz y el antiguo nodo 60 se quita, así que su hijo 65 sube bajo 70."
+  },
+  {
+    "prompt_en": "Then find 65 and find 50. What is the whole output row?",
+    "prompt_es": "Luego find 65 y find 50. ¿Cuál es la fila de salida completa?",
+    "options": [
+      { "en": "[1, 0, 0, 30, 60, 65, 70, 80]", "es": "[1, 0, 0, 30, 60, 65, 70, 80]" },
+      { "en": "[1, 1, 0, 30, 50, 60, 65, 70, 80]", "es": "[1, 1, 0, 30, 50, 60, 65, 70, 80]" },
+      { "en": "[1, 0, 0, 30, 65, 60, 70, 80]", "es": "[1, 0, 0, 30, 65, 60, 70, 80]" }
+    ],
+    "answer": 0,
+    "explain_en": "65 is found (60, right to 70, left to 65). 50 is gone: the search goes left from 60 to 30, then right, and falls off. After the 0 come the five keys in order.",
+    "explain_es": "65 está (60, a la derecha hasta 70, a la izquierda hasta 65). 50 ya no está: la búsqueda va a la izquierda de 60 a 30, luego a la derecha, y se sale. Tras el 0 vienen las cinco claves en orden."
+  }
+]

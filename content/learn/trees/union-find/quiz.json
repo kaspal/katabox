@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "After union 0 1 and union 2 3, union 1 3 runs. Both groups have size 2. What happens?",
+    "prompt_es": "Tras union 0 1 y union 2 3, se ejecuta union 1 3. Los dos grupos tienen tamaño 2. ¿Qué pasa?",
+    "options": [
+      { "en": "1 is linked under 3", "es": "1 se enlaza bajo 3" },
+      { "en": "Root 0 goes under root 2", "es": "La raíz 0 va bajo la raíz 2" },
+      { "en": "Root 2 goes under root 0", "es": "La raíz 2 va bajo la raíz 0" }
+    ],
+    "answer": 2,
+    "explain_en": "union always links roots: find 1 gives 0 and find 3 gives 2. On a tie in size, b's root goes under a's root, so 2 hangs under 0, which now holds 4 elements.",
+    "explain_es": "union siempre enlaza raíces: find 1 da 0 y find 3 da 2. Si los tamaños empatan, la raíz de b va bajo la raíz de a, así que 2 cuelga de 0, que ahora tiene 4 elementos."
+  },
+  {
+    "prompt_en": "Later, union 3 5 calls find 3, which climbs 3 → 2 → 0. What does path compression change?",
+    "prompt_es": "Más tarde, union 3 5 llama a find 3, que sube 3 → 2 → 0. ¿Qué cambia la compresión de caminos?",
+    "options": [
+      { "en": "3 now points straight at 0", "es": "3 apunta ahora directamente a 0" },
+      { "en": "2 becomes a root again", "es": "2 vuelve a ser una raíz" },
+      { "en": "Nothing: the path has only two steps", "es": "Nada: el camino solo tiene dos pasos" }
+    ],
+    "answer": 0,
+    "explain_en": "Every node on the path is pointed at the root. 2 already points at 0, so only 3 changes, and the next find 3 takes one step.",
+    "explain_es": "Cada nodo del camino pasa a apuntar a la raíz. 2 ya apunta a 0, así que solo cambia 3, y el siguiente find 3 da un solo paso."
+  },
+  {
+    "prompt_en": "The seven operations end with find 5 and find 4. What is the whole output row?",
+    "prompt_es": "Las siete operaciones terminan con find 5 y find 4. ¿Cuál es la fila de salida completa?",
+    "options": [
+      { "en": "[4, 4, 2]", "es": "[4, 4, 2]" },
+      { "en": "[0, 0, 1]", "es": "[0, 0, 1]" },
+      { "en": "[0, 0, 2]", "es": "[0, 0, 2]" }
+    ],
+    "answer": 1,
+    "explain_en": "union 3 5 hung root 4 (size 2) under root 0 (size 4), so all six elements are in one group rooted at 0. Both finds give 0, and 1 group is left.",
+    "explain_es": "union 3 5 colgó la raíz 4 (tamaño 2) de la raíz 0 (tamaño 4), así que los seis elementos están en un grupo con raíz 0. Los dos find dan 0 y queda 1 grupo."
+  }
+]

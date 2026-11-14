@@ -73,7 +73,7 @@ export function Cell({
         className="fill-foreground font-mono font-semibold"
         style={{ fontSize: cell < 24 ? 10 : cell < 30 ? 11 : 15 }}
       >
-        {item.value}
+        {item.text ?? item.value}
       </text>
     </motion.g>
   );

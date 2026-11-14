@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Values 50, 30, 70, 20, 40, 60, 80, 35. Right after 30 is taken from the queue and its children are queued, what does the queue hold, front first?",
+    "prompt_es": "Valores 50, 30, 70, 20, 40, 60, 80, 35. Justo después de sacar 30 de la cola y encolar sus hijos, ¿qué hay en la cola, del frente al final?",
+    "options": [
+      { "en": "20, 40, 70", "es": "20, 40, 70" },
+      { "en": "70, 20, 40", "es": "70, 20, 40" },
+      { "en": "20, 40", "es": "20, 40" }
+    ],
+    "answer": 1,
+    "explain_en": "70 was queued with 30 when the root was visited, so it is still at the front. 30's children, 20 and 40, join at the back.",
+    "explain_es": "70 se encoló junto con 30 al visitar la raíz, así que sigue al frente. Los hijos de 30, 20 y 40, entran por el final."
+  },
+  {
+    "prompt_en": "Which value does level order write last?",
+    "prompt_es": "¿Qué valor escribe el último el recorrido por niveles?",
+    "options": [
+      { "en": "80, the rightmost node", "es": "80, el nodo más a la derecha" },
+      { "en": "40, the parent of 35", "es": "40, el padre de 35" },
+      { "en": "35, alone on the fourth row", "es": "35, solo en la cuarta fila" }
+    ],
+    "answer": 2,
+    "explain_en": "35 is the left child of 40, one row below 20, 40, 60 and 80. The whole third row leaves the queue before it.",
+    "explain_es": "35 es el hijo izquierdo de 40, una fila por debajo de 20, 40, 60 y 80. Toda la tercera fila sale de la cola antes que él."
+  },
+  {
+    "prompt_en": "What sets the extra memory level order needs?",
+    "prompt_es": "¿De qué depende la memoria extra que necesita el recorrido por niveles?",
+    "options": [
+      { "en": "The widest level: the queue holds about one row at a time", "es": "Del nivel más ancho: la cola guarda más o menos una fila cada vez" },
+      { "en": "The height: one call per level", "es": "De la altura: una llamada por nivel" },
+      { "en": "Nothing: it needs O(1) extra memory", "es": "De nada: necesita O(1) de memoria extra" }
+    ],
+    "answer": 0,
+    "explain_en": "Here the queue peaks at 4 nodes, the third row. A full tree's bottom row holds about half of its nodes, so the space is O(w) for width w.",
+    "explain_es": "Aquí la cola llega como mucho a 4 nodos, la tercera fila. La última fila de un árbol completo tiene más o menos la mitad de los nodos, así que el espacio es O(w) para una anchura w."
+  }
+]

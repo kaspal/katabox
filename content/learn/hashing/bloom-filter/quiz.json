@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "add 7 sets bits 7, 4, 2 and add 12 sets bits 12, 7, 9. How many of the 16 bits are 1 now?",
+    "prompt_es": "add 7 pone los bits 7, 4, 2 y add 12 pone los bits 12, 7, 9. ¿Cuántos de los 16 bits valen 1 ahora?",
+    "options": [
+      { "en": "6", "es": "6" },
+      { "en": "3", "es": "3" },
+      { "en": "5", "es": "5" }
+    ],
+    "answer": 2,
+    "explain_en": "Bit 7 is shared: setting it a second time changes nothing. The set bits are 2, 4, 7, 9 and 12.",
+    "explain_es": "El bit 7 se comparte: ponerlo a 1 por segunda vez no cambia nada. Los bits a 1 son 2, 4, 7, 9 y 12."
+  },
+  {
+    "prompt_en": "check 23: its hashes give bits 7, 4 and 2. What does the filter answer?",
+    "prompt_es": "check 23: sus hashes dan los bits 7, 4 y 2. ¿Qué responde el filtro?",
+    "options": [
+      { "en": "Maybe (1), a false positive: 23 was never added", "es": "Quizá (1), un falso positivo: 23 nunca se añadió" },
+      { "en": "Definitely not (0)", "es": "Seguro que no (0)" },
+      { "en": "Maybe (1), and 23 really was added", "es": "Quizá (1), y 23 sí se añadió" }
+    ],
+    "answer": 0,
+    "explain_en": "Key 7 set exactly those three bits, so all of them are 1. The filter cannot tell 23 from 7: it can only say maybe.",
+    "explain_es": "La clave 7 puso justo esos tres bits, así que los tres valen 1. El filtro no distingue 23 de 7: solo puede decir quizá."
+  },
+  {
+    "prompt_en": "Why can a plain Bloom filter not delete a key?",
+    "prompt_es": "¿Por qué un filtro de Bloom normal no puede borrar una clave?",
+    "options": [
+      { "en": "Its bits are read-only after the first check", "es": "Sus bits son de solo lectura tras el primer check" },
+      { "en": "Clearing a key's bits may clear bits other keys need, causing false negatives", "es": "Poner a 0 los bits de una clave puede borrar bits que otras claves necesitan, y causar falsos negativos" },
+      { "en": "It does not know the key's hash positions", "es": "No conoce las posiciones hash de la clave" }
+    ],
+    "answer": 1,
+    "explain_en": "Keys share bits, like 7 and 12 share bit 7. Clearing 12's bits would make check 7 say definitely not, which is wrong.",
+    "explain_es": "Las claves comparten bits, como 7 y 12 comparten el bit 7. Poner a 0 los bits de 12 haría que check 7 dijera seguro que no, y sería falso."
+  }
+]

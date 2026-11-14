@@ -24,6 +24,35 @@ function ops(input: readonly number[], width: number, header = 0): number[][] {
   return out;
 }
 
+
+/** Letters 0-25 separated by -1, as words. */
+function words(input: readonly number[]): string[] {
+  return input.reduce<string[]>((w, v) => (v === -1 ? [...w, ""] : [...w.slice(0, -1), w[w.length - 1]! + String.fromCharCode(97 + v)]), [""]);
+}
+
+/** A BST's root as nested objects (smaller left, others right), for traversals. */
+type T = { v: number; l?: T; r?: T };
+function bstOf(values: readonly number[]): T | undefined {
+  let root: T | undefined;
+  for (const v of values) {
+    const node: T = { v };
+    if (!root) root = node;
+    else {
+      let cur = root;
+      for (;;) {
+        if (v < cur.v) {
+          if (!cur.l) { cur.l = node; break; }
+          cur = cur.l;
+        } else {
+          if (!cur.r) { cur.r = node; break; }
+          cur = cur.r;
+        }
+      }
+    }
+  }
+  return root;
+}
+
 export const REFERENCE: Record<string, (input: readonly number[]) => number[]> = {
   "big-o-growth": ([n]) => [1, log2(n!), n!, n! * log2(n!), n! * n!, 2 ** n!],
   "recursion-call-stack": (xs) => [sum(xs)],
@@ -116,6 +145,139 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
       }
     }
     return out;
+  },
+  // Hashing and trees.
+  "separate-chaining": (keys) => {
+    const buckets: number[][] = Array.from({ length: 7 }, () => []);
+    for (const k of keys) if (!buckets[k % 7]!.includes(k)) buckets[k % 7]!.push(k);
+    return buckets.flatMap((b) => [b.length, ...b]);
+  },
+  "open-addressing": (input) => {
+    const set = new Set<number>();
+    const out: number[] = [];
+    for (const [op, k] of ops(input, 1)) {
+      if (op === 1) set.add(k!);
+      else if (op === 2) out.push(set.has(k!) ? 1 : 0);
+      else set.delete(k!);
+    }
+    return out;
+  },
+  "bloom-filter": (input) => {
+    const bits = new Set<number>();
+    const pos = (k: number) => [k % 16, (7 * k + 3) % 16, (11 * k + 5) % 16];
+    const out: number[] = [];
+    for (const [op, k] of ops(input, 1)) {
+      if (op === 1) pos(k!).forEach((p) => bits.add(p));
+      else out.push(pos(k!).every((p) => bits.has(p)) ? 1 : 0);
+    }
+    return out;
+  },
+  "rolling-hash": ([len, ...rest]) => {
+    // Every window hashed from scratch.
+    const codes = rest;
+    const out: number[] = [];
+    for (let i = 0; i + len! <= codes.length; i++) {
+      let h = 0;
+      for (const c of codes.slice(i, i + len!)) h = (h * 26 + c) % 101;
+      out.push(h);
+    }
+    return out;
+  },
+  "tree-traversals": (values) => {
+    const pre: number[] = [];
+    const ino: number[] = [];
+    const post: number[] = [];
+    const walk = (t?: T) => {
+      if (!t) return;
+      pre.push(t.v);
+      walk(t.l);
+      ino.push(t.v);
+      walk(t.r);
+      post.push(t.v);
+    };
+    walk(bstOf(values));
+    return [...pre, ...ino, ...post];
+  },
+  "level-order": (values) => {
+    const out: number[] = [];
+    const levels: T[][] = [[bstOf(values)!]];
+    while (levels[levels.length - 1]!.length) {
+      const level = levels[levels.length - 1]!;
+      out.push(...level.map((t) => t.v));
+      levels.push(level.flatMap((t) => [t.l, t.r].filter((c): c is T => !!c)));
+    }
+    return out;
+  },
+  "bst-operations": (input) => {
+    const multiset: number[] = [];
+    const out: number[] = [];
+    for (const [op, k] of ops(input, 1)) {
+      if (op === 1) multiset.push(k!);
+      else if (op === 2) out.push(multiset.includes(k!) ? 1 : 0);
+      else if (multiset.includes(k!)) multiset.splice(multiset.indexOf(k!), 1);
+    }
+    return [...out, 0, ...sorted(multiset)];
+  },
+  "binary-heap": (input) => {
+    const bag: number[] = [];
+    const out: number[] = [];
+    for (const [op, k] of ops(input, 1)) {
+      if (op === 1) bag.push(k!);
+      else if (!bag.length) out.push(-1);
+      else {
+        const m = Math.min(...bag);
+        bag.splice(bag.indexOf(m), 1);
+        out.push(m);
+      }
+    }
+    return out;
+  },
+  trie: (input) => {
+    const all = words(input);
+    const prefix = all[all.length - 1]!;
+    const ws = all.slice(0, -1);
+    return [ws.filter((w) => w.startsWith(prefix)).length, ws.includes(prefix) ? 1 : 0];
+  },
+  "union-find": (input) => {
+    // A plain union by size with full path compression, written separately.
+    const n = input[0]!;
+    const parent = Array.from({ length: n }, (_, k) => k);
+    const size = new Array<number>(n).fill(1);
+    const root = (x: number): number => (parent[x] === x ? x : (parent[x] = root(parent[x]!)));
+    const out: number[] = [];
+    for (const [op, a, b] of ops(input, 2, 1)) {
+      if (op === 2) out.push(root(a!));
+      else {
+        let ra = root(a!);
+        let rb = root(b!);
+        if (ra === rb) continue;
+        if (size[ra]! < size[rb]!) [ra, rb] = [rb, ra];
+        parent[rb] = ra;
+        size[ra]! += size[rb]!;
+      }
+    }
+    return [...out, parent.filter((p, k) => p === k).length];
+  },
+  "tree-diameter": (parents) => {
+    // The longest of all shortest distances, by BFS from every node.
+    const n = parents.length + 1;
+    const adj: number[][] = Array.from({ length: n }, () => []);
+    parents.forEach((p, k) => {
+      adj[p]!.push(k + 1);
+      adj[k + 1]!.push(p);
+    });
+    let best = 0;
+    for (let s = 0; s < n; s++) {
+      const dist = new Array<number>(n).fill(-1);
+      dist[s] = 0;
+      const q = [s];
+      while (q.length) {
+        const u = q.shift()!;
+        for (const v of adj[u]!) if (dist[v] === -1) { dist[v] = dist[u]! + 1; q.push(v); }
+      }
+      best = Math.max(best, ...dist);
+    }
+    return [best];
   },
   "bubble-sort": sorted,
   "insertion-sort": sorted,
@@ -212,6 +374,72 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  "separate-chaining": {
+    input: [3, 10, 3],
+    markers: [null, "hash", "scan", "insert", "hash", "scan", "insert", "hash", "scan", null],
+    py: [null, 7, 8, 10, 7, 8, 10, 7, 8, null],
+    ts: [null, 6, 7, 10, 6, 7, 10, 6, 7, null],
+  },
+  "open-addressing": {
+    input: [1, 3, 1, 11, 2, 11, 3, 3, 2, 11],
+    markers: [null, "hash", "place", "hash", "probe", "place", "hash", "probe", "found", "hash", "tombstone", "hash", "probe", "found", null],
+    py: [null, 10, 17, 10, 12, 17, 10, 12, 20, 10, 25, 10, 12, 20, null],
+    ts: [null, 9, 18, 9, 11, 18, 9, 11, 22, 9, 28, 9, 11, 22, null],
+  },
+  "bloom-filter": {
+    input: [1, 1, 2, 1, 2, 2],
+    markers: [null, "set", "set", "set", "check", "check", "check", "answer", "check", "answer", null],
+    py: [null, 14, 14, 14, 18, 18, 18, 21, 18, 21, null],
+    ts: [null, 18, 18, 18, 23, 23, 23, 28, 23, 28, null],
+  },
+  "rolling-hash": {
+    input: [2, 0, 1, 2],
+    markers: [null, "add", "add", "remove", "shift-in", null],
+    py: [null, 10, 10, 13, 14, null],
+    ts: [null, 9, 9, 13, 14, null],
+  },
+  "tree-traversals": {
+    input: [2, 1, 3],
+    markers: [null, "pre", "pre", "pre", "in", "in", "in", "post", "post", "post", null],
+    py: [null, 20, 20, 20, 28, 28, 28, 36, 36, 36, null],
+    ts: [null, 20, 20, 20, 29, 29, 29, 38, 38, 38, null],
+  },
+  "level-order": {
+    input: [2, 1, 3],
+    markers: [null, "visit", "enqueue", "enqueue", "visit", "visit", null],
+    py: [null, 24, 28, 28, 24, 24, null],
+    ts: [null, 22, 26, 26, 22, 22, null],
+  },
+  "bst-operations": {
+    input: [1, 5, 1, 3, 1, 8, 2, 3, 3, 5],
+    markers: [null, "root", "descend", "attach-left", "descend", "attach-right", "search", "result", "visit", "copy", "visit", "splice", null],
+    py: [null, 19, 16, 21, 16, 23, 28, 29, 37, 47, 37, 42, null],
+    ts: [null, 23, 19, 25, 19, 27, 34, 36, 47, 58, 47, 52, null],
+  },
+  "binary-heap": {
+    input: [1, 5, 1, 3, 2, 0, 2, 0, 2, 0],
+    markers: [null, "append", "append", "compare-up", "swap-up", "take", "move-last", "take", "empty", null],
+    py: [null, 2, 2, 6, 8, 15, 18, 15, 14, null],
+    ts: [null, 2, 2, 6, 9, 18, 21, 18, 16, null],
+  },
+  trie: {
+    input: [0, 1, -1, 0],
+    markers: [null, "new-node", "follow", "new-node", "follow", "mark-end", "walk", "count"],
+    py: [null, 12, 13, 12, 13, 15, 23, 24],
+    ts: [null, 11, 13, 11, 13, 16, 25, 27],
+  },
+  "union-find": {
+    input: [3, 1, 0, 1, 2, 1, 0, 1, 1, 0],
+    markers: [null, "link", "climb", null, "climb", "same", null],
+    py: [null, 20, 9, null, 9, 17, null],
+    ts: [null, 28, 13, null, 13, 25, null],
+  },
+  "tree-diameter": {
+    input: [0, 1],
+    markers: [null, "first-bfs", "visit", "reach", "visit", "reach", "visit", "second-bfs", "visit", "reach", "visit", "reach", "visit", null],
+    py: [null, 25, 9, 14, 9, 14, 9, 26, 9, 14, 9, 14, 9, null],
+    ts: [null, 26, 7, 11, 7, 11, 7, 27, 7, 11, 7, 11, 7, null],
+  },
   stack: {
     input: [1, 5, 2, 0, 3, 0],
     markers: [null, "push", "pop", "peek", null],

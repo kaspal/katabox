@@ -1,0 +1,28 @@
+id = "rolling-hash"
+subject = "hashing"
+order = 4
+title = "Rolling hash"
+title_es = "Hash rodante"
+tags = ["hashing", "strings"]
+problems = ["repeated-chunk"]
+presets = ["repeat", "random", "words"]
+default = [3, 0, 1, 2, 0, 1, 2, 0, 1]
+
+[complexity]
+best = "O(n)"
+average = "O(n) for all windows"
+worst = "O(n)"
+space = "O(1) extra"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 13
+min = -1
+max = 25
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = window_hashes(kb_text(a[1:])[0], a[0])"
+typescript = "a = windowHashes(kbText(a.slice(1))[0], a[0])"

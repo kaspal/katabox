@@ -1,0 +1,28 @@
+id = "union-find"
+subject = "trees"
+order = 6
+title = "Union-find"
+title_es = "Unión-búsqueda (conjuntos disjuntos)"
+tags = ["union-find", "tree"]
+problems = ["club-merges", "island-ferries", "frozen-ponds"]
+presets = ["chain", "random", "already-joined"]
+default = [6, 1, 0, 1, 1, 2, 3, 1, 1, 3, 1, 4, 5, 1, 3, 5, 2, 5, 0, 2, 4, 0]
+
+[complexity]
+best = "O(1)"
+average = "O(α(n)), almost O(1)"
+worst = "O(log n) without compression"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 4
+max_len = 37
+min = 0
+max = 10
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(a[0], kb_ops(a[1:], [\"union\", \"find\"], 2))"
+typescript = "a = run(a[0], kbOps(a.slice(1), [\"union\", \"find\"], 2))"

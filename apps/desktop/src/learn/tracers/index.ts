@@ -1,6 +1,17 @@
 // Topic id → tracer (ADR 0029). kb-pack checks every topic in content/learn has a file
 // here; Vitest checks the registry matches the files.
 import type { TracerDef } from "../engine/types";
+import { separateChaining } from "./separate-chaining";
+import { openAddressing } from "./open-addressing";
+import { bloomFilter } from "./bloom-filter";
+import { rollingHash } from "./rolling-hash";
+import { treeTraversals } from "./tree-traversals";
+import { levelOrder } from "./level-order";
+import { bstOperations } from "./bst-operations";
+import { binaryHeap } from "./binary-heap";
+import { trie } from "./trie";
+import { unionFind } from "./union-find";
+import { treeDiameter } from "./tree-diameter";
 import { dynamicArrayOps } from "./dynamic-array-ops";
 import { stack } from "./stack";
 import { queueRingBuffer } from "./queue-ring-buffer";
@@ -75,4 +86,15 @@ export const TRACERS: Record<string, TracerDef> = {
   "reverse-list": reverseList,
   "floyd-cycle": floydCycle,
   "lru-cache": lruCache,
+  "separate-chaining": separateChaining,
+  "open-addressing": openAddressing,
+  "bloom-filter": bloomFilter,
+  "rolling-hash": rollingHash,
+  "tree-traversals": treeTraversals,
+  "level-order": levelOrder,
+  "bst-operations": bstOperations,
+  "binary-heap": binaryHeap,
+  "trie": trie,
+  "union-find": unionFind,
+  "tree-diameter": treeDiameter,
 };

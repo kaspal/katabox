@@ -5,7 +5,7 @@ import type { LearnInput } from "@/bindings";
 import type { InputError } from "./inputs";
 
 /** A value with a stable identity: scenes key on `id`, so equal values still slide. */
-export type Item = { id: number; value: number };
+export type Item = { id: number; value: number; /** Shown instead of the value (a letter). */ text?: string };
 
 /** How a position is drawn. Every role has a legend label; colour is never the only cue. */
 export type Role = "idle" | "out" | "pivot" | "compare" | "swap" | "sorted" | "key";
@@ -110,6 +110,13 @@ export type SceneData = {
   slots?: SlotsData;
   /** A key → value table beside the scene (LRU's map). */
   table?: TableData;
+  /** Trees and forests (BSTs, tries, union-find): drawn with a tidy layout. */
+  forest?: ForestNode[];
+  /** A hash table: buckets (chaining) or one item per slot (open addressing), the slots
+   * visited for the current key, and how its home slot was computed. */
+  hash?: HashData;
+  /** A bit array (Bloom filter) with the positions the current key touches. */
+  bitArray?: { bits: number[]; hits: number[]; miss?: number | null; key?: number | null };
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
    * not the final row). cases.json `output` comes from here, so it is the tracer's own. */
   result?: number[];
@@ -137,6 +144,32 @@ export type SlotsData = {
 export type TableData = {
   label: RowLabel;
   rows: { key: number; value: number; role?: Role }[];
+};
+
+export type ForestNode = {
+  id: number;
+  parent: number | null;
+  text: string;
+  role?: Role;
+  /** Binary trees: which child of its parent this is. */
+  side?: "L" | "R";
+  /** A label on the edge from the parent (a trie's letter). */
+  edge?: string;
+  /** A note under the node (a distance, a count). */
+  note?: string;
+  /** A second ring (a trie node that ends a word, a root). */
+  mark?: boolean;
+};
+export type HashData = {
+  mode: "chain" | "open";
+  /** Chaining: each bucket's keys; open addressing: one item or none (value −2 is a
+   * tombstone). */
+  buckets: Item[][];
+  /** The buckets visited for the current key, in order. */
+  probe: number[];
+  key: number | null;
+  /** "k mod m = b" for the current key. */
+  home: number | null;
 };
 
 /** One frame. Snapshots, not diffs: scrubbing is O(1). */
@@ -168,7 +201,10 @@ export type SceneKind =
   | "heap"
   | "monostack"
   | "list"
-  | "slots";
+  | "slots"
+  | "tree"
+  | "hash"
+  | "bits-array";
 
 /** How a topic's input is shaped. Inputs are always one flat list of integers (the DB and
  * the sample driver see only that):

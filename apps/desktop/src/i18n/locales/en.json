@@ -937,7 +937,7 @@
         "distributed": "values distributed",
         "scattered": "values scattered",
         "comparisons_max": "comparisons (at most)",
-        "probes": "values checked",
+        "probes": "probes",
         "capacities_tried": "capacities tried",
         "sums": "sums checked",
         "edge_moves": "edge moves",
@@ -954,7 +954,17 @@
         "puts": "puts",
         "moved_to_front": "moved to recent",
         "enqueued": "enqueued",
-        "dequeued": "dequeued"
+        "dequeued": "dequeued",
+        "bits_set": "bits set",
+        "bits_checked": "bits checked",
+        "letters_added": "letters added",
+        "letters_removed": "letters removed",
+        "visits": "visits",
+        "nodes_added": "nodes added",
+        "edges_followed": "edges followed",
+        "climbs": "climbs",
+        "compressed": "pointers shortened",
+        "links": "links"
       },
       "rows": {
         "prefix": "Prefix sums",
@@ -967,7 +977,11 @@
         "deque": "Deque (positions)",
         "output": "Output",
         "map": "Map: key → value",
-        "list": "List"
+        "list": "List",
+        "order": "Visit order",
+        "bits": "Bits",
+        "found": "Answers",
+        "hashes": "Window hashes"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -991,7 +1005,13 @@
       "right_run": "right",
       "stack": "Stack",
       "summary_list": "List, head first: {{values}}.",
-      "wraps": "wraps around"
+      "wraps": "wraps around",
+      "hash_formula": "key {{key}}: {{key}} mod {{m}} = {{home}}",
+      "bloom_key": "key {{key}} → bits {{positions}}",
+      "summary_tree": "Tree nodes, each with its parent in brackets: {{nodes}}.",
+      "summary_hash": "Buckets: {{buckets}}.",
+      "summary_bits_array": "Bits: {{bits}}.",
+      "summary_empty": "Empty so far: nothing stored yet."
     },
     "roles": {
       "idle": "Not yet placed",
@@ -1043,7 +1063,28 @@
       "written": "Just written",
       "evicted": "Evicted",
       "window_max": "Window maximum",
-      "dropped": "Dropped"
+      "dropped": "Dropped",
+      "probing": "Probing",
+      "checked_bit": "Checked bit",
+      "clear_bit": "Clear bit (so: no)",
+      "in_queue": "In the queue",
+      "being_deleted": "Being deleted",
+      "removed": "Removed",
+      "sifting": "Moving",
+      "comparing_with": "Compared with",
+      "popped": "Popped",
+      "new_node": "New node",
+      "following": "Following",
+      "walking": "Walking",
+      "word_end": "End of a word",
+      "no_edge": "No such edge",
+      "start": "Start",
+      "climbing": "Climbing",
+      "relinked": "Relinked",
+      "root": "Root",
+      "reached": "Reached",
+      "farthest_so_far": "Farthest so far",
+      "visited": "Visited"
     },
     "controls": {
       "label": "Playback",
@@ -1075,7 +1116,23 @@
         "wrap-around": "Wrap around",
         "full": "Fill it up",
         "middle-inserts": "Middle inserts",
-        "front-deletes": "Front deletes"
+        "front-deletes": "Front deletes",
+        "cluster": "A cluster",
+        "tombstone": "Delete, then search",
+        "false-positive": "A false positive",
+        "repeat": "A repeat",
+        "words": "Words",
+        "delete-with-two-children": "Delete a full node",
+        "skewed": "Skewed",
+        "heap-sort-order": "Pop them all",
+        "rising-pushes": "Falling pushes",
+        "shared-prefixes": "Shared prefixes",
+        "missing-prefix": "Missing prefix",
+        "chain": "Chains",
+        "already-joined": "Already joined",
+        "path": "A path",
+        "star": "A star",
+        "caterpillar": "A caterpillar"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1094,7 +1151,13 @@
           "op_args": "{{op}} takes {{count}} number(s).",
           "letters_only": "{{field}}: use the letters a to z only.",
           "word_length": "{{field}}: {{min}} to {{max}} letters.",
-          "capacity": "Use a capacity from {{min}} to {{max}}."
+          "capacity": "Use a capacity from {{min}} to {{max}}.",
+          "too_many_inserts": "At most {{max}} inserts, so a slot stays empty.",
+          "window": "Use a window from 1 to {{max}}.",
+          "word_count": "Enter {{min}} to {{max}} words.",
+          "node_count": "Use from {{min}} to {{max}} elements.",
+          "node_range": "Elements are numbered from 0 to {{max}}.",
+          "parent": "Node {{node}}'s parent must be 0 to {{max}}."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1110,7 +1173,9 @@
         "text": "Text",
         "pattern": "Pattern",
         "words": "Words",
-        "cycle": "Tail links to"
+        "cycle": "Tail links to",
+        "length": "Window",
+        "parents": "Parents"
       }
     },
     "tabs": {
@@ -1166,7 +1231,16 @@
       "linked-list": "Linked list",
       "pointers": "Pointers",
       "cache": "Cache",
-      "arrays": "Arrays"
+      "arrays": "Arrays",
+      "hashing": "Hashing",
+      "probabilistic": "Probabilistic",
+      "strings": "Strings",
+      "binary-tree": "Binary tree",
+      "bst": "Binary search tree",
+      "bfs": "Breadth-first search",
+      "trie": "Trie",
+      "union-find": "Union-find",
+      "tree": "Tree"
     },
     "narration": {
       "bubble-sort": {
@@ -1509,6 +1583,114 @@
         "shrink": "The last slot is now spare: {{size}} values remain.",
         "empty": "remove on an empty array: nothing to do.",
         "done": "Done: {{size}} values, after {{shifts}} shifts in all. Work at the end is cheap; in the middle it costs a shift per value after it."
+      },
+      "separate-chaining": {
+        "ready": "Insert {{n}} keys into a table of {{m}} buckets. Each bucket is a list.",
+        "hash": "Key {{key}} belongs in bucket {{key}} mod 7 = {{b}}.",
+        "scan_empty": "Bucket {{b}} is empty: nothing to compare.",
+        "scan": "Scan bucket {{b}} ({{len}} key(s)) for {{key}}: not there.",
+        "duplicate": "{{key}} is already in bucket {{b}}: skip it.",
+        "insert": "Append {{key}} to bucket {{b}}, which now holds {{len}}.",
+        "done": "{{n}} keys stored; the longest chain has {{longest}}. Short chains keep lookups fast."
+      },
+      "open-addressing": {
+        "ready": "A table of {{m}} slots, one key each. Collisions move on to the next slot (linear probing).",
+        "hash": "Key {{key}}: its home slot is {{key}} mod 8 = {{home}}.",
+        "probe": "The slot holds {{was}}, not {{key}}: try the next one, slot {{slot}}.",
+        "place": "Put {{key}} in slot {{slot}} after {{probes}} probe(s).",
+        "found": "Slot {{slot}} holds {{key}}: found (1).",
+        "not_found": "Slot {{slot}} is empty: {{key}} is not in the table (0).",
+        "tombstone": "Delete {{key}}: leave a tombstone ✕ in slot {{slot}}, so later searches keep probing past it.",
+        "delete_missing": "{{key}} is not in the table: nothing to delete.",
+        "done": "Done: {{finds}} find(s), {{probes}} probe(s) past occupied slots."
+      },
+      "bloom-filter": {
+        "ready": "A Bloom filter: {{m}} bits and three hash functions. It answers \"maybe\" or \"definitely not\".",
+        "set": "add {{key}}: set bit {{p}}.",
+        "check_set": "check {{key}}: bit {{p}} is set; look at the next one.",
+        "check_clear": "check {{key}}: bit {{p}} is clear, so {{key}} was never added.",
+        "maybe": "All of {{key}}'s bits ({{positions}}) are set: maybe (1). Other keys may have set them.",
+        "no": "check {{key}}: definitely not (0).",
+        "done": "Done: {{checks}} check(s). A \"no\" is always right; a \"maybe\" can be a false positive."
+      },
+      "rolling-hash": {
+        "ready": "Hash every window of {{length}} letters in a {{n}}-letter text: base {{base}}, mod {{mod}}.",
+        "add": "Add {{letter}} ({{code}}): h = h × 26 + {{code}} (mod 101) = {{h}}.",
+        "remove": "Take {{letter}} out: subtract {{code}} × {{power}} (its weight), h = {{h}}.",
+        "shift_in": "Shift and add {{letter}} ({{code}}): h = {{h}}, the next window's hash.",
+        "done": "{{windows}} window hashes, each in O(1) after the first window, however long the window ({{length}})."
+      },
+      "tree-traversals": {
+        "ready": "The {{n}} values form a binary search tree. Visit it in three orders.",
+        "pre": "Pre-order: write {{value}} before its children (#{{k}}).",
+        "in": "In-order: write {{value}} between its children (#{{k}}). A BST comes out sorted.",
+        "post": "Post-order: write {{value}} after its children (#{{k}}).",
+        "done": "Each order visited all {{n}} nodes once: O(n)."
+      },
+      "level-order": {
+        "ready": "Visit the tree of {{n}} values level by level, starting with the root, {{root}}.",
+        "visit": "Take {{value}} from the front of the queue and write it.",
+        "enqueue": "Queue {{parent}}'s child {{value}} at the back.",
+        "done": "Every one of the {{n}} nodes came out in level order."
+      },
+      "bst-operations": {
+        "ready": "Run {{n}} operations on an empty binary search tree: smaller keys go left, the rest right.",
+        "descend_left": "insert {{value}}: smaller than {{at}}, go left.",
+        "descend_right": "insert {{value}}: not smaller than {{at}}, go right.",
+        "root": "The tree is empty: {{value}} becomes the root.",
+        "attach_left": "{{value}} becomes {{parent}}'s left child.",
+        "attach_right": "{{value}} becomes {{parent}}'s right child.",
+        "search_left": "find {{value}}: smaller than {{at}}, go left.",
+        "search_right": "find {{value}}: bigger than {{at}}, go right.",
+        "found": "find {{value}}: found (1).",
+        "not_found": "find {{value}}: fell off the tree, not found (0).",
+        "missing": "delete {{value}}: not in the tree.",
+        "visit": "delete {{value}}: at {{at}}.",
+        "splice": "{{value}} has at most one child: its child takes its place.",
+        "successor": "Two children: look for the successor, the smallest key on the right. Go left to {{at}}.",
+        "copy": "Copy the successor {{from}} over {{was}}, then delete the successor below.",
+        "done": "Done. The output holds the find answers, 0, then the {{size}} keys in order."
+      },
+      "binary-heap": {
+        "ready": "Run {{n}} operations on a min-heap: every parent is at most its children, so the root is the smallest.",
+        "append": "push {{value}}: add it at the end, position {{at}}.",
+        "compare_up_stop": "{{value}} is not smaller than its parent {{parent}}: it stays.",
+        "compare_up_swap": "{{value}} is smaller than its parent {{parent}}: sift it up.",
+        "swap_up": "{{value}} moves up to position {{at}}.",
+        "empty": "pop on an empty heap: −1.",
+        "take": "pop: the root, {{value}}, is the smallest. Take it.",
+        "move_last": "Move the last value, {{value}}, to the root.",
+        "compare_down_stop": "{{value}} is not bigger than its smaller child {{child}}: the heap is in order.",
+        "compare_down_swap": "{{value}} is bigger than its smaller child {{child}}: sift it down.",
+        "swap_down": "{{value}} moves down to position {{at}}.",
+        "done": "Done: {{pops}} pop(s), {{size}} value(s) left. Each push and pop touched one path: O(log n)."
+      },
+      "trie": {
+        "ready": "Insert {{n}} words into a trie, then count the words that start with \"{{prefix}}\".",
+        "new_node": "No edge for {{letter}} yet: add a node for \"{{path}}\".",
+        "follow": "Follow {{letter}}; {{count}} word(s) now pass through this node.",
+        "mark_end": "\"{{word}}\" ends here: mark the node.",
+        "walk": "Follow {{letter}}: \"{{path}}\".",
+        "missing": "No edge for {{letter}}: no word starts with \"{{prefix}}\".",
+        "count_word": "{{count}} word(s) start with \"{{prefix}}\", and \"{{prefix}}\" is a word itself.",
+        "count_only": "{{count}} word(s) start with \"{{prefix}}\"; it is not a whole word."
+      },
+      "union-find": {
+        "ready": "{{n}} elements, each in a set of its own: every element is its own root.",
+        "climb": "find {{x}}: climb to {{at}}.",
+        "compress": "Point {{node}} straight at the root {{root}}, so the next find is shorter.",
+        "root": "find {{x}}: the root is {{root}}.",
+        "same": "union {{a}} {{b}}: both are already under root {{root}}.",
+        "link": "Link root {{child}} under root {{root}} (the bigger set); it now holds {{size}}.",
+        "done": "{{sets}} set(s) left."
+      },
+      "tree-diameter": {
+        "ready": "A tree of {{n}} nodes. Find its longest path, counting edges.",
+        "first_bfs": "First BFS from node 0: the farthest node it reaches is one end of a longest path.",
+        "visit": "Visit node {{node}} at distance {{d}}; the farthest so far is {{best}}.",
+        "reach": "Reach node {{node}} at distance {{d}}.",
+        "second_bfs": "Node {{end}} was the farthest (distance {{d}}). Second BFS from there.",
+        "done": "The farthest node from {{a}} is {{b}}: the diameter is {{length}} edge(s)."
       }
     },
     "compare": {

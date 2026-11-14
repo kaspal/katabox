@@ -1,0 +1,28 @@
+id = "open-addressing"
+subject = "hashing"
+order = 2
+title = "Hash table: open addressing"
+title_es = "Tabla hash: direccionamiento abierto"
+tags = ["hashing"]
+problems = ["corner-shop"]
+presets = ["cluster", "random", "tombstone"]
+default = [1, 3, 1, 11, 1, 19, 1, 4, 2, 19, 2, 27]
+
+[complexity]
+best = "O(1)"
+average = "O(1) while the table is not too full"
+worst = "O(m) one long cluster"
+space = "O(m)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 24
+min = 1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(kb_ops(a, [\"insert\", \"find\", \"delete\"], 1))"
+typescript = "a = run(kbOps(a, [\"insert\", \"find\", \"delete\"], 1))"

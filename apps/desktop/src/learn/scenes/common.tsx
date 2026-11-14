@@ -154,6 +154,20 @@ export function sceneSummary(t: TFunction, step: Step): string {
     const values = step.slots.cells.map((c) => (c ? c.value : "_")).join(", ") || "—";
     parts.push(t("learn.stage.fallback_row", { label: t(`learn.stage.rows.${step.slots.label}`), values }) + ".");
   }
+  if (step.forest?.length) {
+    const nodes = step.forest
+      .map((n) => {
+        const parent = n.parent === null ? null : step.forest!.find((p) => p.id === n.parent);
+        return parent ? `${n.text} (${parent.text})` : n.text;
+      })
+      .join(", ");
+    parts.push(t("learn.stage.summary_tree", { nodes }));
+  }
+  if (step.hash) {
+    const buckets = step.hash.buckets.map((b, k) => `${k}: ${b.map((it) => (it.value === -2 ? "✕" : it.value)).join(" ") || "—"}`).join("; ");
+    parts.push(t("learn.stage.summary_hash", { buckets }));
+  }
+  if (step.bitArray) parts.push(t("learn.stage.summary_bits_array", { bits: step.bitArray.bits.join("") }));
   if (step.table) {
     const rows = step.table.rows.map((r) => `${r.key}: ${r.value}`).join(", ") || "—";
     parts.push(t("learn.stage.fallback_row", { label: t(`learn.stage.rows.${step.table.label}`), values: rows }) + ".");
@@ -175,6 +189,7 @@ export function sceneSummary(t: TFunction, step: Step): string {
     parts.push(t("learn.stage.summary_key", { value: step.items[step.lifted]!.value, at: step.lifted }));
   }
   if (step.range) parts.push(t("learn.stage.summary_range", { lo: step.range[0], hi: step.range[1] }));
+  if (parts.length === 0) parts.push(t("learn.stage.summary_empty"));
   return parts.join(" ");
 }
 
