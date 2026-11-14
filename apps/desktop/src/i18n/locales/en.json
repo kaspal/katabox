@@ -964,7 +964,12 @@
         "edges_followed": "edges followed",
         "climbs": "climbs",
         "compressed": "pointers shortened",
-        "links": "links"
+        "links": "links",
+        "rotations": "rotations",
+        "splits": "splits",
+        "reads": "reads",
+        "table_cells": "table cells",
+        "jumps": "jumps"
       },
       "rows": {
         "prefix": "Prefix sums",
@@ -981,7 +986,8 @@
         "order": "Visit order",
         "bits": "Bits",
         "found": "Answers",
-        "hashes": "Window hashes"
+        "hashes": "Window hashes",
+        "array": "Array"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -1011,7 +1017,11 @@
       "summary_tree": "Tree nodes, each with its parent in brackets: {{nodes}}.",
       "summary_hash": "Buckets: {{buckets}}.",
       "summary_bits_array": "Bits: {{bits}}.",
-      "summary_empty": "Empty so far: nothing stored yet."
+      "summary_empty": "Empty so far: nothing stored yet.",
+      "notes": {
+        "red": "red",
+        "black": "black"
+      }
     },
     "roles": {
       "idle": "Not yet placed",
@@ -1084,7 +1094,21 @@
       "root": "Root",
       "reached": "Reached",
       "farthest_so_far": "Farthest so far",
-      "visited": "Visited"
+      "visited": "Visited",
+      "unbalanced": "Out of balance",
+      "rotating": "Rotating",
+      "balanced": "Balanced",
+      "red": "Red",
+      "black": "Black",
+      "overfull": "Too many keys",
+      "split_half": "Half of a split",
+      "in_query": "In the query",
+      "inside": "Fully inside",
+      "outside": "Fully outside",
+      "recomputed": "Recomputed",
+      "tagged": "Tagged",
+      "pushing": "Passing its tag down",
+      "read": "Read"
     },
     "controls": {
       "label": "Playback",
@@ -1132,7 +1156,15 @@
         "already-joined": "Already joined",
         "path": "A path",
         "star": "A star",
-        "caterpillar": "A caterpillar"
+        "caterpillar": "A caterpillar",
+        "whole-range": "The whole range",
+        "small-ranges": "Small ranges",
+        "tag-then-split": "Tag, then split",
+        "overlapping-adds": "Overlapping adds",
+        "power-of-two": "Eight slots",
+        "odd-positions": "Odd positions",
+        "deep-path": "A deep path",
+        "two-branches": "Two branches"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1157,7 +1189,13 @@
           "word_count": "Enter {{min}} to {{max}} words.",
           "node_count": "Use from {{min}} to {{max}} elements.",
           "node_range": "Elements are numbered from 0 to {{max}}.",
-          "parent": "Node {{node}}'s parent must be 0 to {{max}}."
+          "parent": "Node {{node}}'s parent must be 0 to {{max}}.",
+          "list_size": "{{field}}: enter {{min}} to {{max}} numbers from {{lo}} to {{hi}}.",
+          "too_many_ops": "At most {{max}} operations.",
+          "bad_range": "A range is two positions l ≤ r, from 0 to {{max}}.",
+          "value_range": "Add a value from {{min}} to {{max}}.",
+          "pairs_even": "Pairs come two numbers at a time.",
+          "pair_count": "Enter {{min}} to {{max}} pairs."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1175,7 +1213,8 @@
         "words": "Words",
         "cycle": "Tail links to",
         "length": "Window",
-        "parents": "Parents"
+        "parents": "Parents",
+        "pairs": "Pairs"
       }
     },
     "tabs": {
@@ -1240,7 +1279,11 @@
       "bfs": "Breadth-first search",
       "trie": "Trie",
       "union-find": "Union-find",
-      "tree": "Tree"
+      "tree": "Tree",
+      "balanced-tree": "Balanced tree",
+      "segment-tree": "Segment tree",
+      "range-query": "Range query",
+      "binary-lifting": "Binary lifting"
     },
     "narration": {
       "bubble-sort": {
@@ -1691,6 +1734,77 @@
         "reach": "Reach node {{node}} at distance {{d}}.",
         "second_bfs": "Node {{end}} was the farthest (distance {{d}}). Second BFS from there.",
         "done": "The farthest node from {{a}} is {{b}}: the diameter is {{length}} edge(s)."
+      },
+      "avl-rotations": {
+        "ready": "Insert {{n}} values into an AVL tree. Under each node: its height h and its balance (left height − right height).",
+        "place": "Place {{value}} as a new leaf, as in any binary search tree.",
+        "balanced": "Back at {{value}}: balance {{balance}}, within −1 to +1. Nothing to fix.",
+        "left_heavy": "Back at {{value}}: balance {{balance}}. The left side is two levels taller: rotate.",
+        "right_heavy": "Back at {{value}}: balance {{balance}}. The right side is two levels taller: rotate.",
+        "rotate_right": "Rotate right: {{top}} moves up, {{down}} becomes its right child.",
+        "rotate_left": "Rotate left: {{top}} moves up, {{down}} becomes its left child.",
+        "done": "{{n}} values, height {{height}}, after {{rotations}} rotation(s). The pre-order is the output."
+      },
+      "red-black-insert": {
+        "ready": "Insert {{n}} values into a left-leaning red-black tree. A red node is glued to its parent; red links only lean left.",
+        "place": "Place {{value}} as a new red leaf.",
+        "rotate_left": "A red link leans right: rotate left, {{top}} moves up over {{down}}.",
+        "rotate_right": "Two red links in a row on the left: rotate right, {{top}} moves up over {{down}}.",
+        "flip": "{{value}} has two red children: flip the colours, so {{value}} turns red and passes the red up.",
+        "root_black": "Paint the root {{value}} black.",
+        "done": "{{n}} values after {{rotations}} rotation(s). Every path from the root down meets {{black}} black node(s)."
+      },
+      "b-tree-insert": {
+        "ready": "Insert {{n}} values into a B-tree where a node holds at most {{max}} keys.",
+        "descend": "{{key}} goes below this node, into child {{child}}.",
+        "add_key": "Add {{key}} to the leaf, keeping its keys in order.",
+        "split": "Too many keys: split around the middle key {{middle}}, which moves up.",
+        "absorb": "The parent takes {{middle}} and now points to both halves.",
+        "new_root": "The root split: {{middle}} becomes a new root, and the tree grows one level taller.",
+        "done": "{{n}} values, height {{height}}, after {{splits}} split(s). Every leaf is at the same depth."
+      },
+      "segment-tree": {
+        "ready": "{{n}} values in a segment tree of {{nodes}} nodes. Each node stores the sum of the range under it.",
+        "leaf": "Leaf for position {{i}}: {{value}}.",
+        "merge": "Range {{lo}}-{{hi}}: its sum is its two children added, {{sum}}.",
+        "query": "sum {{left}} {{right}}: start at the root.",
+        "outside": "Range {{lo}}-{{hi}} is fully outside the query: skip it.",
+        "inside": "Range {{lo}}-{{hi}} is fully inside: take its {{sum}} without going lower. Total so far {{acc}}.",
+        "answer": "sum {{left}} {{right}} = {{sum}}.",
+        "update": "update {{i}} {{value}}: walk down to the leaf.",
+        "set": "Set position {{i}} to {{value}}.",
+        "recompute": "Range {{lo}}-{{hi}}: recompute its sum, {{sum}}.",
+        "done": "{{answers}} answer(s), {{visited}} nodes visited by the queries."
+      },
+      "lazy-propagation": {
+        "ready": "{{n}} zeros in a segment tree with lazy tags. Under each node: its range and its pending tag.",
+        "add": "add {{left}} {{right}} {{value}}: start at the root.",
+        "tag": "Range {{lo}}-{{hi}} is fully inside: add {{value}} for each position (sum {{sum}}) and leave a tag for the children.",
+        "push_down": "Range {{lo}}-{{hi}} must go lower: pass its tag +{{tag}} to both children first.",
+        "recompute": "Range {{lo}}-{{hi}}: recompute its sum from its children, {{sum}}.",
+        "query": "sum {{left}} {{right}}: start at the root.",
+        "inside": "Range {{lo}}-{{hi}} is fully inside: take its {{sum}}. Total so far {{acc}}.",
+        "answer": "sum {{left}} {{right}} = {{sum}}.",
+        "done": "{{answers}} answer(s); tags were passed down {{pushes}} time(s)."
+      },
+      "fenwick-tree": {
+        "ready": "{{n}} zeros in a Fenwick tree. Slot i covers the positions shown under it.",
+        "start_add": "add {{i}} {{value}}: every slot that covers position {{i}} needs {{value}} more.",
+        "add": "Slot {{slot}} now holds {{total}}. Next slot: add its lowest bit, {{low}}.",
+        "start_sum": "sum {{i}}: add the slots that together cover positions 0 to {{i}}.",
+        "read": "Read slot {{slot}} ({{value}}): total {{acc}}. Then drop its lowest bit.",
+        "answer": "sum {{i}} = {{sum}}.",
+        "done": "{{answers}} answer(s): {{reads}} slot reads and {{writes}} slot writes in all."
+      },
+      "lca-binary-lifting": {
+        "ready": "A tree of {{n}} nodes. Build a table of jumps: each node's ancestor 1, 2, 4… levels up ({{levels}} level(s)).",
+        "table": "{{jump}} level(s) above {{v}}: two jumps of half that, via {{mid}}, land on {{to}}.",
+        "pair": "Lowest common ancestor of {{a}} and {{b}}.",
+        "lift": "Lift the deeper node {{from}} by {{jump}} to {{to}}.",
+        "same": "Same depth and the same node: {{lca}} is the answer for {{a}} and {{b}}.",
+        "jump": "Jump {{jump}} up from {{from_a}} and {{from_b}}: they land on different nodes, {{a}} and {{b}}, so keep the jump.",
+        "answer": "No jump keeps them apart any more: their parent {{lca}} is the answer for {{a}} and {{b}}.",
+        "done": "{{pairs}} pair(s) answered with {{jumps}} jump(s)."
       }
     },
     "compare": {

@@ -1,11 +1,12 @@
 // Trees and forests (ADR 0029, Phase 2): BSTs, traversals, tries, union-find forests,
 // tree diameter. Tidy layout from d3-hierarchy (engine/layout.ts); nodes keyed by id, so
 // an insert, a delete or a re-link animates to the new layout. Edge labels (a trie's
-// letters), notes under nodes (a distance, a count) and a second ring (end of a word, a
+// letters), notes under nodes (a distance, a count, a translated colour) and a second ring (end of a word, a
 // root). Underneath, optionally: a queue row (`slots`) and an output row (`aux`).
 import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { layoutForest } from "../engine/layout";
+import type { NoteKey } from "../engine/types";
 import { Cell } from "./ArrayScene";
 import { SceneFallback, outline, roleColor, sceneSummary, useTransitions, useWidth, type SceneProps } from "./common";
 
@@ -26,7 +27,7 @@ export function TreeScene({ step, instant, def }: SceneProps) {
     const p = at.get(id)!;
     return { x: left + p.x * col, y: TOP + R + p.depth * LEVEL };
   };
-  const treeH = nodes.length ? TOP + 2 * R + depth * LEVEL + 22 : 40;
+  const treeH = nodes.length ? TOP + 2 * R + depth * LEVEL + 32 : 40;
   const rows: { key: string; label: string; cells: { id: number; value: number }[]; roles: Record<number, string> }[] = [];
   if (step.slots) rows.push({ key: "slots", label: t(`learn.stage.rows.${step.slots.label}`), cells: step.slots.cells.filter((c): c is { id: number; value: number } => c !== null), roles: step.slots.roles ?? {} });
   if (step.aux) rows.push({ key: "aux", label: t(`learn.stage.rows.${step.aux.label}`), cells: step.aux.cells.filter((c): c is { id: number; value: number } => c !== null), roles: step.aux.roles ?? {} });
@@ -34,6 +35,8 @@ export function TreeScene({ step, instant, def }: SceneProps) {
   const rowH = cell + 30;
   const height = treeH + rows.length * rowH + 6;
   const byId = new Map(nodes.map((n) => [n.id, n]));
+  /** Notes starting with "@" are translated (`learn.stage.notes.<key>`): a red-black colour. */
+  const noteText = (note: string) => (note.startsWith("@") ? t(`learn.stage.notes.${note.slice(1) as NoteKey}`) : note);
 
   return (
     <div ref={ref} className="relative w-full" data-testid="tree-scene">
@@ -107,7 +110,7 @@ export function TreeScene({ step, instant, def }: SceneProps) {
               </text>
               {n.note && (
                 <text y={R + 14} textAnchor="middle" className="fill-muted-foreground font-mono text-[11px]" style={{ paintOrder: "stroke", stroke: "var(--card)", strokeWidth: 4, strokeLinejoin: "round" }}>
-                  {n.note}
+                  {noteText(n.note)}
                 </text>
               )}
             </motion.g>

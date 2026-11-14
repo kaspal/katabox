@@ -53,6 +53,49 @@ function bstOf(values: readonly number[]): T | undefined {
   return root;
 }
 
+
+/** An AVL tree built immutably (new nodes on the way back up), for the AVL topic. */
+type AvlT = { v: number; l: AvlT | null; r: AvlT | null; h: number } | null;
+function avlInsert(t: AvlT, v: number): AvlT {
+  const h = (x: AvlT) => x?.h ?? 0;
+  const mk = (val: number, l: AvlT, r: AvlT): AvlT => ({ v: val, l, r, h: 1 + Math.max(h(l), h(r)) });
+  if (!t) return mk(v, null, null);
+  const n = v < t.v ? mk(t.v, avlInsert(t.l, v), t.r) : mk(t.v, t.l, avlInsert(t.r, v));
+  const bal = h(n!.l) - h(n!.r);
+  const rotR = (x: NonNullable<AvlT>) => mk(x.l!.v, x.l!.l, mk(x.v, x.l!.r, x.r));
+  const rotL = (x: NonNullable<AvlT>) => mk(x.r!.v, mk(x.v, x.l, x.r!.l), x.r!.r);
+  if (bal > 1) return rotR(v >= n!.l!.v ? mk(n!.v, rotL(n!.l!), n!.r)! : n!);
+  if (bal < -1) return rotL(v < n!.r!.v ? mk(n!.v, n!.l, rotR(n!.r!))! : n!);
+  return n;
+}
+
+/** A 2-3 tree (keys ≤ 2 per node; equal keys go right). Left-leaning red-black trees
+ * are 2-3 trees in disguise: a 3-node [a, b] is b with a red left child a. */
+type T23 = { keys: number[]; kids: T23[] };
+function insert23(t: T23, key: number): T23 | [T23, number, T23] {
+  let keys = [...t.keys];
+  let kids = [...t.kids];
+  const i = keys.filter((k) => k <= key).length;
+  if (!kids.length) keys = sorted([...keys, key]);
+  else {
+    const r = insert23(kids[i]!, key);
+    if (Array.isArray(r)) {
+      keys.splice(i, 0, r[1]);
+      kids.splice(i, 1, r[0], r[2]);
+    } else kids[i] = r;
+  }
+  if (keys.length < 3) return { keys, kids };
+  return [{ keys: [keys[0]!], kids: kids.slice(0, 2) }, keys[1]!, { keys: [keys[2]!], kids: kids.slice(2) }];
+}
+function build23(values: readonly number[]): T23 {
+  let root: T23 = { keys: [], kids: [] };
+  for (const v of values) {
+    const r = insert23(root, v);
+    root = Array.isArray(r) ? { keys: [r[1]], kids: [r[0], r[2]] } : r;
+  }
+  return root;
+}
+
 export const REFERENCE: Record<string, (input: readonly number[]) => number[]> = {
   "big-o-growth": ([n]) => [1, log2(n!), n!, n! * log2(n!), n! * n!, 2 ** n!],
   "recursion-call-stack": (xs) => [sum(xs)],
@@ -279,6 +322,97 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
     }
     return [best];
   },
+  // Trees, part 2.
+  "avl-rotations": (values) => {
+    let t: AvlT = null;
+    for (const v of values) t = avlInsert(t, v);
+    const out: number[] = [];
+    const walk = (x: AvlT) => {
+      if (!x) return;
+      out.push(x.v);
+      walk(x.l);
+      walk(x.r);
+    };
+    walk(t);
+    return out;
+  },
+  "red-black-insert": (values) => {
+    // Read the 2-3 tree as a red-black tree.
+    const vals: number[] = [];
+    const reds: number[] = [];
+    const walk = (t: T23 | undefined) => {
+      if (!t) return;
+      if (t.keys.length === 1) {
+        vals.push(t.keys[0]!);
+        reds.push(0);
+        walk(t.kids[0]);
+        walk(t.kids[1]);
+      } else {
+        vals.push(t.keys[1]!, t.keys[0]!);
+        reds.push(0, 1);
+        walk(t.kids[0]);
+        walk(t.kids[1]);
+        walk(t.kids[2]);
+      }
+    };
+    walk(build23(values));
+    return [...vals, ...reds];
+  },
+  "b-tree-insert": (values) => {
+    const out: number[] = [];
+    let level = [build23(values)];
+    while (level.length) {
+      for (const t of level) out.push(...t.keys, 0);
+      level = level.flatMap((t) => t.kids);
+    }
+    return out;
+  },
+  "segment-tree": (input) => {
+    const n = input[0]!;
+    const a = input.slice(1, 1 + n);
+    const out: number[] = [];
+    for (const [op, x, y] of ops(input, 2, 1 + n)) {
+      if (op === 1) out.push(a.slice(x, y! + 1).reduce((p, q) => p + q, 0));
+      else a[x!] = y!;
+    }
+    return out;
+  },
+  "lazy-propagation": (input) => {
+    const a = new Array<number>(input[0]!).fill(0);
+    const out: number[] = [];
+    for (const [op, l, r, v] of ops(input, 3, 1)) {
+      if (op === 1) for (let k = l!; k <= r!; k++) a[k]! += v!;
+      else out.push(a.slice(l, r! + 1).reduce((p, q) => p + q, 0));
+    }
+    return out;
+  },
+  "fenwick-tree": (input) => {
+    const a = new Array<number>(input[0]!).fill(0);
+    const out: number[] = [];
+    for (const [op, i, v] of ops(input, 2, 1)) {
+      if (op === 1) a[i!]! += v!;
+      else out.push(a.slice(0, i! + 1).reduce((p, q) => p + q, 0));
+    }
+    return out;
+  },
+  "lca-binary-lifting": (input) => {
+    // Mark a's ancestors, then climb from b to the first marked one.
+    const m = input[0]!;
+    const parent = [0, ...input.slice(1, 1 + m)];
+    const flat = input.slice(1 + m);
+    const out: number[] = [];
+    for (let k = 0; k < flat.length; k += 2) {
+      const seen = new Set<number>();
+      for (let x = flat[k]!; ; x = parent[x]!) {
+        seen.add(x);
+        if (x === 0) break;
+      }
+      let y = flat[k + 1]!;
+      while (!seen.has(y)) y = parent[y]!;
+      out.push(y);
+    }
+    return out;
+  },
   "bubble-sort": sorted,
   "insertion-sort": sorted,
   "quick-sort": sorted,
@@ -374,6 +508,48 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  "avl-rotations": {
+    input: [1, 2, 3],
+    markers: [null, "place", "place", "balance", "place", "balance", "balance", "rotate-left", null],
+    py: [null, 37, 37, 43, 37, 43, 43, 28, null],
+    ts: [null, 40, 40, 45, 40, 45, 45, 31, null],
+  },
+  "red-black-insert": {
+    input: [1, 2],
+    markers: [null, "place", "root-black", "place", "rotate-left", "root-black", null],
+    py: [null, 42, 68, 42, 18, 68, null],
+    ts: [null, 45, 68, 45, 21, 68, null],
+  },
+  "b-tree-insert": {
+    input: [1, 2, 3],
+    markers: [null, "add-key", "add-key", "add-key", "split", "new-root", null],
+    py: [null, 14, 14, 14, 28, 38, null],
+    ts: [null, 17, 17, 17, 32, 43, null],
+  },
+  "segment-tree": {
+    input: [2, 1, 2, 1, 0, 1, 2, 0, 5],
+    markers: [null, "leaf", "leaf", "merge", null, "inside", null, null, "set", "recompute", null],
+    py: [null, 3, 3, 8, null, 15, null, null, 23, 30, null],
+    ts: [null, 3, 3, 9, null, 17, null, null, 25, 31, null],
+  },
+  "lazy-propagation": {
+    input: [2, 1, 0, 0, 3, 2, 0, 1, 0],
+    markers: [null, null, "tag", "recompute", null, "inside", null, null],
+    py: [null, null, 18, 24, null, 31, null, null],
+    ts: [null, null, 18, 25, null, 31, null, null],
+  },
+  "fenwick-tree": {
+    input: [2, 1, 0, 1, 2, 1, 0],
+    markers: [null, null, "add", "add", null, "read", null, null],
+    py: [null, null, 4, 4, null, 12, null, null],
+    ts: [null, null, 3, 3, null, 10, null, null],
+  },
+  "lca-binary-lifting": {
+    input: [1, 0, 1, 0],
+    markers: [null, "table", "table", null, "lift", "same", null],
+    py: [null, 11, 11, null, 21, 23, null],
+    ts: [null, 12, 12, null, 23, 27, null],
+  },
   "separate-chaining": {
     input: [3, 10, 3],
     markers: [null, "hash", "scan", "insert", "hash", "scan", "insert", "hash", "scan", null],
@@ -662,4 +838,10 @@ export const GOLDEN: Record<string, Golden> = {
 export const WORST: Record<string, number[]> = {
   "big-o-growth": [16],
   "towers-of-hanoi": [5],
+  // 8 values, 8 operations over (nearly) the whole range.
+  "segment-tree": [8, 20, 19, 18, 17, 16, 15, 14, 13, ...[1, 0, 7, 2, 3, 20, 1, 1, 6, 2, 4, 0, 1, 0, 7, 2, 7, 9, 1, 2, 5, 1, 0, 6]],
+  "lazy-propagation": [8, ...[1, 0, 7, 9, 2, 1, 6, 0, 1, 1, 6, 9, 2, 0, 7, 0, 1, 2, 5, 9, 2, 3, 4, 0, 1, 0, 3, 9, 2, 0, 7, 0]],
+  "fenwick-tree": [12, ...[1, 0, 9, 1, 2, 9, 1, 4, 9, 1, 6, 9, 1, 10, 9, 2, 11, 0, 2, 10, 0, 2, 6, 0, 2, 9, 0, 2, 11, 0]],
+  // A 12-node path: the deepest lifts.
+  "lca-binary-lifting": [11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 11, 1, 10, 3, 11, 6],
 };

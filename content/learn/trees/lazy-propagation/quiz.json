@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "n = 8, all zeros. add 0 5 2 runs first. Which nodes get tagged?",
+    "prompt_es": "n = 8, todo a cero. Primero se hace add 0 5 2. ¿Qué nodos reciben etiqueta?",
+    "options": [
+      { "en": "[0, 5] alone", "es": "Solo [0, 5]" },
+      { "en": "[0, 3] and [4, 5]", "es": "[0, 3] y [4, 5]" },
+      { "en": "Every leaf from 0 to 5", "es": "Cada hoja de 0 a 5" }
+    ],
+    "answer": 1,
+    "explain_en": "There is no node [0, 5]: the root splits into [0, 3] and [4, 7]. [0, 3] is fully inside and takes the tag; [4, 7] is not, so the walk splits it and tags [4, 5]. No leaf is touched.",
+    "explain_es": "No hay ningún nodo [0, 5]: la raíz se parte en [0, 3] y [4, 7]. [0, 3] queda entero dentro y recibe la etiqueta; [4, 7] no, así que el recorrido lo parte y etiqueta [4, 5]. No se toca ninguna hoja."
+  },
+  {
+    "prompt_en": "Next, add 3 7 1. Which nodes push their tags down before the walk goes below them?",
+    "prompt_es": "Después, add 3 7 1. ¿Qué nodos empujan su etiqueta antes de que el recorrido baje por ellos?",
+    "options": [
+      { "en": "[0, 3], then [2, 3]", "es": "[0, 3] y luego [2, 3]" },
+      { "en": "Only the root", "es": "Solo la raíz" },
+      { "en": "None: tags wait for a sum", "es": "Ninguno: las etiquetas esperan a una suma" }
+    ],
+    "answer": 0,
+    "explain_en": "Position 3 lies inside [0, 3] and [2, 3], which are only partly covered, so both push their tag of 2 before the walk enters them. The root and [4, 7] have no tag at that moment.",
+    "explain_es": "La posición 3 está dentro de [0, 3] y [2, 3], que solo quedan cubiertos en parte, así que los dos empujan su etiqueta de 2 antes de que el recorrido entre. La raíz y [4, 7] no tienen etiqueta en ese momento."
+  },
+  {
+    "prompt_en": "What is the whole output row?",
+    "prompt_es": "¿Cuál es la fila de salida completa?",
+    "options": [
+      { "en": "[12, 0]", "es": "[12, 0]" },
+      { "en": "[11, 2]", "es": "[11, 2]" },
+      { "en": "[12, 2]", "es": "[12, 2]" }
+    ],
+    "answer": 2,
+    "explain_en": "The array is 2 2 2 3 3 3 1 1, so positions 2 to 6 add up to 2 + 3 + 3 + 3 + 1 = 12. sum 0 0 pushes [0, 1]'s tag of 2 down before reading the leaf, so it gives 2, not 0.",
+    "explain_es": "El arreglo es 2 2 2 3 3 3 1 1, así que las posiciones 2 a 6 suman 2 + 3 + 3 + 3 + 1 = 12. sum 0 0 empuja la etiqueta 2 de [0, 1] antes de leer la hoja, así que da 2, no 0."
+  }
+]

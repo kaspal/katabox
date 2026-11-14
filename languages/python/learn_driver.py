@@ -25,6 +25,11 @@ def kb_text(values):
     return words
 
 
+def kb_chunks(values, size):
+    """Stored groups (pairs, edges) as lists of `size` values."""
+    return [list(values[k:k + size]) for k in range(0, len(values), size)]
+
+
 a = [int(_kb_token) for _kb_token in _kb_sys.stdin.read().split()]
 {{call}}
 print(" ".join(str(_kb_value) for _kb_value in a))

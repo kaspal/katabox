@@ -12,7 +12,7 @@ En la entrada por defecto se hace insert 50, 30, 70, 60, 80, 65 y luego delete 5
 
 ### Altura
 
-Cada operación cuesta un recorrido hacia abajo, así que su coste es la **altura** `h` del árbol. Claves insertadas en orden aleatorio dan una altura cercana a `log n`. Claves ordenadas forman un árbol **degenerado**, en realidad una lista enlazada, de altura `n`. Los árboles equilibrados (próximamente) se recolocan para evitarlo.
+Cada operación cuesta un recorrido hacia abajo, así que su coste es la **altura** `h` del árbol. Claves insertadas en orden aleatorio dan una altura cercana a `log n`. Claves ordenadas forman un árbol **degenerado**, en realidad una lista enlazada, de altura `n`. Los árboles equilibrados ([AVL](learn:trees/avl-rotations), [rojinegro](learn:trees/red-black-insert)) se recolocan para evitarlo.
 
 ## Pasos
 
@@ -45,4 +45,4 @@ Usa un ABB cuando necesites un conjunto o un mapa que además se mantenga ordena
 - [Búsqueda binaria](learn:searching/binary-search): la misma división por la mitad, en un arreglo ordenado.
 - [Preorden, inorden y postorden](learn:trees/tree-traversals): el inorden lee un ABB ordenado.
 - [Montículo binario y cola de prioridad](learn:trees/binary-heap): otro orden de árbol, solo para la clave menor.
-- Rotaciones AVL (próximamente): mantener la altura cerca de `log n`.
+- [Árbol AVL: rotaciones](learn:trees/avl-rotations): mantener la altura cerca de `log n`.

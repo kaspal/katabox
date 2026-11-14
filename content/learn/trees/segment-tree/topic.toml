@@ -1,0 +1,28 @@
+id = "segment-tree"
+subject = "trees"
+order = 11
+title = "Segment tree"
+title_es = "Árbol de segmentos"
+tags = ["segment-tree", "range-query"]
+problems = ["stock-ledger", "gauge-corrections"]
+presets = ["whole-range", "random", "small-ranges"]
+default = [6, 5, 3, 8, 6, 1, 4, 1, 1, 4, 2, 2, 0, 1, 0, 5]
+
+[complexity]
+best = "O(n) to build"
+average = "O(log n) per sum or update"
+worst = "O(log n)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 6
+max_len = 33
+min = 0
+max = 20
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(a[1:1 + a[0]], kb_ops(a[1 + a[0]:], [\"sum\", \"update\"], 2))"
+typescript = "a = run(a.slice(1, 1 + a[0]), kbOps(a.slice(1 + a[0]), [\"sum\", \"update\"], 2))"

@@ -28,6 +28,8 @@ export type CounterLabel = keyof Locale["stage"]["counter"];
 export type RoleLabel = keyof Locale["roles"];
 /** A row label for an extra row of cells (`learn.stage.rows.<label>`). */
 export type RowLabel = keyof Locale["stage"]["rows"];
+/** A translated note under a tree node (`learn.stage.notes.<key>`), written "@key". */
+export type NoteKey = keyof Locale["stage"]["notes"];
 
 /** A variable shown in the variables grid. */
 export type VarValue = number | boolean | string | null;
@@ -155,7 +157,7 @@ export type ForestNode = {
   side?: "L" | "R";
   /** A label on the edge from the parent (a trie's letter). */
   edge?: string;
-  /** A note under the node (a distance, a count). */
+  /** A note under the node (a distance, a count); "@key" is translated (NoteKey). */
   note?: string;
   /** A second ring (a trie node that ends a word, a root). */
   mark?: boolean;

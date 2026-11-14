@@ -116,3 +116,42 @@ export function decodeText(input: readonly number[]): string[] {
 export function encodeText(words: readonly string[]): number[] {
   return words.flatMap((w, k) => [...(k > 0 ? [-1] : []), ...[...w].map((c) => c.charCodeAt(0) - 97)]);
 }
+
+/** A list of values followed by operations: stored as `[n, v1..vn, ops...]` (the sample
+ * splits it with `a[1:1 + a[0]]`). `check` validates the list's size and range; op
+ * arguments are checked by the tracer's own `check`. */
+export function listOpsCodec(
+  list: FieldKey,
+  ops: readonly OpSpec[],
+  bounds: { minLen: number; maxLen: number; min: number; max: number },
+): InputCodec & { width: number; split: (input: readonly number[]) => { values: number[]; ops: ReturnType<typeof decodeOps> } } {
+  const inner = opsCodec(ops);
+  const sizeError = () => fail("list_size", { field: list, min: bounds.minLen, max: bounds.maxLen, lo: bounds.min, hi: bounds.max });
+  return {
+    width: inner.width,
+    fields: [list, "ops"],
+    format: (input) => {
+      const n = input[0] ?? 0;
+      return [input.slice(1, 1 + n).join(" "), inner.format(input.slice(1 + n))[0]!];
+    },
+    parse: (texts) => {
+      const r = tokens(texts[0] ?? "");
+      if ("error" in r) return r;
+      if (r.values.length < bounds.minLen || r.values.length > bounds.maxLen) return sizeError();
+      if (r.values.some((v) => v < bounds.min || v > bounds.max)) return sizeError();
+      const o = inner.parse([texts[1] ?? ""]);
+      if ("error" in o) return o;
+      return { values: [r.values.length, ...r.values, ...o.values] };
+    },
+    check: (input) => {
+      const n = input[0] ?? 0;
+      if (n < bounds.minLen || n > bounds.maxLen || input.length < 1 + n) return sizeError().error;
+      if (input.slice(1, 1 + n).some((v) => v < bounds.min || v > bounds.max)) return sizeError().error;
+      return inner.check!(input.slice(1 + n));
+    },
+    split: (input) => {
+      const n = input[0]!;
+      return { values: input.slice(1, 1 + n), ops: decodeOps(input.slice(1 + n), ops, inner.width) };
+    },
+  };
+}

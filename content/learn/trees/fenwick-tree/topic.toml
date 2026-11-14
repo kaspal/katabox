@@ -1,0 +1,28 @@
+id = "fenwick-tree"
+subject = "trees"
+order = 13
+title = "Fenwick tree"
+title_es = "Árbol de Fenwick"
+tags = ["range-query"]
+problems = ["stock-ledger", "gauge-corrections"]
+presets = ["power-of-two", "random", "odd-positions"]
+default = [8, 1, 1, 4, 1, 4, 3, 1, 6, 2, 2, 5, 0, 2, 7, 0]
+
+[complexity]
+best = "O(log n)"
+average = "O(log n) per add or prefix sum"
+worst = "O(log n)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 4
+max_len = 31
+min = 0
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(a[0], kb_ops(a[1:], [\"add\", \"sum\"], 2))"
+typescript = "a = run(a[0], kbOps(a.slice(1), [\"add\", \"sum\"], 2))"

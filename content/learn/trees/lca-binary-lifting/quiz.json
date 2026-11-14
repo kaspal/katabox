@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Pair (5, 9): 9 has depth 3 and 5 has depth 2. Where does 9 land after the lift?",
+    "prompt_es": "Pareja (5, 9): 9 tiene profundidad 3 y 5 profundidad 2. ¿Dónde cae 9 tras subirlo?",
+    "options": [
+      { "en": "On 2", "es": "En 2" },
+      { "en": "On 6", "es": "En 6" },
+      { "en": "On 5", "es": "En 5" }
+    ],
+    "answer": 1,
+    "explain_en": "The difference is 1, so one jump from row 0, the parent: 9 → 6. 6 is not 5, so the second phase runs; no jump separates them, and the answer is 6's parent, 2.",
+    "explain_es": "La diferencia es 1, así que hay un salto de la fila 0, el padre: 9 → 6. 6 no es 5, así que se hace la segunda fase; ningún salto los separa, y la respuesta es el padre de 6, 2."
+  },
+  {
+    "prompt_en": "Pair (7, 8), both at depth 3. Why is the jump of 2 levels skipped?",
+    "prompt_es": "Pareja (7, 8), los dos a profundidad 3. ¿Por qué se omite el salto de 2 niveles?",
+    "options": [
+      { "en": "7 and 8 are at different depths", "es": "7 y 8 están a distinta profundidad" },
+      { "en": "The table has only one row", "es": "La tabla solo tiene una fila" },
+      { "en": "It lands both on node 1, which might be the LCA or above it", "es": "Deja a los dos en el nodo 1, que podría ser el LCA o estar por encima" }
+    ],
+    "answer": 2,
+    "explain_en": "up[1][7] and up[1][8] are both 1. Equal ancestors could overshoot, so the jump is skipped; the parents 3 and 4 differ, so both step up once, and the answer is up[0][3] = 1.",
+    "explain_es": "up[1][7] y up[1][8] son ambos 1. Unos ancestros iguales podrían pasarse, así que el salto se omite; los padres 3 y 4 son distintos, así que los dos suben una vez, y la respuesta es up[0][3] = 1."
+  },
+  {
+    "prompt_en": "What is the whole output row?",
+    "prompt_es": "¿Cuál es la fila de salida completa?",
+    "options": [
+      { "en": "[1, 2, 1]", "es": "[1, 2, 1]" },
+      { "en": "[3, 2, 1]", "es": "[3, 2, 1]" },
+      { "en": "[1, 0, 1]", "es": "[1, 0, 1]" }
+    ],
+    "answer": 0,
+    "explain_en": "7 and 8 meet at 1, 5 and 9 at 2, and 3 and 4 are siblings under 1.",
+    "explain_es": "7 y 8 se encuentran en 1, 5 y 9 en 2, y 3 y 4 son hermanos bajo 1."
+  }
+]

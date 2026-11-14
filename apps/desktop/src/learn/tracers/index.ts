@@ -12,6 +12,13 @@ import { binaryHeap } from "./binary-heap";
 import { trie } from "./trie";
 import { unionFind } from "./union-find";
 import { treeDiameter } from "./tree-diameter";
+import { avlRotations } from "./avl-rotations";
+import { redBlackInsert } from "./red-black-insert";
+import { bTreeInsert } from "./b-tree-insert";
+import { segmentTree } from "./segment-tree";
+import { lazyPropagation } from "./lazy-propagation";
+import { fenwickTree } from "./fenwick-tree";
+import { lcaBinaryLifting } from "./lca-binary-lifting";
 import { dynamicArrayOps } from "./dynamic-array-ops";
 import { stack } from "./stack";
 import { queueRingBuffer } from "./queue-ring-buffer";
@@ -97,4 +104,11 @@ export const TRACERS: Record<string, TracerDef> = {
   "trie": trie,
   "union-find": unionFind,
   "tree-diameter": treeDiameter,
+  "avl-rotations": avlRotations,
+  "red-black-insert": redBlackInsert,
+  "b-tree-insert": bTreeInsert,
+  "segment-tree": segmentTree,
+  "lazy-propagation": lazyPropagation,
+  "fenwick-tree": fenwickTree,
+  "lca-binary-lifting": lcaBinaryLifting,
 };

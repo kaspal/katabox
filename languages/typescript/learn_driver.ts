@@ -25,6 +25,13 @@ function kbText(values: number[]): string[] {
   return words;
 }
 
+// Stored groups (pairs, edges) as arrays of `size` values.
+function kbChunks(values: number[], size: number): number[][] {
+  const out: number[][] = [];
+  for (let k = 0; k < values.length; k += size) out.push(values.slice(k, k + size));
+  return out;
+}
+
 // Read the values, call the sample on the array `a` (the call may also set `a` to the
 // sample's result), print it.
 let a: number[] = kbReadFileSync(0, "utf8")

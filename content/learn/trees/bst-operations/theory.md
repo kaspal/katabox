@@ -12,7 +12,7 @@ In the default input, insert 50, 30, 70, 60, 80, 65 and then delete 50, which ha
 
 ### Height
 
-Every operation costs one walk down, so its cost is the tree's **height** `h`. Keys inserted in random order give a height near `log n`. Sorted keys build a **skewed** tree, really a linked list, of height `n`. Balanced trees (coming soon) reshape themselves to avoid this.
+Every operation costs one walk down, so its cost is the tree's **height** `h`. Keys inserted in random order give a height near `log n`. Sorted keys build a **skewed** tree, really a linked list, of height `n`. Balanced trees ([AVL](learn:trees/avl-rotations), [red-black](learn:trees/red-black-insert)) reshape themselves to avoid this.
 
 ## Steps
 
@@ -45,4 +45,4 @@ Use a BST when you need a set or map that also stays ordered: the smallest or la
 - [Binary search](learn:searching/binary-search): the same halving, on a sorted array.
 - [Pre-, in- and post-order](learn:trees/tree-traversals): in-order reads a BST sorted.
 - [Binary heap and priority queue](learn:trees/binary-heap): a different tree order, for the smallest key only.
-- AVL rotations (coming soon): keeping the height near `log n`.
+- [AVL tree: rotations](learn:trees/avl-rotations): keeping the height near `log n`.

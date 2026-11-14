@@ -964,7 +964,12 @@
         "edges_followed": "aristas seguidas",
         "climbs": "subidas",
         "compressed": "punteros acortados",
-        "links": "enlaces"
+        "links": "enlaces",
+        "rotations": "rotaciones",
+        "splits": "divisiones",
+        "reads": "lecturas",
+        "table_cells": "celdas de la tabla",
+        "jumps": "saltos"
       },
       "rows": {
         "prefix": "Sumas prefijas",
@@ -981,7 +986,8 @@
         "order": "Orden de visita",
         "bits": "Bits",
         "found": "Respuestas",
-        "hashes": "Hash de cada ventana"
+        "hashes": "Hash de cada ventana",
+        "array": "Arreglo"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -1011,7 +1017,11 @@
       "summary_tree": "Nodos del árbol, cada uno con su padre entre paréntesis: {{nodes}}.",
       "summary_hash": "Cubetas: {{buckets}}.",
       "summary_bits_array": "Bits: {{bits}}.",
-      "summary_empty": "Vacío por ahora: aún no hay nada guardado."
+      "summary_empty": "Vacío por ahora: aún no hay nada guardado.",
+      "notes": {
+        "red": "rojo",
+        "black": "negro"
+      }
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -1084,7 +1094,21 @@
       "root": "Raíz",
       "reached": "Alcanzado",
       "farthest_so_far": "El más lejano hasta ahora",
-      "visited": "Visitado"
+      "visited": "Visitado",
+      "unbalanced": "Desequilibrado",
+      "rotating": "Rotando",
+      "balanced": "Equilibrado",
+      "red": "Rojo",
+      "black": "Negro",
+      "overfull": "Demasiadas claves",
+      "split_half": "Mitad de una división",
+      "in_query": "En la consulta",
+      "inside": "Dentro por completo",
+      "outside": "Fuera por completo",
+      "recomputed": "Recalculado",
+      "tagged": "Con marca",
+      "pushing": "Pasando su marca abajo",
+      "read": "Leído"
     },
     "controls": {
       "label": "Reproducción",
@@ -1132,7 +1156,15 @@
         "already-joined": "Ya unidos",
         "path": "Un camino",
         "star": "Una estrella",
-        "caterpillar": "Una oruga"
+        "caterpillar": "Una oruga",
+        "whole-range": "Todo el rango",
+        "small-ranges": "Rangos pequeños",
+        "tag-then-split": "Marcar y luego dividir",
+        "overlapping-adds": "Sumas solapadas",
+        "power-of-two": "Ocho casillas",
+        "odd-positions": "Posiciones impares",
+        "deep-path": "Un camino profundo",
+        "two-branches": "Dos ramas"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1157,7 +1189,13 @@
           "word_count": "Escribe de {{min}} a {{max}} palabras.",
           "node_count": "Usa de {{min}} a {{max}} elementos.",
           "node_range": "Los elementos van del 0 al {{max}}.",
-          "parent": "El padre del nodo {{node}} debe estar entre 0 y {{max}}."
+          "parent": "El padre del nodo {{node}} debe estar entre 0 y {{max}}.",
+          "list_size": "{{field}}: escribe de {{min}} a {{max}} números entre {{lo}} y {{hi}}.",
+          "too_many_ops": "Como mucho {{max}} operaciones.",
+          "bad_range": "Un rango son dos posiciones l ≤ r, de 0 a {{max}}.",
+          "value_range": "Suma un valor de {{min}} a {{max}}.",
+          "pairs_even": "Los pares van de dos en dos números.",
+          "pair_count": "Escribe de {{min}} a {{max}} pares."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1175,7 +1213,8 @@
         "words": "Palabras",
         "cycle": "La cola apunta a",
         "length": "Ventana",
-        "parents": "Padres"
+        "parents": "Padres",
+        "pairs": "Pares"
       }
     },
     "tabs": {
@@ -1240,7 +1279,11 @@
       "bfs": "Búsqueda en anchura",
       "trie": "Trie",
       "union-find": "Unión-búsqueda",
-      "tree": "Árbol"
+      "tree": "Árbol",
+      "balanced-tree": "Árbol equilibrado",
+      "segment-tree": "Árbol de segmentos",
+      "range-query": "Consulta de rango",
+      "binary-lifting": "Saltos binarios"
     },
     "narration": {
       "bubble-sort": {
@@ -1691,6 +1734,77 @@
         "reach": "Alcanza el nodo {{node}} a distancia {{d}}.",
         "second_bfs": "El nodo {{end}} era el más lejano (distancia {{d}}). Segundo BFS desde ahí.",
         "done": "El nodo más lejano desde {{a}} es {{b}}: el diámetro es de {{length}} arista(s)."
+      },
+      "avl-rotations": {
+        "ready": "Inserta {{n}} valores en un árbol AVL. Bajo cada nodo: su altura h y su equilibrio (altura izquierda − altura derecha).",
+        "place": "Coloca {{value}} como una hoja nueva, como en cualquier árbol binario de búsqueda.",
+        "balanced": "De vuelta en {{value}}: equilibrio {{balance}}, entre −1 y +1. No hay nada que arreglar.",
+        "left_heavy": "De vuelta en {{value}}: equilibrio {{balance}}. El lado izquierdo es dos niveles más alto: rota.",
+        "right_heavy": "De vuelta en {{value}}: equilibrio {{balance}}. El lado derecho es dos niveles más alto: rota.",
+        "rotate_right": "Rotación a la derecha: {{top}} sube y {{down}} pasa a ser su hijo derecho.",
+        "rotate_left": "Rotación a la izquierda: {{top}} sube y {{down}} pasa a ser su hijo izquierdo.",
+        "done": "{{n}} valores, altura {{height}}, tras {{rotations}} rotación(es). La salida es el preorden."
+      },
+      "red-black-insert": {
+        "ready": "Inserta {{n}} valores en un árbol rojinegro inclinado a la izquierda. Un nodo rojo va pegado a su padre; los enlaces rojos solo se inclinan a la izquierda.",
+        "place": "Coloca {{value}} como una hoja roja nueva.",
+        "rotate_left": "Un enlace rojo se inclina a la derecha: rota a la izquierda, {{top}} sube por encima de {{down}}.",
+        "rotate_right": "Dos enlaces rojos seguidos a la izquierda: rota a la derecha, {{top}} sube por encima de {{down}}.",
+        "flip": "{{value}} tiene dos hijos rojos: invierte los colores, así {{value}} pasa a rojo y sube el rojo.",
+        "root_black": "Pinta de negro la raíz {{value}}.",
+        "done": "{{n}} valores tras {{rotations}} rotación(es). Todo camino desde la raíz hacia abajo pasa por {{black}} nodo(s) negro(s)."
+      },
+      "b-tree-insert": {
+        "ready": "Inserta {{n}} valores en un árbol B donde cada nodo guarda como mucho {{max}} claves.",
+        "descend": "{{key}} va debajo de este nodo, en el hijo {{child}}.",
+        "add_key": "Añade {{key}} a la hoja, manteniendo sus claves en orden.",
+        "split": "Demasiadas claves: divide alrededor de la clave central {{middle}}, que sube.",
+        "absorb": "El padre recibe {{middle}} y ahora apunta a las dos mitades.",
+        "new_root": "La raíz se dividió: {{middle}} pasa a ser una raíz nueva y el árbol crece un nivel.",
+        "done": "{{n}} valores, altura {{height}}, tras {{splits}} división(es). Todas las hojas están a la misma profundidad."
+      },
+      "segment-tree": {
+        "ready": "{{n}} valores en un árbol de segmentos de {{nodes}} nodos. Cada nodo guarda la suma del rango que cubre.",
+        "leaf": "Hoja de la posición {{i}}: {{value}}.",
+        "merge": "Rango {{lo}}-{{hi}}: su suma es la de sus dos hijos, {{sum}}.",
+        "query": "sum {{left}} {{right}}: empieza en la raíz.",
+        "outside": "El rango {{lo}}-{{hi}} queda fuera de la consulta: sáltalo.",
+        "inside": "El rango {{lo}}-{{hi}} está dentro por completo: toma su {{sum}} sin bajar más. Total por ahora {{acc}}.",
+        "answer": "sum {{left}} {{right}} = {{sum}}.",
+        "update": "update {{i}} {{value}}: baja hasta la hoja.",
+        "set": "Pon la posición {{i}} a {{value}}.",
+        "recompute": "Rango {{lo}}-{{hi}}: recalcula su suma, {{sum}}.",
+        "done": "{{answers}} respuesta(s); las consultas visitaron {{visited}} nodos."
+      },
+      "lazy-propagation": {
+        "ready": "{{n}} ceros en un árbol de segmentos con marcas perezosas. Bajo cada nodo: su rango y su marca pendiente.",
+        "add": "add {{left}} {{right}} {{value}}: empieza en la raíz.",
+        "tag": "El rango {{lo}}-{{hi}} está dentro por completo: suma {{value}} por cada posición (suma {{sum}}) y deja una marca para los hijos.",
+        "push_down": "Hay que bajar por el rango {{lo}}-{{hi}}: primero pasa su marca +{{tag}} a los dos hijos.",
+        "recompute": "Rango {{lo}}-{{hi}}: recalcula su suma con sus hijos, {{sum}}.",
+        "query": "sum {{left}} {{right}}: empieza en la raíz.",
+        "inside": "El rango {{lo}}-{{hi}} está dentro por completo: toma su {{sum}}. Total por ahora {{acc}}.",
+        "answer": "sum {{left}} {{right}} = {{sum}}.",
+        "done": "{{answers}} respuesta(s); las marcas bajaron {{pushes}} vez/veces."
+      },
+      "fenwick-tree": {
+        "ready": "{{n}} ceros en un árbol de Fenwick. La casilla i cubre las posiciones que aparecen debajo.",
+        "start_add": "add {{i}} {{value}}: cada casilla que cubre la posición {{i}} necesita {{value}} más.",
+        "add": "La casilla {{slot}} guarda ahora {{total}}. Siguiente casilla: suma su bit más bajo, {{low}}.",
+        "start_sum": "sum {{i}}: suma las casillas que juntas cubren las posiciones de 0 a {{i}}.",
+        "read": "Lee la casilla {{slot}} ({{value}}): total {{acc}}. Luego quita su bit más bajo.",
+        "answer": "sum {{i}} = {{sum}}.",
+        "done": "{{answers}} respuesta(s): {{reads}} lecturas y {{writes}} escrituras de casillas en total."
+      },
+      "lca-binary-lifting": {
+        "ready": "Un árbol de {{n}} nodos. Construye una tabla de saltos: el ancestro de cada nodo 1, 2, 4… niveles arriba ({{levels}} nivel(es)).",
+        "table": "{{jump}} nivel(es) por encima de {{v}}: dos saltos de la mitad, pasando por {{mid}}, llegan a {{to}}.",
+        "pair": "Ancestro común más bajo de {{a}} y {{b}}.",
+        "lift": "Sube el nodo más profundo {{from}} {{jump}} niveles, hasta {{to}}.",
+        "same": "Misma profundidad y el mismo nodo: {{lca}} es la respuesta para {{a}} y {{b}}.",
+        "jump": "Salta {{jump}} arriba desde {{from_a}} y {{from_b}}: caen en nodos distintos, {{a}} y {{b}}, así que el salto vale.",
+        "answer": "Ningún salto los mantiene separados: su padre {{lca}} es la respuesta para {{a}} y {{b}}.",
+        "done": "{{pairs}} par(es) respondido(s) con {{jumps}} salto(s)."
       }
     },
     "compare": {
