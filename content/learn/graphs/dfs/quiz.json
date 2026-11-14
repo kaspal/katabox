@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "In the default graph, DFS has just entered node 4. Which nodes are on the call stack, bottom first?",
+    "prompt_es": "En el grafo por defecto, DFS acaba de entrar en el nodo 4. ¿Qué nodos hay en la pila de llamadas, de abajo arriba?",
+    "options": [
+      { "en": "4 only", "es": "Solo 4" },
+      { "en": "0, 5, 6, 2, 3, 4", "es": "0, 5, 6, 2, 3, 4" },
+      { "en": "0, 1, 2, 3, 4", "es": "0, 1, 2, 3, 4" }
+    ],
+    "answer": 2,
+    "explain_en": "Each visit waits for the one it called, so the stack is the path DFS followed: 0 → 1 → 2 → 3 → 4.",
+    "explain_es": "Cada visit espera a la que ha llamado, así que la pila es el camino que siguió DFS: 0 → 1 → 2 → 3 → 4."
+  },
+  {
+    "prompt_en": "Node 5 is a neighbour of 0, yet it is entered right after 6. Why?",
+    "prompt_es": "El nodo 5 es vecino de 0, pero entra justo después de 6. ¿Por qué?",
+    "options": [
+      { "en": "DFS reaches 6 through 2 first, and 5 is 6's first neighbour", "es": "DFS llega antes a 6 a través de 2, y 5 es el primer vecino de 6" },
+      { "en": "DFS visits neighbours from largest to smallest", "es": "DFS visita los vecinos de mayor a menor" },
+      { "en": "0 skips 5 because it has already finished", "es": "0 se salta 5 porque ya ha terminado" }
+    ],
+    "answer": 0,
+    "explain_en": "0's first neighbour is 1, and that branch leads 1 → 2 → 6 before 0 ever looks at 5. 6's list is [5, 7, 2], so 5 is entered from 6.",
+    "explain_es": "El primer vecino de 0 es 1, y esa rama lleva 1 → 2 → 6 antes de que 0 llegue a mirar a 5. La lista de 6 es [5, 7, 2], así que 5 entra desde 6."
+  },
+  {
+    "prompt_en": "What is the finish order?",
+    "prompt_es": "¿Cuál es el orden de finalización?",
+    "options": [
+      { "en": "0, 1, 2, 3, 4, 6, 5, 7", "es": "0, 1, 2, 3, 4, 6, 5, 7" },
+      { "en": "4, 3, 5, 7, 6, 2, 1, 0", "es": "4, 3, 5, 7, 6, 2, 1, 0" },
+      { "en": "7, 5, 6, 4, 3, 2, 1, 0", "es": "7, 5, 6, 4, 3, 2, 1, 0" }
+    ],
+    "answer": 1,
+    "explain_en": "4 and 3 finish first, as the 0 → 4 path backs up. Then 2 explores 6, whose children 5 and 7 finish before it; 2, 1 and 0 follow.",
+    "explain_es": "4 y 3 terminan primero, al retroceder por el camino 0 → 4. Después 2 explora 6, cuyos hijos 5 y 7 terminan antes que él; luego terminan 2, 1 y 0."
+  }
+]

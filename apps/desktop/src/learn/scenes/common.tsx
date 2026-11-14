@@ -6,7 +6,7 @@ import { motion, type Transition } from "motion/react";
 import { useReducedMotion } from "../engine/media";
 import type { TFunction } from "i18next";
 import { GROWTH_CLASSES } from "../engine/growth";
-import type { Pointer, Role, Step, TracerDef } from "../engine/types";
+import type { NoteKey, Pointer, Role, Step, TracerDef } from "../engine/types";
 
 export type SceneProps = {
   step: Step;
@@ -166,6 +166,12 @@ export function sceneSummary(t: TFunction, step: Step): string {
   if (step.hash) {
     const buckets = step.hash.buckets.map((b, k) => `${k}: ${b.map((it) => (it.value === -2 ? "✕" : it.value)).join(" ") || "—"}`).join("; ");
     parts.push(t("learn.stage.summary_hash", { buckets }));
+  }
+  if (step.graph) {
+    const g = step.graph;
+    const nodes = g.nodes.map((v) => (v.note ? `${v.id} (${v.note.startsWith("@") ? t(`learn.stage.notes.${v.note.slice(1) as NoteKey}`) : v.note})` : String(v.id))).join(", ");
+    const edges = g.edges.map((e) => `${e.u}${g.directed ? "→" : "–"}${e.v}${g.weighted ? ` (${e.label ?? e.w})` : ""}`).join(", ") || "—";
+    parts.push(t("learn.stage.summary_graph", { n: g.n, nodes, edges }));
   }
   if (step.bitArray) parts.push(t("learn.stage.summary_bits_array", { bits: step.bitArray.bits.join("") }));
   if (step.table) {

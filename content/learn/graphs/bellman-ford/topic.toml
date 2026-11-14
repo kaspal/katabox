@@ -1,0 +1,28 @@
+id = "bellman-ford"
+subject = "graphs"
+order = 9
+title = "Bellman-Ford"
+title_es = "Bellman-Ford"
+tags = ["graph", "shortest-path"]
+problems = ["toll-refunds"]
+presets = ["negative-edge", "random", "negative-cycle"]
+default = [5, 1, 3, 4, 2, 1, 3, -2, 0, 1, 4, 0, 2, 1, 2, 1, 2, 2, 3, 5]
+
+[complexity]
+best = "O(m) when one round settles it"
+average = "O(n · m)"
+worst = "O(n · m)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 62
+min = -5
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = bellman_ford(a[0], kb_edges(a), 0)"
+typescript = "a = bellmanFord(a[0], kbEdges(a), 0)"

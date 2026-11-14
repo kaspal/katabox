@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph: edges 0→2, 1→2, 1→3, 2→4, 3→4, 4→5, 3→6. Which nodes are in the queue before anything is taken?",
+    "prompt_es": "Grafo por defecto: aristas 0→2, 1→2, 1→3, 2→4, 3→4, 4→5, 3→6. ¿Qué nodos hay en la cola antes de sacar nada?",
+    "options": [
+      { "en": "0 and 1", "es": "0 y 1" },
+      { "en": "0 only", "es": "Solo 0" },
+      { "en": "5 and 6", "es": "5 y 6" }
+    ],
+    "answer": 0,
+    "explain_en": "Only 0 and 1 have no incoming edges. 5 and 6 have no outgoing edges, which does not matter here.",
+    "explain_es": "Solo 0 y 1 no tienen aristas de entrada. 5 y 6 no tienen aristas de salida, lo que aquí no importa."
+  },
+  {
+    "prompt_en": "Why does 6 come before 5 in the output 0, 1, 2, 3, 4, 6, 5?",
+    "prompt_es": "¿Por qué 6 va antes que 5 en la salida 0, 1, 2, 3, 4, 6, 5?",
+    "options": [
+      { "en": "6 has more edges than 5", "es": "6 tiene más aristas que 5" },
+      { "en": "The queue sorts nodes from largest to smallest", "es": "La cola ordena los nodos de mayor a menor" },
+      { "en": "6 reached in-degree 0 when 3 was taken, before 4 freed 5", "es": "6 llegó a grado de entrada 0 al sacar 3, antes de que 4 liberara a 5" }
+    ],
+    "answer": 2,
+    "explain_en": "Taking 3 queued 4 and 6. Taking 4 then queued 5 behind 6, and a FIFO queue hands nodes out in the order they joined.",
+    "explain_es": "Sacar 3 encoló 4 y 6. Después, sacar 4 encoló 5 detrás de 6, y una cola FIFO entrega los nodos en el orden en que entraron."
+  },
+  {
+    "prompt_en": "You add the edge 5→1 to the default graph. What does Kahn's algorithm output?",
+    "prompt_es": "Añades la arista 5→1 al grafo por defecto. ¿Qué escribe el algoritmo de Kahn?",
+    "options": [
+      { "en": "All seven nodes in a different order", "es": "Los siete nodos en otro orden" },
+      { "en": "Only 0: the cycle 1 → 3 → 4 → 5 → 1 blocks everything else", "es": "Solo 0: el ciclo 1 → 3 → 4 → 5 → 1 bloquea todo lo demás" },
+      { "en": "Nothing at all", "es": "Nada en absoluto" }
+    ],
+    "answer": 1,
+    "explain_en": "1 now has in-degree 1, so only 0 starts in the queue. Taking 0 lowers 2 to 1, and 2 still waits on 1, which waits on the cycle. The order has 1 node instead of 7.",
+    "explain_es": "Ahora 1 tiene grado de entrada 1, así que solo 0 empieza en la cola. Sacar 0 baja 2 a 1, y 2 sigue esperando a 1, que espera al ciclo. El orden tiene 1 nodo en vez de 7."
+  }
+]

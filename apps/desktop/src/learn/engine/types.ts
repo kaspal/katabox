@@ -119,6 +119,8 @@ export type SceneData = {
   hash?: HashData;
   /** A bit array (Bloom filter) with the positions the current key touches. */
   bitArray?: { bits: number[]; hits: number[]; miss?: number | null; key?: number | null };
+  /** A graph (Phases 4-5): fixed node positions, roles on nodes and edges, panels. */
+  graph?: GraphData;
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
    * not the final row). cases.json `output` comes from here, so it is the tracer's own. */
   result?: number[];
@@ -146,6 +148,22 @@ export type SlotsData = {
 export type TableData = {
   label: RowLabel;
   rows: { key: number; value: number; role?: Role }[];
+};
+
+/** Graphs (Phases 4-5): nodes 0..n-1 placed once by d3-force; edges in input order. */
+export type GraphNode = { id: number; role?: Role; note?: string; mark?: boolean; text?: string };
+export type GraphEdge = { id: number; u: number; v: number; w: number; role?: Role; label?: string };
+export type GraphData = {
+  n: number;
+  directed: boolean;
+  weighted: boolean;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  /** A panel with each node's neighbour list; `hotRow` is the row being written. */
+  adjacency?: number[][];
+  hotRow?: number;
+  /** A matrix panel (representations, Floyd-Warshall); null is drawn as ∞. */
+  matrix?: { label: RowLabel; cells: (number | null)[][]; hot?: [number, number][]; via?: [number, number][] };
 };
 
 export type ForestNode = {
@@ -206,7 +224,8 @@ export type SceneKind =
   | "slots"
   | "tree"
   | "hash"
-  | "bits-array";
+  | "bits-array"
+  | "graph";
 
 /** How a topic's input is shaped. Inputs are always one flat list of integers (the DB and
  * the sample driver see only that):

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default graph: edges 0→1, 1→2, 0→3, 3→4, 4→5, 5→3, 2→6. When the search reaches node 5, which nodes are black?",
+    "prompt_es": "Grafo por defecto: aristas 0→1, 1→2, 0→3, 3→4, 4→5, 5→3, 2→6. Cuando la búsqueda llega al nodo 5, ¿qué nodos son negros?",
+    "options": [
+      { "en": "None yet", "es": "Ninguno todavía" },
+      { "en": "0, 3 and 4", "es": "0, 3 y 4" },
+      { "en": "1, 2 and 6", "es": "1, 2 y 6" }
+    ],
+    "answer": 2,
+    "explain_en": "0 follows 0→1 first, and the branch 1 → 2 → 6 is explored and finished before 0 tries 0→3. 0, 3, 4 and 5 are grey: the current path.",
+    "explain_es": "0 sigue primero 0→1, y la rama 1 → 2 → 6 se explora y termina antes de que 0 pruebe 0→3. 0, 3, 4 y 5 son grises: el camino actual."
+  },
+  {
+    "prompt_en": "Why does the edge 5→3 prove there is a cycle?",
+    "prompt_es": "¿Por qué la arista 5→3 demuestra que hay un ciclo?",
+    "options": [
+      { "en": "3 is grey, so it is on the current path 3 → 4 → 5, and the edge closes the loop", "es": "3 es gris, así que está en el camino actual 3 → 4 → 5, y la arista cierra el bucle" },
+      { "en": "3 has already been visited", "es": "3 ya se ha visitado" },
+      { "en": "3 is black", "es": "3 es negro" }
+    ],
+    "answer": 0,
+    "explain_en": "Grey means entered but not finished, so there is a path from 3 down to 5. The edge 5→3 leads back to the start of that path.",
+    "explain_es": "Gris significa que ha entrado pero no ha terminado, así que hay un camino de 3 hasta 5. La arista 5→3 vuelve al principio de ese camino."
+  },
+  {
+    "prompt_en": "In a directed graph, the search meets an edge to a black node. What does it mean?",
+    "prompt_es": "En un grafo dirigido, la búsqueda encuentra una arista hacia un nodo negro. ¿Qué significa?",
+    "options": [
+      { "en": "A cycle", "es": "Un ciclo" },
+      { "en": "Nothing: that node's paths never lead back to the current path", "es": "Nada: los caminos de ese nodo nunca vuelven al camino actual" },
+      { "en": "The graph is undirected", "es": "El grafo es no dirigido" }
+    ],
+    "answer": 1,
+    "explain_en": "A black node is fully explored. If any of its paths reached a grey node, the cycle would already have been reported, so the edge is safe to skip.",
+    "explain_es": "Un nodo negro está explorado por completo. Si alguno de sus caminos llegara a un nodo gris, el ciclo ya se habría detectado, así que la arista se puede saltar sin riesgo."
+  }
+]

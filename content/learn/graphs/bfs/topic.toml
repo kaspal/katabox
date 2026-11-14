@@ -1,0 +1,28 @@
+id = "bfs"
+subject = "graphs"
+order = 2
+title = "Breadth-first search"
+title_es = "Búsqueda en anchura (BFS)"
+tags = ["graph", "bfs"]
+problems = ["fewest-hops", "ring-road"]
+presets = ["grid-like", "random", "two-components"]
+default = [9, 0, 0, 1, 1, 1, 2, 1, 0, 3, 1, 1, 4, 1, 2, 5, 1, 3, 4, 1, 4, 5, 1, 3, 6, 1, 4, 7, 1, 5, 8, 1, 6, 7, 1, 7, 8, 1]
+
+[complexity]
+best = "O(n + m)"
+average = "O(n + m)"
+worst = "O(n + m)"
+space = "O(n) queue"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 62
+min = 0
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = bfs(*kb_graph(a), 0)"
+typescript = "a = bfs(...kbGraph(a), 0)"

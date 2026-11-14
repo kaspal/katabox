@@ -969,7 +969,12 @@
         "splits": "splits",
         "reads": "reads",
         "table_cells": "table cells",
-        "jumps": "jumps"
+        "jumps": "jumps",
+        "taken": "taken",
+        "edges_removed": "edges removed",
+        "labelled": "labelled",
+        "relaxed": "relaxed",
+        "edges_checked": "edges checked"
       },
       "rows": {
         "prefix": "Prefix sums",
@@ -987,7 +992,10 @@
         "bits": "Bits",
         "found": "Answers",
         "hashes": "Window hashes",
-        "array": "Array"
+        "array": "Array",
+        "pq": "Priority queue (distance·node)",
+        "matrix": "Matrix",
+        "adjacency": "Adjacency list"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -1020,8 +1028,11 @@
       "summary_empty": "Empty so far: nothing stored yet.",
       "notes": {
         "red": "red",
-        "black": "black"
-      }
+        "black": "black",
+        "white": "white",
+        "grey": "grey"
+      },
+      "summary_graph": "Graph with {{n}} nodes: {{nodes}}. Edges: {{edges}}."
     },
     "roles": {
       "idle": "Not yet placed",
@@ -1108,7 +1119,30 @@
       "recomputed": "Recomputed",
       "tagged": "Tagged",
       "pushing": "Passing its tag down",
-      "read": "Read"
+      "read": "Read",
+      "neighbour": "Neighbour",
+      "discovered": "Just discovered",
+      "already_seen": "Already seen",
+      "on_the_path": "On the path",
+      "finished": "Finished",
+      "grey": "Grey: on the path",
+      "back_edge": "Back edge (cycle)",
+      "harmless_edge": "Edge to a finished node",
+      "lowered": "In-degree lowered",
+      "freed": "Now free",
+      "placed": "Placed",
+      "component_a": "Component 0, 4, 8",
+      "component_b": "Component 1, 5, 9",
+      "component_c": "Component 2, 6, 10",
+      "component_d": "Component 3, 7, 11",
+      "side_a": "Side A",
+      "side_b": "Side B",
+      "fine_edge": "Edge across the sides",
+      "clash": "Same side: clash",
+      "relaxed": "Distance lowered",
+      "no_better": "No better",
+      "settled": "Settled",
+      "still_lowers": "Still lowers"
     },
     "controls": {
       "label": "Playback",
@@ -1164,7 +1198,23 @@
         "power-of-two": "Eight slots",
         "odd-positions": "Odd positions",
         "deep-path": "A deep path",
-        "two-branches": "Two branches"
+        "two-branches": "Two branches",
+        "undirected": "Undirected",
+        "directed": "Directed",
+        "grid-like": "A grid",
+        "two-components": "Two pieces",
+        "deep-branch": "A deep branch",
+        "hidden-cycle": "A hidden cycle",
+        "dag": "No cycle",
+        "with-a-cycle": "With a cycle",
+        "islands": "Islands",
+        "one-piece": "One piece",
+        "even-cycles": "Even cycles",
+        "odd-cycle": "An odd cycle",
+        "detour-wins": "The detour wins",
+        "stale-entries": "Stale entries",
+        "negative-edge": "A negative edge",
+        "negative-cycle": "A negative cycle"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1195,7 +1245,15 @@
           "bad_range": "A range is two positions l ≤ r, from 0 to {{max}}.",
           "value_range": "Add a value from {{min}} to {{max}}.",
           "pairs_even": "Pairs come two numbers at a time.",
-          "pair_count": "Enter {{min}} to {{max}} pairs."
+          "pair_count": "Enter {{min}} to {{max}} pairs.",
+          "edge_list": "Write edges as \"u v\" (or \"u v w\" with a weight), separated by commas.",
+          "directed_flag": "Directed is 0 (no) or 1 (yes).",
+          "edge_count": "Use {{min}} to {{max}} edges.",
+          "self_loop": "Node {{node}} has an edge to itself.",
+          "duplicate_edge": "The edge {{u}} {{v}} appears twice.",
+          "weight_range": "Weights go from {{min}} to {{max}}.",
+          "edge_weighted": "\"{{edge}}\": write an edge as u v w (two nodes and a weight).",
+          "edge_pair": "\"{{edge}}\": write an edge as u v (two nodes)."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1214,7 +1272,9 @@
         "cycle": "Tail links to",
         "length": "Window",
         "parents": "Parents",
-        "pairs": "Pairs"
+        "pairs": "Pairs",
+        "edges": "Edges",
+        "directed": "Directed (0 / 1)"
       }
     },
     "tabs": {
@@ -1283,7 +1343,13 @@
       "balanced-tree": "Balanced tree",
       "segment-tree": "Segment tree",
       "range-query": "Range query",
-      "binary-lifting": "Binary lifting"
+      "binary-lifting": "Binary lifting",
+      "graph": "Graph",
+      "dfs": "Depth-first search",
+      "cycle": "Cycle",
+      "topological-sort": "Topological sort",
+      "shortest-path": "Shortest path",
+      "bipartite": "Bipartite"
     },
     "narration": {
       "bubble-sort": {
@@ -1805,6 +1871,77 @@
         "jump": "Jump {{jump}} up from {{from_a}} and {{from_b}}: they land on different nodes, {{a}} and {{b}}, so keep the jump.",
         "answer": "No jump keeps them apart any more: their parent {{lca}} is the answer for {{a}} and {{b}}.",
         "done": "{{pairs}} pair(s) answered with {{jumps}} jump(s)."
+      },
+      "graph-representations": {
+        "ready": "{{n}} nodes and {{m}} edges. Build an adjacency list and an adjacency matrix in one pass.",
+        "list": "Edge {{u}} → {{v}}: add {{v}} to {{u}}'s list.",
+        "matrix": "Write its weight {{w}} in row {{u}}, column {{v}}.",
+        "list_back": "Undirected: also add {{u}} to {{v}}'s list and write {{w}} in row {{v}}, column {{u}}.",
+        "done": "The list holds {{list}} entries; the matrix always has {{cells}} cells, edges or not."
+      },
+      "bfs": {
+        "ready": "Breadth-first search from node 0 over {{n}} nodes. The number under a node is its distance in edges.",
+        "visit": "Take {{u}} from the front of the queue (distance {{d}}).",
+        "discover": "{{v}} is new: distance {{d}}, one more than {{u}}. It joins the back of the queue.",
+        "seen": "{{v}} already has a distance ({{d}}): skip it.",
+        "done": "{{reached}} of {{n}} nodes reached; the farthest is {{far}} edge(s) away."
+      },
+      "dfs": {
+        "ready": "Depth-first search from node 0 over {{n}} nodes. The number under a node is the order it was entered.",
+        "enter": "Enter {{u}} (number {{k}}).",
+        "go": "{{v}} is unseen: go deeper, from {{u}} to {{v}}.",
+        "seen": "{{v}} was already seen: try {{u}}'s next neighbour.",
+        "leave": "{{u}} has no unseen neighbours left: it is finished, back up.",
+        "done": "{{reached}} of {{n}} nodes reached. The output is the entry order, then the finish order."
+      },
+      "cycle-detection": {
+        "ready": "Look for a cycle among {{n}} nodes and directed edges. Every node starts white.",
+        "grey": "Enter {{u}}: it turns grey, on the current path.",
+        "black_edge": "{{u}} → {{v}}: {{v}} is black, already finished. No cycle through it.",
+        "back_edge": "{{u}} → {{v}}: {{v}} is grey, still on the path. This edge closes a cycle.",
+        "black": "{{u}} has no more edges to follow: it turns black.",
+        "cycle": "A cycle exists: the answer is 1.",
+        "no_cycle": "All {{n}} nodes are black and no edge went back up a path: no cycle, the answer is 0."
+      },
+      "topological-sort": {
+        "ready": "{{n}} nodes; under each, its in-degree (edges coming in). {{free}} node(s) have none and wait in the queue.",
+        "take": "Take {{u}}: nothing still points to it, so it can go next.",
+        "lower": "Remove {{u}} → {{v}}: {{v}} now has {{d}} edge(s) coming in.",
+        "ready_node": "{{v}} has no edges coming in: it joins the queue.",
+        "done": "All {{n}} nodes are in order: every edge points forward.",
+        "stuck": "The queue is empty but {{left}} node(s) remain: they are on a cycle, so no order exists for them."
+      },
+      "connected-components": {
+        "ready": "Find the connected pieces among {{n}} nodes. The label under a node is its component.",
+        "new": "{{s}} has no label yet: start component #{{c}} there.",
+        "pop": "Pop {{u}} from the stack and look at its neighbours.",
+        "fill": "{{v}} gets label #{{c}} too, from {{u}}, and goes on the stack.",
+        "done": "{{count}} component(s) among {{n}} nodes."
+      },
+      "bipartite-check": {
+        "ready": "Try to split {{n}} nodes into two sides, A and B, so that every edge goes across.",
+        "start": "{{s}} has no side yet: put it on side A and spread from there.",
+        "colour": "{{v}}, a neighbour of {{u}}, goes on the other side.",
+        "fine": "{{u}} and {{v}} are on different sides: fine.",
+        "clash": "{{u}} and {{v}} are on the same side but share an edge: there is an odd cycle, no split exists.",
+        "done": "Every edge goes across: {{a}} node(s) on side A, {{b}} on side B."
+      },
+      "dijkstra": {
+        "ready": "Shortest distances from node 0 over {{n}} nodes; the number under a node is its best distance so far.",
+        "pop": "Pop the smallest entry: {{u}} at distance {{d}}.",
+        "stale": "This entry ({{d}}) is older than {{u}}'s best ({{best}}): skip it.",
+        "relax": "Through {{u}}, {{v}} costs {{d}} (edge {{w}}): better, so update it and push it.",
+        "no_better": "Through {{u}}, {{v}} would cost {{via}}: not better than {{best}}.",
+        "done": "The queue is empty: {{reached}} of {{n}} nodes reached, each with its shortest distance."
+      },
+      "bellman-ford": {
+        "ready": "Shortest distances from node 0 with {{m}} directed edges, some negative: at most {{rounds}} round(s).",
+        "round": "Round {{round}} of {{of}}: try every edge in order.",
+        "relax": "{{u}} → {{v}} (weight {{w}}) lowers {{v}} to {{d}}.",
+        "settled": "Round {{round}} changed nothing: the distances are final.",
+        "check": "One more pass: if any edge still lowers a distance, there is a negative cycle.",
+        "negative_cycle": "{{u}} → {{v}} (weight {{w}}) still lowers a distance: a negative cycle is reachable, so the answer is 1.",
+        "done": "No edge lowers anything: the distances are final after {{relaxed}} update(s) and {{checked}} edge checks."
       }
     },
     "compare": {

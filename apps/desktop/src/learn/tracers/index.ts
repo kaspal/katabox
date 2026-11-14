@@ -19,6 +19,15 @@ import { segmentTree } from "./segment-tree";
 import { lazyPropagation } from "./lazy-propagation";
 import { fenwickTree } from "./fenwick-tree";
 import { lcaBinaryLifting } from "./lca-binary-lifting";
+import { graphRepresentations } from "./graph-representations";
+import { bfs } from "./bfs";
+import { dfs } from "./dfs";
+import { cycleDetection } from "./cycle-detection";
+import { topologicalSort } from "./topological-sort";
+import { connectedComponents } from "./connected-components";
+import { bipartiteCheck } from "./bipartite-check";
+import { dijkstra } from "./dijkstra";
+import { bellmanFord } from "./bellman-ford";
 import { dynamicArrayOps } from "./dynamic-array-ops";
 import { stack } from "./stack";
 import { queueRingBuffer } from "./queue-ring-buffer";
@@ -111,4 +120,13 @@ export const TRACERS: Record<string, TracerDef> = {
   "lazy-propagation": lazyPropagation,
   "fenwick-tree": fenwickTree,
   "lca-binary-lifting": lcaBinaryLifting,
+  "graph-representations": graphRepresentations,
+  bfs,
+  dfs,
+  "cycle-detection": cycleDetection,
+  "topological-sort": topologicalSort,
+  "connected-components": connectedComponents,
+  "bipartite-check": bipartiteCheck,
+  dijkstra,
+  "bellman-ford": bellmanFord,
 };

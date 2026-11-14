@@ -25,6 +25,24 @@ function kbText(values: number[]): string[] {
   return words;
 }
 
+// A stored graph [n, directed, u, v, w, ...]: its edges as [u, v, w], in order.
+function kbEdges(values: number[]): number[][] {
+  const out: number[][] = [];
+  for (let k = 2; k < values.length; k += 3) out.push(values.slice(k, k + 3));
+  return out;
+}
+
+// A stored graph as [n, adjacency lists of [v, w]]; undirected edges go both ways.
+function kbGraph(values: number[]): [number, number[][][]] {
+  const n = values[0];
+  const adj: number[][][] = Array.from({ length: n }, () => []);
+  for (const [u, v, w] of kbEdges(values)) {
+    adj[u].push([v, w]);
+    if (!values[1]) adj[v].push([u, w]);
+  }
+  return [n, adj];
+}
+
 // Stored groups (pairs, edges) as arrays of `size` values.
 function kbChunks(values: number[], size: number): number[][] {
   const out: number[][] = [];

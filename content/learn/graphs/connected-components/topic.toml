@@ -1,0 +1,28 @@
+id = "connected-components"
+subject = "graphs"
+order = 6
+title = "Connected components"
+title_es = "Componentes conexas"
+tags = ["graph", "dfs"]
+problems = ["island-ferries", "frozen-ponds"]
+presets = ["islands", "random", "one-piece"]
+default = [10, 0, 0, 1, 1, 1, 2, 1, 3, 4, 1, 4, 5, 1, 5, 3, 1, 6, 7, 1, 8, 9, 1, 7, 8, 1]
+
+[complexity]
+best = "O(n + m)"
+average = "O(n + m)"
+worst = "O(n + m)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 62
+min = 0
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = components(*kb_graph(a))"
+typescript = "a = components(...kbGraph(a))"

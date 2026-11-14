@@ -1,0 +1,28 @@
+id = "graph-representations"
+subject = "graphs"
+order = 1
+title = "Graph representations"
+title_es = "Representaciones de grafos"
+tags = ["graph"]
+problems = []
+presets = ["undirected", "random", "directed"]
+default = [5, 0, 0, 1, 4, 0, 2, 1, 1, 3, 2, 2, 3, 5, 3, 4, 3]
+
+[complexity]
+best = "O(n + m) list"
+average = "O(1) matrix lookup"
+worst = "O(deg) list lookup"
+space = "O(n + m) list, O(n²) matrix"
+stable = true
+in_place = true
+
+[input]
+min_len = 5
+max_len = 62
+min = 0
+max = 12
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(a[0], a[1], kb_edges(a))"
+typescript = "a = run(a[0], a[1], kbEdges(a))"

@@ -96,6 +96,44 @@ function build23(values: readonly number[]): T23 {
   return root;
 }
 
+
+/** A stored graph [n, directed, u, v, w, …], read independently of engine/graph.ts. */
+function graphOf(input: readonly number[]) {
+  const n = input[0]!;
+  const directed = input[1] === 1;
+  const edges: [number, number, number][] = [];
+  for (let k = 2; k < input.length; k += 3) edges.push([input[k]!, input[k + 1]!, input[k + 2]!]);
+  // Neighbours of x in kb_graph's order: scan the edges, both ends when undirected.
+  const nbrs = (x: number) => {
+    const out: number[] = [];
+    for (const [u, v] of edges) {
+      if (u === x) out.push(v);
+      else if (!directed && v === x) out.push(u);
+    }
+    return out;
+  };
+  return { n, directed, edges, nbrs };
+}
+
+/** All-pairs shortest distances (Floyd-Warshall); null = unreachable. */
+function allPairs(n: number, arcs: readonly [number, number, number][]): (number | null)[][] {
+  const d: (number | null)[][] = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 0 : null)));
+  for (const [u, v, w] of arcs) if (d[u]![v] === null || w < d[u]![v]!) d[u]![v] = w;
+  for (let k = 0; k < n; k++)
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++) {
+        const a = d[i]![k];
+        const b = d[k]![j];
+        if (a !== null && b !== null && (d[i]![j] === null || a + b < d[i]![j]!)) d[i]![j] = a + b;
+      }
+  return d;
+}
+const arcsOf = (g: ReturnType<typeof graphOf>, unit = false) =>
+  g.edges.flatMap(([u, v, w]) => {
+    const c = unit ? 1 : w;
+    return g.directed ? [[u, v, c] as [number, number, number]] : [[u, v, c] as [number, number, number], [v, u, c] as [number, number, number]];
+  });
+
 export const REFERENCE: Record<string, (input: readonly number[]) => number[]> = {
   "big-o-growth": ([n]) => [1, log2(n!), n!, n! * log2(n!), n! * n!, 2 ** n!],
   "recursion-call-stack": (xs) => [sum(xs)],
@@ -413,6 +451,96 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
     }
     return out;
   },
+  // Graphs, part 1.
+  "graph-representations": (input) => {
+    const g = graphOf(input);
+    const matrix = Array.from({ length: g.n }, () => new Array<number>(g.n).fill(0));
+    for (const [u, v, w] of arcsOf(g)) matrix[u]![v] = w;
+    return [...Array.from({ length: g.n }, (_, x) => g.nbrs(x)).flatMap((l) => [l.length, ...l]), ...matrix.flat()];
+  },
+  bfs: (input) => {
+    const g = graphOf(input);
+    return allPairs(g.n, arcsOf(g, true))[0]!.map((d) => d ?? -1);
+  },
+  dfs: (input) => {
+    // Iterative, with an explicit stack of (node, next neighbour index).
+    const g = graphOf(input);
+    const seen = new Set<number>([0]);
+    const order = [0];
+    const finished: number[] = [];
+    const stack: [number, number][] = [[0, 0]];
+    while (stack.length) {
+      const top = stack[stack.length - 1]!;
+      const list = g.nbrs(top[0]);
+      if (top[1] === list.length) {
+        finished.push(top[0]);
+        stack.pop();
+        continue;
+      }
+      const v = list[top[1]++]!;
+      if (!seen.has(v)) {
+        seen.add(v);
+        order.push(v);
+        stack.push([v, 0]);
+      }
+    }
+    return [...order, ...finished];
+  },
+  "cycle-detection": (input) => {
+    // A directed graph has a cycle exactly when repeatedly deleting sources cannot empty it.
+    const g = graphOf(input);
+    const alive = new Set(Array.from({ length: g.n }, (_, k) => k));
+    for (;;) {
+      const source = [...alive].find((x) => !g.edges.some(([u, v]) => v === x && alive.has(u)));
+      if (source === undefined) break;
+      alive.delete(source);
+    }
+    return [alive.size > 0 ? 1 : 0];
+  },
+  "topological-sort": (input) => {
+    // Kahn's order, by levels: each level is the queue's next run, in the order it was filled.
+    const g = graphOf(input);
+    const indeg = new Array<number>(g.n).fill(0);
+    for (const [, v] of g.edges) indeg[v]!++;
+    const order: number[] = [];
+    for (let k = 0; k < g.n; k++) if (indeg[k] === 0) order.push(k);
+    for (let i = 0; i < order.length; i++)
+      for (const v of g.nbrs(order[i]!)) if (--indeg[v]! === 0) order.push(v);
+    return order;
+  },
+  "connected-components": (input) => {
+    // Union-find, then number the components by their smallest node.
+    const g = graphOf(input);
+    const parent = Array.from({ length: g.n }, (_, k) => k);
+    const root = (x: number): number => (parent[x] === x ? x : root(parent[x]!));
+    for (const [u, v] of g.edges) parent[root(u)] = root(v);
+    const names = new Map<number, number>();
+    return Array.from({ length: g.n }, (_, x) => {
+      if (!names.has(root(x))) names.set(root(x), names.size);
+      return names.get(root(x))!;
+    });
+  },
+  "bipartite-check": (input) => {
+    // Side = parity of the distance from the smallest node of the component.
+    const g = graphOf(input);
+    const d = allPairs(g.n, arcsOf(g, true));
+    const side = Array.from({ length: g.n }, (_, x) => {
+      const first = d.findIndex((row) => row[x] !== null);
+      return d[first]![x]! % 2;
+    });
+    return g.edges.some(([u, v]) => side[u] === side[v]) ? [-1] : side;
+  },
+  dijkstra: (input) => {
+    const g = graphOf(input);
+    return allPairs(g.n, arcsOf(g))[0]!.map((d) => d ?? -1);
+  },
+  "bellman-ford": (input) => {
+    // A negative cycle reachable from 0 shows as a negative d[k][k] on a reachable k.
+    const g = graphOf(input);
+    const d = allPairs(g.n, arcsOf(g));
+    if (d.some((row, k) => d[0]![k] !== null && row[k]! < 0)) return [1];
+    return [0, ...d[0]!.map((x) => x ?? 999)];
+  },
   "bubble-sort": sorted,
   "insertion-sort": sorted,
   "quick-sort": sorted,
@@ -508,6 +636,60 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  "graph-representations": {
+    input: [2, 0, 0, 1, 5],
+    markers: [null, "list", "matrix", "list-back", null],
+    py: [null, 5, 6, 8, null],
+    ts: [null, 5, 6, 8, null],
+  },
+  bfs: {
+    input: [3, 0, 0, 1, 1, 1, 2, 1],
+    markers: [null, "visit", "discover", "visit", null, "discover", "visit", null, null],
+    py: [null, 9, 12, 9, null, 12, 9, null, null],
+    ts: [null, 7, 10, 7, null, 10, 7, null, null],
+  },
+  dfs: {
+    input: [2, 0, 0, 1, 1],
+    markers: [null, "enter", "go", "enter", null, "leave", "leave", null],
+    py: [null, 7, 10, 7, null, 11, 11, null],
+    ts: [null, 8, 11, 8, null, 14, 14, null],
+  },
+  "cycle-detection": {
+    input: [2, 1, 0, 1, 1, 1, 0, 1],
+    markers: [null, "grey", "grey", "back-edge", null],
+    py: [null, 8, 8, 11, null],
+    ts: [null, 9, 9, 12, null],
+  },
+  "topological-sort": {
+    input: [2, 1, 0, 1, 1],
+    markers: [null, "take", "lower", "ready", "take", null],
+    py: [null, 13, 15, 17, 13, null],
+    ts: [null, 12, 14, 16, 12, null],
+  },
+  "connected-components": {
+    input: [3, 0, 0, 1, 1],
+    markers: [null, "new", null, "fill", null, "new", null, null],
+    py: [null, 7, null, 13, null, 7, null, null],
+    ts: [null, 6, null, 12, null, 6, null, null],
+  },
+  "bipartite-check": {
+    input: [3, 0, 0, 1, 1, 1, 2, 1],
+    markers: [null, "start", "colour", null, "colour", null, null],
+    py: [null, 9, 15, null, 15, null, null],
+    ts: [null, 5, 12, null, 12, null, null],
+  },
+  dijkstra: {
+    input: [2, 0, 0, 1, 4],
+    markers: [null, "pop", "relax", "pop", null, null],
+    py: [null, 9, 14, 9, null, null],
+    ts: [null, 8, 14, 8, null, null],
+  },
+  "bellman-ford": {
+    input: [3, 1, 0, 1, 3],
+    markers: [null, null, "relax", null, "settled", null, null],
+    py: [null, null, 11, null, 14, null, null],
+    ts: [null, null, 10, null, 15, null, null],
+  },
   "avl-rotations": {
     input: [1, 2, 3],
     markers: [null, "place", "place", "balance", "place", "balance", "balance", "rotate-left", null],
@@ -838,6 +1020,15 @@ export const GOLDEN: Record<string, Golden> = {
 export const WORST: Record<string, number[]> = {
   "big-o-growth": [16],
   "towers-of-hanoi": [5],
+  "graph-representations": [12, 1, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
+  bfs: [12, 0, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
+  dfs: [12, 0, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
+  "cycle-detection": [12, 1, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
+  "topological-sort": [12, 1, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
+  "connected-components": [12, 0, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
+  "bipartite-check": [12, 0, 0, 1, 1, 0, 2, 1, 1, 3, 1, 2, 3, 1, 3, 4, 1, 4, 5, 1, 5, 6, 1, 6, 7, 1, 7, 8, 1, 8, 9, 1, 9, 10, 1, 10, 11, 1, 0, 11, 1, 1, 5, 1, 2, 7, 1, 3, 9, 1, 4, 10, 1, 6, 11, 1, 1, 8, 1, 2, 10, 1],
+  dijkstra: [12, 0, 0, 1, 1, 0, 2, 8, 1, 3, 6, 2, 3, 4, 3, 4, 2, 4, 5, 9, 5, 6, 7, 6, 7, 5, 7, 8, 3, 8, 9, 1, 9, 10, 8, 10, 11, 6, 0, 11, 4, 1, 5, 2, 2, 7, 9, 3, 9, 7, 4, 10, 5, 6, 11, 3, 1, 8, 1, 2, 10, 8],
+  "bellman-ford": [12, 1, 10, 11, 9, 9, 10, 8, 8, 9, 7, 7, 8, 6, 6, 7, 5, 6, 11, 9, 5, 6, 8, 4, 5, 7, 4, 10, 6, 3, 4, 5, 3, 9, 9, 2, 3, 8, 2, 7, 7, 2, 10, 6, 1, 3, 5, 1, 5, 9, 1, 8, 8, 0, 1, 7, 0, 2, 6, 0, 11, 5],
   // 8 values, 8 operations over (nearly) the whole range.
   "segment-tree": [8, 20, 19, 18, 17, 16, 15, 14, 13, ...[1, 0, 7, 2, 3, 20, 1, 1, 6, 2, 4, 0, 1, 0, 7, 2, 7, 9, 1, 2, 5, 1, 0, 6]],
   "lazy-propagation": [8, ...[1, 0, 7, 9, 2, 1, 6, 0, 1, 1, 6, 9, 2, 0, 7, 0, 1, 2, 5, 9, 2, 3, 4, 0, 1, 0, 3, 9, 2, 0, 7, 0]],

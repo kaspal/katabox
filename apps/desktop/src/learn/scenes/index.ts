@@ -6,6 +6,7 @@ import { BarsScene } from "./BarsScene";
 import { BitsScene } from "./BitsScene";
 import { BucketsScene } from "./BucketsScene";
 import type { SceneProps } from "./common";
+import { GraphScene } from "./GraphScene";
 import { GrowthScene } from "./GrowthScene";
 import { HanoiScene } from "./HanoiScene";
 import { BitArrayScene, HashScene } from "./HashScene";
@@ -32,4 +33,5 @@ export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
   tree: TreeScene,
   hash: HashScene,
   "bits-array": BitArrayScene,
+  graph: GraphScene,
 };

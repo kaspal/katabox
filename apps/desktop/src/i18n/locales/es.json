@@ -969,7 +969,12 @@
         "splits": "divisiones",
         "reads": "lecturas",
         "table_cells": "celdas de la tabla",
-        "jumps": "saltos"
+        "jumps": "saltos",
+        "taken": "tomados",
+        "edges_removed": "aristas quitadas",
+        "labelled": "etiquetados",
+        "relaxed": "mejorados",
+        "edges_checked": "aristas revisadas"
       },
       "rows": {
         "prefix": "Sumas prefijas",
@@ -987,7 +992,10 @@
         "bits": "Bits",
         "found": "Respuestas",
         "hashes": "Hash de cada ventana",
-        "array": "Arreglo"
+        "array": "Arreglo",
+        "pq": "Cola de prioridad (distancia·nodo)",
+        "matrix": "Matriz",
+        "adjacency": "Lista de adyacencia"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -1020,8 +1028,11 @@
       "summary_empty": "Vacío por ahora: aún no hay nada guardado.",
       "notes": {
         "red": "rojo",
-        "black": "negro"
-      }
+        "black": "negro",
+        "white": "blanco",
+        "grey": "gris"
+      },
+      "summary_graph": "Grafo de {{n}} nodos: {{nodes}}. Aristas: {{edges}}."
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -1108,7 +1119,30 @@
       "recomputed": "Recalculado",
       "tagged": "Con marca",
       "pushing": "Pasando su marca abajo",
-      "read": "Leído"
+      "read": "Leído",
+      "neighbour": "Vecino",
+      "discovered": "Recién descubierto",
+      "already_seen": "Ya visto",
+      "on_the_path": "En el camino",
+      "finished": "Terminado",
+      "grey": "Gris: en el camino",
+      "back_edge": "Arista de retroceso (ciclo)",
+      "harmless_edge": "Arista a un nodo terminado",
+      "lowered": "Grado de entrada reducido",
+      "freed": "Ya libre",
+      "placed": "Colocado",
+      "component_a": "Componente 0, 4, 8",
+      "component_b": "Componente 1, 5, 9",
+      "component_c": "Componente 2, 6, 10",
+      "component_d": "Componente 3, 7, 11",
+      "side_a": "Lado A",
+      "side_b": "Lado B",
+      "fine_edge": "Arista entre lados",
+      "clash": "Mismo lado: conflicto",
+      "relaxed": "Distancia reducida",
+      "no_better": "No mejora",
+      "settled": "Fijado",
+      "still_lowers": "Aún reduce"
     },
     "controls": {
       "label": "Reproducción",
@@ -1164,7 +1198,23 @@
         "power-of-two": "Ocho casillas",
         "odd-positions": "Posiciones impares",
         "deep-path": "Un camino profundo",
-        "two-branches": "Dos ramas"
+        "two-branches": "Dos ramas",
+        "undirected": "No dirigido",
+        "directed": "Dirigido",
+        "grid-like": "Una cuadrícula",
+        "two-components": "Dos trozos",
+        "deep-branch": "Una rama profunda",
+        "hidden-cycle": "Un ciclo escondido",
+        "dag": "Sin ciclos",
+        "with-a-cycle": "Con un ciclo",
+        "islands": "Islas",
+        "one-piece": "Una sola pieza",
+        "even-cycles": "Ciclos pares",
+        "odd-cycle": "Un ciclo impar",
+        "detour-wins": "El rodeo gana",
+        "stale-entries": "Entradas viejas",
+        "negative-edge": "Una arista negativa",
+        "negative-cycle": "Un ciclo negativo"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1195,7 +1245,15 @@
           "bad_range": "Un rango son dos posiciones l ≤ r, de 0 a {{max}}.",
           "value_range": "Suma un valor de {{min}} a {{max}}.",
           "pairs_even": "Los pares van de dos en dos números.",
-          "pair_count": "Escribe de {{min}} a {{max}} pares."
+          "pair_count": "Escribe de {{min}} a {{max}} pares.",
+          "edge_list": "Escribe las aristas como \"u v\" (o \"u v w\" con peso), separadas por comas.",
+          "directed_flag": "Dirigido es 0 (no) o 1 (sí).",
+          "edge_count": "Usa de {{min}} a {{max}} aristas.",
+          "self_loop": "El nodo {{node}} tiene una arista a sí mismo.",
+          "duplicate_edge": "La arista {{u}} {{v}} aparece dos veces.",
+          "weight_range": "Los pesos van de {{min}} a {{max}}.",
+          "edge_weighted": "\"{{edge}}\": escribe una arista como u v w (dos nodos y un peso).",
+          "edge_pair": "\"{{edge}}\": escribe una arista como u v (dos nodos)."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1214,7 +1272,9 @@
         "cycle": "La cola apunta a",
         "length": "Ventana",
         "parents": "Padres",
-        "pairs": "Pares"
+        "pairs": "Pares",
+        "edges": "Aristas",
+        "directed": "Dirigido (0 / 1)"
       }
     },
     "tabs": {
@@ -1283,7 +1343,13 @@
       "balanced-tree": "Árbol equilibrado",
       "segment-tree": "Árbol de segmentos",
       "range-query": "Consulta de rango",
-      "binary-lifting": "Saltos binarios"
+      "binary-lifting": "Saltos binarios",
+      "graph": "Grafo",
+      "dfs": "Búsqueda en profundidad",
+      "cycle": "Ciclo",
+      "topological-sort": "Orden topológico",
+      "shortest-path": "Camino más corto",
+      "bipartite": "Bipartito"
     },
     "narration": {
       "bubble-sort": {
@@ -1805,6 +1871,77 @@
         "jump": "Salta {{jump}} arriba desde {{from_a}} y {{from_b}}: caen en nodos distintos, {{a}} y {{b}}, así que el salto vale.",
         "answer": "Ningún salto los mantiene separados: su padre {{lca}} es la respuesta para {{a}} y {{b}}.",
         "done": "{{pairs}} par(es) respondido(s) con {{jumps}} salto(s)."
+      },
+      "graph-representations": {
+        "ready": "{{n}} nodos y {{m}} aristas. Construye una lista de adyacencia y una matriz de adyacencia en una pasada.",
+        "list": "Arista {{u}} → {{v}}: añade {{v}} a la lista de {{u}}.",
+        "matrix": "Escribe su peso {{w}} en la fila {{u}}, columna {{v}}.",
+        "list_back": "No dirigido: añade también {{u}} a la lista de {{v}} y escribe {{w}} en la fila {{v}}, columna {{u}}.",
+        "done": "La lista tiene {{list}} entradas; la matriz siempre tiene {{cells}} celdas, haya aristas o no."
+      },
+      "bfs": {
+        "ready": "Búsqueda en anchura desde el nodo 0 sobre {{n}} nodos. El número bajo un nodo es su distancia en aristas.",
+        "visit": "Saca {{u}} del frente de la cola (distancia {{d}}).",
+        "discover": "{{v}} es nuevo: distancia {{d}}, una más que {{u}}. Entra al final de la cola.",
+        "seen": "{{v}} ya tiene distancia ({{d}}): sáltalo.",
+        "done": "Se alcanzaron {{reached}} de {{n}} nodos; el más lejano está a {{far}} arista(s)."
+      },
+      "dfs": {
+        "ready": "Búsqueda en profundidad desde el nodo 0 sobre {{n}} nodos. El número bajo un nodo es el orden en que se entró.",
+        "enter": "Entra en {{u}} (número {{k}}).",
+        "go": "{{v}} no se ha visto: baja más, de {{u}} a {{v}}.",
+        "seen": "{{v}} ya se vio: prueba el siguiente vecino de {{u}}.",
+        "leave": "A {{u}} no le quedan vecinos sin ver: está terminado, vuelve atrás.",
+        "done": "Se alcanzaron {{reached}} de {{n}} nodos. La salida es el orden de entrada y luego el de salida."
+      },
+      "cycle-detection": {
+        "ready": "Busca un ciclo entre {{n}} nodos y aristas dirigidas. Todos los nodos empiezan en blanco.",
+        "grey": "Entra en {{u}}: pasa a gris, está en el camino actual.",
+        "black_edge": "{{u}} → {{v}}: {{v}} es negro, ya terminado. No hay ciclo por ahí.",
+        "back_edge": "{{u}} → {{v}}: {{v}} es gris, sigue en el camino. Esta arista cierra un ciclo.",
+        "black": "{{u}} no tiene más aristas que seguir: pasa a negro.",
+        "cycle": "Hay un ciclo: la respuesta es 1.",
+        "no_cycle": "Los {{n}} nodos son negros y ninguna arista volvió hacia arriba en un camino: no hay ciclo, la respuesta es 0."
+      },
+      "topological-sort": {
+        "ready": "{{n}} nodos; bajo cada uno, su grado de entrada (aristas que llegan). {{free}} nodo(s) no tienen ninguna y esperan en la cola.",
+        "take": "Toma {{u}}: ya nada apunta a él, así que puede ir el siguiente.",
+        "lower": "Quita {{u}} → {{v}}: a {{v}} le llegan ahora {{d}} arista(s).",
+        "ready_node": "A {{v}} no le llega ninguna arista: entra en la cola.",
+        "done": "Los {{n}} nodos están en orden: toda arista apunta hacia delante.",
+        "stuck": "La cola está vacía pero quedan {{left}} nodo(s): están en un ciclo, así que para ellos no existe orden."
+      },
+      "connected-components": {
+        "ready": "Encuentra las piezas conexas entre {{n}} nodos. La etiqueta bajo un nodo es su componente.",
+        "new": "{{s}} aún no tiene etiqueta: empieza ahí el componente #{{c}}.",
+        "pop": "Saca {{u}} de la pila y mira sus vecinos.",
+        "fill": "{{v}} recibe también la etiqueta #{{c}}, desde {{u}}, y va a la pila.",
+        "done": "{{count}} componente(s) entre {{n}} nodos."
+      },
+      "bipartite-check": {
+        "ready": "Intenta repartir {{n}} nodos en dos lados, A y B, de modo que toda arista cruce de un lado al otro.",
+        "start": "{{s}} aún no tiene lado: ponlo en el lado A y extiende desde ahí.",
+        "colour": "{{v}}, vecino de {{u}}, va al otro lado.",
+        "fine": "{{u}} y {{v}} están en lados distintos: bien.",
+        "clash": "{{u}} y {{v}} están en el mismo lado pero comparten arista: hay un ciclo impar, no existe el reparto.",
+        "done": "Toda arista cruza: {{a}} nodo(s) en el lado A y {{b}} en el lado B."
+      },
+      "dijkstra": {
+        "ready": "Distancias más cortas desde el nodo 0 sobre {{n}} nodos; el número bajo un nodo es su mejor distancia hasta ahora.",
+        "pop": "Saca la entrada más pequeña: {{u}} a distancia {{d}}.",
+        "stale": "Esta entrada ({{d}}) es más vieja que la mejor de {{u}} ({{best}}): sáltala.",
+        "relax": "Pasando por {{u}}, {{v}} cuesta {{d}} (arista {{w}}): mejor, así que actualízalo y mételo en la cola.",
+        "no_better": "Pasando por {{u}}, {{v}} costaría {{via}}: no mejora {{best}}.",
+        "done": "La cola está vacía: se alcanzaron {{reached}} de {{n}} nodos, cada uno con su distancia más corta."
+      },
+      "bellman-ford": {
+        "ready": "Distancias más cortas desde el nodo 0 con {{m}} aristas dirigidas, algunas negativas: como mucho {{rounds}} ronda(s).",
+        "round": "Ronda {{round}} de {{of}}: prueba cada arista en orden.",
+        "relax": "{{u}} → {{v}} (peso {{w}}) baja {{v}} a {{d}}.",
+        "settled": "La ronda {{round}} no cambió nada: las distancias son definitivas.",
+        "check": "Una pasada más: si alguna arista aún reduce una distancia, hay un ciclo negativo.",
+        "negative_cycle": "{{u}} → {{v}} (peso {{w}}) aún reduce una distancia: hay un ciclo negativo alcanzable, así que la respuesta es 1.",
+        "done": "Ninguna arista reduce nada: las distancias son definitivas tras {{relaxed}} actualización(es) y {{checked}} revisiones de aristas."
       }
     },
     "compare": {

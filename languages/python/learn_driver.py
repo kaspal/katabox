@@ -25,6 +25,22 @@ def kb_text(values):
     return words
 
 
+def kb_edges(values):
+    """A stored graph [n, directed, u, v, w, ...]: its edges as (u, v, w), in order."""
+    return [tuple(values[k:k + 3]) for k in range(2, len(values), 3)]
+
+
+def kb_graph(values):
+    """A stored graph as (n, adjacency lists of (v, w)); undirected edges go both ways."""
+    n, directed = values[0], values[1]
+    adj = [[] for _ in range(n)]
+    for u, v, w in kb_edges(values):
+        adj[u].append((v, w))
+        if not directed:
+            adj[v].append((u, w))
+    return n, adj
+
+
 def kb_chunks(values, size):
     """Stored groups (pairs, edges) as lists of `size` values."""
     return [list(values[k:k + size]) for k in range(0, len(values), size)]

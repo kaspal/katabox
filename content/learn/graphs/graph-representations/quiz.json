@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Undirected edges 0 1 4, 0 2 1, 1 3 2, 2 3 5, 3 4 3. What is node 3's adjacency list?",
+    "prompt_es": "Aristas no dirigidas 0 1 4, 0 2 1, 1 3 2, 2 3 5, 3 4 3. ¿Cuál es la lista de adyacencia del nodo 3?",
+    "options": [
+      { "en": "[4]", "es": "[4]" },
+      { "en": "[1, 2, 4]", "es": "[1, 2, 4]" },
+      { "en": "[4, 2, 1]", "es": "[4, 2, 1]" }
+    ],
+    "answer": 1,
+    "explain_en": "Node 3 appears in edges 1 3, 2 3 and 3 4. Each undirected edge is written both ways, in input order, so 3's list gets 1, then 2, then 4.",
+    "explain_es": "El nodo 3 aparece en las aristas 1 3, 2 3 y 3 4. Cada arista no dirigida se escribe en los dos sentidos, en el orden de entrada, así que la lista de 3 recibe 1, luego 2 y luego 4."
+  },
+  {
+    "prompt_en": "In the same graph, how many of the 25 matrix cells hold a weight?",
+    "prompt_es": "En el mismo grafo, ¿cuántas de las 25 celdas de la matriz guardan un peso?",
+    "options": [
+      { "en": "5, one per edge", "es": "5, una por arista" },
+      { "en": "25, every cell", "es": "25, todas las celdas" },
+      { "en": "10, two per edge", "es": "10, dos por arista" }
+    ],
+    "answer": 2,
+    "explain_en": "Each undirected edge sets both [u][v] and [v][u], so 5 edges fill 10 cells. The other 15 stay 0, meaning no edge.",
+    "explain_es": "Cada arista no dirigida rellena [u][v] y [v][u], así que 5 aristas ocupan 10 celdas. Las otras 15 siguen a 0, que significa que no hay arista."
+  },
+  {
+    "prompt_en": "You must answer millions of \"is u joined to v?\" questions on a small, dense graph. Which representation fits best?",
+    "prompt_es": "Tienes que responder millones de preguntas \"¿está u unido a v?\" sobre un grafo pequeño y denso. ¿Qué representación encaja mejor?",
+    "options": [
+      { "en": "The adjacency matrix", "es": "La matriz de adyacencia" },
+      { "en": "The adjacency list", "es": "La lista de adyacencia" },
+      { "en": "The raw edge list", "es": "La lista de aristas tal cual" }
+    ],
+    "answer": 0,
+    "explain_en": "The matrix answers each question in O(1) by reading one cell, and its O(n²) space is cheap when n is small. The list needs O(deg u) per question.",
+    "explain_es": "La matriz responde cada pregunta en O(1) leyendo una celda, y su espacio O(n²) es barato cuando n es pequeño. La lista necesita O(grado de u) por pregunta."
+  }
+]
