@@ -1,0 +1,28 @@
+id = "queue-ring-buffer"
+subject = "linear"
+order = 3
+title = "Queue and circular buffer"
+title_es = "Cola y búfer circular"
+tags = ["queue", "arrays"]
+problems = ["library-holds", "request-throttle"]
+presets = ["wrap-around", "random", "full"]
+default = [4, 1, 11, 1, 22, 1, 33, 2, 0, 2, 0, 1, 44, 1, 55, 1, 66, 2, 0, 2, 0]
+
+[complexity]
+best = "O(1)"
+average = "O(1) per operation"
+worst = "O(1)"
+space = "O(capacity)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 27
+min = 0
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(a[0], kb_ops(a[1:], [\"enqueue\", \"dequeue\"], 1))"
+typescript = "a = run(a[0], kbOps(a.slice(1), [\"enqueue\", \"dequeue\"], 1))"

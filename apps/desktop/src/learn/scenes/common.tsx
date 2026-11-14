@@ -93,16 +93,23 @@ export function Pointers({
   y: number;
   transition: Transition;
 }) {
-  const seen = new Map<number, number>();
-  const counts = new Map<number, number>();
-  for (const p of pointers) counts.set(p.at, (counts.get(p.at) ?? 0) + 1);
+  // Labels sharing a position fan out side by side, each as wide as its text (one-letter
+  // labels take 26 px, as before), centred on the position.
+  const width = (p: Pointer) => Math.max(18, p.label.length * 7.5) + 8;
+  const offset = new Map<Pointer, number>();
+  const groups = new Map<number, Pointer[]>();
+  for (const p of pointers) groups.set(p.at, [...(groups.get(p.at) ?? []), p]);
+  for (const group of groups.values()) {
+    let x = -group.reduce((s, p) => s + width(p), 0) / 2;
+    for (const p of group) {
+      offset.set(p, x + width(p) / 2);
+      x += width(p);
+    }
+  }
   return (
     <g aria-hidden>
       {pointers.map((p) => {
-        const k = seen.get(p.at) ?? 0;
-        seen.set(p.at, k + 1);
-        const spread = ((counts.get(p.at) ?? 1) - 1) * 13;
-        const x = (p.at + 0.5) * slot - spread + k * 26;
+        const x = (p.at + 0.5) * slot + offset.get(p)!;
         return (
           <motion.g
             key={p.label}
@@ -140,6 +147,17 @@ export function sceneSummary(t: TFunction, step: Step): string {
     parts.push(t("learn.stage.summary_bits", { rows: step.bits.map((b) => `${b.label} = ${b.value}`).join("; ") }));
   }
   if (step.chart) parts.push(t("learn.stage.summary_growth", { count: step.chart.shown, n: step.chart.n }));
+  if (step.list) {
+    parts.push(t("learn.stage.summary_list", { values: step.list.nodes.map((n) => n.value).join(" → ") || "—" }));
+  }
+  if (step.slots) {
+    const values = step.slots.cells.map((c) => (c ? c.value : "_")).join(", ") || "—";
+    parts.push(t("learn.stage.fallback_row", { label: t(`learn.stage.rows.${step.slots.label}`), values }) + ".");
+  }
+  if (step.table) {
+    const rows = step.table.rows.map((r) => `${r.key}: ${r.value}`).join(", ") || "—";
+    parts.push(t("learn.stage.fallback_row", { label: t(`learn.stage.rows.${step.table.label}`), values: rows }) + ".");
+  }
   if (step.stack?.length) parts.push(t("learn.stage.summary_stack", { top: step.stack[step.stack.length - 1]!.text }));
   const at = (role: Role) =>
     Object.entries(step.roles)

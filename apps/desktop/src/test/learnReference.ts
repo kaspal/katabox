@@ -16,6 +16,14 @@ function hanoiMoves(n: number): number[] {
   return out;
 }
 
+
+/** Stored operations as [code, args…] with a fixed width (the topics' own encoding). */
+function ops(input: readonly number[], width: number, header = 0): number[][] {
+  const out: number[][] = [];
+  for (let k = header; k < input.length; k += width + 1) out.push(input.slice(k, k + width + 1));
+  return out;
+}
+
 export const REFERENCE: Record<string, (input: readonly number[]) => number[]> = {
   "big-o-growth": ([n]) => [1, log2(n!), n!, n! * log2(n!), n! * n!, 2 ** n!],
   "recursion-call-stack": (xs) => [sum(xs)],
@@ -31,6 +39,83 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
   "dynamic-array": (xs) => {
     const cap = 2 ** Math.ceil(Math.log2(xs.length));
     return [cap, cap - 1, ...xs];
+  },
+  // Linear structures: plain array simulations.
+  "dynamic-array-ops": (input) => {
+    const a: number[] = [];
+    for (const [op, x, y] of ops(input, 2)) {
+      if (op === 1) a.push(x!);
+      else if (op === 2) a.splice(Math.min(x!, a.length), 0, y!);
+      else if (a.length > 0) a.splice(Math.min(x!, a.length - 1), 1);
+    }
+    return a;
+  },
+  stack: (input) => {
+    const a: number[] = [];
+    const out: number[] = [];
+    for (const [op, x] of ops(input, 1)) {
+      if (op === 1) a.push(x!);
+      else if (op === 2) out.push(a.length ? a.pop()! : -1);
+      else out.push(a.length ? a[a.length - 1]! : -1);
+    }
+    return out;
+  },
+  "queue-ring-buffer": (input) => {
+    const cap = input[0]!;
+    const q: number[] = [];
+    const out: number[] = [];
+    for (const [op, x] of ops(input, 1, 1)) {
+      if (op === 1) {
+        if (q.length < cap) q.push(x!);
+      } else out.push(q.length ? q.shift()! : -1);
+    }
+    return out;
+  },
+  "deque-monotonic-queue": ([k, ...a]) => {
+    const out: number[] = [];
+    for (let hi = k! - 1; hi < a.length; hi++) out.push(Math.max(...a.slice(hi - k! + 1, hi + 1)));
+    return out;
+  },
+  "singly-linked-list": (input) => {
+    const a: number[] = [];
+    for (const [op, x] of ops(input, 1)) {
+      if (op === 1) a.unshift(x!);
+      else if (op === 2) a.push(x!);
+      else if (a.includes(x!)) a.splice(a.indexOf(x!), 1);
+    }
+    return a;
+  },
+  "doubly-linked-list": (input) => {
+    const a: number[] = [];
+    const out: number[] = [];
+    for (const [op, x] of ops(input, 1)) {
+      if (op === 1) a.unshift(x!);
+      else if (op === 2) a.push(x!);
+      else if (op === 3) out.push(a.length ? a.shift()! : -1);
+      else out.push(a.length ? a.pop()! : -1);
+    }
+    return [...out, 0, ...a, 0, ...[...a].reverse()];
+  },
+  "reverse-list": (a) => [...a].reverse(),
+  "floyd-cycle": ([pos]) => [pos!],
+  "lru-cache": (input) => {
+    const cap = input[0]!;
+    const order: number[] = []; // keys, least recent first
+    const value = new Map<number, number>();
+    const out: number[] = [];
+    for (const [op, key, v] of ops(input, 2, 1)) {
+      const has = order.includes(key!);
+      if (has) order.splice(order.indexOf(key!), 1);
+      if (op === 1) {
+        if (has) order.push(key!);
+        out.push(has ? value.get(key!)! : -1);
+      } else {
+        order.push(key!);
+        value.set(key!, v!);
+        if (order.length > cap) value.delete(order.shift()!);
+      }
+    }
+    return out;
   },
   "bubble-sort": sorted,
   "insertion-sort": sorted,
@@ -127,6 +212,60 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  stack: {
+    input: [1, 5, 2, 0, 3, 0],
+    markers: [null, "push", "pop", "peek", null],
+    py: [null, 5, 7, 9, null],
+    ts: [null, 6, 8, 10, null],
+  },
+  "queue-ring-buffer": {
+    input: [2, 1, 4, 1, 6, 1, 8, 2, 0, 2, 0, 2, 0],
+    markers: [null, "enqueue", "enqueue", "full", "dequeue", "dequeue", "empty", null],
+    py: [null, 11, 11, 9, 18, 18, 17, null],
+    ts: [null, 15, 15, 12, 24, 24, 22, null],
+  },
+  "deque-monotonic-queue": {
+    input: [2, 3, 1, 4],
+    markers: [null, "push-back", "push-back", "emit", "pop-back", "pop-back", "push-back", "emit", null],
+    py: [null, 9, 9, 13, 8, 8, 9, 13, null],
+    ts: [null, 8, 8, 13, 6, 6, 8, 13, null],
+  },
+  "singly-linked-list": {
+    input: [1, 5, 2, 9, 3, 9],
+    markers: [null, "link", "new-head", "append", "search", "unlink", null],
+    py: [null, 12, 13, 22, 26, 31, null],
+    ts: [null, 15, 16, 26, 32, 38, null],
+  },
+  "doubly-linked-list": {
+    input: [1, 5, 2, 9, 4, 0, 3, 0, 3, 0],
+    markers: [null, "link-front", "link-back", "unlink-back", "unlink-front", "empty-front", null],
+    py: [null, 15, 24, 46, 35, 33, null],
+    ts: [null, 17, 25, 47, 36, 33, null],
+  },
+  "reverse-list": {
+    input: [4, 7],
+    markers: [null, "save", "flip", "advance", "save", "flip", "advance", "new-head"],
+    py: [null, 19, 20, 21, 19, 20, 21, 22],
+    ts: [null, 24, 25, 26, 24, 25, 26, 28],
+  },
+  "floyd-cycle": {
+    input: [0, 5, 9],
+    markers: [null, "move", "move", "meet", "reset", "found"],
+    py: [null, 20, 20, 22, 25, 29],
+    ts: [null, 22, 22, 24, 30, 35],
+  },
+  "lru-cache": {
+    input: [1, 2, 1, 10, 2, 2, 20, 1, 1, 0, 1, 2, 0],
+    markers: [null, "put", "put", "evict", "miss", "hit", null],
+    py: [null, 18, 18, 20, 11, 12, null],
+    ts: [null, 23, 23, 25, 12, 14, null],
+  },
+  "dynamic-array-ops": {
+    input: [1, 7, 0, 2, 0, 3, 2, 1, 5, 3, 0, 0],
+    markers: [null, "write", "shift-right", "write", "grow", "shift-right", "write", "shift-left", "shift-left", "shrink", null],
+    py: [null, 11, 10, 11, 8, 10, 11, 16, 16, 17, null],
+    ts: [null, 12, 10, 12, 7, 10, 12, 18, 18, 20, null],
+  },
   "linear-search": {
     input: [5, 3, 5, 1],
     markers: [null, "check", "check", "found"],

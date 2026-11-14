@@ -9,8 +9,10 @@ import type { SceneProps } from "./common";
 import { GrowthScene } from "./GrowthScene";
 import { HanoiScene } from "./HanoiScene";
 import { HeapScene } from "./HeapScene";
+import { ListScene } from "./ListScene";
 import { MonoStackScene } from "./MonoStackScene";
 import { RecursionScene } from "./RecursionScene";
+import { SlotsScene } from "./SlotsScene";
 
 export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
   bars: BarsScene,
@@ -23,4 +25,6 @@ export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
   merge: ArrayScene,
   heap: HeapScene,
   monostack: MonoStackScene,
+  list: ListScene,
+  slots: SlotsScene,
 };

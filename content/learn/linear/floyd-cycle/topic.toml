@@ -1,0 +1,28 @@
+id = "floyd-cycle"
+subject = "linear"
+order = 8
+title = "Floyd cycle detection"
+title_es = "Detección de ciclos de Floyd"
+tags = ["linked-list", "two-pointers"]
+problems = []
+presets = ["random", "few-unique"]
+default = [2, 3, 8, 15, 21, 42, 7]
+
+[complexity]
+best = "O(n)"
+average = "O(n)"
+worst = "O(n)"
+space = "O(1)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 11
+min = -1
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(a[1:], a[0])"
+typescript = "a = run(a.slice(1), a[0])"

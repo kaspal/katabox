@@ -942,13 +942,32 @@
         "sums": "sumas revisadas",
         "edge_moves": "movimientos de los bordes",
         "pushes": "apilados",
-        "pops": "desapilados"
+        "pops": "desapilados",
+        "peeks": "consultas",
+        "inserts": "inserciones",
+        "deletes": "borrados",
+        "steps_walked": "nodos recorridos",
+        "links_flipped": "enlaces invertidos",
+        "hare_moves": "movimientos",
+        "second_walk": "segundo recorrido",
+        "gets": "lecturas",
+        "puts": "escrituras",
+        "moved_to_front": "pasados a reciente",
+        "enqueued": "encolados",
+        "dequeued": "desencolados"
       },
       "rows": {
         "prefix": "Sumas prefijas",
         "buffer": "Búfer de mezcla",
         "storage": "Almacenamiento nuevo",
-        "answer": "Siguiente mayor"
+        "answer": "Siguiente mayor",
+        "stack": "Pila",
+        "queue": "Cola",
+        "ring": "Búfer circular",
+        "deque": "Bicola (posiciones)",
+        "output": "Salida",
+        "map": "Mapa: clave → valor",
+        "list": "Lista"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -970,7 +989,9 @@
       "fallback_growth": "{{label}}: {{count}} pasos con n = {{n}}",
       "left_run": "izquierda",
       "right_run": "derecha",
-      "stack": "Pila"
+      "stack": "Pila",
+      "summary_list": "Lista, desde la cabeza: {{values}}.",
+      "wraps": "vuelve al principio"
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -1005,7 +1026,24 @@
       "leaving": "Sale de la ventana",
       "current": "Valor actual",
       "stack_top": "Cima de la pila",
-      "answered": "Respondido"
+      "answered": "Respondido",
+      "pushed": "Recién apilado",
+      "peeked": "Leído por peek",
+      "linking": "Enlazando",
+      "visiting": "Visitando",
+      "waiting_link": "Esperando enlace",
+      "passed": "Pasado o desenlazado",
+      "unlinked": "Desenlazado",
+      "reversed_part": "Ya invertido",
+      "slow": "Lento (1 paso)",
+      "fast": "Rápido (2 pasos)",
+      "meeting": "Punto de encuentro",
+      "cycle_start": "Inicio del ciclo",
+      "used": "Recién usado",
+      "written": "Recién escrito",
+      "evicted": "Expulsado",
+      "window_max": "Máximo de la ventana",
+      "dropped": "Descartado"
     },
     "controls": {
       "label": "Reproducción",
@@ -1025,9 +1063,20 @@
         "random": "Aleatoria",
         "nearly-sorted": "Casi ordenada",
         "reversed": "Invertida",
-        "few-unique": "Pocos distintos"
+        "few-unique": "Pocos distintos",
+        "last-in-first-out": "Último en entrar, primero en salir",
+        "underflow": "Sacar con la pila vacía",
+        "build-and-delete": "Crear y borrar",
+        "delete-missing": "Borrar un valor ausente",
+        "both-ends": "Por los dos extremos",
+        "drain": "Vaciarla",
+        "lru-thrash": "Rotación constante",
+        "hits-keep-it": "Los aciertos lo mantienen",
+        "wrap-around": "Dar la vuelta",
+        "full": "Llenarlo",
+        "middle-inserts": "Inserciones en medio",
+        "front-deletes": "Borrados al principio"
       },
-      "custom": "La tuya",
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
       "errors": {
@@ -1036,15 +1085,32 @@
         "range": "{{value}} está fuera de rango: usa de {{min}} a {{max}}.",
         "steps": "Esta entrada necesita más de {{max}} pasos. Prueba con menos valores.",
         "unsorted": "Los valores deben estar en orden ascendente.",
-        "target": "Usa un objetivo de {{min}} a {{max}}."
+        "target": "Usa un objetivo de {{min}} a {{max}}.",
+        "custom": {
+          "size": "Esta entrada es demasiado larga o demasiado corta.",
+          "one_number": "{{field}}: escribe un solo número entero.",
+          "no_ops": "Escribe al menos una operación, por ejemplo \"push 3, pop\".",
+          "unknown_op": "«{{op}}» no es una operación de este tema. Usa: {{ops}}.",
+          "op_args": "{{op}} lleva {{count}} número(s).",
+          "letters_only": "{{field}}: usa solo las letras de la a a la z.",
+          "word_length": "{{field}}: de {{min}} a {{max}} letras.",
+          "capacity": "Usa una capacidad de {{min}} a {{max}}."
+        }
       },
-      "count": "n =",
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
-      "target": {
+      "field": {
+        "values": "La tuya",
+        "count": "n =",
         "target": "Objetivo",
         "k": "k",
         "days": "Días",
-        "limit": "Límite"
+        "limit": "Límite",
+        "ops": "Operaciones",
+        "capacity": "Capacidad",
+        "text": "Texto",
+        "pattern": "Patrón",
+        "words": "Palabras",
+        "cycle": "La cola apunta a"
       }
     },
     "tabs": {
@@ -1093,7 +1159,14 @@
       "two-pointers": "Dos punteros",
       "sliding-window": "Ventana deslizante",
       "monotonic-stack": "Pila monótona",
-      "sorted-input": "Entrada ordenada"
+      "sorted-input": "Entrada ordenada",
+      "stack": "Pila",
+      "queue": "Cola",
+      "deque": "Bicola",
+      "linked-list": "Lista enlazada",
+      "pointers": "Punteros",
+      "cache": "Caché",
+      "arrays": "Arreglos"
     },
     "narration": {
       "bubble-sort": {
@@ -1354,6 +1427,88 @@
         "pop": "Desapila la posición {{at}}: el siguiente mayor después de {{value}} es {{answer}}.",
         "push": "Apila la posición {{at}} ({{value}}): espera a un valor mayor. La pila tiene {{size}}.",
         "done": "Hecho: {{pops}} valores tienen respuesta; los {{left}} que quedan en la pila no tienen (−1)."
+      },
+      "stack": {
+        "ready": "Haz {{n}} operaciones sobre una pila vacía. Solo se toca la cima.",
+        "push": "push {{value}}: va a la cima. La pila tiene {{size}}.",
+        "pop": "pop: saca el valor de la cima, {{value}}. Quedan {{size}}.",
+        "pop_empty": "pop con la pila vacía: no hay nada que sacar, así que la respuesta es −1.",
+        "peek": "peek: la cima es {{value}}; se queda en la pila.",
+        "peek_empty": "peek con la pila vacía: −1.",
+        "done": "Hecho. La fila de salida tiene los {{count}} valores devueltos, en orden."
+      },
+      "queue-ring-buffer": {
+        "ready": "Una cola en un arreglo fijo de {{capacity}} huecos. head es el frente; la cola está en head + size, dando la vuelta.",
+        "full": "enqueue {{value}}: los {{capacity}} huecos están llenos, así que se rechaza.",
+        "enqueue": "enqueue {{value}}: se escribe al final, en el hueco {{at}}.",
+        "empty": "dequeue con la cola vacía: −1.",
+        "dequeue": "dequeue: saca {{value}} del hueco {{at}}; head pasa a {{head}} (vuelve al principio al llegar al final).",
+        "done": "Hecho: {{count}} dequeue. Nunca se desplazó nada: solo se movieron head y la cola."
+      },
+      "deque-monotonic-queue": {
+        "ready": "Busca el máximo de cada ventana de {{k}} valores entre {{n}}. La bicola guarda posiciones con valores decrecientes del frente al final.",
+        "pop_back": "{{value}} (posición {{at}}) ≤ {{by}}: ya nunca será el máximo de una ventana, así que se saca por el final.",
+        "push_back": "Mete la posición {{at}} ({{value}}) por el final.",
+        "pop_front": "La posición {{at}} ({{value}}) ha salido de la ventana: sácala por el frente.",
+        "emit": "Ventana {{lo}}–{{hi}}: su máximo es el frente, {{max}}.",
+        "done": "{{windows}} máximos de ventana con solo {{pops}} salidas en total: cada posición entra y sale de la bicola una vez."
+      },
+      "singly-linked-list": {
+        "ready": "Haz {{n}} operaciones sobre una lista simplemente enlazada vacía. Cada nodo solo conoce al siguiente.",
+        "link": "front {{value}}: el nodo nuevo apunta a la cabeza actual.",
+        "new_head": "head apunta ahora a {{value}}: añadido en O(1).",
+        "first": "back {{value}}: la lista está vacía, así que el nodo pasa a ser la cabeza.",
+        "walk": "Avanza al siguiente nodo, {{value}}, buscando el último.",
+        "append": "{{after}} es el último nodo: enlázalo con {{value}}. Llegar al final costó un recorrido: O(n).",
+        "search": "delete {{value}}: {{seen}} no es, así que prev y cur avanzan.",
+        "unlink_head": "{{value}} es la cabeza: head salta al siguiente nodo.",
+        "unlink": "Encontrado {{value}}: {{prev}} ahora enlaza por encima de él y el nodo queda fuera.",
+        "not_found": "delete {{value}}: el recorrido llegó al final sin encontrarlo.",
+        "done": "Hecho: la lista tiene {{size}} valores, leídos desde la cabeza hasta el final."
+      },
+      "doubly-linked-list": {
+        "ready": "Haz {{n}} operaciones sobre una lista doblemente enlazada: cada nodo enlaza hacia delante y hacia atrás, así que los dos extremos son O(1).",
+        "link_front": "front {{value}}: enlázalo antes de la cabeza, en los dos sentidos. Es la nueva cabeza.",
+        "link_back": "back {{value}}: enlázalo después de la cola, en los dos sentidos. Es la nueva cola.",
+        "empty": "pop con la lista vacía: −1.",
+        "unlink_front": "pop-front: sale {{value}}; el siguiente nodo pasa a ser la cabeza y olvida su enlace hacia atrás.",
+        "unlink_back": "pop-back: sale {{value}}; el nodo anterior pasa a ser la cola. No hace falta recorrer nada.",
+        "done": "Hecho: {{pops}} pop; la lista tiene {{size}} valores. La salida la lee hacia delante y luego hacia atrás."
+      },
+      "reverse-list": {
+        "ready": "Invierte una lista de {{n}} nodos sin memoria extra: recórrela una vez dando la vuelta a cada flecha.",
+        "save": "Guarda el siguiente de cur ({{next}}) en nxt antes de sobrescribir el enlace.",
+        "flip": "Haz que {{cur}} apunte hacia atrás, a prev ({{prev}}).",
+        "advance": "Avanza: prev = {{prev}}, cur = nxt.",
+        "new_head": "cur se salió del final: prev, {{head}}, es la nueva cabeza. {{n}} enlaces invertidos, sin memoria extra."
+      },
+      "floyd-cycle": {
+        "ready": "{{n}} nodos; el último enlaza con la posición {{pos}} (−1 significa sin enlace). ¿Da vueltas la lista?",
+        "move": "slow avanza 1 nodo (a {{slow}}) y fast avanza 2 (a {{fast}}).",
+        "meet": "slow y fast se encuentran en el nodo {{at}}: hay un ciclo.",
+        "no_cycle": "fast llegó al final tras {{steps}} movimientos: no hay ciclo.",
+        "reset": "Devuelve slow a la cabeza; fast se queda. Ahora los dos avanzan de 1 en 1.",
+        "walk": "slow en {{slow}}, fast en {{fast}}.",
+        "found": "Se encuentran en el nodo {{at}} ({{value}}): ahí empieza el ciclo."
+      },
+      "lru-cache": {
+        "ready": "Una caché LRU con {{capacity}} claves como mucho. La usada hace más tiempo a la izquierda y la más reciente a la derecha.",
+        "miss": "get {{key}}: no está en la caché (un fallo), así que −1.",
+        "hit": "get {{key}}: un acierto, valor {{value}}. Pasa al extremo de lo más reciente.",
+        "refresh": "put {{key}}: ya estaba, así que primero pasa al extremo de lo más reciente.",
+        "put": "put {{key}} = {{value}} en el extremo de lo más reciente.",
+        "evict": "Se pasa de la capacidad ({{capacity}}): expulsa la clave usada hace más tiempo, {{key}}.",
+        "done": "Hecho: la salida tiene las {{gets}} respuestas a get."
+      },
+      "dynamic-array-ops": {
+        "ready": "Haz {{n}} operaciones sobre un arreglo dinámico. Insertar o borrar en medio mueve todos los valores que hay detrás.",
+        "grow": "El arreglo está lleno ({{size}} valores): primero dobla el almacenamiento a {{capacity}}.",
+        "shift_right": "Desplaza {{value}} de la posición {{from}} a la {{to}} para abrir un hueco.",
+        "write": "Escribe {{value}} en el hueco de la posición {{at}}.",
+        "shift_left": "{{removed}} ya no está: desplaza {{value}} de la posición {{from}} a la {{to}}.",
+        "shrink": "El último hueco queda libre: quedan {{size}} valores.",
+        "empty": "remove con el arreglo vacío: no hay nada que hacer.",
+        "done": "Hecho: {{size}} valores, tras {{shifts}} desplazamientos en total. Trabajar al final es barato; en medio cuesta un desplazamiento por cada valor de detrás."
       }
     },
     "compare": {

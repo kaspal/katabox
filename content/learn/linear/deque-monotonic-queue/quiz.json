@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "k = 3 on [4, 2, 12, 3, 8, 5, 7, 1, 9]. 12 arrives while the deque holds the positions of 4 and 2. What happens?",
+    "prompt_es": "k = 3 sobre [4, 2, 12, 3, 8, 5, 7, 1, 9]. Llega 12 mientras la bicola tiene las posiciones de 4 y 2. ¿Qué pasa?",
+    "options": [
+      { "en": "12 goes behind them: the deque holds 4, 2, 12", "es": "12 se pone detrás: la bicola queda con 4, 2, 12" },
+      { "en": "2 and then 4 are popped off the back; only 12 remains", "es": "Salen por el final 2 y luego 4; solo queda 12" },
+      { "en": "Only 2 is popped: 4 is at the front", "es": "Solo sale 2: 4 está en el principio" }
+    ],
+    "answer": 1,
+    "explain_en": "Both are ≤ 12 and leave the window before it, so neither can ever be a maximum again. The first window, 0–2, reports 12.",
+    "explain_es": "Los dos son ≤ 12 y salen de la ventana antes que él, así que ninguno podrá volver a ser máximo. La primera ventana, 0–2, da 12."
+  },
+  {
+    "prompt_en": "At position 5 (value 5) the deque holds the positions of 12, 8 and 5 after the push. What is the maximum of window 3–5?",
+    "prompt_es": "En la posición 5 (valor 5) la bicola tiene, tras meterlo, las posiciones de 12, 8 y 5. ¿Cuál es el máximo de la ventana 3–5?",
+    "options": [
+      { "en": "12", "es": "12" },
+      { "en": "5", "es": "5" },
+      { "en": "8", "es": "8" }
+    ],
+    "answer": 2,
+    "explain_en": "12 sits at position 2, and 2 ≤ 5 − 3, so it has left the window and is popped off the front. The new front, 8, is the maximum.",
+    "explain_es": "12 está en la posición 2, y 2 ≤ 5 − 3, así que ha salido de la ventana y sale por el principio. El nuevo principio, 8, es el máximo."
+  },
+  {
+    "prompt_en": "One arrival can pop several values. Why is the whole pass still O(n)?",
+    "prompt_es": "Una sola llegada puede sacar varios valores. ¿Por qué la pasada entera sigue siendo O(n)?",
+    "options": [
+      { "en": "Each position is pushed once and popped at most once", "es": "Cada posición entra una vez y sale como mucho una vez" },
+      { "en": "The deque never holds more than 2 positions", "es": "La bicola nunca tiene más de 2 posiciones" },
+      { "en": "It is not: it is O(n · k)", "es": "No lo es: es O(n · k)" }
+    ],
+    "answer": 0,
+    "explain_en": "Counting pops over the whole run, not per step, gives at most n of them. On this input the 9 values produce 7 window maxima.",
+    "explain_es": "Si cuentas las salidas en toda la pasada, no paso a paso, hay como mucho n. En esta entrada, los 9 valores dan 7 máximos de ventana."
+  }
+]

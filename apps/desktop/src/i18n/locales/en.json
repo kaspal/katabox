@@ -942,13 +942,32 @@
         "sums": "sums checked",
         "edge_moves": "edge moves",
         "pushes": "pushes",
-        "pops": "pops"
+        "pops": "pops",
+        "peeks": "peeks",
+        "inserts": "inserts",
+        "deletes": "deletes",
+        "steps_walked": "nodes walked",
+        "links_flipped": "links flipped",
+        "hare_moves": "moves",
+        "second_walk": "second walk",
+        "gets": "gets",
+        "puts": "puts",
+        "moved_to_front": "moved to recent",
+        "enqueued": "enqueued",
+        "dequeued": "dequeued"
       },
       "rows": {
         "prefix": "Prefix sums",
         "buffer": "Merge buffer",
         "storage": "New storage",
-        "answer": "Next greater"
+        "answer": "Next greater",
+        "stack": "Stack",
+        "queue": "Queue",
+        "ring": "Ring buffer",
+        "deque": "Deque (positions)",
+        "output": "Output",
+        "map": "Map: key → value",
+        "list": "List"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -970,7 +989,9 @@
       "fallback_growth": "{{label}}: {{count}} steps at n = {{n}}",
       "left_run": "left",
       "right_run": "right",
-      "stack": "Stack"
+      "stack": "Stack",
+      "summary_list": "List, head first: {{values}}.",
+      "wraps": "wraps around"
     },
     "roles": {
       "idle": "Not yet placed",
@@ -1005,7 +1026,24 @@
       "leaving": "Leaving the window",
       "current": "Current value",
       "stack_top": "Top of the stack",
-      "answered": "Answered"
+      "answered": "Answered",
+      "pushed": "Just pushed",
+      "peeked": "Read by peek",
+      "linking": "Linking",
+      "visiting": "Visiting",
+      "waiting_link": "Waiting to be linked",
+      "passed": "Passed or unlinked",
+      "unlinked": "Unlinked",
+      "reversed_part": "Already reversed",
+      "slow": "Slow (1 step)",
+      "fast": "Fast (2 steps)",
+      "meeting": "Meeting point",
+      "cycle_start": "Cycle start",
+      "used": "Just used",
+      "written": "Just written",
+      "evicted": "Evicted",
+      "window_max": "Window maximum",
+      "dropped": "Dropped"
     },
     "controls": {
       "label": "Playback",
@@ -1025,9 +1063,20 @@
         "random": "Random",
         "nearly-sorted": "Nearly sorted",
         "reversed": "Reversed",
-        "few-unique": "Few unique"
+        "few-unique": "Few unique",
+        "last-in-first-out": "Last in, first out",
+        "underflow": "Pop when empty",
+        "build-and-delete": "Build and delete",
+        "delete-missing": "Delete a missing value",
+        "both-ends": "Both ends",
+        "drain": "Drain it",
+        "lru-thrash": "Thrashing",
+        "hits-keep-it": "Hits keep it",
+        "wrap-around": "Wrap around",
+        "full": "Fill it up",
+        "middle-inserts": "Middle inserts",
+        "front-deletes": "Front deletes"
       },
-      "custom": "Your own",
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
       "errors": {
@@ -1036,15 +1085,32 @@
         "range": "{{value}} is out of range: use {{min}} to {{max}}.",
         "steps": "This input needs more than {{max}} steps. Try fewer values.",
         "unsorted": "The values must be in ascending order.",
-        "target": "Use a target from {{min}} to {{max}}."
+        "target": "Use a target from {{min}} to {{max}}.",
+        "custom": {
+          "size": "This input is too long or too short.",
+          "one_number": "{{field}}: enter one whole number.",
+          "no_ops": "Enter at least one operation, such as \"push 3, pop\".",
+          "unknown_op": "\"{{op}}\" is not an operation here. Use: {{ops}}.",
+          "op_args": "{{op}} takes {{count}} number(s).",
+          "letters_only": "{{field}}: use the letters a to z only.",
+          "word_length": "{{field}}: {{min}} to {{max}} letters.",
+          "capacity": "Use a capacity from {{min}} to {{max}}."
+        }
       },
-      "count": "n =",
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
-      "target": {
+      "field": {
+        "values": "Your own",
+        "count": "n =",
         "target": "Target",
         "k": "k",
         "days": "Days",
-        "limit": "Limit"
+        "limit": "Limit",
+        "ops": "Operations",
+        "capacity": "Capacity",
+        "text": "Text",
+        "pattern": "Pattern",
+        "words": "Words",
+        "cycle": "Tail links to"
       }
     },
     "tabs": {
@@ -1093,7 +1159,14 @@
       "two-pointers": "Two pointers",
       "sliding-window": "Sliding window",
       "monotonic-stack": "Monotonic stack",
-      "sorted-input": "Sorted input"
+      "sorted-input": "Sorted input",
+      "stack": "Stack",
+      "queue": "Queue",
+      "deque": "Deque",
+      "linked-list": "Linked list",
+      "pointers": "Pointers",
+      "cache": "Cache",
+      "arrays": "Arrays"
     },
     "narration": {
       "bubble-sort": {
@@ -1354,6 +1427,88 @@
         "pop": "Pop position {{at}}: the next greater value after {{value}} is {{answer}}.",
         "push": "Push position {{at}} ({{value}}): it waits for a bigger value. The stack holds {{size}}.",
         "done": "Done: {{pops}} values got an answer; {{left}} still on the stack have none (−1)."
+      },
+      "stack": {
+        "ready": "Run {{n}} operations on an empty stack. Only the top is ever touched.",
+        "push": "push {{value}}: it goes on top. The stack holds {{size}}.",
+        "pop": "pop: take the top value, {{value}}, off. {{size}} left.",
+        "pop_empty": "pop on an empty stack: nothing to take, so the answer is −1.",
+        "peek": "peek: the top is {{value}}; it stays on the stack.",
+        "peek_empty": "peek on an empty stack: −1.",
+        "done": "Done. The output row holds the {{count}} values returned, in order."
+      },
+      "queue-ring-buffer": {
+        "ready": "A queue in a fixed array of {{capacity}} slots. head is the front; the tail is head + size, wrapping around.",
+        "full": "enqueue {{value}}: all {{capacity}} slots are full, so it is refused.",
+        "enqueue": "enqueue {{value}}: write it at the tail, slot {{at}}.",
+        "empty": "dequeue on an empty queue: −1.",
+        "dequeue": "dequeue: take {{value}} from slot {{at}}; head moves on to {{head}} (wrapping at the end).",
+        "done": "Done: {{count}} dequeues. Nothing was ever shifted: only head and tail moved."
+      },
+      "deque-monotonic-queue": {
+        "ready": "Find the maximum of every window of {{k}} values among {{n}}. The deque keeps positions whose values decrease from front to back.",
+        "pop_back": "{{value}} (position {{at}}) ≤ {{by}}: it can never be a window's maximum again, so pop it off the back.",
+        "push_back": "Push position {{at}} ({{value}}) onto the back.",
+        "pop_front": "Position {{at}} ({{value}}) has left the window: pop it off the front.",
+        "emit": "Window {{lo}}–{{hi}}: its maximum is the front, {{max}}.",
+        "done": "{{windows}} window maxima with only {{pops}} pops in all: each position enters and leaves the deque once."
+      },
+      "singly-linked-list": {
+        "ready": "Run {{n}} operations on an empty singly linked list. Each node knows only the next one.",
+        "link": "front {{value}}: the new node points at the current head.",
+        "new_head": "head now points at {{value}}: added in O(1).",
+        "first": "back {{value}}: the list is empty, so the node becomes the head.",
+        "walk": "Walk to the next node, {{value}}, looking for the last one.",
+        "append": "{{after}} is the last node: link it to {{value}}. Reaching the back took a walk: O(n).",
+        "search": "delete {{value}}: {{seen}} is not it, so prev and cur move on.",
+        "unlink_head": "{{value}} is the head: head skips to the next node.",
+        "unlink": "Found {{value}}: {{prev}} now links past it, and the node drops out.",
+        "not_found": "delete {{value}}: the walk reached the end without finding it.",
+        "done": "Done: the list holds {{size}} values, read from head to the end."
+      },
+      "doubly-linked-list": {
+        "ready": "Run {{n}} operations on a doubly linked list: every node links forward and back, so both ends are O(1).",
+        "link_front": "front {{value}}: link it before the head, both ways. It is the new head.",
+        "link_back": "back {{value}}: link it after the tail, both ways. It is the new tail.",
+        "empty": "pop on an empty list: −1.",
+        "unlink_front": "pop-front: {{value}} leaves; the next node becomes the head and forgets its back link.",
+        "unlink_back": "pop-back: {{value}} leaves; the previous node becomes the tail. No walk needed.",
+        "done": "Done: {{pops}} pops; the list holds {{size}} values. The output reads it forwards and then backwards."
+      },
+      "reverse-list": {
+        "ready": "Reverse a list of {{n}} nodes in place: walk once, turning every arrow around.",
+        "save": "Save cur's next ({{next}}) as nxt before the link is overwritten.",
+        "flip": "Point {{cur}} back at prev ({{prev}}).",
+        "advance": "Move on: prev = {{prev}}, cur = nxt.",
+        "new_head": "cur ran off the end: prev, {{head}}, is the new head. {{n}} links flipped, no extra memory."
+      },
+      "floyd-cycle": {
+        "ready": "{{n}} nodes; the last one links to position {{pos}} (−1 means no link). Does the list loop?",
+        "move": "slow moves 1 node (to {{slow}}), fast moves 2 (to {{fast}}).",
+        "meet": "slow and fast meet at node {{at}}: there is a cycle.",
+        "no_cycle": "fast reached the end after {{steps}} moves: no cycle.",
+        "reset": "Send slow back to the head; fast stays. Now both move 1 node at a time.",
+        "walk": "slow at {{slow}}, fast at {{fast}}.",
+        "found": "They meet at node {{at}} ({{value}}): that is where the cycle starts."
+      },
+      "lru-cache": {
+        "ready": "An LRU cache holding at most {{capacity}} keys. Least recently used on the left, most recent on the right.",
+        "miss": "get {{key}}: not in the cache (a miss), so −1.",
+        "hit": "get {{key}}: a hit, value {{value}}. It moves to the most recent end.",
+        "refresh": "put {{key}}: already cached, so move it to the most recent end first.",
+        "put": "put {{key}} = {{value}} at the most recent end.",
+        "evict": "Over capacity ({{capacity}}): evict the least recently used key, {{key}}.",
+        "done": "Done: the output holds the {{gets}} answers to get."
+      },
+      "dynamic-array-ops": {
+        "ready": "Run {{n}} operations on a dynamic array. Inserting or deleting in the middle moves every value after it.",
+        "grow": "The array is full ({{size}} values): double the storage to {{capacity}} first.",
+        "shift_right": "Shift {{value}} from position {{from}} to {{to}} to open a gap.",
+        "write": "Write {{value}} into the gap at position {{at}}.",
+        "shift_left": "{{removed}} is gone: shift {{value}} from position {{from}} to {{to}}.",
+        "shrink": "The last slot is now spare: {{size}} values remain.",
+        "empty": "remove on an empty array: nothing to do.",
+        "done": "Done: {{size}} values, after {{shifts}} shifts in all. Work at the end is cheap; in the middle it costs a shift per value after it."
       }
     },
     "compare": {

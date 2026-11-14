@@ -4,7 +4,7 @@
 // content/learn/<subject>/<topic>/cases.json; kb-pack runs both samples on them in the
 // sandbox.
 import type { LearnInput } from "@/bindings";
-import { PRESETS, presetInput } from "./inputs";
+import { presetIds, presetInput } from "./inputs";
 import { outputOf, type TracerDef } from "./types";
 
 /** The limits sorting topics use (topic.toml `[input]`; kb-pack checks cases fit). */
@@ -21,12 +21,13 @@ export function caseInputs(def: TracerDef): { name: string; input: number[] }[] 
       input: [lim.min + k],
     }));
   }
-  const out: { name: string; input: number[] }[] = PRESETS.map((p) => ({
+  const out: { name: string; input: number[] }[] = presetIds(def).map((p) => ({
     name: p,
     input: presetInput(def, p, 1, Math.min(10, lim.max_len)),
   }));
   for (let k = 1; k <= RANDOM_CASES; k++) {
     const len = lim.min_len + ((k * 7) % (lim.max_len - lim.min_len + 1));
+    if (def.presets && !def.presets.random) break; // a topic without random inputs: presets only
     out.push({ name: `random-${k}`, input: presetInput(def, "random", 1000 + k, len) });
   }
   return out;

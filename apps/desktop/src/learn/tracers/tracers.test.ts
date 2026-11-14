@@ -4,11 +4,11 @@
 import { describe, expect, it } from "vitest";
 import en from "@/i18n/locales/en.json";
 import es from "@/i18n/locales/es.json";
-import { sampleSource, topicLimits } from "@/test/fakeLearn";
+import { sampleSource, topicLimits, topicPresets } from "@/test/fakeLearn";
 import { GOLDEN, REFERENCE, WORST } from "@/test/learnReference";
 import { parseSample } from "../engine/markers";
 import { caseInputs } from "../engine/cases";
-import { checkInput } from "../engine/inputs";
+import { checkInput, presetIds } from "../engine/inputs";
 import { MAX_STEPS, outputOf, type Step, type TracerDef } from "../engine/types";
 import { TRACERS } from ".";
 
@@ -47,6 +47,15 @@ describe.each(Object.values(TRACERS))("$id tracer", (def) => {
 
   it("has the limits of its topic.toml", () => {
     expect(def.limits).toEqual(topicLimits(def.subject, def.id));
+  });
+
+  it("offers only its own presets, each named in English and Spanish", () => {
+    const ids = presetIds(def);
+    for (const p of topicPresets(def.subject, def.id)) {
+      expect(ids, p).toContain(p);
+      expect(typeof lookup(en.learn.input.presets, p), `en preset ${p}`).toBe("string");
+      expect(typeof lookup(es.learn.input.presets, p), `es preset ${p}`).toBe("string");
+    }
   });
 
   it("outputs the reference, emits only known markers and keys, and stays under the step cap", () => {

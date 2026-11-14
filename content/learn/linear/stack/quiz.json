@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "push 10, push 20, push 30, then pop twice. What do the two pops return?",
+    "prompt_es": "push 10, push 20, push 30 y luego dos pop. ¿Qué devuelven los dos pop?",
+    "options": [
+      { "en": "10, then 20", "es": "10 y luego 20" },
+      { "en": "30, then 20", "es": "30 y luego 20" },
+      { "en": "30, then 30", "es": "30 y luego 30" }
+    ],
+    "answer": 1,
+    "explain_en": "The last value pushed is on top, so 30 comes off first and then 20. Only 10 is left.",
+    "explain_es": "El último valor apilado está arriba, así que sale primero 30 y luego 20. Solo queda 10."
+  },
+  {
+    "prompt_en": "Then push 40, peek, pop, pop. What is the whole output row?",
+    "prompt_es": "Después push 40, peek, pop, pop. ¿Cuál es la fila de salida completa?",
+    "options": [
+      { "en": "[30, 20, 40, 10]", "es": "[30, 20, 40, 10]" },
+      { "en": "[30, 20, 40, 40, −1]", "es": "[30, 20, 40, 40, −1]" },
+      { "en": "[30, 20, 40, 40, 10]", "es": "[30, 20, 40, 40, 10]" }
+    ],
+    "answer": 2,
+    "explain_en": "peek reports 40 but leaves it on top, so the next pop returns 40 again, and the last pop takes 10. Every peek and pop adds one value to the row.",
+    "explain_es": "peek informa de 40 pero lo deja arriba, así que el siguiente pop vuelve a devolver 40, y el último pop saca 10. Cada peek y cada pop añade un valor a la fila."
+  },
+  {
+    "prompt_en": "The stack keeps its top at the end of an array. What does pop cost with n values on it?",
+    "prompt_es": "La pila tiene su cima al final de un arreglo. ¿Cuánto cuesta pop con n valores dentro?",
+    "options": [
+      { "en": "O(1)", "es": "O(1)" },
+      { "en": "O(n): the values below move down", "es": "O(n): los valores de abajo se desplazan" },
+      { "en": "O(log n)", "es": "O(log n)" }
+    ],
+    "answer": 0,
+    "explain_en": "Removing the last value of an array moves nothing else. With the top at position 0 instead, every pop would shift all the others.",
+    "explain_es": "Quitar el último valor de un arreglo no mueve nada más. Con la cima en la posición 0, cada pop desplazaría a todos los demás."
+  }
+]

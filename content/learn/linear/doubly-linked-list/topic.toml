@@ -1,0 +1,28 @@
+id = "doubly-linked-list"
+subject = "linear"
+order = 6
+title = "Doubly linked list"
+title_es = "Lista doblemente enlazada"
+tags = ["linked-list", "deque"]
+problems = []
+presets = ["both-ends", "random", "drain"]
+default = [2, 10, 2, 20, 1, 5, 2, 30, 3, 0, 4, 0, 1, 1]
+
+[complexity]
+best = "O(1)"
+average = "O(1) at either end"
+worst = "O(1)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 24
+min = 0
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = run(kb_ops(a, [\"front\", \"back\", \"pop-front\", \"pop-back\"], 1))"
+typescript = "a = run(kbOps(a, [\"front\", \"back\", \"pop-front\", \"pop-back\"], 1))"

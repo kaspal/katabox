@@ -2,6 +2,7 @@
 // front, so playing, stepping and scrubbing only index into an array.
 import type en from "@/i18n/locales/en.json";
 import type { LearnInput } from "@/bindings";
+import type { InputError } from "./inputs";
 
 /** A value with a stable identity: scenes key on `id`, so equal values still slide. */
 export type Item = { id: number; value: number };
@@ -101,9 +102,41 @@ export type SceneData = {
   bucketDepth?: number;
   /** Stack scenes: the deepest the stack gets during the trace (fixed height). */
   stackDepth?: number;
+  /** Linked list: nodes in display order and their links by node id. `fixed` keeps the
+   * nodes where they are (a reversal rewires arrows, nodes stay put). */
+  list?: ListData;
+  /** Slots of a stack (bottom first), a queue or deque (front first) or a ring buffer
+   * (by index), with pointers on slot positions. */
+  slots?: SlotsData;
+  /** A key → value table beside the scene (LRU's map). */
+  table?: TableData;
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
    * not the final row). cases.json `output` comes from here, so it is the tracer's own. */
   result?: number[];
+};
+
+/** A list node; `text` replaces the value on the node (LRU shows `key:value`). */
+export type ListNode = Item & { role?: Role; text?: string };
+export type ListData = {
+  nodes: ListNode[];
+  next: Record<number, number | null>;
+  /** Doubly linked lists: the back links. */
+  prev?: Record<number, number | null>;
+  /** Labels on nodes (head, tail, prev, curr, slow, fast), by node id. */
+  labels: { label: string; id: number; tone: PointerTone }[];
+  fixed?: boolean;
+};
+export type SlotsData = {
+  layout: "stack" | "row" | "ring";
+  cells: (Item | null)[];
+  roles?: Record<number, Role>;
+  pointers?: Pointer[];
+  /** The row's title (`learn.stage.rows.<label>`). */
+  label: RowLabel;
+};
+export type TableData = {
+  label: RowLabel;
+  rows: { key: number; value: number; role?: Role }[];
 };
 
 /** One frame. Snapshots, not diffs: scrubbing is O(1). */
@@ -133,7 +166,9 @@ export type SceneKind =
   | "buckets"
   | "merge"
   | "heap"
-  | "monostack";
+  | "monostack"
+  | "list"
+  | "slots";
 
 /** How a topic's input is shaped. Inputs are always one flat list of integers (the DB and
  * the sample driver see only that):
@@ -141,16 +176,33 @@ export type SceneKind =
  * - `target`: `[target, ...values]`;
  * - `sorted-target`: `[target, ...values]` with the values ascending;
  * - `count`: `[n]` (disks, the size of a problem). */
-export type InputKind = "values" | "target" | "sorted-target" | "count";
+export type InputKind = "values" | "target" | "sorted-target" | "count" | "codec";
+
+/** A "your own" field label (`learn.input.field.<key>`). */
+export type FieldKey = keyof Locale["input"]["field"];
+
+/** How a structured input (operations, text, a graph, a grid…) is typed and stored: one
+ * text per field in the UI, one flat integer list everywhere else. */
+export type InputCodec = {
+  fields: readonly FieldKey[];
+  /** The flat input as one text per field. */
+  format: (input: readonly number[]) => string[];
+  /** The texts as a flat input, or a reason to refuse them. */
+  parse: (texts: readonly string[]) => { values: number[] } | { error: InputError };
+  /** Checks beyond the flat limits (shape, references), or null. */
+  check?: (input: readonly number[]) => InputError | null;
+};
 
 export type InputSpec = {
   kind: InputKind;
   /** The `learn.input.target.<label>` name of the first number for target kinds. */
-  targetLabel?: "target" | "k" | "days" | "limit";
+  targetLabel?: FieldKey;
   /** Picks a target for a preset (target kinds), from the values and a seeded random. */
   pickTarget?: (values: number[], next: () => number) => number;
   /** Extra checks for a typed-in target, as an error, or null when fine. */
   checkTarget?: (target: number, values: readonly number[]) => { min: number; max: number } | null;
+  /** The structured input of `codec` topics. */
+  codec?: InputCodec;
 };
 
 export type CounterSpec = { slot: keyof Counters; label: CounterLabel };
@@ -168,6 +220,10 @@ export type TracerDef = {
   /** The topic.toml `[input]` limits (Vitest checks they match). */
   limits: LearnInput;
   input: InputSpec;
+  /** Named presets, each a generator from a seeded random (`learn.input.presets.<id>`).
+   * Topics without them use the four sort presets. A `random` preset, when present, also
+   * makes the 20 random cases of cases.json. */
+  presets?: Readonly<Record<string, (next: () => number) => number[]>>;
   /** Every `@step` id the tracer emits; both samples must carry each once. */
   markers: readonly string[];
   /** Every narration key the tracer can emit (full keys under `learn.narration`). */

@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Nodes 3, 8, 15, 21, 42, 7 at positions 0–5; the last one links back to position 2. Where do slow and fast first meet?",
+    "prompt_es": "Nodos 3, 8, 15, 21, 42, 7 en las posiciones 0–5; el último enlaza de vuelta con la posición 2. ¿Dónde se encuentran slow y fast por primera vez?",
+    "options": [
+      { "en": "Node 2 (15), after 2 moves", "es": "En el nodo 2 (15), tras 2 movimientos" },
+      { "en": "Node 4 (42), after 4 moves", "es": "En el nodo 4 (42), tras 4 movimientos" },
+      { "en": "Node 5 (7), after 3 moves", "es": "En el nodo 5 (7), tras 3 movimientos" }
+    ],
+    "answer": 1,
+    "explain_en": "slow goes 1, 2, 3, 4. fast goes 2, 4, then 5 → 2 around the loop, then 3 → 4. After the fourth move both are at node 4.",
+    "explain_es": "slow pasa por 1, 2, 3, 4. fast pasa por 2, 4, luego 5 → 2 dando la vuelta, y luego 3 → 4. Tras el cuarto movimiento los dos están en el nodo 4."
+  },
+  {
+    "prompt_en": "slow goes back to the head (node 0) and fast stays at node 4. Both now move one node per step. Where do they meet?",
+    "prompt_es": "slow vuelve a la cabeza (nodo 0) y fast se queda en el nodo 4. Ahora los dos avanzan un nodo por paso. ¿Dónde se encuentran?",
+    "options": [
+      { "en": "Node 4 (42)", "es": "En el nodo 4 (42)" },
+      { "en": "Node 0 (3)", "es": "En el nodo 0 (3)" },
+      { "en": "Node 2 (15), the start of the cycle", "es": "En el nodo 2 (15), el comienzo del ciclo" }
+    ],
+    "answer": 2,
+    "explain_en": "The tail before the cycle is 2 nodes long. slow goes 0 → 1 → 2 and fast goes 4 → 5 → 2: both take 2 steps and arrive together.",
+    "explain_es": "El tramo antes del ciclo mide 2 nodos. slow va 0 → 1 → 2 y fast va 4 → 5 → 2: los dos dan 2 pasos y llegan a la vez."
+  },
+  {
+    "prompt_en": "How much extra memory does Floyd's method need on a list of n nodes?",
+    "prompt_es": "¿Cuánta memoria extra necesita el método de Floyd en una lista de n nodos?",
+    "options": [
+      { "en": "O(1): two pointers", "es": "O(1): dos punteros" },
+      { "en": "O(n): a set of visited nodes", "es": "O(n): un conjunto de nodos visitados" },
+      { "en": "O(log n)", "es": "O(log n)" }
+    ],
+    "answer": 0,
+    "explain_en": "That is its advantage over remembering every visited node, which also works in O(n) time but needs O(n) space.",
+    "explain_es": "Esa es su ventaja frente a recordar cada nodo visitado, que también funciona en tiempo O(n) pero necesita espacio O(n)."
+  }
+]

@@ -1,6 +1,15 @@
 // Topic id → tracer (ADR 0029). kb-pack checks every topic in content/learn has a file
 // here; Vitest checks the registry matches the files.
 import type { TracerDef } from "../engine/types";
+import { dynamicArrayOps } from "./dynamic-array-ops";
+import { stack } from "./stack";
+import { queueRingBuffer } from "./queue-ring-buffer";
+import { dequeMonotonicQueue } from "./deque-monotonic-queue";
+import { singlyLinkedList } from "./singly-linked-list";
+import { doublyLinkedList } from "./doubly-linked-list";
+import { reverseList } from "./reverse-list";
+import { floydCycle } from "./floyd-cycle";
+import { lruCache } from "./lru-cache";
 import { bigOGrowth } from "./big-o-growth";
 import { bitManipulation } from "./bit-manipulation";
 import { bubbleSort } from "./bubble-sort";
@@ -57,4 +66,13 @@ export const TRACERS: Record<string, TracerDef> = {
   "two-pointers": twoPointers,
   "sliding-window": slidingWindow,
   "monotonic-stack": monotonicStack,
+  "dynamic-array-ops": dynamicArrayOps,
+  "stack": stack,
+  "queue-ring-buffer": queueRingBuffer,
+  "deque-monotonic-queue": dequeMonotonicQueue,
+  "singly-linked-list": singlyLinkedList,
+  "doubly-linked-list": doublyLinkedList,
+  "reverse-list": reverseList,
+  "floyd-cycle": floydCycle,
+  "lru-cache": lruCache,
 };

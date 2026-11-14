@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Reverse 3 → 8 → 15 → 21 → 42. The first round starts with prev = None and cur = 3. After save, flip and advance, what are prev and cur?",
+    "prompt_es": "Invierte 3 → 8 → 15 → 21 → 42. La primera vuelta empieza con prev = None y cur = 3. Tras guardar, girar y avanzar, ¿qué son prev y cur?",
+    "options": [
+      { "en": "prev = None, cur = 8", "es": "prev = None, cur = 8" },
+      { "en": "prev = 3, cur = 8", "es": "prev = 3, cur = 8" },
+      { "en": "prev = 8, cur = 15", "es": "prev = 8, cur = 15" }
+    ],
+    "answer": 1,
+    "explain_en": "nxt saves 8, 3 now points at nothing (it will be the new end), then prev moves to 3 and cur to the saved 8.",
+    "explain_es": "nxt guarda 8, 3 pasa a apuntar a nada (será el nuevo final), y luego prev pasa a 3 y cur al 8 guardado."
+  },
+  {
+    "prompt_en": "Why must nxt = cur.next come before cur.next = prev?",
+    "prompt_es": "¿Por qué nxt = cur.next tiene que ir antes de cur.next = prev?",
+    "options": [
+      { "en": "After the flip, nothing links to the rest of the list", "es": "Tras el giro, nada enlaza con el resto de la lista" },
+      { "en": "To count the nodes", "es": "Para contar los nodos" },
+      { "en": "It does not matter: both orders work", "es": "Da igual: los dos órdenes funcionan" }
+    ],
+    "answer": 0,
+    "explain_en": "cur.next was the only pointer to the nodes after cur. Overwrite it first and they are lost.",
+    "explain_es": "cur.next era el único puntero a los nodos que van detrás de cur. Si lo sobrescribes primero, se pierden."
+  },
+  {
+    "prompt_en": "The loop ends when cur runs off the end. What is returned, and how many links were flipped?",
+    "prompt_es": "El bucle termina cuando cur se sale del final. ¿Qué se devuelve y cuántos enlaces se han girado?",
+    "options": [
+      { "en": "3, after 4 flips", "es": "3, tras 4 giros" },
+      { "en": "None: cur is empty", "es": "None: cur está vacío" },
+      { "en": "42, after 5 flips", "es": "42, tras 5 giros" }
+    ],
+    "answer": 2,
+    "explain_en": "prev holds the old last node, 42, the new head. Every one of the 5 nodes had its next flipped once, including 3, which now points at nothing.",
+    "explain_es": "prev tiene el antiguo último nodo, 42, la nueva cabeza. Cada uno de los 5 nodos ha girado su next una vez, incluido 3, que ahora apunta a nada."
+  }
+]

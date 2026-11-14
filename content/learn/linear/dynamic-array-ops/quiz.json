@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "append 10, append 20, then append 30. The array starts with 2 slots. What happens before 30 is written?",
+    "prompt_es": "append 10, append 20 y luego append 30. El arreglo empieza con 2 casillas. ¿Qué pasa antes de escribir 30?",
+    "options": [
+      { "en": "10 and 20 shift right to make room", "es": "10 y 20 se desplazan a la derecha para hacer sitio" },
+      { "en": "The storage doubles to 4 slots", "es": "La memoria se duplica a 4 casillas" },
+      { "en": "30 overwrites 20", "es": "30 pisa a 20" }
+    ],
+    "answer": 1,
+    "explain_en": "2 values fill both slots, so the insert grows the storage first. Appending never shifts anything: nothing sits after the end.",
+    "explain_es": "2 valores llenan las dos casillas, así que la inserción amplía la memoria primero. Añadir al final nunca desplaza nada: detrás del final no hay nada."
+  },
+  {
+    "prompt_en": "The array is [10, 15, 20, 30] in 4 slots. How many shifts does insert 0 5 make?",
+    "prompt_es": "El arreglo es [10, 15, 20, 30] en 4 casillas. ¿Cuántos desplazamientos hace insert 0 5?",
+    "options": [
+      { "en": "0: the storage grows instead", "es": "0: en su lugar crece la memoria" },
+      { "en": "1", "es": "1" },
+      { "en": "4", "es": "4" }
+    ],
+    "answer": 2,
+    "explain_en": "The storage doubles to 8 first, then 30, 20, 15 and 10 each move one place right, starting from the end. Inserting at the front moves every value.",
+    "explain_es": "Primero la memoria se duplica a 8 y luego 30, 20, 15 y 10 se mueven un lugar a la derecha, empezando por el final. Insertar al principio mueve todos los valores."
+  },
+  {
+    "prompt_en": "Why does opening a gap at i start with the last value instead of a[i]?",
+    "prompt_es": "¿Por qué abrir un hueco en i empieza por el último valor y no por a[i]?",
+    "options": [
+      { "en": "Copying a[i] first would overwrite a[i + 1] before it moved", "es": "Copiar a[i] primero pisaría a[i + 1] antes de moverse" },
+      { "en": "It is faster: fewer shifts", "es": "Es más rápido: hay menos desplazamientos" },
+      { "en": "The last slot is always free after a doubling", "es": "La última casilla siempre está libre tras duplicar" }
+    ],
+    "answer": 0,
+    "explain_en": "Both directions make the same number of copies. Only the order from the end moves each value into a slot that is already free.",
+    "explain_es": "Las dos direcciones hacen el mismo número de copias. Solo el orden desde el final mueve cada valor a una casilla que ya está libre."
+  }
+]

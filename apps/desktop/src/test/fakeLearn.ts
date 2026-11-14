@@ -103,3 +103,10 @@ export function topicLimits(subject: string, id: string) {
   const num = (k: string) => Number(new RegExp(`^${k}\\s*=\\s*(-?\\d+)`, "m").exec(table)?.[1]);
   return { min_len: num("min_len"), max_len: num("max_len"), min: num("min"), max: num("max") };
 }
+
+/** topic.toml's `presets` list. */
+export function topicPresets(subject: string, id: string): string[] {
+  const text = topicFile(subject, id, "topic.toml").replace(/\r\n/g, "\n");
+  const line = /^presets\s*=\s*\[(.*)\]/m.exec(text)?.[1] ?? "";
+  return [...line.matchAll(/"([^"]+)"/g)].map((m) => m[1]!);
+}

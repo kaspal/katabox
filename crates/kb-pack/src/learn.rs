@@ -15,7 +15,8 @@ use serde_json::{Map, Value};
 
 /// The languages every topic has a sample in.
 pub const SAMPLE_LANGUAGES: [Language; 2] = [Language::Python, Language::TypeScript];
-const PRESETS: [&str; 4] = ["random", "nearly-sorted", "reversed", "few-unique"];
+/// The longest flat input a topic may take (a 20 × 20 grid with its header fits).
+pub const MAX_INPUT_LEN: u32 = 512;
 const FILES: [&str; 6] = [
     "topic.toml",
     "theory.md",
@@ -365,14 +366,20 @@ fn read_topic(dir: &Path, subject: &str, problems: &Path) -> Result<TopicDir, Ve
             errors.push(format!("linked problem {p:?} is not in the catalogue"));
         }
     }
-    if t.presets.is_empty() || t.presets.iter().any(|p| !PRESETS.contains(&p.as_str())) {
-        errors.push(format!("presets: one or more of {PRESETS:?}"));
+    // Preset ids are the tracer's (Vitest checks each exists there and has a name in both
+    // locales); here they only need to be well-formed.
+    if t.presets.is_empty() || t.presets.iter().any(|p| !kebab(p)) {
+        errors.push("presets: one or more kebab-case ids".into());
     }
     let lim = t.input;
-    let lim_ok =
-        lim.min_len >= 1 && lim.min_len <= lim.max_len && lim.max_len <= 64 && lim.min <= lim.max;
+    let lim_ok = lim.min_len >= 1
+        && lim.min_len <= lim.max_len
+        && lim.max_len <= MAX_INPUT_LEN
+        && lim.min <= lim.max;
     if !lim_ok {
-        errors.push("input: need 1 ≤ min_len ≤ max_len ≤ 64 and min ≤ max".into());
+        errors.push(format!(
+            "input: need 1 ≤ min_len ≤ max_len ≤ {MAX_INPUT_LEN} and min ≤ max"
+        ));
     }
     let fits = |xs: &[i64]| {
         (lim.min_len as usize..=lim.max_len as usize).contains(&xs.len())
@@ -735,7 +742,8 @@ mod tests {
                 let all = (lim.max - lim.min + 1) as usize;
                 assert_eq!(t.cases.len(), all, "{}: every n", t.topic.id);
             } else {
-                assert!(t.cases.len() >= 24, "{}: presets + 20 random", t.topic.id);
+                // At least one preset plus the 20 random inputs.
+                assert!(t.cases.len() >= 21, "{}: presets + 20 random", t.topic.id);
             }
         }
     }
@@ -882,7 +890,8 @@ mod tests {
         });
         assert!(has(&e, "not the sorted input"), "{e:?}");
         let e = broken("preset", |t| {
-            rewrite(&t.join("topic.toml"), "\"few-unique\"", "\"zigzag\"")
+            // Existence is the tracer's (checked by Vitest); kb-pack refuses malformed ids.
+            rewrite(&t.join("topic.toml"), "\"few-unique\"", "\"Zig Zag\"")
         });
         assert!(has(&e, "presets"), "{e:?}");
         let e = broken("id", |t| {

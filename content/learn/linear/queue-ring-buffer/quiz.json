@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Capacity 4. After enqueue 11, 22, 33, two dequeues and enqueue 44, head = 2 and size = 2. Where does enqueue 55 write?",
+    "prompt_es": "Capacidad 4. Tras enqueue 11, 22, 33, dos dequeue y enqueue 44, head = 2 y size = 2. ¿Dónde escribe enqueue 55?",
+    "options": [
+      { "en": "Slot 4, after the end", "es": "En la casilla 4, tras el final" },
+      { "en": "Slot 0", "es": "En la casilla 0" },
+      { "en": "Nowhere: the buffer is full", "es": "En ningún sitio: el búfer está lleno" }
+    ],
+    "answer": 1,
+    "explain_en": "tail = (2 + 2) mod 4 = 0. The tail wraps around into the slot that dequeuing 11 freed. Only 2 of the 4 slots are in use.",
+    "explain_es": "tail = (2 + 2) mod 4 = 0. El final da la vuelta hasta la casilla que liberó el dequeue de 11. Solo hay 2 de las 4 casillas en uso."
+  },
+  {
+    "prompt_en": "Then enqueue 66 fills the buffer, and two dequeues follow. What do they return?",
+    "prompt_es": "Después enqueue 66 llena el búfer y siguen dos dequeue. ¿Qué devuelven?",
+    "options": [
+      { "en": "55, then 66", "es": "55 y luego 66" },
+      { "en": "11, then 22", "es": "11 y luego 22" },
+      { "en": "33, then 44", "es": "33 y luego 44" }
+    ],
+    "answer": 2,
+    "explain_en": "head is at slot 2, which holds 33, the oldest value still queued. Then head moves to slot 3 (44) and wraps to 0. The full output is [11, 22, 33, 44].",
+    "explain_es": "head está en la casilla 2, que guarda 33, el valor más antiguo que sigue en la cola. Luego head pasa a la casilla 3 (44) y da la vuelta a la 0. La salida completa es [11, 22, 33, 44]."
+  },
+  {
+    "prompt_en": "What does dequeue cost in a ring buffer holding n values?",
+    "prompt_es": "¿Cuánto cuesta dequeue en un búfer circular con n valores?",
+    "options": [
+      { "en": "O(1): only head and size change", "es": "O(1): solo cambian head y size" },
+      { "en": "O(n): the other values shift left", "es": "O(n): los demás valores se desplazan a la izquierda" },
+      { "en": "O(capacity)", "es": "O(capacity)" }
+    ],
+    "answer": 0,
+    "explain_en": "No value ever moves in a ring buffer. That is the whole point compared with removing the front of a plain array.",
+    "explain_es": "En un búfer circular ningún valor se mueve nunca. Esa es justo la ventaja frente a quitar el principio de un arreglo normal."
+  }
+]
