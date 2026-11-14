@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input. After a (4) and b (7) join into a tree of weight 11, c also weighs 11. Which two trees join next?",
+    "prompt_es": "Entrada por defecto. Tras unirse a (4) y b (7) en un árbol de peso 11, c también pesa 11. ¿Qué dos árboles se unen a continuación?",
+    "options": [
+      { "en": "d (15) and e (18), the next symbols in the input", "es": "d (15) y e (18), los siguientes símbolos de la entrada" },
+      { "en": "c (11) and f (40)", "es": "c (11) y f (40)" },
+      { "en": "c and the new tree, both of weight 11, into 22", "es": "c y el nuevo árbol, ambos de peso 11, en 22" }
+    ],
+    "answer": 2,
+    "explain_en": "The queue always hands out the two lightest trees. Both weigh 11; c comes out first because it is older, but either way the pair is the same.",
+    "explain_es": "La cola siempre entrega los dos árboles más ligeros. Los dos pesan 11; c sale primero porque es más antiguo, pero el par es el mismo en cualquier caso."
+  },
+  {
+    "prompt_en": "What is the output for the default input?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto?",
+    "options": [
+      { "en": "[216, 4, 4, 3, 3, 3, 1]", "es": "[216, 4, 4, 3, 3, 3, 1]" },
+      { "en": "[285, 3, 3, 3, 3, 3, 3]", "es": "[285, 3, 3, 3, 3, 3, 3]" },
+      { "en": "[216, 1, 3, 3, 3, 4, 4]", "es": "[216, 1, 3, 3, 3, 4, 4]" }
+    ],
+    "answer": 0,
+    "explain_en": "The lengths follow the input order: a and b are 4 deep, c, d and e 3, and f 1. The bits are 16 + 28 + 33 + 45 + 54 + 40 = 216. [285, …] is the fixed 3-bit code.",
+    "explain_es": "Las longitudes siguen el orden de la entrada: a y b están a profundidad 4, c, d y e a 3, y f a 1. Los bits son 16 + 28 + 33 + 45 + 54 + 40 = 216. [285, …] es el código fijo de 3 bits."
+  },
+  {
+    "prompt_en": "Why can a receiver decode a Huffman-coded message without separators between codes?",
+    "prompt_es": "¿Por qué un receptor puede decodificar un mensaje en Huffman sin separadores entre códigos?",
+    "options": [
+      { "en": "Every code has the same length", "es": "Todos los códigos tienen la misma longitud" },
+      { "en": "No code is the start of another, because symbols sit only at the leaves", "es": "Ningún código es el comienzo de otro, porque los símbolos están solo en las hojas" },
+      { "en": "The codes are sent sorted by frequency", "es": "Los códigos se envían ordenados por frecuencia" }
+    ],
+    "answer": 1,
+    "explain_en": "Reading bits walks down from the root; reaching a leaf means a symbol is complete, and the next bit starts again at the root.",
+    "explain_es": "Leer bits baja desde la raíz; llegar a una hoja significa que un símbolo está completo, y el siguiente bit vuelve a empezar en la raíz."
+  }
+]

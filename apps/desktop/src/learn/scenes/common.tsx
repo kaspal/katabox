@@ -193,6 +193,11 @@ export function sceneSummary(t: TFunction, step: Step): string {
       .join("; ");
     parts.push(t("learn.stage.fallback_row", { label: t(`learn.stage.rows.${d.label}`), values: rows }) + ".");
   }
+  if (step.timeline) {
+    const bars = step.timeline.bars.map((b) => `${b.start}–${b.end}`).join(", ") || "—";
+    const output = (step.timeline.output ?? []).map((b) => `${b.start}–${b.end}`).join(", ") || "—";
+    parts.push(t("learn.stage.summary_timeline", { bars, output }));
+  }
   if (step.bitArray) parts.push(t("learn.stage.summary_bits_array", { bits: step.bitArray.bits.join("") }));
   if (step.table) {
     const rows = step.table.rows.map((r) => `${r.key}: ${r.value}`).join(", ") || "—";

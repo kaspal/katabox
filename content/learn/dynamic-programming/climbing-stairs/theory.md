@@ -48,4 +48,4 @@ The pattern "count the ways to build length `n` from pieces" fits tilings, codes
 - [Fibonacci: memo and table](learn:dynamic-programming/fibonacci-memo-table): the same rule, and both ways to compute it.
 - [House robber](learn:dynamic-programming/house-robber): another table that looks back two cells.
 - [Coin change](learn:dynamic-programming/coin-change): pieces of several sizes, counting the fewest instead of the ways.
-- Grid paths (coming soon): counting routes in two dimensions.
+- [Paths through a grid](learn:dynamic-programming/grid-paths): counting routes in two dimensions.

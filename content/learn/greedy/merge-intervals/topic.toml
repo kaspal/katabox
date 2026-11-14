@@ -1,0 +1,28 @@
+id = "merge-intervals"
+subject = "greedy"
+order = 5
+title = "Merge intervals"
+title_es = "Fusionar intervalos"
+tags = ["greedy", "intervals"]
+problems = ["merge-bookings", "insert-slot", "paint-strokes"]
+presets = ["bookings", "random", "nested-and-touching"]
+default = [7, 9, 1, 4, 3, 5, 14, 17, 8, 11, 5, 6]
+
+[complexity]
+best = "O(n log n)"
+average = "O(n log n)"
+worst = "O(n log n)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 20
+min = 0
+max = 24
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = merge(kb_chunks(a, 2))"
+typescript = "a = merge(kbChunks(a, 2))"

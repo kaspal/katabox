@@ -48,4 +48,4 @@ Use Kadane for the best stretch of daily gains, the strongest segment of a signa
 - [Prefix sums](learn:foundations/prefix-sums): a run's sum as a difference of two prefixes.
 - [Sliding window](learn:searching/sliding-window): runs with a size or a condition instead of a best sum.
 - [House robber](learn:dynamic-programming/house-robber): another one-pass choice over a row of values.
-- Longest increasing subsequence (coming soon): best answer ending at each index, with a longer look back.
+- [Longest increasing subsequence](learn:dynamic-programming/lis): best answer ending at each index, with a longer look back.

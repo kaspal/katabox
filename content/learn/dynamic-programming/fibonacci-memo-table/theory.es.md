@@ -44,4 +44,4 @@ Recurre a la programación dinámica cuando una solución recursiva hace las mis
 - [Recursión y pila de llamadas](learn:foundations/recursion-call-stack): las llamadas que la memoria corta.
 - [Curvas de crecimiento Big-O](learn:foundations/big-o-growth): crecimiento exponencial frente a lineal.
 - [Subir escaleras](learn:dynamic-programming/climbing-stairs): la misma regla disfrazada.
-- Subsecuencia común más larga (próximamente): una tabla de dos dimensiones.
+- [Subsecuencia común más larga](learn:dynamic-programming/lcs): una tabla de dos dimensiones.

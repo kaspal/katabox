@@ -48,4 +48,4 @@ Usa Kadane para el mejor periodo de ganancias diarias, el segmento más fuerte d
 - [Sumas prefijas](learn:foundations/prefix-sums): la suma de un tramo como diferencia de dos prefijos.
 - [Ventana deslizante](learn:searching/sliding-window): tramos con un tamaño o una condición en vez de una mejor suma.
 - [El ladrón de casas](learn:dynamic-programming/house-robber): otra decisión en una pasada sobre una fila de valores.
-- Subsecuencia creciente más larga (próximamente): la mejor respuesta que termina en cada índice, mirando más atrás.
+- [Subsecuencia creciente más larga](learn:dynamic-programming/lis): la mejor respuesta que termina en cada índice, mirando más atrás.

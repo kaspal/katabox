@@ -43,4 +43,4 @@ Use it for budgets with yes-or-no choices: packing, picking projects under a cos
 - [Rod cutting (unbounded knapsack)](learn:dynamic-programming/rod-cutting): the same table when an item may repeat.
 - [Coin change](learn:dynamic-programming/coin-change): reaching an exact total with reusable pieces.
 - [House robber](learn:dynamic-programming/house-robber): take or skip, with a one-dimensional table.
-- Bitmask dynamic programming (coming soon).
+- [Travelling salesperson (bitmask DP)](learn:dynamic-programming/bitmask-tsp): a table over subsets of cities.

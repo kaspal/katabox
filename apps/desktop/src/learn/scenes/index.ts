@@ -17,6 +17,7 @@ import { ListScene } from "./ListScene";
 import { MonoStackScene } from "./MonoStackScene";
 import { RecursionScene } from "./RecursionScene";
 import { SlotsScene } from "./SlotsScene";
+import { TimelineScene } from "./TimelineScene";
 import { TreeScene } from "./TreeScene";
 
 export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
@@ -38,4 +39,5 @@ export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
   graph: GraphScene,
   grid: GridScene,
   dp: DPTableScene,
+  timeline: TimelineScene,
 };

@@ -48,6 +48,18 @@ import { maximumSubarray } from "./maximum-subarray";
 import { coinChange } from "./coin-change";
 import { knapsack01 } from "./knapsack-01";
 import { rodCutting } from "./rod-cutting";
+import { lis } from "./lis";
+import { lcs } from "./lcs";
+import { editDistance } from "./edit-distance";
+import { gridPaths } from "./grid-paths";
+import { wordBreak } from "./word-break";
+import { matrixChain } from "./matrix-chain";
+import { bitmaskTsp } from "./bitmask-tsp";
+import { activitySelection } from "./activity-selection";
+import { fractionalKnapsack } from "./fractional-knapsack";
+import { huffmanCoding } from "./huffman-coding";
+import { jumpGame } from "./jump-game";
+import { mergeIntervals } from "./merge-intervals";
 import { dynamicArrayOps } from "./dynamic-array-ops";
 import { stack } from "./stack";
 import { queueRingBuffer } from "./queue-ring-buffer";
@@ -169,4 +181,16 @@ export const TRACERS: Record<string, TracerDef> = {
   "coin-change": coinChange,
   "knapsack-01": knapsack01,
   "rod-cutting": rodCutting,
+  lis,
+  lcs,
+  "edit-distance": editDistance,
+  "grid-paths": gridPaths,
+  "word-break": wordBreak,
+  "matrix-chain": matrixChain,
+  "bitmask-tsp": bitmaskTsp,
+  "activity-selection": activitySelection,
+  "fractional-knapsack": fractionalKnapsack,
+  "huffman-coding": huffmanCoding,
+  "jump-game": jumpGame,
+  "merge-intervals": mergeIntervals,
 };

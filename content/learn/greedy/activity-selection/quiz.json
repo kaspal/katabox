@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input. After positions 0 and 4 are taken, free_at is 6. Position 5 is (6, 9). What happens to it?",
+    "prompt_es": "Entrada por defecto. Tras tomar las posiciones 0 y 4, free_at vale 6. La posición 5 es (6, 9). ¿Qué le pasa?",
+    "options": [
+      { "en": "It clashes, because it starts exactly when the last one ends", "es": "Choca, porque empieza justo cuando termina la anterior" },
+      { "en": "It is taken: touching is allowed, and free_at becomes 9", "es": "Se toma: tocarse está permitido, y free_at pasa a 9" },
+      { "en": "It replaces position 4, which ends later", "es": "Sustituye a la posición 4, que termina más tarde" }
+    ],
+    "answer": 1,
+    "explain_en": "The test is start ≥ free_at, and 6 ≥ 6. A greedy algorithm never swaps out an earlier choice.",
+    "explain_es": "La comprobación es inicio ≥ free_at, y 6 ≥ 6. Un algoritmo voraz nunca cambia una elección anterior."
+  },
+  {
+    "prompt_en": "Activities (0, 5), (4, 7) and (6, 11). Which rule finds the best schedule?",
+    "prompt_es": "Actividades (0, 5), (4, 7) y (6, 11). ¿Qué regla encuentra el mejor calendario?",
+    "options": [
+      { "en": "Shortest first", "es": "La más corta primero" },
+      { "en": "Both rules give the same answer", "es": "Las dos reglas dan la misma respuesta" },
+      { "en": "Earliest end first", "es": "La que termina antes primero" }
+    ],
+    "answer": 2,
+    "explain_en": "Shortest first takes (4, 7), which clashes with both others: 1 activity. Earliest end takes (0, 5), then (6, 11): 2 activities.",
+    "explain_es": "La más corta primero toma (4, 7), que choca con las otras dos: 1 actividad. La que termina antes toma (0, 5) y después (6, 11): 2 actividades."
+  },
+  {
+    "prompt_en": "What is the output for the default input?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto?",
+    "options": [
+      { "en": "[4, 0, 4, 5, 7]", "es": "[4, 0, 4, 5, 7]" },
+      { "en": "[1, 2]", "es": "[1, 2]" },
+      { "en": "[4, 0, 3, 5, 7]", "es": "[4, 0, 3, 5, 7]" }
+    ],
+    "answer": 0,
+    "explain_en": "The taken activities are (1, 4), (4, 6), (6, 9) and (9, 12), at positions 0, 4, 5 and 7. Position 3, (5, 7), clashes with (4, 6). [1, 2] is what earliest start would pick.",
+    "explain_es": "Las actividades tomadas son (1, 4), (4, 6), (6, 9) y (9, 12), en las posiciones 0, 4, 5 y 7. La posición 3, (5, 7), choca con (4, 6). [1, 2] es lo que elegiría la regla de la que empieza antes."
+  }
+]

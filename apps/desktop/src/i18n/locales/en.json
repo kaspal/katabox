@@ -986,7 +986,10 @@
         "stored": "stored",
         "filled": "filled",
         "records": "new bests",
-        "values_read": "values read"
+        "values_read": "values read",
+        "merged_in": "merged in",
+        "opened": "opened",
+        "merges": "merges"
       },
       "rows": {
         "prefix": "Prefix sums",
@@ -1018,7 +1021,22 @@
         "fewest": "Fewest coins for each total",
         "items": "Items (weight/value)",
         "best_value": "Best value",
-        "prices": "Prices (length:price)"
+        "prices": "Prices (length:price)",
+        "values": "Values",
+        "lis_length": "Longest run ending here",
+        "lcs_length": "Common subsequence length",
+        "edits": "Edits needed",
+        "paths": "Paths to each cell",
+        "letters": "Text",
+        "breakable": "Can the first letters be cut (1 yes, 0 no)",
+        "dictionary": "Words",
+        "matrices": "Matrices",
+        "multiplications": "Fewest multiplications for matrices i..j",
+        "route_length": "Shortest route (rows: cities visited, as bits; columns: last city)",
+        "chosen": "Chosen",
+        "merged": "Merged",
+        "weights": "Weights",
+        "trees_by_weight": "Trees by weight (lightest first)"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -1056,7 +1074,8 @@
         "grey": "grey"
       },
       "summary_graph": "Graph with {{n}} nodes: {{nodes}}. Edges: {{edges}}.",
-      "summary_grid": "A {{rows}} by {{cols}} grid: {{map}}."
+      "summary_grid": "A {{rows}} by {{cols}} grid: {{map}}.",
+      "summary_timeline": "Intervals: {{bars}}. Result: {{output}}."
     },
     "roles": {
       "idle": "Not yet placed",
@@ -1191,7 +1210,13 @@
       "filled": "Filled",
       "taken": "Taken",
       "current_run": "Current run",
-      "best_run": "Best run so far"
+      "best_run": "Best run so far",
+      "growing": "Growing",
+      "reachable": "Reachable",
+      "not_reached": "Not reached yet",
+      "stuck_here": "Stuck here",
+      "part_taken": "Taken in part",
+      "merged_pair": "Joined under the new node"
     },
     "controls": {
       "label": "Playback",
@@ -1293,7 +1318,28 @@
         "cannot-make": "Cannot be made",
         "one-heavy": "One heavy item",
         "cut-pays": "Cutting pays",
-        "whole-rod": "Keep it whole"
+        "whole-rod": "Keep it whole",
+        "a-few-blocks": "A few blocks",
+        "walled-off": "Walled off",
+        "splits": "It splits",
+        "dead-end": "A dead end",
+        "order-matters": "Order matters",
+        "long-chain": "A long chain",
+        "four-towns": "Four towns",
+        "five-towns": "Five towns",
+        "long-meeting": "A long meeting",
+        "back-to-back": "Back to back",
+        "bookings": "Bookings",
+        "nested-and-touching": "Nested and touching",
+        "zero-trap": "A zero trap",
+        "long-leaps": "Long leaps",
+        "spice-shelf": "A spice shelf",
+        "all-fit": "Everything fits",
+        "even": "Even counts",
+        "shared-letters": "Shared letters",
+        "nothing-shared": "Nothing shared",
+        "near-miss": "A near miss",
+        "swapped-letters": "Swapped letters"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1343,7 +1389,13 @@
           "maze_seed": "The seed goes from 1 to {{max}}.",
           "item_pair": "Write each item as weight value (\"{{item}}\").",
           "capacity_range": "The capacity goes from 1 to {{max}}.",
-          "item_count": "Use {{min}} to {{max}} items."
+          "item_count": "Use {{min}} to {{max}} items.",
+          "interval_pair": "Write each interval as start end (\"{{item}}\").",
+          "interval_count": "Use {{min}} to {{max}} intervals.",
+          "interval_range": "Each interval starts before it ends, between {{min}} and {{max}}.",
+          "matrix_shape": "Write {{n}} rows of {{n}} distances.",
+          "matrix_diagonal": "A city is 0 away from itself.",
+          "matrix_symmetric": "The distance from {{i}} to {{j}} must equal the way back."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1369,7 +1421,12 @@
         "size": "Size k (2k+1 cells a side)",
         "seed": "Seed",
         "amount": "Amount",
-        "items": "Items (weight value, …)"
+        "items": "Items (weight value, …)",
+        "first": "First word",
+        "second": "Second word",
+        "map": "Map (rows split by /; . open, # blocked)",
+        "distances": "Distances (one row per city, rows split by commas)",
+        "intervals": "Intervals (start end, …)"
       }
     },
     "tabs": {
@@ -1454,7 +1511,12 @@
       "maze": "Maze",
       "memoization": "Memoization",
       "knapsack": "Knapsack",
-      "array": "Array"
+      "array": "Array",
+      "greedy": "Greedy",
+      "intervals": "Intervals",
+      "bitmask": "Bitmask",
+      "interval-dp": "Interval DP",
+      "huffman": "Huffman coding"
     },
     "narration": {
       "bubble-sort": {
@@ -2203,6 +2265,88 @@
         "improve": "First piece {{cut}}, then the best for {{rest}}: {{value}}, the best so far.",
         "trace": "Cut a piece of {{piece}}; {{left}} left.",
         "done": "A rod of {{n}} earns at most {{best}}, in {{count}} piece(s)."
+      },
+      "lis": {
+        "ready": "Find the longest strictly increasing subsequence of {{n}} values (not necessarily side by side).",
+        "start": "Value {{value}} at {{i}}: on its own, a run of 1.",
+        "extend": "{{a}} (at {{j}}) is smaller than {{b}}: extend its run to length {{length}}.",
+        "trace": "Read the run back: {{value}} (at {{k}}).",
+        "done": "The longest increasing subsequence has {{length}} value(s)."
+      },
+      "lcs": {
+        "ready": "Longest common subsequence of \"{{a}}\" and \"{{b}}\": letters in the same order, not necessarily side by side.",
+        "match": "Both letters are \"{{letter}}\": one more than the diagonal, {{value}}.",
+        "carry": "\"{{x}}\" ≠ \"{{y}}\": keep the better of above and left, {{value}}.",
+        "trace": "Back from the corner: \"{{letter}}\" is in the common subsequence.",
+        "done": "The longest common subsequence is \"{{word}}\" ({{length}} letter(s))."
+      },
+      "edit-distance": {
+        "ready": "Fewest single-letter edits (insert, delete, replace) to turn \"{{a}}\" into \"{{b}}\". Row 0 and column 0: build from or to nothing.",
+        "same": "Both letters are \"{{letter}}\": no edit needed, {{value}} as on the diagonal.",
+        "change": "\"{{x}}\" ≠ \"{{y}}\": 1 + the cheapest of replace ({{replace}}), delete ({{remove}}) and insert ({{insert}}) = {{value}}.",
+        "done": "\"{{a}}\" becomes \"{{b}}\" in {{value}} edit(s)."
+      },
+      "grid-paths": {
+        "ready": "Count the paths through a {{rows}} × {{cols}} grid moving only right or down; {{blocked}} cell(s) are blocked.",
+        "blocked": "({{r}}, {{c}}) is blocked: no path goes through it.",
+        "start": "The top-left cell: one path, standing still.",
+        "add": "({{r}}, {{c}}): {{up}} from above + {{left}} from the left = {{ways}}.",
+        "done": "{{ways}} path(s) reach the bottom-right cell."
+      },
+      "word-break": {
+        "ready": "Can \"{{text}}\" be cut into the {{count}} dictionary word(s)?",
+        "end": "Can the first {{end}} letters, \"{{prefix}}\", be cut?",
+        "fits": "\"{{word}}\" ends here and letters before {{start}} can be cut: yes up to {{end}}.",
+        "none": "No word ends at {{end}} after a good cut: no.",
+        "done": "Yes: \"{{text}}\" splits into dictionary words.",
+        "fail": "No: \"{{text}}\" cannot be cut into dictionary words."
+      },
+      "matrix-chain": {
+        "ready": "Multiply {{n}} matrices in a row with the fewest scalar multiplications: the order of the brackets matters, the result does not.",
+        "span": "Now chains of {{span}} matrices.",
+        "split": "Matrices {{i}}..{{j}} split after {{k}}: {{left}} + {{right}} + {{join}} = {{total}}, the best so far.",
+        "worse": "Split after {{k}}: {{total}}, no better than {{best}}.",
+        "done": "All {{n}} matrices: {{total}} multiplications at best."
+      },
+      "bitmask-tsp": {
+        "ready": "Shortest round trip from city 0 through all {{n}} cities. Each row is a set of visited cities written as bits ({{rows}} rows).",
+        "extend": "From {{last}} on to {{city}}: {{total}}, the best so far for the set {{set}} ending at {{city}}.",
+        "close": "All cities visited: go back from {{last}} to 0 (+{{back}}), {{total}} in all.",
+        "done": "The shortest round trip through {{n}} cities is {{total}}."
+      },
+      "activity-selection": {
+        "ready": "{{n}} activities, one room: fit in as many as possible.",
+        "sorted": "Sort them by end time: the one that ends first leaves the most room.",
+        "take": "Activity {{k}} ({{start}}–{{end}}) starts after the room is free: take it.",
+        "clash": "Activity {{k}} starts at {{start}}, but the room is busy until {{free}}: skip it.",
+        "done": "{{count}} of {{n}} activities fit."
+      },
+      "merge-intervals": {
+        "ready": "Merge {{n}} intervals wherever they overlap or touch.",
+        "sorted": "Sort them by start.",
+        "open": "{{start}}–{{end}} starts after the last merged interval ends: open a new one.",
+        "extend": "{{start}}–{{end}} overlaps the last merged interval: it now ends at {{to}}.",
+        "done": "{{n}} intervals became {{count}}."
+      },
+      "jump-game": {
+        "ready": "From each of {{n}} squares you may jump forward up to its number. Can you reach the last square?",
+        "step": "Square {{i}} (jump {{jump}}) reaches no farther than {{reach}}.",
+        "farther": "Square {{i}} with a jump of {{jump}} reaches square {{reach}}: farther than before.",
+        "stuck": "Square {{i}} is beyond the farthest reach, {{reach}}: stuck.",
+        "done": "The last square, {{last}}, is reachable (reach {{reach}})."
+      },
+      "fractional-knapsack": {
+        "ready": "{{n}} items that can be cut, a bag of {{capacity}}: carry the most value.",
+        "sorted": "Sort them by value per unit of weight, best first.",
+        "take": "Item {{k}} (weight {{w}}, value {{v}}) fits whole: {{total}} so far, {{room}} room left.",
+        "part": "Item {{k}} weighs {{w}} but only {{room}} is left: take {{room}}/{{w}} of it, worth {{num}}/{{den}}.",
+        "done": "The bag is full: {{whole}} + {{num}}/{{den}} in value.",
+        "all": "Everything fits: {{total}} in value."
+      },
+      "huffman-coding": {
+        "ready": "Build a prefix code for {{n}} symbols: the more frequent a symbol, the shorter its code.",
+        "merge": "Join the two lightest trees, {{a}} and {{b}}, under a new node of {{sum}}.",
+        "done": "{{bits}} bits in all, against {{fixed}} with a fixed-length code."
       }
     },
     "compare": {

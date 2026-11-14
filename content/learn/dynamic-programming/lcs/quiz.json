@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input: planet and anklet. The last letters are both t, and best[5][5] = 3. What is the corner cell best[6][6]?",
+    "prompt_es": "Entrada por defecto: planet y anklet. Las dos últimas letras son t, y best[5][5] = 3. ¿Cuánto vale la celda de la esquina best[6][6]?",
+    "options": [
+      { "en": "3: the larger of up and left", "es": "3: la mayor entre arriba e izquierda" },
+      { "en": "5: the length of the shorter word minus one", "es": "5: la longitud de la palabra más corta menos uno" },
+      { "en": "4: the diagonal plus one", "es": "4: la diagonal más uno" }
+    ],
+    "answer": 2,
+    "explain_en": "On a match the cell is the diagonal plus one: best[5][5] + 1 = 4. The t closes the shared subsequence ante.",
+    "explain_es": "Si las letras coinciden, la celda es la diagonal más uno: best[5][5] + 1 = 4. La t cierra la subsecuencia compartida ante."
+  },
+  {
+    "prompt_en": "On a mismatch where the cell above and the cell to the left hold the same value, where does the sample's traceback go?",
+    "prompt_es": "Si las letras no coinciden y la celda de arriba y la de la izquierda valen lo mismo, ¿hacia dónde va la reconstrucción del ejemplo?",
+    "options": [
+      { "en": "Up", "es": "Hacia arriba" },
+      { "en": "Left", "es": "Hacia la izquierda" },
+      { "en": "Diagonally, recording the letter", "es": "En diagonal, apuntando la letra" }
+    ],
+    "answer": 0,
+    "explain_en": "The test is best[i - 1][j] >= best[i][j - 1], so a tie goes up. A letter is recorded only on a match.",
+    "explain_es": "La comprobación es best[i - 1][j] >= best[i][j - 1], así que un empate sube. Solo se apunta una letra cuando coinciden."
+  },
+  {
+    "prompt_en": "Why does the table have an extra row and column of zeros?",
+    "prompt_es": "¿Por qué la tabla tiene una fila y una columna extra de ceros?",
+    "options": [
+      { "en": "To store the answer", "es": "Para guardar la respuesta" },
+      { "en": "They stand for an empty prefix, which shares nothing with any word", "es": "Representan un prefijo vacío, que no comparte nada con ninguna palabra" },
+      { "en": "To mark the letters that matched", "es": "Para marcar las letras que coincidieron" }
+    ],
+    "answer": 1,
+    "explain_en": "Cells in row 1 and column 1 read the diagonal, up or left; the zeros give them the answer for an empty prefix without special cases.",
+    "explain_es": "Las celdas de la fila 1 y la columna 1 leen la diagonal, arriba o la izquierda; los ceros les dan la respuesta de un prefijo vacío sin casos especiales."
+  }
+]

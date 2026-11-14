@@ -45,4 +45,4 @@ La salida es `[2]`: 6 + 6. El voraz se comprometió con el 9 y nunca miró atrá
 - [Corte de barras (mochila sin límite)](learn:dynamic-programming/rod-cutting): la misma reutilización de piezas, maximizando un precio.
 - [Mochila 0/1](learn:dynamic-programming/knapsack-01): cuando cada objeto solo se puede usar una vez.
 - [Búsqueda en anchura (BFS)](learn:graphs/bfs): los totales como nodos y las monedas como aristas; el mínimo de monedas es el mínimo de aristas desde 0.
-- Algoritmos voraces (próximamente): cuándo la elección voraz es segura y cómo demostrarlo.
+- [Selección de actividades](learn:greedy/activity-selection): cuándo la elección voraz es segura y cómo argumentarlo.

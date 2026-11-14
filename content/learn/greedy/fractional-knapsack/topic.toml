@@ -1,0 +1,28 @@
+id = "fractional-knapsack"
+subject = "greedy"
+order = 2
+title = "Fractional knapsack"
+title_es = "Mochila fraccionaria"
+tags = ["greedy", "knapsack"]
+problems = ["spice-market"]
+presets = ["spice-shelf", "random", "all-fit"]
+default = [10, 4, 12, 6, 9, 3, 12, 5, 5]
+
+[complexity]
+best = "O(n log n)"
+average = "O(n log n)"
+worst = "O(n log n)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 13
+min = 1
+max = 20
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = fractional(a[0], kb_chunks(a[1:], 2))"
+typescript = "a = fractional(a[0], kbChunks(a.slice(1), 2))"

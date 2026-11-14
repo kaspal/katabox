@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input dims = [8, 20, 4, 30]. What does the order A(BC) cost?",
+    "prompt_es": "Entrada por defecto dims = [8, 20, 4, 30]. ¿Cuánto cuesta el orden A(BC)?",
+    "options": [
+      { "en": "1600", "es": "1600" },
+      { "en": "7200", "es": "7200" },
+      { "en": "2400", "es": "2400" }
+    ],
+    "answer": 1,
+    "explain_en": "BC costs 20 · 4 · 30 = 2400 and gives a 20 × 30 matrix; A times it costs 8 · 20 · 30 = 4800. 1600 is the other order, (AB)C.",
+    "explain_es": "BC cuesta 20 · 4 · 30 = 2400 y da una matriz 20 × 30; A por ella cuesta 8 · 20 · 30 = 4800. 1600 es el otro orden, (AB)C."
+  },
+  {
+    "prompt_en": "Why does the sample fill the table by span (one diagonal at a time) instead of row by row?",
+    "prompt_es": "¿Por qué el ejemplo rellena la tabla por longitud de tramo (una diagonal cada vez) en lugar de fila a fila?",
+    "options": [
+      { "en": "Each range needs the shorter ranges inside it, which may lie in later rows", "es": "Cada tramo necesita los tramos más cortos que contiene, que pueden estar en filas posteriores" },
+      { "en": "It skips the splits that cost too much", "es": "Se salta los cortes que cuestan demasiado" },
+      { "en": "The diagonal holds the answer", "es": "La diagonal guarda la respuesta" }
+    ],
+    "answer": 0,
+    "explain_en": "cost[0][2] reads cost[1][2], one row down. Filling every span of 2 before any span of 3 makes sure it is ready. The answer is in the top-right corner.",
+    "explain_es": "cost[0][2] lee cost[1][2], una fila más abajo. Rellenar todos los tramos de 2 antes que cualquier tramo de 3 garantiza que está listo. La respuesta está en la esquina superior derecha."
+  },
+  {
+    "prompt_en": "For the split k inside the range i..j, which product is the cost of the last multiplication?",
+    "prompt_es": "Para el corte k dentro del tramo i..j, ¿qué producto es el coste de la última multiplicación?",
+    "options": [
+      { "en": "dims[i] · dims[k] · dims[j]", "es": "dims[i] · dims[k] · dims[j]" },
+      { "en": "dims[k] · dims[k + 1] · dims[k + 2]", "es": "dims[k] · dims[k + 1] · dims[k + 2]" },
+      { "en": "dims[i] · dims[k + 1] · dims[j + 1]", "es": "dims[i] · dims[k + 1] · dims[j + 1]" }
+    ],
+    "answer": 2,
+    "explain_en": "The left part is dims[i] × dims[k + 1] and the right part is dims[k + 1] × dims[j + 1], so the product costs their three sizes multiplied.",
+    "explain_es": "La parte izquierda es dims[i] × dims[k + 1] y la derecha dims[k + 1] × dims[j + 1], así que el producto cuesta esos tres tamaños multiplicados."
+  }
+]

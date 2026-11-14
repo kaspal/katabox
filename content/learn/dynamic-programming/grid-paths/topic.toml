@@ -1,0 +1,28 @@
+id = "grid-paths"
+subject = "dynamic-programming"
+order = 11
+title = "Paths through a grid"
+title_es = "Caminos por una cuadrícula"
+tags = ["dynamic-programming", "grid"]
+problems = ["blocked-walks", "orchard-path"]
+presets = ["a-few-blocks", "random", "walled-off"]
+default = [5, 6, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+[complexity]
+best = "O(R · C)"
+average = "O(R · C)"
+worst = "O(R · C)"
+space = "O(R · C)"
+stable = true
+in_place = true
+
+[input]
+min_len = 4
+max_len = 66
+min = 0
+max = 8
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = grid_paths(a[0], a[1], a[2:])"
+typescript = "a = gridPaths(a[0], a[1], a.slice(2))"

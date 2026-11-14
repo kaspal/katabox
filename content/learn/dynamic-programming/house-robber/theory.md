@@ -47,4 +47,4 @@ The skip-or-take choice with a "no two in a row" rule fits shift planning, picki
 - [Climbing stairs](learn:dynamic-programming/climbing-stairs): the same look-back of two cells, adding instead of choosing.
 - [0/1 knapsack](learn:dynamic-programming/knapsack-01): take or leave each item, with a capacity instead of neighbours.
 - [Maximum subarray (Kadane)](learn:dynamic-programming/maximum-subarray): a different rule over a row of values.
-- Longest increasing subsequence (coming soon): choosing items in order with a traceback.
+- [Longest increasing subsequence](learn:dynamic-programming/lis): choosing items in order with a traceback.

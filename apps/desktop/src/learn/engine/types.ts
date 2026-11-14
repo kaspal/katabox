@@ -125,6 +125,8 @@ export type SceneData = {
   grid?: GridData;
   /** A dynamic programming table (Phases 7-8). */
   dp?: DPData;
+  /** Intervals on a time line (Phase 8). */
+  timeline?: TimelineData;
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
    * not the final row). cases.json `output` comes from here, so it is the tracer's own. */
   result?: number[];
@@ -195,6 +197,18 @@ export type DPData = {
   deps?: [number, number][];
   /** The traceback, once the table is full. */
   path?: [number, number][];
+  /** Cells that cannot be used (a blocked grid square), drawn solid. */
+  blocked?: [number, number][];
+};
+
+/** Intervals on a time line (Phase 8): one lane per interval, a moment, a result lane. */
+export type TimelineData = {
+  min: number;
+  max: number;
+  bars: { id: number; start: number; end: number; role?: Role }[];
+  mark?: number | null;
+  output?: { start: number; end: number; role?: Role }[];
+  outputLabel?: RowLabel;
 };
 
 export type ForestNode = {
@@ -258,7 +272,8 @@ export type SceneKind =
   | "bits-array"
   | "graph"
   | "grid"
-  | "dp";
+  | "dp"
+  | "timeline";
 
 /** How a topic's input is shaped. Inputs are always one flat list of integers (the DB and
  * the sample driver see only that):

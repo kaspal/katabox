@@ -1,0 +1,28 @@
+id = "lcs"
+subject = "dynamic-programming"
+order = 9
+title = "Longest common subsequence"
+title_es = "Subsecuencia común más larga"
+tags = ["dynamic-programming", "strings"]
+problems = ["shared-melody"]
+presets = ["shared-letters", "random", "nothing-shared"]
+default = [15, 11, 0, 13, 4, 19, -1, 0, 13, 10, 11, 4, 19]
+
+[complexity]
+best = "O(m · n)"
+average = "O(m · n)"
+worst = "O(m · n)"
+space = "O(m · n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 17
+min = -1
+max = 25
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = lcs(*kb_text(a))"
+typescript = "a = lcs(...(kbText(a) as [string, string]))"

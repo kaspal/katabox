@@ -43,4 +43,4 @@ La salida es `[19, 1, 2]`. Los objetos 0, 2 y 3 dan 2 por unidad de peso, pero c
 - [Corte de barras (mochila sin límite)](learn:dynamic-programming/rod-cutting): la misma tabla cuando un objeto se puede repetir.
 - [Cambio de monedas](learn:dynamic-programming/coin-change): llegar a un total exacto con piezas reutilizables.
 - [El ladrón de casas](learn:dynamic-programming/house-robber): tomar o saltar, con una tabla de una dimensión.
-- Programación dinámica con máscaras de bits (próximamente).
+- [Viajante de comercio (PD con máscaras)](learn:dynamic-programming/bitmask-tsp): una tabla sobre subconjuntos de ciudades.

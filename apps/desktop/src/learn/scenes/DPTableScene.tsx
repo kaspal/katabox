@@ -75,9 +75,10 @@ export function DPTableScene({ step, instant, def }: SceneProps) {
             ))}
             {dp.cells.map((row, r) =>
               row.map((v, c) => {
-                const role: Role = hot && hot[0] === r && hot[1] === c ? "key" : has(dp.deps, r, c) ? "compare" : has(dp.path, r, c) ? "swap" : v === null ? "idle" : "sorted";
+                const blocked = has(dp.blocked, r, c);
+                const role: Role = blocked ? "idle" : hot && hot[0] === r && hot[1] === c ? "key" : has(dp.deps, r, c) ? "compare" : has(dp.path, r, c) ? "swap" : v === null ? "idle" : "sorted";
                 return (
-                  <g key={`${r}-${c}`} transform={`translate(${left + head + c * size},${top + GRID + r * size})`} data-cell={`${r}-${c}`} data-role={role}>
+                  <g key={`${r}-${c}`} transform={`translate(${left + head + c * size},${top + GRID + r * size})`} data-cell={`${r}-${c}`} data-role={blocked ? "blocked" : role}>
                     <rect
                       x={1}
                       y={1}
@@ -85,14 +86,14 @@ export function DPTableScene({ step, instant, def }: SceneProps) {
                       height={size - 2}
                       rx={4}
                       style={{
-                        fill: role === "idle" ? "var(--card)" : `color-mix(in srgb, ${roleColor(role)} ${role === "sorted" ? 12 : 28}%, var(--card))`,
-                        stroke: role === "idle" ? "var(--viz-out)" : roleColor(role),
+                        fill: blocked ? "var(--viz-edge)" : role === "idle" ? "var(--card)" : `color-mix(in srgb, ${roleColor(role)} ${role === "sorted" ? 12 : 28}%, var(--card))`,
+                        stroke: blocked ? "var(--viz-edge)" : role === "idle" ? "var(--viz-out)" : roleColor(role),
                         transition: tr.colors,
                       }}
                       strokeWidth={role === "key" || role === "swap" ? 2.5 : 1}
                       strokeDasharray={outline(role).strokeDasharray}
                     />
-                    {v !== null && (
+                    {v !== null && !blocked && (
                       <text x={size / 2} y={size / 2 + 4} textAnchor="middle" className="fill-foreground font-mono" style={{ fontSize: size < 26 ? 10 : 12 }}>
                         {v === Infinity || v >= 1e6 ? "∞" : v}
                       </text>

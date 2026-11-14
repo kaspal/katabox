@@ -45,4 +45,4 @@ Use it for exact change, making a target from fixed step sizes, or any "fewest p
 - [Rod cutting (unbounded knapsack)](learn:dynamic-programming/rod-cutting): the same reuse of pieces, maximising a price instead.
 - [0/1 knapsack](learn:dynamic-programming/knapsack-01): when each item can be used only once.
 - [Breadth-first search](learn:graphs/bfs): totals as nodes and coins as edges; the fewest coins is the fewest edges from 0.
-- Greedy algorithms (coming soon): when the greedy choice is safe, and how to prove it.
+- [Activity selection](learn:greedy/activity-selection): when the greedy choice is safe, and how to argue it.

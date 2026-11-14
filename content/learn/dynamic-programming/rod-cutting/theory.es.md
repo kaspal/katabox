@@ -45,4 +45,4 @@ Usa el patrón sin límite siempre que las piezas se puedan repetir: cortar mate
 - [Mochila 0/1](learn:dynamic-programming/knapsack-01): la versión en la que cada objeto se usa como mucho una vez.
 - [Cambio de monedas](learn:dynamic-programming/coin-change): otra vez piezas reutilizables, minimizando una cuenta.
 - [Subir escaleras](learn:dynamic-programming/climbing-stairs): otra regla de "primer trozo y después el resto".
-- Multiplicación de cadenas de matrices (próximamente): elegir dónde partir, sobre intervalos.
+- [Multiplicación de cadenas de matrices](learn:dynamic-programming/matrix-chain): elegir dónde partir, sobre intervalos.

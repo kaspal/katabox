@@ -1,0 +1,28 @@
+id = "matrix-chain"
+subject = "dynamic-programming"
+order = 13
+title = "Matrix chain multiplication"
+title_es = "Multiplicación de cadenas de matrices"
+tags = ["dynamic-programming", "interval-dp"]
+problems = ["log-cutting"]
+presets = ["order-matters", "random", "long-chain"]
+default = [8, 20, 4, 30]
+
+[complexity]
+best = "O(n³)"
+average = "O(n³)"
+worst = "O(n³)"
+space = "O(n²)"
+stable = true
+in_place = true
+
+[input]
+min_len = 3
+max_len = 7
+min = 1
+max = 30
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = matrix_chain(a)"
+typescript = "a = matrixChain(a)"

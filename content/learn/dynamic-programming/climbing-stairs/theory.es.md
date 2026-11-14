@@ -48,4 +48,4 @@ El patrón "contar las formas de construir una longitud `n` con piezas" sirve pa
 - [Fibonacci: memo y tabla](learn:dynamic-programming/fibonacci-memo-table): la misma regla y las dos formas de calcularla.
 - [El ladrón de casas](learn:dynamic-programming/house-robber): otra tabla que mira dos celdas atrás.
 - [Cambio de monedas](learn:dynamic-programming/coin-change): piezas de varios tamaños, contando el mínimo en vez de las formas.
-- Caminos en una cuadrícula (próximamente): contar rutas en dos dimensiones.
+- [Caminos por una cuadrícula](learn:dynamic-programming/grid-paths): contar rutas en dos dimensiones.

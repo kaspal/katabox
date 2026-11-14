@@ -44,4 +44,4 @@ Reach for dynamic programming when a recursive answer keeps asking the same ques
 - [Recursion and the call stack](learn:foundations/recursion-call-stack): the calls the memo cuts short.
 - [Big-O growth curves](learn:foundations/big-o-growth): exponential against linear growth.
 - [Climbing stairs](learn:dynamic-programming/climbing-stairs): the same rule in disguise.
-- Longest common subsequence (coming soon): a table with two dimensions.
+- [Longest common subsequence](learn:dynamic-programming/lcs): a table with two dimensions.

@@ -1,0 +1,28 @@
+id = "activity-selection"
+subject = "greedy"
+order = 1
+title = "Activity selection"
+title_es = "Selección de actividades"
+tags = ["greedy", "intervals"]
+problems = ["most-talks"]
+presets = ["long-meeting", "random", "back-to-back"]
+default = [1, 4, 3, 5, 0, 10, 5, 7, 4, 6, 6, 9, 8, 11, 9, 12]
+
+[complexity]
+best = "O(n log n)"
+average = "O(n log n)"
+worst = "O(n log n)"
+space = "O(n)"
+stable = true
+in_place = true
+
+[input]
+min_len = 2
+max_len = 20
+min = 0
+max = 24
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = select(kb_chunks(a, 2))"
+typescript = "a = select(kbChunks(a, 2))"

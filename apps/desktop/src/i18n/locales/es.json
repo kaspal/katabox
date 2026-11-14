@@ -986,7 +986,10 @@
         "stored": "guardados",
         "filled": "rellenados",
         "records": "nuevos mejores",
-        "values_read": "valores leídos"
+        "values_read": "valores leídos",
+        "merged_in": "fusionados",
+        "opened": "abiertos",
+        "merges": "uniones"
       },
       "rows": {
         "prefix": "Sumas prefijas",
@@ -1018,7 +1021,22 @@
         "fewest": "Menos monedas para cada total",
         "items": "Objetos (peso/valor)",
         "best_value": "Mejor valor",
-        "prices": "Precios (longitud:precio)"
+        "prices": "Precios (longitud:precio)",
+        "values": "Valores",
+        "lis_length": "Subsecuencia más larga que acaba aquí",
+        "lcs_length": "Longitud de la subsecuencia común",
+        "edits": "Ediciones necesarias",
+        "paths": "Caminos hasta cada celda",
+        "letters": "Texto",
+        "breakable": "¿Se pueden cortar las primeras letras? (1 sí, 0 no)",
+        "dictionary": "Palabras",
+        "matrices": "Matrices",
+        "multiplications": "Menos multiplicaciones para las matrices i..j",
+        "route_length": "Ruta más corta (filas: ciudades visitadas, en bits; columnas: última ciudad)",
+        "chosen": "Elegidas",
+        "merged": "Fusionados",
+        "weights": "Pesos",
+        "trees_by_weight": "Árboles por peso (el más ligero primero)"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -1056,7 +1074,8 @@
         "grey": "gris"
       },
       "summary_graph": "Grafo de {{n}} nodos: {{nodes}}. Aristas: {{edges}}.",
-      "summary_grid": "Una cuadrícula de {{rows}} por {{cols}}: {{map}}."
+      "summary_grid": "Una cuadrícula de {{rows}} por {{cols}}: {{map}}.",
+      "summary_timeline": "Intervalos: {{bars}}. Resultado: {{output}}."
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -1191,7 +1210,13 @@
       "filled": "Rellenada",
       "taken": "Tomado",
       "current_run": "Tramo actual",
-      "best_run": "Mejor tramo hasta ahora"
+      "best_run": "Mejor tramo hasta ahora",
+      "growing": "Creciendo",
+      "reachable": "Alcanzable",
+      "not_reached": "Aún no alcanzada",
+      "stuck_here": "Atascado aquí",
+      "part_taken": "Tomado en parte",
+      "merged_pair": "Unido bajo el nodo nuevo"
     },
     "controls": {
       "label": "Reproducción",
@@ -1293,7 +1318,28 @@
         "cannot-make": "No se puede formar",
         "one-heavy": "Un objeto pesado",
         "cut-pays": "Cortar compensa",
-        "whole-rod": "Mejor entera"
+        "whole-rod": "Mejor entera",
+        "a-few-blocks": "Unos pocos bloqueos",
+        "walled-off": "Amurallado",
+        "splits": "Se puede cortar",
+        "dead-end": "Un callejón sin salida",
+        "order-matters": "El orden importa",
+        "long-chain": "Una cadena larga",
+        "four-towns": "Cuatro pueblos",
+        "five-towns": "Cinco pueblos",
+        "long-meeting": "Una reunión larga",
+        "back-to-back": "Seguidas",
+        "bookings": "Reservas",
+        "nested-and-touching": "Anidados y tocándose",
+        "zero-trap": "La trampa del cero",
+        "long-leaps": "Saltos largos",
+        "spice-shelf": "Un estante de especias",
+        "all-fit": "Todo cabe",
+        "even": "Frecuencias iguales",
+        "shared-letters": "Letras compartidas",
+        "nothing-shared": "Nada en común",
+        "near-miss": "Por poco",
+        "swapped-letters": "Letras cambiadas"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1343,7 +1389,13 @@
           "maze_seed": "La semilla va de 1 a {{max}}.",
           "item_pair": "Escribe cada objeto como peso valor (\"{{item}}\").",
           "capacity_range": "La capacidad va de 1 a {{max}}.",
-          "item_count": "Usa de {{min}} a {{max}} objetos."
+          "item_count": "Usa de {{min}} a {{max}} objetos.",
+          "interval_pair": "Escribe cada intervalo como inicio fin (\"{{item}}\").",
+          "interval_count": "Usa de {{min}} a {{max}} intervalos.",
+          "interval_range": "Cada intervalo empieza antes de terminar, entre {{min}} y {{max}}.",
+          "matrix_shape": "Escribe {{n}} filas de {{n}} distancias.",
+          "matrix_diagonal": "Una ciudad está a 0 de sí misma.",
+          "matrix_symmetric": "La distancia de {{i}} a {{j}} debe ser igual a la de vuelta."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1369,7 +1421,12 @@
         "size": "Tamaño k (2k+1 celdas por lado)",
         "seed": "Semilla",
         "amount": "Cantidad",
-        "items": "Objetos (peso valor, …)"
+        "items": "Objetos (peso valor, …)",
+        "first": "Primera palabra",
+        "second": "Segunda palabra",
+        "map": "Mapa (filas separadas por /; . libre, # bloqueada)",
+        "distances": "Distancias (una fila por ciudad, filas separadas por comas)",
+        "intervals": "Intervalos (inicio fin, …)"
       }
     },
     "tabs": {
@@ -1454,7 +1511,12 @@
       "maze": "Laberinto",
       "memoization": "Memoización",
       "knapsack": "Mochila",
-      "array": "Arreglo"
+      "array": "Arreglo",
+      "greedy": "Voraz",
+      "intervals": "Intervalos",
+      "bitmask": "Máscara de bits",
+      "interval-dp": "PD sobre intervalos",
+      "huffman": "Codificación de Huffman"
     },
     "narration": {
       "bubble-sort": {
@@ -2203,6 +2265,88 @@
         "improve": "Primer trozo {{cut}} y luego lo mejor para {{rest}}: {{value}}, lo mejor por ahora.",
         "trace": "Corta un trozo de {{piece}}; quedan {{left}}.",
         "done": "Una barra de {{n}} gana como mucho {{best}}, en {{count}} trozo(s)."
+      },
+      "lis": {
+        "ready": "Encuentra la subsecuencia estrictamente creciente más larga de {{n}} valores (no hace falta que estén juntos).",
+        "start": "El valor {{value}} en {{i}}: por sí solo, una subsecuencia de 1.",
+        "extend": "{{a}} (en {{j}}) es menor que {{b}}: alarga su subsecuencia hasta {{length}}.",
+        "trace": "Lee la subsecuencia hacia atrás: {{value}} (en {{k}}).",
+        "done": "La subsecuencia creciente más larga tiene {{length}} valor(es)."
+      },
+      "lcs": {
+        "ready": "Subsecuencia común más larga de \"{{a}}\" y \"{{b}}\": letras en el mismo orden, no necesariamente juntas.",
+        "match": "Las dos letras son \"{{letter}}\": una más que la diagonal, {{value}}.",
+        "carry": "\"{{x}}\" ≠ \"{{y}}\": quédate con lo mejor de arriba y de la izquierda, {{value}}.",
+        "trace": "Desde la esquina: \"{{letter}}\" está en la subsecuencia común.",
+        "done": "La subsecuencia común más larga es \"{{word}}\" ({{length}} letra(s))."
+      },
+      "edit-distance": {
+        "ready": "Menos ediciones de una letra (insertar, borrar, sustituir) para convertir \"{{a}}\" en \"{{b}}\". Fila 0 y columna 0: construir desde nada o hasta nada.",
+        "same": "Las dos letras son \"{{letter}}\": no hace falta editar, {{value}} como en la diagonal.",
+        "change": "\"{{x}}\" ≠ \"{{y}}\": 1 + lo más barato entre sustituir ({{replace}}), borrar ({{remove}}) e insertar ({{insert}}) = {{value}}.",
+        "done": "\"{{a}}\" se convierte en \"{{b}}\" con {{value}} edición(es)."
+      },
+      "grid-paths": {
+        "ready": "Cuenta los caminos por una cuadrícula de {{rows}} × {{cols}} moviéndose solo a la derecha o hacia abajo; hay {{blocked}} celda(s) bloqueada(s).",
+        "blocked": "({{r}}, {{c}}) está bloqueada: ningún camino pasa por ella.",
+        "start": "La celda de arriba a la izquierda: un camino, quedarse quieto.",
+        "add": "({{r}}, {{c}}): {{up}} desde arriba + {{left}} desde la izquierda = {{ways}}.",
+        "done": "{{ways}} camino(s) llegan a la celda de abajo a la derecha."
+      },
+      "word-break": {
+        "ready": "¿Se puede cortar \"{{text}}\" en las {{count}} palabra(s) del diccionario?",
+        "end": "¿Se pueden cortar las primeras {{end}} letras, \"{{prefix}}\"?",
+        "fits": "\"{{word}}\" acaba aquí y las letras antes de {{start}} se pueden cortar: sí hasta {{end}}.",
+        "none": "Ninguna palabra acaba en {{end}} tras un buen corte: no.",
+        "done": "Sí: \"{{text}}\" se divide en palabras del diccionario.",
+        "fail": "No: \"{{text}}\" no se puede cortar en palabras del diccionario."
+      },
+      "matrix-chain": {
+        "ready": "Multiplica {{n}} matrices seguidas con las menos multiplicaciones escalares posibles: el orden de los paréntesis importa, el resultado no.",
+        "span": "Ahora cadenas de {{span}} matrices.",
+        "split": "Matrices {{i}}..{{j}} partidas tras {{k}}: {{left}} + {{right}} + {{join}} = {{total}}, lo mejor por ahora.",
+        "worse": "Partir tras {{k}}: {{total}}, no mejora {{best}}.",
+        "done": "Las {{n}} matrices: {{total}} multiplicaciones como mínimo."
+      },
+      "bitmask-tsp": {
+        "ready": "Viaje de ida y vuelta más corto desde la ciudad 0 por las {{n}} ciudades. Cada fila es un conjunto de ciudades visitadas escrito en bits ({{rows}} filas).",
+        "extend": "De {{last}} a {{city}}: {{total}}, lo mejor por ahora para el conjunto {{set}} acabando en {{city}}.",
+        "close": "Todas las ciudades visitadas: vuelve de {{last}} a 0 (+{{back}}), {{total}} en total.",
+        "done": "El viaje de ida y vuelta más corto por {{n}} ciudades mide {{total}}."
+      },
+      "activity-selection": {
+        "ready": "{{n}} actividades, una sala: haz que quepan todas las posibles.",
+        "sorted": "Ordénalas por hora de fin: la que acaba antes deja más sitio.",
+        "take": "La actividad {{k}} ({{start}}–{{end}}) empieza con la sala libre: tómala.",
+        "clash": "La actividad {{k}} empieza a las {{start}}, pero la sala está ocupada hasta las {{free}}: sáltala.",
+        "done": "Caben {{count}} de {{n}} actividades."
+      },
+      "merge-intervals": {
+        "ready": "Fusiona {{n}} intervalos allí donde se solapen o se toquen.",
+        "sorted": "Ordénalos por inicio.",
+        "open": "{{start}}–{{end}} empieza después de que acabe el último fusionado: abre uno nuevo.",
+        "extend": "{{start}}–{{end}} se solapa con el último fusionado: ahora acaba en {{to}}.",
+        "done": "{{n}} intervalos quedaron en {{count}}."
+      },
+      "jump-game": {
+        "ready": "Desde cada una de las {{n}} casillas puedes saltar hacia delante hasta su número. ¿Llegas a la última?",
+        "step": "La casilla {{i}} (salto {{jump}}) no llega más allá de {{reach}}.",
+        "farther": "La casilla {{i}} con un salto de {{jump}} llega a la casilla {{reach}}: más lejos que antes.",
+        "stuck": "La casilla {{i}} está más allá del alcance máximo, {{reach}}: atascado.",
+        "done": "La última casilla, {{last}}, se alcanza (alcance {{reach}})."
+      },
+      "fractional-knapsack": {
+        "ready": "{{n}} objetos que se pueden partir y una bolsa de {{capacity}}: lleva el mayor valor posible.",
+        "sorted": "Ordénalos por valor por unidad de peso, el mejor primero.",
+        "take": "El objeto {{k}} (peso {{w}}, valor {{v}}) cabe entero: {{total}} por ahora, quedan {{room}} de sitio.",
+        "part": "El objeto {{k}} pesa {{w}} pero solo quedan {{room}}: toma {{room}}/{{w}} de él, que vale {{num}}/{{den}}.",
+        "done": "La bolsa está llena: {{whole}} + {{num}}/{{den}} de valor.",
+        "all": "Todo cabe: {{total}} de valor."
+      },
+      "huffman-coding": {
+        "ready": "Construye un código de prefijos para {{n}} símbolos: cuanto más frecuente un símbolo, más corto su código.",
+        "merge": "Une los dos árboles más ligeros, {{a}} y {{b}}, bajo un nodo nuevo de {{sum}}.",
+        "done": "{{bits}} bits en total, frente a {{fixed}} con un código de longitud fija."
       }
     },
     "compare": {

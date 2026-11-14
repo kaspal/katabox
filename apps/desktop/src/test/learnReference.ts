@@ -882,6 +882,182 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
     }
     return [best(prices.length), ...pieces];
   },
+  // Dynamic programming, part 2, and greedy.
+  lis: (values) => {
+    // Top-down: L(i) = 1 + the best L(j) of a smaller earlier value (first j on ties).
+    const memo = new Map<number, [number, number]>();
+    const L = (i: number): [number, number] => {
+      if (!memo.has(i)) {
+        let best: [number, number] = [1, -1];
+        for (let j = 0; j < i; j++) if (values[j]! < values[i]! && L(j)[0] + 1 > best[0]) best = [L(j)[0] + 1, j];
+        memo.set(i, best);
+      }
+      return memo.get(i)!;
+    };
+    let end = 0;
+    for (let k = 1; k < values.length; k++) if (L(k)[0] > L(end)[0]) end = k;
+    const chain: number[] = [];
+    for (let k = end; k !== -1; k = L(k)[1]) chain.unshift(values[k]!);
+    return [chain.length, ...chain];
+  },
+  lcs: (input) => {
+    const [a, b] = words(input) as [string, string];
+    const memo = new Map<string, number>();
+    const L = (i: number, j: number): number => {
+      if (i === 0 || j === 0) return 0;
+      const key = `${i},${j}`;
+      if (!memo.has(key)) memo.set(key, a[i - 1] === b[j - 1] ? L(i - 1, j - 1) + 1 : Math.max(L(i - 1, j), L(i, j - 1)));
+      return memo.get(key)!;
+    };
+    const out: number[] = [];
+    for (let i = a.length, j = b.length; i > 0 && j > 0; ) {
+      if (a[i - 1] === b[j - 1]) {
+        out.unshift(a.charCodeAt(i - 1) - 97);
+        i--;
+        j--;
+      } else if (L(i - 1, j) >= L(i, j - 1)) i--;
+      else j--;
+    }
+    return [out.length, ...out];
+  },
+  "edit-distance": (input) => {
+    const [a, b] = words(input) as [string, string];
+    const memo = new Map<string, number>();
+    const D = (i: number, j: number): number => {
+      if (i === 0) return j;
+      if (j === 0) return i;
+      const key = `${i},${j}`;
+      if (!memo.has(key)) memo.set(key, a[i - 1] === b[j - 1] ? D(i - 1, j - 1) : 1 + Math.min(D(i - 1, j - 1), D(i - 1, j), D(i, j - 1)));
+      return memo.get(key)!;
+    };
+    return [D(a.length, b.length)];
+  },
+  "grid-paths": ([rows, cols, ...cells]) => {
+    // Walk every right/down path.
+    const walk = (r: number, c: number): number => {
+      if (r >= rows! || c >= cols! || cells[r * cols! + c] === 1) return 0;
+      if (r === rows! - 1 && c === cols! - 1) return 1;
+      return walk(r + 1, c) + walk(r, c + 1);
+    };
+    return [walk(0, 0)];
+  },
+  "word-break": (input) => {
+    const [text, ...dict] = words(input);
+    const memo = new Map<number, boolean>();
+    const can = (from: number): boolean => {
+      if (from === text!.length) return true;
+      if (!memo.has(from)) memo.set(from, dict.some((w) => text!.startsWith(w, from) && can(from + w.length)));
+      return memo.get(from)!;
+    };
+    return [can(0) ? 1 : 0];
+  },
+  "matrix-chain": (dims) => {
+    // Every bracketing, recursively, without a table.
+    const best = (i: number, j: number): number => {
+      if (i === j) return 0;
+      let m = Infinity;
+      for (let k = i; k < j; k++) m = Math.min(m, best(i, k) + best(k + 1, j) + dims[i]! * dims[k + 1]! * dims[j + 1]!);
+      return m;
+    };
+    return [best(0, dims.length - 2)];
+  },
+  "bitmask-tsp": ([n, ...flat]) => {
+    // Every order of the other cities.
+    const d = (i: number, j: number) => flat[i * n! + j]!;
+    const rest = Array.from({ length: n! - 1 }, (_, k) => k + 1);
+    let best = Infinity;
+    const permute = (left: number[], at: number, sum: number) => {
+      if (!left.length) {
+        best = Math.min(best, sum + d(at, 0));
+        return;
+      }
+      left.forEach((c, k) => permute([...left.slice(0, k), ...left.slice(k + 1)], c, sum + d(at, c)));
+    };
+    permute(rest, 0, 0);
+    return [best];
+  },
+  "activity-selection": (input) => {
+    // The count by brute force over subsets; the set by repeatedly taking the compatible
+    // activity that ends first (ties: earlier start, then earlier input).
+    const iv = Array.from({ length: input.length / 2 }, (_, k) => [input[2 * k]!, input[2 * k + 1]!, k] as const);
+    let most = 0;
+    for (let mask = 0; mask < 1 << iv.length; mask++) {
+      const pick = iv.filter((_, k) => mask & (1 << k)).sort((x, y) => x[0] - y[0]);
+      if (pick.every((x, k) => k === 0 || pick[k - 1]![1] <= x[0])) most = Math.max(most, pick.length);
+    }
+    const chosen: number[] = [];
+    let free = -Infinity;
+    for (;;) {
+      const next = iv.filter((x) => x[0] >= free && !chosen.includes(x[2])).sort((x, y) => x[1] - y[1] || x[0] - y[0] || x[2] - y[2])[0];
+      if (!next) break;
+      chosen.push(next[2]);
+      free = next[1];
+    }
+    return chosen.length === most ? [most, ...chosen.sort((x, y) => x - y)] : [-1];
+  },
+  "fractional-knapsack": ([capacity, ...flat]) => {
+    // Exact: compare ratios by cross-multiplication, keep the answer as a fraction.
+    const items = Array.from({ length: flat.length / 2 }, (_, k) => ({ w: flat[2 * k]!, v: flat[2 * k + 1]!, k }));
+    items.sort((a, b) => b.v * a.w - a.v * b.w || a.k - b.k);
+    let num = 0;
+    let den = 1;
+    let room = capacity!;
+    for (const it of items) {
+      const take = Math.min(room, it.w);
+      // num/den += it.v * take / it.w
+      num = num * it.w + it.v * take * den;
+      den = den * it.w;
+      room -= take;
+      if (!room) break;
+    }
+    const g = (x: number, y: number): number => (y === 0 ? x : g(y, x % y));
+    const k = g(num, den);
+    num /= k;
+    den /= k;
+    return [Math.floor(num / den), num % den, den];
+  },
+  "huffman-coding": (freqs) => {
+    // Total bits = the sum of every merged weight; lengths from a list kept by hand.
+    let forest = freqs.map((f, k) => ({ f, id: k, leaves: [k] }));
+    const depth = new Array<number>(freqs.length).fill(0);
+    let total = 0;
+    let next = freqs.length;
+    while (forest.length > 1) {
+      forest.sort((x, y) => x.f - y.f || x.id - y.id);
+      const [a, b] = forest;
+      for (const leaf of [...a!.leaves, ...b!.leaves]) depth[leaf]!++;
+      total += a!.f + b!.f;
+      forest = [...forest.slice(2), { f: a!.f + b!.f, id: next++, leaves: [...a!.leaves, ...b!.leaves] }];
+    }
+    return [total, ...depth];
+  },
+  "jump-game": (jumps) => {
+    // Breadth-first over squares.
+    const seen = new Set([0]);
+    const queue = [0];
+    while (queue.length) {
+      const i = queue.shift()!;
+      for (let k = 1; k <= jumps[i]! && i + k < jumps.length; k++)
+        if (!seen.has(i + k)) {
+          seen.add(i + k);
+          queue.push(i + k);
+        }
+    }
+    if (seen.has(jumps.length - 1)) return [1, jumps.length - 1];
+    return [0, Math.max(...[...seen].map((i) => i + jumps[i]!))];
+  },
+  "merge-intervals": (input) => {
+    // Mark covered points and the half-steps between them, then read off the runs.
+    const max = Math.max(...input);
+    const covered = new Array<boolean>(2 * max + 1).fill(false);
+    for (let k = 0; k < input.length; k += 2) for (let t = 2 * input[k]!; t <= 2 * input[k + 1]!; t++) covered[t] = true;
+    const out: number[] = [];
+    for (let t = 0; t < covered.length; t++) {
+      if (covered[t] && !covered[t - 1]) out.push(t / 2);
+      if (covered[t] && !covered[t + 1]) out.push(t / 2);
+    }
+    return out;
+  },
   "bubble-sort": sorted,
   "insertion-sort": sorted,
   "quick-sort": sorted,
@@ -977,6 +1153,78 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  lis: {
+    input: [1, 2],
+    markers: [null, null, null, "extend", "trace", "trace", null],
+    py: [null, null, null, 8, 13, 13, null],
+    ts: [null, null, null, 8, 17, 17, null],
+  },
+  lcs: {
+    input: [0, 1, -1, 1],
+    markers: [null, "carry", "match", "trace", null],
+    py: [null, 9, 7, 13, null],
+    ts: [null, 10, 8, 19, null],
+  },
+  "edit-distance": {
+    input: [0, 1, -1, 1],
+    markers: [null, "change", "same", null],
+    py: [null, 13, 11, null],
+    ts: [null, 12, 10, null],
+  },
+  "grid-paths": {
+    input: [2, 2, 0, 0, 1, 0],
+    markers: [null, null, "add", "blocked", "add", null],
+    py: [null, null, 12, 6, 12, null],
+    ts: [null, null, 12, 6, 12, null],
+  },
+  "word-break": {
+    input: [0, 1, -1, 0, -1, 1],
+    markers: [null, null, "fits", null, "fits", null],
+    py: [null, null, 9, null, 9, null],
+    ts: [null, null, 9, null, 9, null],
+  },
+  "matrix-chain": {
+    input: [2, 3, 4],
+    markers: [null, null, "split", null],
+    py: [null, null, 11, null],
+    ts: [null, null, 11, null],
+  },
+  "bitmask-tsp": {
+    input: [2, 0, 5, 5, 0],
+    markers: [null, "extend", null, null],
+    py: [null, 18, null, null],
+    ts: [null, 15, null, null],
+  },
+  "activity-selection": {
+    input: [0, 2, 1, 3],
+    markers: [null, null, "take", "clash", null],
+    py: [null, null, 7, 10, null],
+    ts: [null, null, 8, 11, null],
+  },
+  "fractional-knapsack": {
+    input: [2, 1, 3, 2, 2],
+    markers: [null, null, "take", "part", null],
+    py: [null, null, 10, 13, null],
+    ts: [null, null, 12, 15, null],
+  },
+  "huffman-coding": {
+    input: [1, 2, 3],
+    markers: [null, "merge", "merge", null],
+    py: [null, 12, 12, null],
+    ts: [null, 10, 10, null],
+  },
+  "jump-game": {
+    input: [1, 0, 1],
+    markers: [null, "farther", null, "stuck"],
+    py: [null, 7, null, 5],
+    ts: [null, 8, null, 5],
+  },
+  "merge-intervals": {
+    input: [1, 3, 2, 4],
+    markers: [null, null, "open", "extend", null],
+    py: [null, null, 7, 5, null],
+    ts: [null, null, 8, 6, null],
+  },
   "fibonacci-memo-table": {
     input: [3],
     markers: [null, null, null, null, "store", null, "store", "store", null, "hit", "store", null, "fill", "fill", null],
@@ -1481,6 +1729,14 @@ export const GOLDEN: Record<string, Golden> = {
 export const WORST: Record<string, number[]> = {
   "big-o-growth": [16],
   "towers-of-hanoi": [5],
+  lcs: [0, 1, 2, 3, 4, 0, 1, 2, -1, 2, 0, 1, 3, 4, 0, 2, 1],
+  "edit-distance": [0, 1, 2, 3, 4, 0, 1, 2, -1, 2, 0, 1, 3, 4, 0, 2, 1],
+  "grid-paths": [8, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  "word-break": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, -1, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0],
+  "bitmask-tsp": [5, 0, 3, 4, 2, 7, 3, 0, 4, 6, 3, 4, 4, 0, 5, 8, 2, 6, 5, 0, 6, 7, 3, 8, 6, 0],
+  "activity-selection": [0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 9, 7, 10, 8, 11, 9, 12],
+  "fractional-knapsack": [20, 3, 9, 4, 8, 5, 7, 6, 6, 7, 5, 8, 4],
+  "merge-intervals": [0, 3, 1, 4, 2, 5, 10, 12, 11, 13, 15, 16, 17, 20, 18, 19, 21, 22, 23, 24],
   "fibonacci-memo-table": [12],
   "climbing-stairs": [15],
   "coin-change": [20, 1, 2, 3, 4, 5],

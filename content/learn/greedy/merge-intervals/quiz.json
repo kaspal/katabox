@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "Default input, sorted. The last merged interval is (1, 5) and the next one is (5, 6). What happens?",
+    "prompt_es": "Entrada por defecto, ordenada. El último intervalo fusionado es (1, 5) y el siguiente es (5, 6). ¿Qué pasa?",
+    "options": [
+      { "en": "It opens a new interval, because they only touch", "es": "Abre un intervalo nuevo, porque solo se tocan" },
+      { "en": "It is dropped as a duplicate", "es": "Se descarta como duplicado" },
+      { "en": "It extends the last one to (1, 6): touching intervals merge", "es": "Amplía el último a (1, 6): los intervalos que se tocan se fusionan" }
+    ],
+    "answer": 2,
+    "explain_en": "The test is start ≤ last end, and 5 ≤ 5. The new end is max(5, 6) = 6.",
+    "explain_es": "La comprobación es inicio ≤ último fin, y 5 ≤ 5. El nuevo fin es max(5, 6) = 6."
+  },
+  {
+    "prompt_en": "What is the output for the default input?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto?",
+    "options": [
+      { "en": "[1, 6, 7, 11, 14, 17]", "es": "[1, 6, 7, 11, 14, 17]" },
+      { "en": "[1, 11, 14, 17]", "es": "[1, 11, 14, 17]" },
+      { "en": "[1, 5, 5, 6, 7, 11, 14, 17]", "es": "[1, 5, 5, 6, 7, 11, 14, 17]" }
+    ],
+    "answer": 0,
+    "explain_en": "(1, 4), (3, 5) and (5, 6) become (1, 6); (7, 9) and (8, 11) become (7, 11); (14, 17) stays alone. 6 and 7 do not touch, so (1, 6) and (7, 11) stay apart.",
+    "explain_es": "(1, 4), (3, 5) y (5, 6) pasan a ser (1, 6); (7, 9) y (8, 11) pasan a ser (7, 11); (14, 17) queda solo. 6 y 7 no se tocan, así que (1, 6) y (7, 11) quedan separados."
+  },
+  {
+    "prompt_en": "Intervals (1, 10) and (2, 3). Why must the end become max(10, 3) and not 3?",
+    "prompt_es": "Intervalos (1, 10) y (2, 3). ¿Por qué el fin debe pasar a max(10, 3) y no a 3?",
+    "options": [
+      { "en": "Because intervals must be sorted by end", "es": "Porque los intervalos deben ordenarse por fin" },
+      { "en": "Because (2, 3) lies inside (1, 10); taking its end would shrink the merged interval", "es": "Porque (2, 3) está dentro de (1, 10); tomar su fin encogería el intervalo fusionado" },
+      { "en": "It does not matter; both give (1, 10)", "es": "Da igual; las dos opciones dan (1, 10)" }
+    ],
+    "answer": 1,
+    "explain_en": "A nested interval adds nothing. Overwriting the end would give (1, 3) and lose 3 to 10.",
+    "explain_es": "Un intervalo anidado no añade nada. Sobrescribir el fin daría (1, 3) y perdería el tramo de 3 a 10."
+  }
+]

@@ -239,7 +239,7 @@ export function InputRow({ def, input, presets, values, error, onPreset, onCusto
         <div className="flex flex-wrap items-center gap-1.5">
           {fields.map((f, k) => {
             // Lists and text get a wide box; single numbers (n, a target, a capacity) a short one.
-            const short = !["values", "ops", "text", "words", "pattern", "edges", "grid", "parents", "pairs", "points", "intervals", "items"].includes(f.key);
+            const short = !["values", "ops", "text", "words", "pattern", "edges", "grid", "map", "distances", "first", "second", "parents", "pairs", "points", "intervals", "items"].includes(f.key);
             return (
               <div key={f.key} className="flex items-center gap-1.5">
                 <label htmlFor={`${errorId}-${f.key}`} className="text-muted-foreground">

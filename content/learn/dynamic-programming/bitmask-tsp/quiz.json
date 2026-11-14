@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "With four cities, which cities does the mask 13 (binary 1101) hold?",
+    "prompt_es": "Con cuatro ciudades, ¿qué ciudades contiene la máscara 13 (1101 en binario)?",
+    "options": [
+      { "en": "Cities 1, 2 and 3", "es": "Las ciudades 1, 2 y 3" },
+      { "en": "Cities 0, 2 and 3", "es": "Las ciudades 0, 2 y 3" },
+      { "en": "Cities 0, 1 and 3", "es": "Las ciudades 0, 1 y 3" }
+    ],
+    "answer": 1,
+    "explain_en": "Bit c stands for city c, counting from the right: 1101 has bits 0, 2 and 3 set (1 + 4 + 8 = 13).",
+    "explain_es": "El bit c representa la ciudad c, contando desde la derecha: 1101 tiene a 1 los bits 0, 2 y 3 (1 + 4 + 8 = 13)."
+  },
+  {
+    "prompt_en": "Default input. The full mask ends with 16 at city 1, 9 at city 2 and 11 at city 3, and city 0 is 2, 9 and 10 away from them. What is the output?",
+    "prompt_es": "Entrada por defecto. La máscara completa termina con 16 en la ciudad 1, 9 en la ciudad 2 y 11 en la ciudad 3, y la ciudad 0 está a 2, 9 y 10 de ellas. ¿Cuál es la salida?",
+    "options": [
+      { "en": "[18]", "es": "[18]" },
+      { "en": "[9]", "es": "[9]" },
+      { "en": "[21]", "es": "[21]" }
+    ],
+    "answer": 0,
+    "explain_en": "Each open path must return to city 0: 16 + 2 = 18, 9 + 9 = 18 and 11 + 10 = 21. The smallest is 18. 9 forgets the way home.",
+    "explain_es": "Cada camino abierto tiene que volver a la ciudad 0: 16 + 2 = 18, 9 + 9 = 18 y 11 + 10 = 21. El menor es 18. 9 olvida la vuelta a casa."
+  },
+  {
+    "prompt_en": "Why is it safe to process the masks in increasing numeric order?",
+    "prompt_es": "¿Por qué es seguro procesar las máscaras en orden numérico creciente?",
+    "options": [
+      { "en": "Smaller masks always have shorter paths", "es": "Las máscaras más pequeñas siempre tienen caminos más cortos" },
+      { "en": "It visits the nearest city first", "es": "Visita primero la ciudad más cercana" },
+      { "en": "Adding a city sets a bit, so every state is extended only into larger masks, which come later", "es": "Añadir una ciudad pone un bit a 1, así que cada estado solo se amplía hacia máscaras mayores, que vienen después" }
+    ],
+    "answer": 2,
+    "explain_en": "mask | (1 << city) is larger than mask when city is new, so all the ways into a mask are done before it is extended.",
+    "explain_es": "mask | (1 << city) es mayor que mask cuando la ciudad es nueva, así que todas las formas de llegar a una máscara están hechas antes de ampliarla."
+  }
+]

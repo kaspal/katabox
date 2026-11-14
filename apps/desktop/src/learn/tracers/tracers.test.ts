@@ -49,6 +49,10 @@ describe.each(Object.values(TRACERS))("$id tracer", (def) => {
     expect(def.limits).toEqual(topicLimits(def.subject, def.id));
   });
 
+  it("makes only valid inputs from its presets and random cases", () => {
+    for (const c of caseInputs(def)) expect(checkInput(def, c.input), `${c.name}: ${c.input.join(" ")}`).toBeNull();
+  });
+
   it("offers only its own presets, each named in English and Spanish", () => {
     const ids = presetIds(def);
     for (const p of topicPresets(def.subject, def.id)) {

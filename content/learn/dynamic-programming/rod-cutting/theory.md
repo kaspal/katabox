@@ -45,4 +45,4 @@ Use the unbounded pattern whenever pieces can repeat: cutting stock, filling a b
 - [0/1 knapsack](learn:dynamic-programming/knapsack-01): the version where each item is used at most once.
 - [Coin change](learn:dynamic-programming/coin-change): reusable pieces again, minimising a count instead.
 - [Climbing stairs](learn:dynamic-programming/climbing-stairs): another "first piece, then the rest" rule.
-- Matrix chain multiplication (coming soon): choosing where to split, over intervals.
+- [Matrix chain multiplication](learn:dynamic-programming/matrix-chain): choosing where to split, over intervals.

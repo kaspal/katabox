@@ -47,4 +47,4 @@ La elección de saltar o tomar con la regla "nunca dos seguidas" sirve para plan
 - [Subir escaleras](learn:dynamic-programming/climbing-stairs): la misma mirada dos celdas atrás, sumando en vez de elegir.
 - [Mochila 0/1](learn:dynamic-programming/knapsack-01): tomar o dejar cada objeto, con una capacidad en vez de vecinas.
 - [Subarreglo de suma máxima (Kadane)](learn:dynamic-programming/maximum-subarray): otra regla sobre una fila de valores.
-- Subsecuencia creciente más larga (próximamente): elegir elementos en orden con una reconstrucción.
+- [Subsecuencia creciente más larga](learn:dynamic-programming/lis): elegir elementos en orden con una reconstrucción.
