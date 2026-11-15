@@ -1,0 +1,5 @@
+Reunir las especies de cada tramo en un conjunto cuesta hasta `n` pasos por pregunta, y los tramos pueden ser largos. No hace falta responder las preguntas en el orden en que llegan: ¿y si las ordenaras por su extremo derecho `r`?
+---
+Lee el registro de izquierda a derecha. Al llegar a la foto `r`, pon una marca solo en la foto **más reciente** de cada especie vista hasta ahora. Entonces cada especie de `l..r` tiene exactamente una marca dentro de `l..r`, y ninguna otra especie la tiene, así que la respuesta es el número de marcas en `l..r`.
+---
+Cuando la foto `r` muestra una especie vista por última vez en la foto `p`, quita la marca de `p` y pon una en `r`. Guarda las marcas en un árbol de Fenwick (árbol binario indexado) para que cada cambio y cada recuento de marcas en `1..k` cueste O(log n); la respuesta es `count(r) − count(l − 1)`. Usa un mapa hash del identificador de especie a su foto más reciente (los identificadores llegan a 10⁹) y guarda cada respuesta en la posición original de su pregunta.

@@ -1,0 +1,15 @@
+id = "course-plan"
+title = "Course Plan"
+title_es = "Plan de estudios"
+difficulty = "medium"
+tags = ["graph", "topological-sort", "bfs"]
+pattern = "graphs"
+rank = 6
+mode = "program"
+profile = true
+profile_sizes = [1000, 2000, 4000, 8000, 12000, 16000]
+
+[judge]
+checker = "tokens"
+time_limit_ms = 200 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

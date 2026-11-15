@@ -1,0 +1,13 @@
+id = "banner-fit"
+title = "Banner Fit"
+title_es = "Encaje del cartel"
+difficulty = "hard"
+tags = ["stack", "monotonic-stack", "matrix"]
+pattern = "stack"
+rank = 9
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 200 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

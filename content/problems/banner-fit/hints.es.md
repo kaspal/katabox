@@ -1,0 +1,5 @@
+Fija la fila en la que queda el borde inferior del cartel. Para cada columna, ¿cuántas casillas libres seguidas terminan en esa fila? Con esas alturas, la pared por encima de la fila parece un perfil de edificios hecho de barras.
+---
+Las alturas se actualizan en O(C) por fila: una casilla libre suma 1 a la altura de encima y una bloqueada la pone a 0. El mejor cartel con el borde inferior en esta fila es el rectángulo más grande bajo el perfil. Para cada barra, el rectángulo más ancho de su altura se extiende hasta la primera barra más baja a cada lado.
+---
+Recorre las barras de izquierda a derecha con una pila de columnas de altura creciente. Antes de apilar la columna `x`, saca todas las columnas al menos tan altas como `height[x]`: una barra sacada de altura `h` va desde justo después de la columna que queda en la cima de la pila (o desde la columna 0 si la pila está vacía) hasta `x − 1`, así que su área es `h · (x − left)`. Añade al final una barra de altura 0 para vaciar la pila. Quédate con la mejor área de todas las filas.

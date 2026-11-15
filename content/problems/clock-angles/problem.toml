@@ -1,0 +1,13 @@
+id = "clock-angles"
+title = "Clock Angles"
+title_es = "Ángulos del reloj"
+difficulty = "easy"
+tags = ["math", "input-parsing", "formatting"]
+pattern = "math"
+rank = 3
+mode = "program"
+
+[judge]
+checker = "tokens-float:1e-6"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256
