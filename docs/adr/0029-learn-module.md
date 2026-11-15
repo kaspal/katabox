@@ -245,3 +245,21 @@ Date: 2026-11-14 · Status: accepted (maintainer sign-off on the section, `motio
   (ADR 0028, `fix/ts-program-check`), so the import's position no longer matters; it
   stays first.
 - **A new path is a `paths.toml` entry**; kb-pack refuses unknown or repeated topics.
+
+## Addendum (2026-11, features-content M9): the Databases subject
+- **Topics:** join algorithms (a hash join), GROUP BY (hash aggregation), window
+  functions (running totals per partition) and recursive queries (WITH RECURSIVE, round
+  by round).
+- **The relations scene:** input tables, any helper table (the hash index, the groups),
+  and the result growing below. Rows use the usual roles, plus a dashed or solid outline
+  so colour is never the only cue.
+  - It is drawn as **real HTML tables** inside a labelled `role="group"`, not an
+    `<svg role="img">`, so screen readers read rows and columns as a table.
+  - The every-scene test accepts either form. It still requires the summary and the text
+    fallback to describe every step.
+- **Inputs:** `rowsCodec` (one or two tables of two-column rows) and `bossesCodec` (a
+  boss list without loops).
+- **Samples:** each `sample.py` checks its own answer against SQLite in memory before
+  returning (`sqlite3` is in the pinned Python). So every sandbox run of the sample also
+  proves that SQLite agrees with the animation. The TypeScript samples have no database
+  and only compute.

@@ -104,3 +104,11 @@ name_es = "Matemáticas y geometría"
 blurb = "Sieve, fast power, modular inverse, convex hull"
 blurb_es = "Criba, potencia rápida, inverso modular, envolvente convexa"
 icon = "sigma"
+
+[[subject]]
+id = "databases"
+name = "Databases"
+name_es = "Bases de datos"
+blurb = "How SQL runs: hash joins, GROUP BY, window functions, recursive queries"
+blurb_es = "Cómo se ejecuta SQL: uniones hash, GROUP BY, funciones de ventana, consultas recursivas"
+icon = "database"

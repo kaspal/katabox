@@ -174,3 +174,80 @@ export function textWordsCodec(o: { maxText: number; maxWords: number; maxWord: 
     check,
   };
 }
+
+/** Database rows (the Databases subject): one or two tables of "a b" rows, comma
+ * separated. One table is stored [a, b, a, b, …]; two are stored [n_first, …first rows,
+ * …second rows]. Both columns are small whole numbers within their ranges. */
+export function rowsCodec(o: {
+  fields: readonly [FieldKey] | readonly [FieldKey, FieldKey];
+  a: [number, number];
+  b: [number, number];
+  count: [number, number];
+}): InputCodec {
+  const two = o.fields.length === 2;
+  const split = (input: readonly number[]): number[][] =>
+    two ? [input.slice(1, 1 + 2 * input[0]!), input.slice(1 + 2 * input[0]!)] : [[...input]];
+  const check = (input: readonly number[]): InputError | null => {
+    if (two && (input.length < 1 || input[0]! < 0 || 1 + 2 * input[0]! > input.length)) return err("row_pair", { item: "" });
+    for (const [k, rows] of split(input).entries()) {
+      if (rows.length % 2 !== 0) return err("row_pair", { item: "" });
+      const n = rows.length / 2;
+      if (n < o.count[0] || n > o.count[1]) return err("row_count", { field: o.fields[k]!, min: o.count[0], max: o.count[1] });
+      for (let r = 0; r < n; r++) {
+        const a = rows[2 * r]!;
+        const b = rows[2 * r + 1]!;
+        if (a < o.a[0] || a > o.a[1] || b < o.b[0] || b > o.b[1]) return err("row_range", { amin: o.a[0], amax: o.a[1], bmin: o.b[0], bmax: o.b[1] });
+      }
+    }
+    return null;
+  };
+  const show = (rows: number[]) => Array.from({ length: rows.length / 2 }, (_, k) => `${rows[2 * k]} ${rows[2 * k + 1]}`).join(", ");
+  return {
+    fields: o.fields,
+    format: (input) => split(input).map(show),
+    parse: (texts) => {
+      const tables: number[][] = [];
+      for (const text of texts.slice(0, o.fields.length)) {
+        const r = groups(text ?? "", 2, "row_pair");
+        if ("error" in r) return r;
+        tables.push(r.values);
+      }
+      const values = two ? [tables[0]!.length / 2, ...tables[0]!, ...(tables[1] ?? [])] : (tables[0] ?? []);
+      const e = check(values);
+      return e ? { error: e } : { values };
+    },
+    check,
+  };
+}
+
+/** Each employee's boss (-1 for none), employees numbered from 0: stored as the list. The
+ * chain of bosses never loops back. */
+export function bossesCodec(o: { count: [number, number] }): InputCodec {
+  const check = (input: readonly number[]): InputError | null => {
+    const n = input.length;
+    if (n < o.count[0] || n > o.count[1]) return err("boss_count", { min: o.count[0], max: o.count[1] });
+    for (let i = 0; i < n; i++) {
+      const b = input[i]!;
+      if (b !== -1 && (b < 0 || b >= n || b === i)) return err("boss_range", { max: n - 1 });
+    }
+    for (let i = 0; i < n; i++) {
+      let x = i;
+      for (let steps = 0; x !== -1; steps++) {
+        if (steps > n) return err("boss_cycle");
+        x = input[x]!;
+      }
+    }
+    return null;
+  };
+  return {
+    fields: ["bosses"],
+    format: (input) => [input.join(" ")],
+    parse: (texts) => {
+      const r = tokens(texts[0] ?? "");
+      if ("error" in r) return r;
+      const e = check(r.values);
+      return e ? { error: e } : r;
+    },
+    check,
+  };
+}

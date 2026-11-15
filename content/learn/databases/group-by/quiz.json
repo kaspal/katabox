@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "What does the hash table keep for each group during the pass?",
+    "prompt_es": "¿Qué guarda la tabla hash para cada grupo durante la pasada?",
+    "options": [
+      { "en": "Every row of the group, to add up at the end", "es": "Todas las filas del grupo, para sumarlas al final" },
+      { "en": "A running count and sum", "es": "Una cuenta y una suma acumuladas" },
+      { "en": "Only the largest v seen so far", "es": "Solo el mayor v visto hasta ahora" }
+    ],
+    "answer": 1,
+    "explain_en": "COUNT(*) and SUM(v) can be updated one row at a time, so each group needs only the pair (count, sum), never its rows.",
+    "explain_es": "COUNT(*) y SUM(v) se pueden actualizar fila a fila, así que cada grupo necesita solo el par (count, sum), nunca sus filas."
+  },
+  {
+    "prompt_en": "What is the output for the default input [1, 10, 2, 5, 1, 30, 2, 7, 1, 2]?",
+    "prompt_es": "¿Cuál es la salida para la entrada por defecto [1, 10, 2, 5, 1, 30, 2, 7, 1, 2]?",
+    "options": [
+      { "en": "[1, 3, 42, 2, 2, 12]", "es": "[1, 3, 42, 2, 2, 12]" },
+      { "en": "[1, 2, 40, 2, 2, 12]", "es": "[1, 2, 40, 2, 2, 12]" },
+      { "en": "[1, 3, 42, 2, 3, 12]", "es": "[1, 3, 42, 2, 3, 12]" }
+    ],
+    "answer": 0,
+    "explain_en": "Group 1 gets 10, 30 and 2: 3 rows, sum 42. Group 2 gets 5 and 7: 2 rows, sum 12.",
+    "explain_es": "El grupo 1 recibe 10, 30 y 2: 3 filas, suma 42. El grupo 2 recibe 5 y 7: 2 filas, suma 12."
+  },
+  {
+    "prompt_en": "To keep only the groups with more than two rows, which clause do you use?",
+    "prompt_es": "Para conservar solo los grupos con más de dos filas, ¿qué cláusula usas?",
+    "options": [
+      { "en": "WHERE COUNT(*) > 2", "es": "WHERE COUNT(*) > 2" },
+      { "en": "ORDER BY COUNT(*) > 2", "es": "ORDER BY COUNT(*) > 2" },
+      { "en": "HAVING COUNT(*) > 2", "es": "HAVING COUNT(*) > 2" }
+    ],
+    "answer": 2,
+    "explain_en": "WHERE runs on rows before grouping, when no count exists yet. HAVING runs on the finished groups.",
+    "explain_es": "WHERE actúa sobre las filas antes de agrupar, cuando todavía no existe ninguna cuenta. HAVING actúa sobre los grupos ya terminados."
+  }
+]

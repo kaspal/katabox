@@ -1,0 +1,28 @@
+id = "window-functions"
+subject = "databases"
+order = 3
+title = "Window functions"
+title_es = "Funciones de ventana"
+tags = ["sql", "prefix-sum"]
+problems = ["mileage-log"]
+presets = ["two-accounts", "one-partition", "random"]
+default = [1, 50, 2, 20, 1, 15, 1, 5, 2, 40]
+
+[complexity]
+best = "O(n)"
+average = "O(n) (rows already in order)"
+worst = "O(n log n) (sorting first)"
+space = "O(p) for p partitions"
+stable = true
+in_place = false
+
+[input]
+min_len = 2
+max_len = 20
+min = 0
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = running_totals(a)"
+typescript = "a = runningTotals(a)"

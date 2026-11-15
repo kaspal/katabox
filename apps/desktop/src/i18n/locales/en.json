@@ -1145,7 +1145,18 @@
         "euclid_steps": "a, b → b, a mod b",
         "power_steps": "One row per bit of the exponent",
         "extended_euclid": "Remainders and coefficients",
-        "pascal": "Row n, entry k: C(n, k)"
+        "pascal": "Row n, entry k: C(n, k)",
+        "left_table": "Table L",
+        "right_table": "Table R",
+        "hash_index": "Hash index on R.key",
+        "joined": "Result: L JOIN R",
+        "rows_in": "Table t",
+        "groups": "Hash table of groups",
+        "grouped": "Result: GROUP BY g",
+        "running_totals": "Running total per partition",
+        "with_totals": "Result: with running totals",
+        "employees": "Table emp",
+        "chain": "Result: chain (id, depth)"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -1187,7 +1198,8 @@
       "summary_timeline": "Intervals: {{bars}}. Result: {{output}}.",
       "summary_board": "A {{rows}} by {{cols}} board: {{cells}}.",
       "summary_strings": "{{rows}}.",
-      "summary_plane": "Points: {{points}}."
+      "summary_plane": "Points: {{points}}.",
+      "summary_relations": "Tables: {{tables}}. {{result}}."
     },
     "roles": {
       "idle": "Not yet placed",
@@ -1496,7 +1508,14 @@
         "square": "A square",
         "crossing": "Crossing",
         "end-on-the-line": "An end on the other line",
-        "side-by-side": "Side by side"
+        "side-by-side": "Side by side",
+        "one-to-many": "One key, several matches",
+        "no-match": "No matches",
+        "two-groups": "Two groups",
+        "one-group": "One group",
+        "two-accounts": "Two accounts",
+        "one-partition": "One partition",
+        "small-company": "Small company"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1560,7 +1579,13 @@
           "power_range": "Use a base up to 999 and a modulus from 2 to 999.",
           "point_pair": "Write each point as x y (\"{{item}}\").",
           "point_count": "Use {{min}} to {{max}} points.",
-          "coordinate_range": "Coordinates go from 0 to {{max}}."
+          "coordinate_range": "Coordinates go from 0 to {{max}}.",
+          "row_pair": "Each row is two numbers, as in \"2 15, 3 7\". {{item}}",
+          "row_count": "{{field}}: {{min}} to {{max}} rows.",
+          "row_range": "The first number of a row goes from {{amin}} to {{amax}}, the second from {{bmin}} to {{bmax}}.",
+          "boss_count": "Enter {{min}} to {{max}} employees.",
+          "boss_range": "A boss is -1 (none) or another employee's number, 0 to {{max}}.",
+          "boss_cycle": "The bosses go round in a loop: someone must be at the top."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1598,7 +1623,11 @@
         "modulus": "Modulus",
         "number": "Number",
         "points": "Points (x y, …)",
-        "segments": "Endpoints P1, P2, P3, P4 (x y, …)"
+        "segments": "Endpoints P1, P2, P3, P4 (x y, …)",
+        "left_rows": "Rows of L (key a)",
+        "right_rows": "Rows of R (key b)",
+        "rows": "Rows",
+        "bosses": "Bosses (-1: none)"
       }
     },
     "tabs": {
@@ -1699,7 +1728,8 @@
       "modular-arithmetic": "Modular arithmetic",
       "combinatorics": "Combinatorics",
       "geometry": "Geometry",
-      "convex-hull": "Convex hull"
+      "convex-hull": "Convex hull",
+      "sql": "SQL"
     },
     "narration": {
       "bubble-sort": {
@@ -2666,6 +2696,33 @@
         "cross": "Each segment's ends lie on opposite sides of the other: they cross.",
         "touch": "{{point}} lies on the other segment: they touch.",
         "apart": "No crossing and no touching: the segments are apart."
+      },
+      "join-algorithms": {
+        "ready": "Join L ({{left}} rows) with R ({{right}} rows) on key. First build a hash index on R.key, then probe it with each L row.",
+        "build": "Build: R row #{{row}} goes into the index under key {{key}}.",
+        "probe": "Probe: L row #{{row}} looks up key {{key}} in the index: {{matches}} matching R row(s).",
+        "match": "Match on key {{key}}: output ({{key}}, {{a}}, {{b}}).",
+        "done": "{{rows}} joined row(s), each R row hashed once and each L row probed once. A nested-loop join would have compared all {{pairs}} pairs."
+      },
+      "group-by": {
+        "ready": "Group {{n}} rows by g, keeping COUNT(*) and SUM(v) for each group in a hash table.",
+        "new_group": "Group {{g}} is new: count 1, sum {{v}}.",
+        "add": "Row in group {{g}} adds {{v}}: count {{num}}, sum {{sum}}.",
+        "emit": "Output group {{g}}: {{num}} row(s), sum {{sum}} (groups come out by g).",
+        "done": "{{n}} rows became {{groups}} group row(s), in one pass over the table."
+      },
+      "window-functions": {
+        "ready": "SUM(v) OVER (PARTITION BY p ORDER BY id): every row stays, with its partition's total so far.",
+        "start": "First row of partition {{p}}: its running total starts at {{v}}.",
+        "add": "Partition {{p}} continues: {{before}} + {{v}} = {{total}}.",
+        "done": "{{n}} rows kept, each with its running total, across {{partitions}} partition(s)."
+      },
+      "recursive-cte": {
+        "ready": "Find every employee's depth below the top, the way WITH RECURSIVE does: an anchor, then rounds.",
+        "anchor": "Anchor: employee {{id}} has no boss, so depth 0.",
+        "round": "Round {{round}}: join the {{rows}} row(s) found last round with the employees who report to them.",
+        "join": "Employee {{id}} reports to {{boss}}: depth {{depth}}.",
+        "done": "All {{n}} employees placed in {{rounds}} round(s); the last round found nothing new."
       }
     },
     "compare": {

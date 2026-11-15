@@ -5,6 +5,7 @@ import {
   BookOpenText,
   ChartColumn,
   ChartLine,
+  Database,
   Grid3x3,
   Hash,
   Network,
@@ -35,6 +36,7 @@ export const SUBJECT_ICONS: Record<string, SubjectIcon> = {
   "undo": { icon: Undo2, tint: "violet" },
   "type": { icon: Type, tint: "slate" },
   "sigma": { icon: Sigma, tint: "pink" },
+  "database": { icon: Database, tint: "amber" },
 };
 
 export const subjectIcon = (name: string): SubjectIcon =>

@@ -1145,7 +1145,18 @@
         "euclid_steps": "a, b → b, a mod b",
         "power_steps": "Una fila por bit del exponente",
         "extended_euclid": "Restos y coeficientes",
-        "pascal": "Fila n, entrada k: C(n, k)"
+        "pascal": "Fila n, entrada k: C(n, k)",
+        "left_table": "Tabla L",
+        "right_table": "Tabla R",
+        "hash_index": "Índice hash sobre R.key",
+        "joined": "Resultado: L JOIN R",
+        "rows_in": "Tabla t",
+        "groups": "Tabla hash de grupos",
+        "grouped": "Resultado: GROUP BY g",
+        "running_totals": "Total acumulado por partición",
+        "with_totals": "Resultado: con totales acumulados",
+        "employees": "Tabla emp",
+        "chain": "Resultado: chain (id, depth)"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -1187,7 +1198,8 @@
       "summary_timeline": "Intervalos: {{bars}}. Resultado: {{output}}.",
       "summary_board": "Un tablero de {{rows}} por {{cols}}: {{cells}}.",
       "summary_strings": "{{rows}}.",
-      "summary_plane": "Puntos: {{points}}."
+      "summary_plane": "Puntos: {{points}}.",
+      "summary_relations": "Tablas: {{tables}}. {{result}}."
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -1496,7 +1508,14 @@
         "square": "Un cuadrado",
         "crossing": "Se cruzan",
         "end-on-the-line": "Un extremo sobre la otra recta",
-        "side-by-side": "Uno al lado del otro"
+        "side-by-side": "Uno al lado del otro",
+        "one-to-many": "Una clave, varias coincidencias",
+        "no-match": "Sin coincidencias",
+        "two-groups": "Dos grupos",
+        "one-group": "Un grupo",
+        "two-accounts": "Dos cuentas",
+        "one-partition": "Una partición",
+        "small-company": "Empresa pequeña"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1560,7 +1579,13 @@
           "power_range": "Usa una base de hasta 999 y un módulo de 2 a 999.",
           "point_pair": "Escribe cada punto como x y (\"{{item}}\").",
           "point_count": "Usa de {{min}} a {{max}} puntos.",
-          "coordinate_range": "Las coordenadas van de 0 a {{max}}."
+          "coordinate_range": "Las coordenadas van de 0 a {{max}}.",
+          "row_pair": "Cada fila son dos números, como en \"2 15, 3 7\". {{item}}",
+          "row_count": "{{field}}: de {{min}} a {{max}} filas.",
+          "row_range": "El primer número de una fila va de {{amin}} a {{amax}}, el segundo de {{bmin}} a {{bmax}}.",
+          "boss_count": "Escribe de {{min}} a {{max}} empleados.",
+          "boss_range": "Un jefe es -1 (ninguno) o el número de otro empleado, de 0 a {{max}}.",
+          "boss_cycle": "Los jefes forman un ciclo: alguien tiene que estar en la cima."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1598,7 +1623,11 @@
         "modulus": "Módulo",
         "number": "Número",
         "points": "Puntos (x y, …)",
-        "segments": "Extremos P1, P2, P3, P4 (x y, …)"
+        "segments": "Extremos P1, P2, P3, P4 (x y, …)",
+        "left_rows": "Filas de L (key a)",
+        "right_rows": "Filas de R (key b)",
+        "rows": "Filas",
+        "bosses": "Jefes (-1: ninguno)"
       }
     },
     "tabs": {
@@ -1699,7 +1728,8 @@
       "modular-arithmetic": "Aritmética modular",
       "combinatorics": "Combinatoria",
       "geometry": "Geometría",
-      "convex-hull": "Envolvente convexa"
+      "convex-hull": "Envolvente convexa",
+      "sql": "SQL"
     },
     "narration": {
       "bubble-sort": {
@@ -2666,6 +2696,33 @@
         "cross": "Los extremos de cada segmento quedan a lados opuestos del otro: se cruzan.",
         "touch": "{{point}} está sobre el otro segmento: se tocan.",
         "apart": "Ni se cruzan ni se tocan: los segmentos están separados."
+      },
+      "join-algorithms": {
+        "ready": "Unir L ({{left}} filas) con R ({{right}} filas) por key. Primero se construye un índice hash sobre R.key y luego se consulta con cada fila de L.",
+        "build": "Construcción: la fila #{{row}} de R entra en el índice con la clave {{key}}.",
+        "probe": "Consulta: la fila #{{row}} de L busca la clave {{key}} en el índice: {{matches}} fila(s) de R coinciden.",
+        "match": "Coincidencia en la clave {{key}}: sale ({{key}}, {{a}}, {{b}}).",
+        "done": "{{rows}} fila(s) unidas: cada fila de R se insertó una vez y cada fila de L consultó una vez. Una unión con bucles anidados habría comparado los {{pairs}} pares."
+      },
+      "group-by": {
+        "ready": "Agrupar {{n}} filas por g, llevando COUNT(*) y SUM(v) de cada grupo en una tabla hash.",
+        "new_group": "El grupo {{g}} es nuevo: cuenta 1, suma {{v}}.",
+        "add": "Una fila del grupo {{g}} suma {{v}}: cuenta {{num}}, suma {{sum}}.",
+        "emit": "Sale el grupo {{g}}: {{num}} fila(s), suma {{sum}} (los grupos salen ordenados por g).",
+        "done": "{{n}} filas se convirtieron en {{groups}} fila(s) de grupo, en una sola pasada por la tabla."
+      },
+      "window-functions": {
+        "ready": "SUM(v) OVER (PARTITION BY p ORDER BY id): todas las filas se quedan, cada una con el total de su partición hasta ella.",
+        "start": "Primera fila de la partición {{p}}: su total acumulado empieza en {{v}}.",
+        "add": "La partición {{p}} sigue: {{before}} + {{v}} = {{total}}.",
+        "done": "Se conservan las {{n}} filas, cada una con su total acumulado, en {{partitions}} partición(es)."
+      },
+      "recursive-cte": {
+        "ready": "Hallar la profundidad de cada empleado bajo la cima, como hace WITH RECURSIVE: un ancla y luego rondas.",
+        "anchor": "Ancla: el empleado {{id}} no tiene jefe, así que profundidad 0.",
+        "round": "Ronda {{round}}: unir las {{rows}} fila(s) halladas en la ronda anterior con los empleados que dependen de ellas.",
+        "join": "El empleado {{id}} depende de {{boss}}: profundidad {{depth}}.",
+        "done": "Los {{n}} empleados quedan colocados en {{rounds}} ronda(s); la última no halló nada nuevo."
       }
     },
     "compare": {
