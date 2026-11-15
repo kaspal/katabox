@@ -68,6 +68,18 @@ export function Shell() {
       }
       data-focus={focus || undefined}
     >
+      <a
+        href="#main"
+        className="sr-only z-50 rounded-md bg-primary text-primary-foreground focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:px-3 focus:py-2 focus:text-sm focus:font-medium"
+        onClick={(e) => {
+          // The router uses the hash: move focus instead of navigating.
+          e.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+        data-testid="skip-link"
+      >
+        {t("app.skipToContent")}
+      </a>
       <nav
         hidden={focus}
         aria-label={t("nav.label")}
@@ -125,7 +137,7 @@ export function Shell() {
         </div>
       </header>
 
-      <main className="min-h-0 overflow-auto">
+      <main id="main" tabIndex={-1} className="min-h-0 overflow-auto outline-none">
         {gated ? (
           <Welcome onClose={firstRun.hide} />
         ) : (

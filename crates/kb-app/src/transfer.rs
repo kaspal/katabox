@@ -28,6 +28,9 @@ fn machine_setting(key: &str) -> bool {
 /// stay on this machine.
 const LEARN_SETTINGS: [&str; 2] = ["learn.viewed", "learn.last"];
 
+/// Appearance preferences that travel with an export (features-content M11).
+const UI_SETTINGS: [&str; 2] = ["ui.contrast", "ui.motion"];
+
 /// Settings an import may write.
 fn importable_setting(key: &str) -> bool {
     ["editor.", "workspace.", "practice."]
@@ -36,6 +39,7 @@ fn importable_setting(key: &str) -> bool {
         || key == "ui_lang"
         || key == "theme"
         || LEARN_SETTINGS.contains(&key)
+        || UI_SETTINGS.contains(&key)
 }
 
 /// Settings an export leaves out: machine-specific ones, and any an import would refuse
@@ -435,6 +439,8 @@ mod tests {
             "theme",
             "learn.viewed",
             "learn.last",
+            "ui.contrast",
+            "ui.motion",
         ] {
             assert!(importable_setting(k), "{k}");
             assert!(!unexported_setting(k), "{k}");
@@ -445,6 +451,7 @@ mod tests {
             "learn.layout",
             "learn.speed",
             "learn.other",
+            "ui.other",
         ] {
             assert!(!importable_setting(k), "{k}");
             assert!(

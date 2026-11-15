@@ -2,7 +2,8 @@
   "app": {
     "name": "KataBox",
     "devData": "DEV DATA",
-    "devDataHint": "Development build: progress is saved in a separate folder, not your real data."
+    "devDataHint": "Development build: progress is saved in a separate folder, not your real data.",
+    "skipToContent": "Skip to main content"
   },
   "nav": {
     "label": "Main navigation",
@@ -385,6 +386,16 @@
       "copy": "Copy",
       "copied": "Copied.",
       "copyFailed": "Could not copy. Select the text and copy it yourself."
+    },
+    "contrast": "Contrast",
+    "contrasts": {
+      "normal": "Normal",
+      "high": "High"
+    },
+    "motion": "Motion",
+    "motions": {
+      "system": "Follow the system",
+      "reduced": "Reduce"
     }
   },
   "languages": {

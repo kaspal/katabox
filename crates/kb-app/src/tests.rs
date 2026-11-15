@@ -1337,7 +1337,7 @@ async fn import_rejects_bad_files_and_imports_nothing() {
 async fn learn_commands_read_the_bundled_topics() {
     let a = app("learn").await;
     let catalog = a.learn_catalog(UiLang::En).await.unwrap();
-    assert_eq!(catalog.len(), 13, "every subject, with or without topics");
+    assert_eq!(catalog.len(), 14, "every subject, with or without topics");
     let sorting = catalog.iter().find(|s| s.id == "sorting").unwrap();
     let ids: Vec<_> = sorting.topics.iter().map(|t| t.id.as_str()).collect();
     // In topic.toml `order`: the Phase 0 sorts first, then the Phase 1 ones.

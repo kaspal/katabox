@@ -44,6 +44,10 @@ fn files_under(dir: &Path) -> Vec<PathBuf> {
     out
 }
 
+/// The two suites share the runs folder, whose file count is part of the check: they
+/// take turns even when the harness runs tests in parallel.
+static ONE_AT_A_TIME: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 /// Judge `query` on the fixture's first test only; check nothing new appears on disk.
 fn attack(query: &str) -> Report {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/sql/late-returns");
@@ -86,6 +90,7 @@ fn stopped_with(query: &str, verdict: Verdict, code: MessageCode) {
 
 #[test]
 fn plan_attacks_are_contained() {
+    let _turn = ONE_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
     use MessageCode::*;
     use Verdict::*;
     stopped_with("ATTACH 'evil.db' AS evil", CompilationError, SqlNotSelect);
@@ -147,6 +152,7 @@ fn plan_attacks_are_contained() {
 
 #[test]
 fn limits_and_determinism_hold() {
+    let _turn = ONE_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
     use MessageCode::*;
     use Verdict::*;
     // Non-deterministic functions are refused (the reference's answer could not match).

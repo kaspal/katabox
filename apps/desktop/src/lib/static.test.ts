@@ -135,6 +135,33 @@ describe.each(
   });
 });
 
+// High contrast (ui.contrast): text tokens reach 7:1 (WCAG AAA) on every surface; the
+// semantic colours keep AA; borders, inputs and the focus ring reach 3:1 (WCAG 1.4.11).
+const HC_TEXT = ["foreground", "muted-foreground", "primary", "card-foreground", "popover-foreground", "accent-foreground"];
+describe.each([
+  ["light high contrast", { ...block(":root"), ...block(".hc") }],
+  ["dark high contrast", { ...block(":root"), ...block(".dark"), ...block(".dark.hc") }],
+])("%s (WCAG AAA text)", (_, t) => {
+  it.each(HC_TEXT)("%s text is ≥ 7:1 on every surface", (fg) => {
+    for (const bg of TEXT_ON) {
+      expect(contrast(t[fg], t[bg]), `${fg} on ${bg}`).toBeGreaterThanOrEqual(7);
+    }
+  });
+  it.each(SEMANTIC)("%s stays ≥ 4.5:1 on every surface", (fg) => {
+    for (const bg of TEXT_ON) {
+      expect(contrast(t[fg], t[bg]), `${fg} on ${bg}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+  it("borders, inputs and the focus ring are ≥ 3:1 on the surfaces", () => {
+    for (const line of ["border", "input", "ring"]) {
+      for (const bg of ["background", "card"]) {
+        expect(contrast(t[line], t[bg]), `${line} on ${bg}`).toBeGreaterThanOrEqual(3);
+      }
+    }
+    expect(contrast(t["primary-foreground"], t.primary)).toBeGreaterThanOrEqual(7);
+  });
+});
+
 describe.each([
   ["light", block(":root")],
   ["dark", { ...block(":root"), ...block(".dark") }],

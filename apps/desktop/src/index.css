@@ -161,3 +161,20 @@
   outline: 2px solid var(--ring);
   outline-offset: 3px;
 }
+
+/* Reduce motion (Settings → Appearance, ui.motion = reduced): no CSS transitions or
+   animations anywhere; Learn's scenes jump to each step (useReducedMotion). */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* High contrast: the selected toggle or tab gets a ring, not only a lighter fill. */
+.hc [data-state="on"],
+.hc [role="tab"][data-state="active"] {
+  box-shadow: inset 0 0 0 2px var(--ring);
+}

@@ -172,6 +172,51 @@
   --syntax-operator: #a9b3c6;
   --syntax-invalid: #ff8a80;
 }
+/* High contrast (Settings → Appearance, ui.contrast): stronger text (≥ 7:1 on every
+   surface), borders and focus rings; the semantic colours keep their meaning. Placed after
+   .dark so `.hc` and `.dark.hc` win. */
+.hc {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --muted: #f0f1f4;
+  --muted-foreground: #2b2f38;
+  --accent: #e6e8ee;
+  --accent-foreground: #000000;
+  --border: #5a6070;
+  --input: #4a5060;
+  --rail: #f0f1f4;
+  --primary: #1f3399;
+  --primary-foreground: #ffffff;
+  --secondary: #e6e8ee;
+  --secondary-foreground: #000000;
+  --ring: #1f3399;
+}
+
+.dark.hc {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0a0a0c;
+  --card-foreground: #ffffff;
+  --popover: #0f1014;
+  --popover-foreground: #ffffff;
+  --muted: #16181d;
+  --muted-foreground: #d5d9e2;
+  --accent: #1f232b;
+  --accent-foreground: #ffffff;
+  --border: #9aa1b0;
+  --input: #aab0bd;
+  --rail: #000000;
+  --primary: #b3c4ff;
+  --primary-foreground: #000000;
+  --secondary: #1f232b;
+  --secondary-foreground: #ffffff;
+  --ring: #b3c4ff;
+}
+
 
 /* Editor colour themes (editor.theme; features-content M1). Scoped to the editor host:
    each overrides the editor surface, its gutter text and the syntax colours, for light

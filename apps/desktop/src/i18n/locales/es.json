@@ -2,7 +2,8 @@
   "app": {
     "name": "KataBox",
     "devData": "DATOS DE DESARROLLO",
-    "devDataHint": "Versión de desarrollo: el progreso se guarda en una carpeta aparte, no en tus datos reales."
+    "devDataHint": "Versión de desarrollo: el progreso se guarda en una carpeta aparte, no en tus datos reales.",
+    "skipToContent": "Saltar al contenido principal"
   },
   "nav": {
     "label": "Navegación principal",
@@ -385,6 +386,16 @@
       "copy": "Copiar",
       "copied": "Copiado.",
       "copyFailed": "No se pudo copiar. Selecciona el texto y cópialo tú."
+    },
+    "contrast": "Contraste",
+    "contrasts": {
+      "normal": "Normal",
+      "high": "Alto"
+    },
+    "motion": "Movimiento",
+    "motions": {
+      "system": "Seguir al sistema",
+      "reduced": "Reducir"
     }
   },
   "languages": {

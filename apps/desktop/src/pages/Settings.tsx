@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { UI_LANGS, type UiLangCode } from "@/i18n";
-import { THEMES, usePrefs, type ThemePref } from "@/lib/prefs";
+import { CONTRASTS, MOTIONS, THEMES, usePrefs, type ContrastPref, type MotionPref, type ThemePref } from "@/lib/prefs";
 import { api } from "@/lib/api";
 import { useOnboardingDone } from "@/onboarding/state";
 import { copyText, diagnosticsText, recentErrors } from "@/lib/diagnostics";
@@ -414,7 +414,7 @@ function CalibrationSection() {
 
 export function Settings() {
   const { t } = useTranslation();
-  const { theme, lang, setTheme, setLang } = usePrefs();
+  const { theme, lang, contrast, motion, setTheme, setLang, setContrast, setMotion } = usePrefs();
   const info = useAppInfo();
   const editor = useEditorPrefs();
 
@@ -455,6 +455,38 @@ export function Settings() {
                 {UI_LANGS.map((l) => (
                   <ToggleGroupItem key={l} value={l} lang={l} className="px-3">
                     {t(`language.${l}`)}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </Row>
+            <Row label={t("settings.contrast")}>
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                aria-label={t("settings.contrast")}
+                value={contrast}
+                onValueChange={(v) => v && setContrast(v as ContrastPref)}
+              >
+                {CONTRASTS.map((c) => (
+                  <ToggleGroupItem key={c} value={c} className="px-3">
+                    {t(`settings.contrasts.${c}`)}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </Row>
+            <Row label={t("settings.motion")}>
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                aria-label={t("settings.motion")}
+                value={motion}
+                onValueChange={(v) => v && setMotion(v as MotionPref)}
+              >
+                {MOTIONS.map((m) => (
+                  <ToggleGroupItem key={m} value={m} className="px-3">
+                    {t(`settings.motions.${m}`)}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
