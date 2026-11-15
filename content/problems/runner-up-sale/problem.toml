@@ -1,0 +1,13 @@
+id = "runner-up-sale"
+title = "Runner-up Sale"
+title_es = "La segunda venta"
+difficulty = "hard"
+tags = ["subquery", "null-handling"]
+pattern = "sql-aggregation"
+rank = 7
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

@@ -1,0 +1,1 @@
+{"input":{"tables":{"routes":[[64879,"Central","Market"],[75121,"Strand","Central"],[25197,"Central","Strand"],[52781,"Strand","Market"]]}},"output":{"columns":["pier","hops"],"rows":[["Market",1],["Strand",1]]}}

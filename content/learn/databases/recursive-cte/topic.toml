@@ -4,7 +4,7 @@ order = 4
 title = "Recursive queries"
 title_es = "Consultas recursivas"
 tags = ["sql", "recursion", "tree"]
-problems = ["org-chart", "family-generations"]
+problems = ["org-chart", "family-generations", "chain-depth", "hop-reach"]
 presets = ["small-company", "long-chain", "random"]
 default = [-1, 0, 0, 1, 1, 2]
 

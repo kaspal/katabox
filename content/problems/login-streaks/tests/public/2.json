@@ -1,0 +1,1 @@
+{"input":{"tables":{"logins":[[8,"cyrus","2025-12-31"],[9,"cyrus","2026-01-01"]]}},"output":{"columns":["username","longest"],"rows":[["cyrus",2]]}}

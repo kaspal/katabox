@@ -1,0 +1,1 @@
+{"input":{"tables":{"orders":[[80725,"2026-05-03 17:59",1311]]}},"output":{"columns":["day","orders","revenue_cents"],"rows":[["2026-05-03",1,1311]]}}

@@ -1,0 +1,1 @@
+{"input":{"tables":{"transactions":[[69090,"AC774","2026-01-01",48178]]}},"output":{"columns":["account","day","amount_cents","balance_cents"],"rows":[["AC774","2026-01-01",48178,48178]]}}

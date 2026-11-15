@@ -1,0 +1,13 @@
+id = "chain-depth"
+title = "Chain Depth"
+title_es = "Profundidad en la cadena"
+difficulty = "medium"
+tags = ["recursive-cte", "trees"]
+pattern = "sql-advanced"
+rank = 4
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

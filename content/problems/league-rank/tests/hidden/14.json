@@ -1,0 +1,1 @@
+{"input":{"tables":{"teams":[[96356,"Rangers","C",5],[33526,"City","C",3]]}},"output":{"columns":["division","name","points","place"],"rows":[["C","Rangers",5,1],["C","City",3,2]]}}

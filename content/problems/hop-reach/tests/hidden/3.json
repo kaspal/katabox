@@ -1,0 +1,1 @@
+{"input":{"tables":{"routes":[[75239,"Strand","Sands"],[45995,"Market","Strand"],[70006,"Sands","Market"],[76687,"Sands","Central"],[53422,"Market","Central"],[76580,"Strand","Market"],[30460,"Central","Sands"],[44141,"Strand","Central"],[89389,"Central","Strand"],[3757,"Central","Market"]]}},"output":{"columns":["pier","hops"],"rows":[["Market",1],["Sands",1],["Strand",1]]}}

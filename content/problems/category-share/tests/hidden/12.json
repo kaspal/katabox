@@ -1,0 +1,1 @@
+{"input":{"tables":{"sales":[[18691,"ink",1865],[50023,"ink",300],[1424,"tape",3012],[49120,"tape",100],[63248,"tape",1636],[35921,"tape",2761],[84333,"ink",716],[60322,"tape",4170]]}},"output":{"columns":["category","total_cents","share_pct"],"rows":[["tape",11679,80.2],["ink",2881,19.8]]}}

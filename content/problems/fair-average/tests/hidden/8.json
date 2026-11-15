@@ -1,0 +1,1 @@
+{"input":{"tables":{"reviews":[[25313,"Dixit",null],[92382,"Dixit",1],[5739,"Catan",4],[11166,"Catan",4]]}},"output":{"columns":["game","rated","avg_stars"],"rows":[["Catan",2,4.0],["Dixit",1,1.0]]}}

@@ -4,7 +4,7 @@ order = 3
 title = "Window functions"
 title_es = "Funciones de ventana"
 tags = ["sql", "prefix-sum"]
-problems = ["mileage-log"]
+problems = ["mileage-log", "running-balance", "league-rank", "price-moves", "login-streaks"]
 presets = ["two-accounts", "one-partition", "random"]
 default = [1, 50, 2, 20, 1, 15, 1, 5, 2, 40]
 

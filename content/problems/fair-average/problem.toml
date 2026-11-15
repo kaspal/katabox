@@ -1,0 +1,13 @@
+id = "fair-average"
+title = "Fair Average"
+title_es = "Media justa"
+difficulty = "medium"
+tags = ["group-by", "null-handling"]
+pattern = "sql-aggregation"
+rank = 4
+mode = "sql"
+
+[judge]
+checker = "rows-ordered:0.001"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

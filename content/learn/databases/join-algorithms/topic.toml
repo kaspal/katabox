@@ -4,7 +4,7 @@ order = 1
 title = "Join algorithms"
 title_es = "Algoritmos de unión"
 tags = ["sql", "hashing"]
-problems = ["two-sum"]
+problems = ["two-sum", "order-customers", "trip-legs", "idle-members", "ledger-mismatch"]
 presets = ["one-to-many", "no-match", "random"]
 default = [3, 1, 10, 2, 20, 3, 30, 2, 5, 3, 7, 3, 8, 4, 9]
 

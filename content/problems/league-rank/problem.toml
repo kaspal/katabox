@@ -1,0 +1,13 @@
+id = "league-rank"
+title = "League Rank"
+title_es = "Clasificación de la liga"
+difficulty = "medium"
+tags = ["window-functions", "ranking"]
+pattern = "sql-advanced"
+rank = 3
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

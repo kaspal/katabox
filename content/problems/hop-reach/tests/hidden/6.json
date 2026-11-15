@@ -1,0 +1,1 @@
+{"input":{"tables":{"routes":[[91701,"Lighthouse","Harbour"],[12292,"Sands","Lighthouse"],[99034,"Sands","Central"],[25843,"Harbour","Fort"],[91849,"Ness","Sands"],[83221,"Fort","Cape"],[38167,"Harbour","Cape"],[12787,"Ness","Cape"],[5988,"Fort","Central"],[77146,"Sands","Fort"],[26329,"Harbour","Sands"]]}},"output":{"columns":["pier","hops"],"rows":[]}}

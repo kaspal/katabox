@@ -1,0 +1,1 @@
+{"input":{"tables":{"reviews":[[24344,"Patchwork",2],[85461,"Patchwork",null],[30220,"Patchwork",1],[87319,"Splendor",null],[19289,"Patchwork",2]]}},"output":{"columns":["game","rated","avg_stars"],"rows":[["Patchwork",3,1.67],["Splendor",0,null]]}}

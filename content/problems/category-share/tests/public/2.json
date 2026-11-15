@@ -1,0 +1,1 @@
+{"input":{"tables":{"sales":[[5,"cards",999]]}},"output":{"columns":["category","total_cents","share_pct"],"rows":[["cards",999,100.0]]}}

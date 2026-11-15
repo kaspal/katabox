@@ -1,0 +1,13 @@
+id = "busy-stations"
+title = "Busy Stations"
+title_es = "Estaciones con movimiento"
+difficulty = "medium"
+tags = ["group-by", "having"]
+pattern = "sql-aggregation"
+rank = 3
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

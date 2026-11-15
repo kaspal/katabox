@@ -1,0 +1,1 @@
+{"input":{"tables":{"sales":[[1424,"Coast",4300],[49120,"Coast",2500],[63248,"Centre",2300],[35921,"Centre",2300],[84333,"Coast",2300],[60322,"Coast",1000],[90518,"Centre",4300],[78835,"Coast",4300]]}},"output":{"columns":["region","runner_up_cents"],"rows":[["Centre",2300],["Coast",2500]]}}

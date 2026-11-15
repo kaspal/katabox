@@ -1,0 +1,1 @@
+{"input":{"tables":{"trips":[[88690,"Market","Bridge",90],[844,"Museum","Museum",58],[44346,"Bridge","Museum",31],[65901,"Museum","Museum",65],[60781,"Bridge","Bridge",89],[79260,"Market","Museum",38],[10593,"Museum","Bridge",54]]}},"output":{"columns":["station","trips"],"rows":[["Museum",5],["Bridge",4]]}}

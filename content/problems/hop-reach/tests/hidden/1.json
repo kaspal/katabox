@@ -1,0 +1,1 @@
+{"input":{"tables":{"routes":[[45312,"Cove","Lighthouse"],[30261,"Lighthouse","Cove"],[88716,"Central","Lighthouse"],[28677,"Lighthouse","Cape"],[99739,"Cove","Cape"],[60242,"Central","Cove"],[37983,"Cove","Central"],[2817,"Central","Cape"]]}},"output":{"columns":["pier","hops"],"rows":[["Cape",1],["Cove",1],["Lighthouse",1]]}}

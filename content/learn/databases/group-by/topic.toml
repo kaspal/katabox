@@ -4,7 +4,7 @@ order = 2
 title = "GROUP BY"
 title_es = "GROUP BY"
 tags = ["sql", "hashing"]
-problems = ["crate-labels"]
+problems = ["crate-labels", "orders-per-day", "busy-stations", "fair-average", "quarter-pivot"]
 presets = ["two-groups", "one-group", "random"]
 default = [1, 10, 2, 5, 1, 30, 2, 7, 1, 2]
 

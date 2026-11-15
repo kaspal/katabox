@@ -1,0 +1,1 @@
+{"input":{"tables":{"reviews":[[90499,"Patchwork",2],[96980,"Carcassonne",5],[85464,"Patchwork",null],[69474,"Patchwork",2],[3802,"Carcassonne",null],[61031,"Patchwork",null],[32644,"Carcassonne",null],[85063,"Patchwork",1],[6797,"Patchwork",2],[20559,"Patchwork",2]]}},"output":{"columns":["game","rated","avg_stars"],"rows":[["Carcassonne",1,5.0],["Patchwork",5,1.8]]}}

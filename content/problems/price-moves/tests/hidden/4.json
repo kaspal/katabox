@@ -1,0 +1,1 @@
+{"input":{"tables":{"prices":[]}},"output":{"columns":["ticker","day","close_cents","prev_cents","change_pct"],"rows":[]}}

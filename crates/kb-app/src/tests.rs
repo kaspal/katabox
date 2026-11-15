@@ -656,7 +656,7 @@ async fn submits_drive_reviews_daily_problem_and_streak() {
 /// `PATTERN_TRACK` and the ranks); after one solve the usual daily and next rules apply.
 #[tokio::test]
 async fn a_brand_new_user_starts_at_fundamentals() {
-    use crate::practice::{PATTERN_TRACK, daily_pick, next_problem};
+    use crate::practice::{PATTERN_TRACK, daily_pick, hide_unopened_sql, next_problem};
     let app = app("brand-new").await;
     let today = "2026-11-14";
     let all = app.all_problems(UiLang::En).await.unwrap();
@@ -685,7 +685,9 @@ async fn a_brand_new_user_starts_at_fundamentals() {
         )
         .await
         .unwrap();
-    let all = app.all_problems(UiLang::En).await.unwrap();
+    // No SQL problem opened yet: SQL is never suggested (ADR 0031).
+    let all = hide_unopened_sql(app.all_problems(UiLang::En).await.unwrap(), "");
+    assert!(all.iter().all(|p| p.mode != kb_core::ProblemMode::Sql));
     let next = app
         .next_problem("two-sum", UiLang::En)
         .await
@@ -704,6 +706,7 @@ async fn a_brand_new_user_starts_at_fundamentals() {
     let install = app.store.user.install_id().await.unwrap();
     let expected = daily_pick(&all, tomorrow.parse().unwrap(), &install).unwrap();
     assert_eq!(daily.problem.id, expected.id);
+    assert_ne!(daily.problem.mode, kb_core::ProblemMode::Sql);
     app.close().await;
 }
 
