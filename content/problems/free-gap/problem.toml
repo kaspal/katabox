@@ -1,0 +1,13 @@
+id = "free-gap"
+title = "Free Gap"
+title_es = "Hueco libre"
+difficulty = "easy"
+tags = ["intervals", "sorting", "formatting"]
+pattern = "intervals"
+rank = 3
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

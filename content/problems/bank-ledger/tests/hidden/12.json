@@ -1,0 +1,1 @@
+{"stdin":"4\nSET em 47\nSET vq 61\nCOUNT 67\nSET em 71\n","stdout":"0\n"}

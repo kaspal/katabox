@@ -1,0 +1,15 @@
+id = "island-merges"
+title = "Island Merges"
+title_es = "Islas que se unen"
+difficulty = "hard"
+tags = ["union-find", "matrix", "graph"]
+pattern = "union-find"
+rank = 9
+mode = "program"
+profile = true
+profile_sizes = [1000, 2000, 4000, 8000, 14000, 20000]
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

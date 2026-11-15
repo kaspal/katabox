@@ -1,0 +1,13 @@
+id = "plot-survey"
+title = "Plot Survey"
+title_es = "Medición de parcelas"
+difficulty = "medium"
+tags = ["math", "cross-product", "number-theory"]
+pattern = "geometry"
+rank = 6
+mode = "program"
+
+[judge]
+checker = "tokens-float:1e-6"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

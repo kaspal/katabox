@@ -1,0 +1,1 @@
+{"stdin":"4\ndxm:15;ecca:18;dxm:7\ndxm:2;ecca:18;dxm:11\necca:41;ecca:6;ecca:43\ndxm:12;dxm:31;ecca:6;ecca:1\n","stdout":"dxm 78\necca 133\n"}

@@ -1,0 +1,1 @@
+{"stdin":"3\nyooqs:35;yooqs:39\no:42;fz:40;yooqs:34;yooqs:4\nfz:16\n","stdout":"fz 56\no 42\nyooqs 112\n"}

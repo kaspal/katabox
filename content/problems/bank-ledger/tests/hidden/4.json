@@ -1,0 +1,1 @@
+{"stdin":"10\nSET dx 61\nCOUNT -33\nCOUNT 90\nGET dx\nCOUNT 87\nBEGIN\nADD dx -17\nCOUNT -44\nADD dx -16\nCOUNT 29\n","stdout":"0\n0\n61\n0\n0\n0\n"}

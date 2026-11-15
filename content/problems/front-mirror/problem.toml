@@ -1,0 +1,15 @@
+id = "front-mirror"
+title = "Front Mirror"
+title_es = "Espejo delantero"
+difficulty = "hard"
+tags = ["string", "palindrome", "kmp"]
+pattern = "strings"
+rank = 9
+mode = "program"
+profile = true
+profile_sizes = [3000, 6000, 12000, 25000, 50000, 100000]
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

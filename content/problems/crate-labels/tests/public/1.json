@@ -1,0 +1,1 @@
+{"stdin": "3\napples:12;pears:3\npears:5;apples:1;figs:40\nkiwis:7\n", "stdout": "apples 13\nfigs 40\nkiwis 7\npears 8\n"}

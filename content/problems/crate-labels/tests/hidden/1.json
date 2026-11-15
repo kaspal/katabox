@@ -1,0 +1,1 @@
+{"stdin":"4\nzycid:32;zycid:25\nzycid:45;yopu:18;zycid:38;zycid:21\nzycid:2\nyopu:44\n","stdout":"yopu 62\nzycid 163\n"}

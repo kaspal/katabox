@@ -1,0 +1,1 @@
+{"stdin":"4\nSET ie 43\nSET v 64\nBEGIN\nSET v 70\n","stdout":""}
