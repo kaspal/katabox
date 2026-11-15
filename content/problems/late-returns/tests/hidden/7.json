@@ -1,0 +1,1 @@
+{"input":{"tables":{"loans":[[55667,497,"Ulysses Dick","2026-07-29","2026-08-08"]],"members":[[497,"vsp"],[781,"kyaipz"],[268,"xnrr"],[38,"gs"],[1,"wzxivztvc"]]}},"output":{"columns":["name","title","days_late"],"rows":[["vsp","Ulysses Dick",10]]}}

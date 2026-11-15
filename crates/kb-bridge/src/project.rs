@@ -41,6 +41,7 @@ pub fn language_id(language: Language) -> &'static str {
         Language::TypeScript => "typescript",
         Language::Php => "php",
         Language::Rust => "rust",
+        Language::Sql => "sql",
     }
 }
 
@@ -60,11 +61,68 @@ fn uri_of(path: &Path, dir: bool) -> io::Result<String> {
 
 /// Create (or refresh) the project for `problem` in `language` under `projects_root`,
 /// with `text` as the initial solution file.
+/// The parts of Node's API a program problem uses (ADR 0028), hand-written: not
+/// @types/node. Only program problems' TypeScript/JavaScript projects get it, so a
+/// function problem never sees `process` or `require`.
+pub const NODE_SHIM_FILE: &str = "node-program.d.ts";
+pub const NODE_SHIM: &str = r#"// KataBox: the Node APIs a program problem reads stdin and writes stdout with.
+// Hand-written for the editor's checks (not @types/node); the judge runs real Node.
+type KbEncoding = "utf8" | "utf-8" | "ascii" | "latin1";
+interface Buffer extends Uint8Array {
+  toString(encoding?: KbEncoding, start?: number, end?: number): string;
+}
+declare var Buffer: {
+  from(data: string | ArrayLike<number>, encoding?: KbEncoding): Buffer;
+  alloc(size: number): Buffer;
+  concat(list: readonly Uint8Array[]): Buffer;
+};
+declare module "node:fs" {
+  export function readFileSync(path: number | string, options: KbEncoding | { encoding: KbEncoding }): string;
+  export function readFileSync(path: number | string): Buffer;
+  export function readSync(fd: number, buffer: Uint8Array, offset?: number, length?: number, position?: number | null): number;
+  export function writeSync(fd: number, data: string | Uint8Array): number;
+}
+declare module "fs" {
+  export * from "node:fs";
+}
+interface KbReadStream {
+  fd: number;
+  setEncoding(encoding: KbEncoding): void;
+  on(event: "data", listener: (chunk: string) => void): void;
+  on(event: "end" | "close", listener: () => void): void;
+}
+interface KbWriteStream {
+  write(chunk: string | Uint8Array): boolean;
+}
+declare var process: {
+  stdin: KbReadStream;
+  stdout: KbWriteStream;
+  stderr: KbWriteStream;
+  argv: string[];
+  env: Record<string, string | undefined>;
+  exit(code?: number): never;
+};
+declare function require(id: string): any;
+"#;
+
 pub fn prepare(
     projects_root: &Path,
     problem: &str,
     language: Language,
     text: &str,
+    tc: &Toolchains,
+) -> io::Result<Project> {
+    prepare_with(projects_root, problem, language, text, false, tc)
+}
+
+/// [`prepare`], for a program problem when `program` is set: TypeScript and JavaScript
+/// projects then also get [`NODE_SHIM`].
+pub fn prepare_with(
+    projects_root: &Path,
+    problem: &str,
+    language: Language,
+    text: &str,
+    program: bool,
     tc: &Toolchains,
 ) -> io::Result<Project> {
     if !valid_problem_id(problem) {
@@ -79,6 +137,17 @@ pub fn prepare(
     let file_name = format!("solution.{}", language.extension());
     let file = dir.join(&file_name);
     std::fs::write(&file, text)?;
+    let shim = program && matches!(language, Language::TypeScript | Language::JavaScript);
+    let shim_path = dir.join(NODE_SHIM_FILE);
+    if shim {
+        std::fs::write(&shim_path, NODE_SHIM)?;
+    } else if shim_path.exists() {
+        std::fs::remove_file(&shim_path)?;
+    }
+    let mut ts_files = vec![file_name.clone()];
+    if shim {
+        ts_files.push(NODE_SHIM_FILE.to_string());
+    }
 
     let config: Option<(&str, serde_json::Value)> = match language {
         Language::Python => Some((
@@ -110,7 +179,7 @@ pub fn prepare(
                     "types": [],
                     "allowJs": true,
                 },
-                "files": [file_name],
+                "files": ts_files,
             }),
         )),
         Language::Php => Some((
@@ -129,6 +198,7 @@ pub fn prepare(
                 "blackfire.enabled": false,
             }),
         )),
+        Language::Sql => None,
         Language::Rust => {
             let sysroot = tc.rust_sysroot();
             Some((
@@ -170,6 +240,57 @@ mod tests {
         let d = std::env::temp_dir().join(format!("kb-bridge-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         d
+    }
+
+    #[test]
+    fn only_program_typescript_projects_get_the_node_shim() {
+        let root = temp("shim");
+        let tc = Toolchains::new(temp("tc-shim"));
+        let read = |p: &Project| -> serde_json::Value {
+            serde_json::from_str(&std::fs::read_to_string(p.dir.join("tsconfig.json")).unwrap())
+                .unwrap()
+        };
+        // A program problem: the shim is written and listed with the solution.
+        let p = prepare_with(&root, "tide-lows", Language::TypeScript, "code", true, &tc).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(p.dir.join(NODE_SHIM_FILE)).unwrap(),
+            NODE_SHIM
+        );
+        assert_eq!(
+            read(&p)["files"],
+            serde_json::json!(["solution.ts", NODE_SHIM_FILE])
+        );
+        let js = prepare_with(&root, "tide-lows", Language::JavaScript, "code", true, &tc).unwrap();
+        assert!(js.dir.join(NODE_SHIM_FILE).is_file());
+        // A function problem never sees it, even in a folder that once had it.
+        let p = prepare_with(&root, "tide-lows", Language::TypeScript, "code", false, &tc).unwrap();
+        assert!(!p.dir.join(NODE_SHIM_FILE).exists());
+        assert_eq!(read(&p)["files"], serde_json::json!(["solution.ts"]));
+        let p = prepare(&root, "two-sum", Language::TypeScript, "code", &tc).unwrap();
+        assert!(!p.dir.join(NODE_SHIM_FILE).exists());
+        // Other languages never get it.
+        let py = prepare_with(&root, "tide-lows", Language::Python, "code", true, &tc).unwrap();
+        assert!(!py.dir.join(NODE_SHIM_FILE).exists());
+        // The shim is hand-written and small: no @types/node.
+        assert!(NODE_SHIM.contains("declare module \"node:fs\"") && NODE_SHIM.len() < 4000);
+    }
+
+    #[test]
+    fn sql_has_no_server_and_no_config() {
+        let root = temp("sql");
+        let tc = Toolchains::new(temp("tc-sql"));
+        let p = prepare(&root, "late-returns", Language::Sql, "SELECT 1", &tc).unwrap();
+        assert_eq!(p.language_id, "sql");
+        assert_eq!(p.file.file_name().unwrap(), "solution.sql");
+        assert_eq!(
+            std::fs::read_dir(&p.dir).unwrap().count(),
+            1,
+            "only the solution"
+        );
+        assert_eq!(
+            crate::spec::unavailable_reason(Language::Sql, &tc).as_deref(),
+            Some("no language server for SQL")
+        );
     }
 
     #[test]

@@ -25,6 +25,7 @@ export function EditorStatusBar({
   onFormat,
   onInstall,
   basicCompletion = false,
+  completionNote,
 }: {
   language: Language;
   server: ServerState;
@@ -34,6 +35,8 @@ export function EditorStatusBar({
   onInstall?: () => void;
   /** A static completion list stands in for the missing server (PHP). */
   basicCompletion?: boolean;
+  /** What completes instead of a server (SQL: the problem's tables and columns). */
+  completionNote?: string;
 }) {
   const { t } = useTranslation();
   const name = t(`languages.${language}`);
@@ -67,7 +70,8 @@ export function EditorStatusBar({
   const reason = server.state === "unavailable" ? server.reason : null;
   // The status text is the one part that gives way on a narrow bar: it truncates (full text
   // in the title) so the counts and the cursor position never wrap.
-  const fullText = basicCompletion ? `${text} · ${t("lsp.status.basicCompletion")}` : text;
+  const note = completionNote ?? (basicCompletion ? t("lsp.status.basicCompletion") : null);
+  const fullText = note ? `${text} · ${note}` : text;
   const label = (
     <span
       className="inline-flex min-w-0 items-center gap-1.5"
@@ -86,9 +90,7 @@ export function EditorStatusBar({
       />
       <span className="truncate">
         {text}
-        {basicCompletion && (
-          <span data-testid="basic-completion"> · {t("lsp.status.basicCompletion")}</span>
-        )}
+        {note && <span data-testid="basic-completion"> · {note}</span>}
       </span>
     </span>
   );

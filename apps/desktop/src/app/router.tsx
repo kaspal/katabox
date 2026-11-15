@@ -47,7 +47,7 @@ export function parseLibrarySearch(s: Record<string, unknown>): LibrarySearch {
     status: oneOf(s.status, ["todo", "attempted", "solved"] as const),
     pattern: text(s.pattern),
     tag: text(s.tag),
-    mode: oneOf(s.mode, ["function", "program"] as const),
+    mode: oneOf(s.mode, ["function", "program", "sql"] as const),
     sort: oneOf(s.sort, SORT_KEYS),
     desc: s.desc === true || s.desc === "true" ? true : undefined,
     view: oneOf(s.view, ["lists"] as const),

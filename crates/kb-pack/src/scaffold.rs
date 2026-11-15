@@ -46,6 +46,8 @@ pub fn files_with_todo(dir: &Path) -> Vec<String> {
 pub enum NewMode {
     Function,
     Program,
+    /// One SELECT over the problem's tables (ADR 0031).
+    Sql,
 }
 
 fn kebab_id(id: &str) -> Result<(), String> {
@@ -205,6 +207,9 @@ TODO(kb-pack): el método, por qué es correcto, la complejidad y por qué lo ob
 pub fn new_problem(problems: &Path, id: &str, mode: NewMode) -> Result<Vec<PathBuf>, String> {
     kebab_id(id)?;
     let dir = problems.join(id);
+    if mode == NewMode::Sql {
+        return write_all(&dir, &sql_files(id));
+    }
     let program = mode == NewMode::Program;
     let toml = if program {
         format!(
@@ -358,6 +363,151 @@ if __name__ == \"__main__\":
         files.push((format!("solutions/ref.{}", lang.extension()), body));
     }
     write_all(&dir, &files)
+}
+
+/// The files of a new SQL package (ADR 0031): a one-table schema, a test, the scripts
+/// and the two queries, all marked [`TODO_MARKER`].
+fn sql_files(id: &str) -> Vec<(String, String)> {
+    let todo = TODO_MARKER;
+    let file = |name: &str, body: String| (name.to_string(), body);
+    vec![
+        file(
+            "problem.toml",
+            format!(
+                "id = \"{id}\"
+title = \"{todo}: Title\"
+title_es = \"{todo}: Título\"
+difficulty = \"easy\" # easy | medium | hard
+tags = [\"sorting\"] # {todo}: names from tag.names in en.json and es.json
+pattern = \"sql-basics\" # {todo}: sql-basics | sql-joins | sql-aggregation | sql-advanced
+rank = 5 # 1-10: the order within the pattern
+mode = \"sql\"
+
+[judge]
+checker = \"rows-unordered\" # rows-unordered | rows-ordered (the statement asks for an order), optionally :<eps>
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256
+"
+            ),
+        ),
+        file(
+            "schema.sql",
+            format!(
+                "-- {todo}: the tables (CREATE TABLE only; INTEGER, REAL, TEXT; PRIMARY KEY, NOT NULL, REFERENCES).
+CREATE TABLE items (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  price INTEGER NOT NULL
+);
+"
+            ),
+        ),
+        file(
+            "statement.md",
+            format!(
+                "{todo}: the story, then what to return.
+
+This is an **SQL problem**: write one `SELECT` statement (SQLite 3.53, as bundled). The tables are in the schema panel.
+
+## Tables
+
+- `items(id, name, price)`: {todo}.
+
+## Result
+
+{todo}: the columns, and the order when there is one.
+
+### Example 1
+
+{todo}: the tables of public test 1 and its result, as Markdown tables.
+
+## Constraints
+
+- {todo}
+"
+            ),
+        ),
+        file(
+            "statement.es.md",
+            format!(
+                "{todo}: la historia y qué devolver.
+
+Este es un **problema SQL**: escribe una sola sentencia `SELECT` (SQLite 3.53, la incluida). Las tablas están en el panel del esquema.
+
+## Tablas
+
+- `items(id, name, price)`: {todo}.
+
+## Resultado
+
+{todo}: las columnas y el orden, si lo hay.
+
+### Ejemplo 1
+
+{todo}: las tablas de la prueba pública 1 y su resultado, como tablas Markdown.
+
+## Restricciones
+
+- {todo}
+"
+            ),
+        ),
+        file("hints.md", HINTS_EN.into()),
+        file("hints.es.md", HINTS_ES.into()),
+        file("editorial.md", EDITORIAL_EN.into()),
+        file("editorial.es.md", EDITORIAL_ES.into()),
+        file(
+            "tests/public/1.json",
+            "{\"input\": {\"tables\": {\"items\": [[1, \"pen\", 3], [2, \"ink\", 5]]}}, \"output\": {\"columns\": [\"name\"], \"rows\": [[\"ink\"]]}}\n".into(),
+        ),
+        file(
+            "gen.py",
+            format!(
+                "\"\"\"{todo}: what the tables look like (an SQL problem, ADR 0031).\"\"\"
+import random
+
+
+def generate(seed, size):
+    rng = random.Random(seed)
+    # {todo}: \"small\" tables for the stress test, \"max\" for the limits, and edge
+    # shapes (empty tables, NULLs, ties).
+    n = 2000 if size == \"max\" else rng.randint(0, 8)
+    items = [[i + 1, rng.choice([\"pen\", \"ink\", \"pad\"]), rng.randint(1, 9)] for i in range(n)]
+    return {{\"tables\": {{\"items\": items}}}}
+"
+            ),
+        ),
+        file(
+            "validate.py",
+            format!(
+                "def validate(inp):
+    tables = inp[\"tables\"]
+    # {todo}: return the broken constraint as text, or None when the tables are valid
+    # (sizes, value ranges, keys that refer to existing rows).
+    return None
+"
+            ),
+        ),
+        file(
+            "solutions/brute.py",
+            format!(
+                "# {todo}: the expected result computed in plain Python (no SQL), from the tables.
+def solve(tables):
+    return {{\"columns\": [\"name\"], \"rows\": []}}
+"
+            ),
+        ),
+        file(
+            "solutions/ref.sql",
+            format!("-- {todo}: the reference query.\nSELECT name\nFROM items;\n"),
+        ),
+        file(
+            "solutions/wrong.sql",
+            format!(
+                "-- {todo}: a plausible mistake the tests must catch (kb-pack checks it gets Wrong Answer).\nSELECT name\nFROM items;\n"
+            ),
+        ),
+    ]
 }
 
 /// Scaffold `content/learn/<subject>/<id>`. The tracer (TypeScript, in the app) and its
@@ -695,6 +845,38 @@ mod tests {
             let _ = std::fs::remove_dir_all(&root);
         }
         assert!(new_problem(&temp("bad"), "Bad_Id", NewMode::Function).is_err());
+    }
+
+    #[test]
+    fn a_scaffolded_sql_problem_is_refused_until_every_todo_is_gone() {
+        let root = temp("sql");
+        new_problem(&root, "new-query", NewMode::Sql).unwrap();
+        let dir = root.join("new-query");
+        let todo = files_with_todo(&dir);
+        for f in [
+            "problem.toml",
+            "schema.sql",
+            "statement.md",
+            "statement.es.md",
+            "gen.py",
+            "validate.py",
+            "solutions/brute.py",
+            "solutions/ref.sql",
+            "solutions/wrong.sql",
+        ] {
+            assert!(todo.contains(&f.to_string()), "{f}: {todo:?}");
+        }
+        // Only the TODO markers (and the hidden tests `kb-pack generate` writes) stand in
+        // the way: the package itself is an SQL one.
+        let (_, errs) = crate::validate::validate_problem_meta(&dir);
+        assert!(!errs.is_empty());
+        assert!(
+            errs.iter()
+                .all(|e| e.contains(TODO_MARKER) || e == "needs at least one hidden test"),
+            "only TODO errors expected: {errs:?}"
+        );
+        assert!(!dir.join("solutions/ref.py").exists());
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]

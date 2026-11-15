@@ -28,6 +28,16 @@ Every place where you must write something says `TODO(kb-pack)`. Use
 already match the placeholder signature, so rename it in `problem.toml` and all four
 references together.
 
+`--mode sql` writes an SQL package instead (ADR 0031): `schema.sql` (`CREATE TABLE` only),
+`solutions/ref.sql`, `solutions/wrong.sql` (a plausible mistake the tests must catch with
+Wrong Answer), and `solutions/brute.py`, whose `solve(tables)` computes the expected
+`{"columns": [...], "rows": [[...]]}` in plain Python. Tests are
+`{"input": {"tables": {...}}, "output": {"columns": [...], "rows": [...]}}`;
+`kb-pack generate` fills the outputs from `ref.sql`. The statement names the dialect
+(SQLite) and the pattern is one of `sql-basics`, `sql-joins`, `sql-aggregation` and
+`sql-advanced`. `validate --run` checks the validator, `ref.sql` (Accepted, within half
+its limit), `wrong.sql` (Wrong Answer) and 500 generated inputs against `brute.py`.
+
 ### 2. Fill it in
 
 - **`problem.toml`:** title (EN and ES), difficulty, tags (each needs a name in

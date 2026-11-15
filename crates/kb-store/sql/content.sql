@@ -11,8 +11,9 @@ CREATE TABLE problems (
     difficulty    TEXT NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
     pattern       TEXT NOT NULL,
     rank          INTEGER NOT NULL,
-    -- 'function' (the harness calls the solution) or 'program' (stdin/stdout; ADR 0028)
-    mode          TEXT NOT NULL DEFAULT 'function' CHECK (mode IN ('function', 'program')),
+    -- 'function' (the harness calls the solution), 'program' (stdin/stdout; ADR 0028)
+    -- or 'sql' (one SELECT over the problem's tables; ADR 0031)
+    mode          TEXT NOT NULL DEFAULT 'function' CHECK (mode IN ('function', 'program', 'sql')),
     -- {"name": ..., "params": [{"name": ..., "type": ...}], "returns": ...}; a program
     -- problem stores its synthetic main(stdin: string) -> string
     signature     TEXT NOT NULL,
@@ -22,7 +23,13 @@ CREATE TABLE problems (
     -- 1 when the complexity profiler has data for it (profile_inputs; ADR 0024)
     profile       INTEGER NOT NULL DEFAULT 0,
     -- validate.py (constraint checks for custom tests, run in the sandbox; ADR 0016)
-    validator     TEXT
+    validator     TEXT,
+    -- SQL problems only (ADR 0031): schema.sql as written (the judge runs it) and its
+    -- tables as JSON for the schema panel and completion
+    -- ([{"name", "columns": [{"name", "type", "primary_key", "not_null", "references"}]}])
+    schema_sql    TEXT,
+    sql_schema    TEXT,
+    CHECK ((mode = 'sql') = (schema_sql IS NOT NULL AND sql_schema IS NOT NULL))
 ) WITHOUT ROWID;
 
 CREATE TABLE problem_tags (

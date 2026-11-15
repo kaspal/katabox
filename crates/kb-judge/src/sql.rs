@@ -464,6 +464,17 @@ pub fn check_result_shape(v: &Value) -> Result<(), String> {
     Ok(())
 }
 
+/// The starter query of an SQL problem: a comment naming the dialect, then a SELECT
+/// over the first table (it runs, and is wrong, until the user writes their query).
+pub fn starter(schema: &SqlSchema) -> String {
+    let first = schema
+        .tables
+        .first()
+        .map(|t| t.name.as_str())
+        .unwrap_or("t");
+    format!("-- One SELECT statement (SQLite 3.53)\nSELECT *\nFROM {first};\n")
+}
+
 /// What the harness reported for one test.
 enum HarnessRecord {
     Rows(Value),

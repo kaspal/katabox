@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { DebugThisCase } from "@/workspace/debug/context";
 import type { PracticeOutcome } from "@/bindings";
 import { SubmitPractice } from "@/practice/SubmitPractice";
@@ -23,6 +23,9 @@ import {
   type Signature,
 } from "@/workspace/results/validate";
 import type { Report } from "@/bindings";
+import { RowsTable } from "@/workspace/sql/RowsTable";
+import { NamedInputTables } from "@/workspace/sql/SqlViews";
+import { asRows, parseSqlTables } from "@/workspace/sql/tables";
 
 export type ResultsTab = "testcases" | "result" | "debug";
 
@@ -87,6 +90,12 @@ export function ResultsPane({
   const { t } = useTranslation();
   const phaseText = usePhaseText()(phase);
   const program = problem.mode === "program";
+  // SQL problems (ADR 0031): tables in, rows out; no custom tests yet.
+  const sql = problem.mode === "sql";
+  const sqlColumns = useMemo(
+    () => Object.fromEntries(parseSqlTables(problem.sql_tables).map((t) => [t.name, t.columns.map((c) => c.name)])),
+    [problem.sql_tables],
+  );
   const nextId = () => Math.max(0, ...customs.map((c) => c.id)) + 1;
   const customError =
     isAppError(error) && error.code === "invalid_custom_input" ? error.message : null;
@@ -137,7 +146,20 @@ export function ResultsPane({
                 </h4>
                 <DebugThisCase input={test.input} label={`${t("results.testKind.public")} ${test.index}`} />
               </div>
-              {program ? (
+              {sql ? (
+                <div className="space-y-2">
+                  <NamedInputTables input={test.input} columns={sqlColumns} limit={20} />
+                  {asRows(test.output) && (
+                    <RowsTable
+                      caption={t("sqlProblem.expected")}
+                      columns={asRows(test.output)!.columns}
+                      rows={asRows(test.output)!.rows}
+                      limit={20}
+                      testId={`public-${test.index}-expected`}
+                    />
+                  )}
+                </div>
+              ) : program ? (
                 <div className="grid gap-2 md:grid-cols-2">
                   <div className="min-w-0">
                     <p className="mb-1 text-xs text-muted-foreground">{t("results.program.input")}</p>
@@ -209,7 +231,12 @@ export function ResultsPane({
               )}
             </p>
           )}
-          {signature && (
+          {sql && (
+            <p className="text-xs text-muted-foreground" data-testid="sql-no-custom">
+              {t("sqlProblem.customUnavailable")}
+            </p>
+          )}
+          {signature && !sql && (
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
@@ -243,6 +270,7 @@ export function ResultsPane({
               celebrate={celebrate}
               mode={problem.mode}
               checker={problem.checker}
+              sqlColumns={sqlColumns}
               afterSummary={
                 (practice || complexity) && (
                   <>

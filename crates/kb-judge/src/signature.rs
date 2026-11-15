@@ -88,6 +88,8 @@ impl Type {
                 Type::Array(t) if t.is_node() => format!("({})[]", t.spelled_in(lang)),
                 Type::Array(t) => format!("{}[]", t.spelled_in(lang)),
             },
+            // SQL has no function signature (ADR 0031).
+            Language::Sql => String::new(),
             // PHP has one array type; nesting is not expressible in a type declaration.
             Language::Php => match self {
                 Type::Int => "int".into(),
@@ -302,7 +304,7 @@ impl Signature {
 /// A problem.toml name (camelCase) in `lang`'s naming convention.
 fn identifier(name: &str, lang: Language) -> String {
     let name = match lang {
-        Language::Python | Language::Rust => snake_case(name),
+        Language::Python | Language::Rust | Language::Sql => snake_case(name),
         // PHP functions are conventionally camelCase, like the problem.toml name.
         Language::Php | Language::TypeScript | Language::JavaScript => name.to_string(),
     };
@@ -486,6 +488,7 @@ fn avoid_keyword(name: String, lang: Language) -> String {
         Language::TypeScript | Language::JavaScript => TS_RESERVED,
         Language::Php => PHP_RESERVED,
         Language::Rust => RUST_KEYWORDS,
+        Language::Sql => &[],
     };
     // PHP keywords are case-insensitive.
     let lowered = name.to_ascii_lowercase();

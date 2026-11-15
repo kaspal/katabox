@@ -49,7 +49,9 @@
     "label": "Tipo de problema",
     "function": "Función",
     "program": "Programa",
-    "badge": "Programa · stdin/stdout"
+    "badge": "Programa · stdin/stdout",
+    "sql": "SQL",
+    "sqlBadge": "SQL · una consulta"
   },
   "status": {
     "label": "Estado",
@@ -83,7 +85,11 @@
     "bit-manipulation": "Manipulación de bits",
     "strings": "Cadenas",
     "union-find": "Union-find",
-    "design": "Diseño"
+    "design": "Diseño",
+    "sql-basics": "SQL básico",
+    "sql-joins": "Uniones SQL (JOIN)",
+    "sql-aggregation": "Agregación SQL",
+    "sql-advanced": "SQL avanzado"
   },
   "tag": {
     "label": "Etiqueta",
@@ -108,6 +114,7 @@
       "counting": "Conteo",
       "cross-product": "Producto cruzado",
       "cycle": "Ciclo",
+      "dates": "Fechas",
       "design": "Diseño",
       "dfs": "Búsqueda en profundidad",
       "digit-dp": "DP por dígitos",
@@ -127,6 +134,7 @@
       "input-parsing": "Lectura de entrada",
       "interval-dp": "DP por intervalos",
       "intervals": "Intervalos",
+      "join": "Unión (JOIN)",
       "kmp": "KMP",
       "knapsack": "Mochila",
       "lazy-propagation": "Propagación perezosa",
@@ -224,7 +232,8 @@
       "editorial": "Solución",
       "submissions": "Envíos",
       "notes": "Notas",
-      "history": "Historial"
+      "history": "Historial",
+      "schema": "Tablas"
     },
     "limits": {
       "time": "Tiempo límite",
@@ -403,7 +412,8 @@
     "javascript": "JavaScript",
     "typescript": "TypeScript",
     "php": "PHP",
-    "rust": "Rust"
+    "rust": "Rust",
+    "sql": "SQL"
   },
   "time": {
     "justNow": "ahora mismo"
@@ -899,7 +909,8 @@
       "changedCount_one": "{{count}} cambio",
       "changedCount_other": "{{count}} cambios"
     },
-    "programUnsupported": "Los problemas de programa se pueden depurar en Python y JavaScript/TypeScript."
+    "programUnsupported": "Los problemas de programa se pueden depurar en Python y JavaScript/TypeScript.",
+    "sqlUnsupported": "El depurador no está disponible en los problemas SQL: una consulta no tiene pasos que reproducir."
   },
   "complexity": {
     "button": "Complejidad",
@@ -2798,5 +2809,35 @@
       "label": "Bienvenida",
       "button": "Mostrar de nuevo la bienvenida"
     }
+  },
+  "sqlProblem": {
+    "schemaIntro": "Las tablas que lee tu consulta. Las filas de ejemplo vienen de la prueba pública 1.",
+    "columnsOf": "Columnas de {{table}}",
+    "column": "Columna",
+    "type": "Tipo",
+    "keys": "Claves",
+    "primaryKey": "Clave primaria",
+    "notNull": "No nulo",
+    "references": "Referencia a {{table}}.{{column}}",
+    "sample": "Filas de ejemplo: {{shown}} de {{count}}",
+    "tableCaption_one": "{{table}} · {{count}} fila",
+    "tableCaption_other": "{{table}} · {{count}} filas",
+    "null": "NULL",
+    "noRows": "Sin filas",
+    "moreRows_one": "… {{count}} fila más",
+    "moreRows_other": "… {{count}} filas más",
+    "firstDiff": "primera diferencia",
+    "expected": "Filas esperadas",
+    "actual": "Tus filas",
+    "result": "Filas",
+    "rowsCount_one": "{{count}} fila",
+    "rowsCount_other": "{{count}} filas",
+    "ordered": "El orden de las filas importa",
+    "unordered": "El orden de las filas no importa",
+    "columnsDiffer": "Las columnas no coinciden: se esperaba {{expected}}; las tuyas son {{actual}}. Corrige primero las columnas (nombres y orden).",
+    "inputTables": "Las tablas de la prueba",
+    "customUnavailable": "Las pruebas personalizadas aún no están disponibles en los problemas SQL: editar tablas llegará más adelante.",
+    "needsPython": "Los problemas SQL se ejecutan con el SQLite de Python. Instala Python para ejecutar tu consulta.",
+    "completion": "autocompletado de tablas, columnas y palabras clave"
   }
 }

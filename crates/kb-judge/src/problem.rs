@@ -196,6 +196,40 @@ impl Problem {
         .map_err(bad)
     }
 
+    /// Build an SQL problem (ADR 0031) from stored parts: its `schema.sql` text, checker,
+    /// limits and tests, with the same checks as [`Problem::load`].
+    pub fn from_sql_parts(
+        id: &str,
+        schema_sql: &str,
+        checker: &str,
+        time_limit_ms: u32,
+        memory_mb: u32,
+        tests: Vec<TestCase>,
+    ) -> Result<Problem, JudgeError> {
+        let bad = |msg: String| JudgeError::Problem(format!("{id}: {msg}"));
+        let schema =
+            crate::sql::parse_schema(schema_sql).map_err(|e| bad(format!("schema.sql: {e}")))?;
+        for t in &tests {
+            crate::sql::check_tables(&schema, &t.input)
+                .map_err(|e| bad(format!("{:?} test {}: {e}", t.kind, t.index)))?;
+            crate::sql::check_result_shape(&t.expected)
+                .map_err(|e| bad(format!("{:?} test {}: output: {e}", t.kind, t.index)))?;
+        }
+        let mut problem = Problem::new(
+            id.to_string(),
+            PathBuf::new(),
+            ProblemMode::Sql,
+            program_signature(),
+            checker,
+            time_limit_ms,
+            memory_mb,
+            tests,
+        )
+        .map_err(bad)?;
+        problem.sql = Some(schema);
+        Ok(problem)
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn new(
         id: String,

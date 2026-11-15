@@ -25,15 +25,29 @@ pub enum Language {
     TypeScript,
     Php,
     Rust,
+    /// SQL problems only (ADR 0031): one query, run by the Python host's sqlite3.
+    Sql,
 }
 
 impl Language {
+    /// The code languages: every problem mode but SQL offers these. SQL is not in this
+    /// list, so per-language loops (references, calibration, toolchains) never meet it.
     pub const ALL: [Language; 5] = [
         Language::Python,
         Language::JavaScript,
         Language::TypeScript,
         Language::Php,
         Language::Rust,
+    ];
+
+    /// Every language, SQL included (parsing, display).
+    pub const EVERY: [Language; 6] = [
+        Language::Python,
+        Language::JavaScript,
+        Language::TypeScript,
+        Language::Php,
+        Language::Rust,
+        Language::Sql,
     ];
 
     /// Stable identifier used in file names and the database.
@@ -44,6 +58,7 @@ impl Language {
             Language::TypeScript => "typescript",
             Language::Php => "php",
             Language::Rust => "rust",
+            Language::Sql => "sql",
         }
     }
 
@@ -55,6 +70,7 @@ impl Language {
             Language::TypeScript => "ts",
             Language::Php => "php",
             Language::Rust => "rs",
+            Language::Sql => "sql",
         }
     }
 
@@ -77,7 +93,7 @@ pub struct UnknownLanguage(pub String);
 impl FromStr for Language {
     type Err = UnknownLanguage;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Language::ALL
+        Language::EVERY
             .into_iter()
             .find(|l| l.id() == s || l.extension() == s)
             .ok_or_else(|| UnknownLanguage(s.to_string()))

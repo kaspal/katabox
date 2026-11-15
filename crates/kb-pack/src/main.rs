@@ -33,7 +33,7 @@
 //! `target/content.db`, pack `core`, this crate's version). Refuses to build if any
 //! problem fails validation.
 //!
-//! `kb-pack new ID [--mode function|program] [DIR]` — scaffolds `DIR/ID` (default
+//! `kb-pack new ID [--mode function|program|sql] [DIR]` — scaffolds `DIR/ID` (default
 //! `content/problems`) with every file a package needs, each marked `TODO(kb-pack)` where
 //! something must be written; validation refuses a file that still has the marker.
 //!
@@ -52,7 +52,7 @@ const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run [--problems ID,ID |
                      kb-pack profile PROBLEM_DIR [--root ROOT]\n  \
                      kb-pack profile --inputs [DIR] [--root ROOT]
                        kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]
-                       kb-pack new ID [--mode function|program] [DIR]
+                       kb-pack new ID [--mode function|program|sql] [DIR]
                        kb-pack new-topic SUBJECT ID [LEARN_DIR]
                        kb-pack preview PROBLEM_DIR [--out DIR]";
 
@@ -88,12 +88,8 @@ fn new_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
             "--mode" => match args.next().as_deref() {
                 Some("function") => mode = NewMode::Function,
                 Some("program") => mode = NewMode::Program,
-                Some("sql") => {
-                    return usage(
-                        "--mode sql waits for SQL in the app (ADR 0031); use function or program",
-                    );
-                }
-                _ => return usage("--mode is function or program"),
+                Some("sql") => mode = NewMode::Sql,
+                _ => return usage("--mode is function, program or sql"),
             },
             s if s.starts_with("--") => return usage(&format!("unknown option {s}")),
             _ if id.is_none() => id = Some(a),

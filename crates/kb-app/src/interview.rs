@@ -111,7 +111,12 @@ pub fn pick_problems<'a>(
 ) -> Option<[&'a ProblemSummary; 2]> {
     let mut fresh: Vec<&ProblemSummary> = all
         .iter()
-        .filter(|p| p.status != Some(ProblemStatus::Solved) && !touched.contains(&p.id))
+        // SQL problems (ADR 0031) take only SQL; a session's languages are code languages.
+        .filter(|p| {
+            p.status != Some(ProblemStatus::Solved)
+                && !touched.contains(&p.id)
+                && p.mode != kb_core::ProblemMode::Sql
+        })
         .collect();
     fresh.sort_by(|a, b| a.id.cmp(&b.id));
     let mut chosen: Vec<&ProblemSummary> = Vec::new();

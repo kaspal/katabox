@@ -18,7 +18,7 @@ use crate::{App, AppError, AppErrorCode, Result};
 /// The order patterns are learnt in (the pattern map and the "next problem" fallback):
 /// the order of `pattern.*` in the UI's locale files. Patterns not listed sort after
 /// these, by id.
-pub const PATTERN_TRACK: [&str; 23] = [
+pub const PATTERN_TRACK: [&str; 27] = [
     "fundamentals",
     "arrays-hashing",
     "sorting",
@@ -42,6 +42,12 @@ pub const PATTERN_TRACK: [&str; 23] = [
     "strings",
     "union-find",
     "design",
+    // SQL problems (ADR 0031): last, and never suggested before the user opens one
+    // ([`hide_unopened_sql`]).
+    "sql-basics",
+    "sql-joins",
+    "sql-aggregation",
+    "sql-advanced",
 ];
 
 /// Review intervals in days: after the first Accepted, then after each passed review.
@@ -100,6 +106,20 @@ pub fn apply_floor(
     all.into_iter()
         .filter(|p| p.id == keep || past_floor(p, floor))
         .collect()
+}
+
+/// `all` without SQL problems (ADR 0031) until the user has opened one: the daily problem
+/// and "next problem" never push SQL on someone practising algorithms. Opened means a
+/// Run or Submit (a status), or `current` itself being an SQL problem.
+pub fn hide_unopened_sql(all: Vec<ProblemSummary>, current: &str) -> Vec<ProblemSummary> {
+    let is_sql = |p: &ProblemSummary| p.mode == kb_core::ProblemMode::Sql;
+    let opened = all
+        .iter()
+        .any(|p| is_sql(p) && (p.status.is_some() || p.id == current));
+    if opened {
+        return all;
+    }
+    all.into_iter().filter(|p| !is_sql(p)).collect()
 }
 
 /// Parse the `practice.start` setting (anything else: no floor).
@@ -645,7 +665,8 @@ impl App {
         lang: UiLang,
     ) -> Result<Option<ProblemSummary>> {
         let floor = self.start_floor().await?;
-        let all = apply_floor(self.all_problems(lang).await?, floor.as_ref(), current);
+        let all = hide_unopened_sql(self.all_problems(lang).await?, current);
+        let all = apply_floor(all, floor.as_ref(), current);
         Ok(next_problem(&all, current).cloned())
     }
 
@@ -653,7 +674,8 @@ impl App {
     pub async fn daily_problem(&self, today: &str, lang: UiLang) -> Result<Option<DailyProblem>> {
         let day = parse_day(today)?;
         let floor = self.start_floor().await?;
-        let all = apply_floor(self.all_problems(lang).await?, floor.as_ref(), "");
+        let all = hide_unopened_sql(self.all_problems(lang).await?, "");
+        let all = apply_floor(all, floor.as_ref(), "");
         let pick = match self.store.user.daily_pick(day).await? {
             Some(p) if all.iter().any(|x| x.id == p.problem_id) => p,
             // No pick yet, or the picked problem left the pack: pick (again).
@@ -1128,6 +1150,52 @@ mod tests {
         // From the last pattern: wraps around to the first.
         assert_eq!(next_problem(&all, "z1").unwrap().id, "a2");
         assert_eq!(next_problem(&all, "missing"), None);
+    }
+
+    #[test]
+    fn sql_is_never_pushed_before_the_user_opens_an_sql_problem() {
+        let sql = |id: &str, pattern: &str, rank: u8| {
+            let mut x = p(id, pattern, rank, false);
+            x.mode = kb_core::ProblemMode::Sql;
+            x
+        };
+        let mut all = pack();
+        all.extend([sql("q1", "sql-basics", 1), sql("q2", "sql-joins", 1)]);
+        // Every algorithm problem solved but g9: SQL would come next by track order.
+        for x in &mut all {
+            if !x.id.starts_with('q') && x.id != "g9" {
+                x.status = Some(ProblemStatus::Solved);
+            }
+        }
+        let hidden = hide_unopened_sql(all.clone(), "g9");
+        assert!(hidden.iter().all(|x| x.mode != kb_core::ProblemMode::Sql));
+        // "Next problem" from g9 has nothing left but SQL: it suggests nothing.
+        assert_eq!(next_problem(&hidden, "g9"), None);
+        assert_eq!(next_problem(&all, "g9").unwrap().id, "q1");
+        // The daily problem never lands on SQL, over many days and installs.
+        for d in 1..=60 {
+            let today = day("2026-11-01").add_days(d);
+            let pick = daily_pick(&hidden, today, "install").unwrap();
+            assert_eq!(pick.mode, kb_core::ProblemMode::Function, "{}", pick.id);
+        }
+        // Once the user opened an SQL problem (a Run or Submit), SQL is fair game.
+        let mut opened = all.clone();
+        opened.iter_mut().find(|x| x.id == "q2").unwrap().status = Some(ProblemStatus::Attempted);
+        let shown = hide_unopened_sql(opened, "g9");
+        assert_eq!(shown.len(), all.len());
+        assert_eq!(next_problem(&shown, "g9").unwrap().id, "q1");
+        // So does being on one.
+        assert_eq!(hide_unopened_sql(all.clone(), "q1").len(), all.len());
+        // A brand-new user starts at the beginning of the track, never on SQL.
+        let fresh: Vec<ProblemSummary> = all
+            .iter()
+            .cloned()
+            .map(|mut x| {
+                x.status = None;
+                x
+            })
+            .collect();
+        assert_eq!(start_here(&fresh).unwrap().pattern, "arrays-hashing");
     }
 
     #[test]

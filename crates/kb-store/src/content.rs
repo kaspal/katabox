@@ -17,7 +17,7 @@ use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 7;
+pub const CONTENT_SCHEMA_VERSION: i64 = 8;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -81,6 +81,17 @@ pub struct PackProblem {
     pub solutions: Vec<(Language, String)>,
     /// `validate.py`, when the problem has one (ADR 0016).
     pub validator: Option<String>,
+    /// SQL problems (ADR 0031): `schema.sql` as written, and its tables as JSON.
+    pub sql: Option<PackSql>,
+}
+
+/// An SQL problem's schema (ADR 0031).
+#[derive(Debug, Clone, PartialEq)]
+pub struct PackSql {
+    /// `schema.sql`, which the judge runs before each test.
+    pub schema_sql: String,
+    /// The tables, columns and types (`kb_judge::sql::SqlSchema::to_json`).
+    pub tables: Value,
 }
 
 /// The complexity profiler's data for one problem (ADR 0024).
@@ -210,6 +221,9 @@ pub struct ProblemView {
     pub time_limits: Vec<LanguageLimit>,
     /// The time scale in `time_limits` (1.0 = the reference machine; ADR 0017).
     pub time_scale: f64,
+    /// An SQL problem's tables (ADR 0031): `[{"name", "columns": [{"name", "type",
+    /// "primary_key", "not_null", "references"}]}]`, for the schema panel and completion.
+    pub sql_tables: Option<Value>,
 }
 
 /// What the judge needs: settings and every test (public first, then hidden).
@@ -224,6 +238,8 @@ pub struct JudgeData {
     pub tests: Vec<TestCase>,
     /// `validate.py`, checking custom inputs (ADR 0016).
     pub validator: Option<String>,
+    /// An SQL problem's `schema.sql` (ADR 0031).
+    pub schema_sql: Option<String>,
 }
 
 /// Read-only handle to content.db.
@@ -403,6 +419,10 @@ impl ContentDb {
             profile: p.try_get("profile")?,
             time_limits: Vec::new(),
             time_scale: 1.0,
+            sql_tables: p
+                .try_get::<Option<String>, _>("sql_schema")?
+                .map(|s| serde_json::from_str(&s))
+                .transpose()?,
         })
     }
 
@@ -426,10 +446,20 @@ impl ContentDb {
         v.ok_or_else(|| StoreError::NotFound(format!("problem {id}")))
     }
 
+    /// The problem's mode, without loading its tests.
+    pub async fn problem_mode(&self, id: &str) -> Result<ProblemMode> {
+        let m: Option<String> = sqlx::query_scalar("SELECT mode FROM problems WHERE id = ?")
+            .bind(id)
+            .fetch_optional(&self.pool)
+            .await?;
+        parse_mode(&m.ok_or_else(|| StoreError::NotFound(format!("problem {id}")))?)
+    }
+
     /// Settings and all tests for judging `id` (public first, then hidden).
     pub async fn judge_data(&self, id: &str) -> Result<JudgeData> {
         let p = sqlx::query(
-            "SELECT mode, signature, checker, time_limit_ms, memory_mb, validator FROM problems WHERE id = ?",
+            "SELECT mode, signature, checker, time_limit_ms, memory_mb, validator, schema_sql
+             FROM problems WHERE id = ?",
         )
         .bind(id)
         .fetch_optional(&self.pool)
@@ -461,6 +491,7 @@ impl ContentDb {
             memory_mb: p.try_get("memory_mb")?,
             tests,
             validator: p.try_get("validator")?,
+            schema_sql: p.try_get("schema_sql")?,
         })
     }
 
@@ -657,8 +688,9 @@ fn parse_mode(s: &str) -> Result<ProblemMode> {
 async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<()> {
     sqlx::query(
         "INSERT INTO problems (id, difficulty, pattern, rank, mode, signature, checker,
-                               time_limit_ms, memory_mb, profile, validator)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               time_limit_ms, memory_mb, profile, validator, schema_sql,
+                               sql_schema)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&p.id)
     .bind(difficulty_code(p.difficulty))
@@ -671,6 +703,13 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
     .bind(p.memory_mb)
     .bind(p.profile.is_some())
     .bind(&p.validator)
+    .bind(p.sql.as_ref().map(|s| s.schema_sql.as_str()))
+    .bind(
+        p.sql
+            .as_ref()
+            .map(|s| serde_json::to_string(&s.tables))
+            .transpose()?,
+    )
     .execute(&mut *conn)
     .await?;
 
@@ -909,6 +948,7 @@ pub(crate) mod tests {
                 test(TestKind::Public, 1, 1),
             ],
             solutions: vec![(Language::Python, "def widest_gap(nums): ...\n".into())],
+            sql: None,
         }
     }
 
@@ -925,6 +965,57 @@ pub(crate) mod tests {
         ];
         build(&path, &meta, &problems).await.unwrap();
         (dir, ContentDb::open(&path).await.unwrap())
+    }
+
+    /// An SQL problem (ADR 0031): its schema text and tables round-trip; other problems
+    /// have neither.
+    #[tokio::test]
+    async fn sql_problems_keep_their_schema() {
+        let dir = temp_dir("sql-schema");
+        let path = dir.join("content.db");
+        let meta = PackMeta {
+            pack_id: "test".into(),
+            pack_version: "1.0.0".into(),
+        };
+        let mut sql = sample_problem("rows-a", Difficulty::Easy, 1, false);
+        sql.mode = ProblemMode::Sql;
+        sql.pattern = "sql-basics".into();
+        sql.checker = "rows-unordered".into();
+        let schema_sql = "CREATE TABLE t (id INTEGER PRIMARY KEY, name TEXT NOT NULL);\n";
+        let tables = json!([{"name": "t", "columns": [
+            {"name": "id", "type": "integer", "primary_key": true, "not_null": false, "references": null},
+            {"name": "name", "type": "text", "primary_key": false, "not_null": true, "references": null}
+        ]}]);
+        sql.sql = Some(PackSql {
+            schema_sql: schema_sql.into(),
+            tables: tables.clone(),
+        });
+        let plain = sample_problem("gap-a", Difficulty::Easy, 2, false);
+        build(&path, &meta, &[sql, plain]).await.unwrap();
+        let db = ContentDb::open(&path).await.unwrap();
+
+        assert_eq!(db.problem_mode("rows-a").await.unwrap(), ProblemMode::Sql);
+        assert_eq!(
+            db.problem_mode("gap-a").await.unwrap(),
+            ProblemMode::Function
+        );
+        let view = db.get_problem("rows-a", UiLang::En).await.unwrap();
+        assert_eq!(view.mode, ProblemMode::Sql);
+        assert_eq!(view.sql_tables, Some(tables));
+        let jd = db.judge_data("rows-a").await.unwrap();
+        assert_eq!(jd.schema_sql.as_deref(), Some(schema_sql));
+        assert_eq!(jd.checker, "rows-unordered");
+
+        let view = db.get_problem("gap-a", UiLang::En).await.unwrap();
+        assert_eq!(view.sql_tables, None);
+        assert_eq!(db.judge_data("gap-a").await.unwrap().schema_sql, None);
+
+        // The schema's CHECK: an SQL problem without its schema is refused at build time.
+        let mut broken = sample_problem("rows-b", Difficulty::Easy, 1, false);
+        broken.mode = ProblemMode::Sql;
+        let other = dir.join("broken.db");
+        assert!(build(&other, &meta, &[broken]).await.is_err());
+        db.close().await;
     }
 
     #[tokio::test]
@@ -989,7 +1080,7 @@ pub(crate) mod tests {
                 .await
                 .unwrap();
         assert_eq!(kinds, ["blob/blob"]);
-        assert_eq!(CONTENT_SCHEMA_VERSION, 7);
+        assert_eq!(CONTENT_SCHEMA_VERSION, 8);
         // Profile data round-trips (ADR 0024); gap-b has none.
         let mut want = packed.profile.clone().unwrap();
         want.reference.sort_by_key(|(l, _)| l.id());

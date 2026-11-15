@@ -32,7 +32,17 @@ const PATTERNS: &[&str] = &[
     "strings",
     "union-find",
     "design",
+    // SQL problems (ADR 0031)
+    "sql-basics",
+    "sql-joins",
+    "sql-aggregation",
+    "sql-advanced",
 ];
+
+/// The patterns of SQL problems: an SQL problem has one of these, and only SQL problems
+/// do (ADR 0031).
+pub(crate) const SQL_PATTERNS: &[&str] =
+    &["sql-basics", "sql-joins", "sql-aggregation", "sql-advanced"];
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -359,6 +369,21 @@ pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<Stri
         errs.push(format!("rank must be 1-10, got {}", meta.rank));
     }
     let program = meta.mode == kb_core::ProblemMode::Program;
+    let sql = meta.mode == kb_core::ProblemMode::Sql;
+    if sql != SQL_PATTERNS.contains(&meta.pattern.as_str()) {
+        errs.push(if sql {
+            format!("an SQL problem's pattern is one of {SQL_PATTERNS:?}")
+        } else {
+            format!(
+                "pattern {:?} is for SQL problems (mode = \"sql\")",
+                meta.pattern
+            )
+        });
+    }
+    if sql {
+        validate_sql_package(dir, &meta, &mut errs);
+        return (Some(meta.difficulty), errs);
+    }
     match (&meta.signature, program) {
         (Some(sig), false) => {
             if sig.name.is_empty() || sig.returns.is_empty() {
@@ -388,6 +413,9 @@ pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<Stri
         } else {
             "text checkers (tokens, lines) are for program problems".into()
         }),
+        Ok(c) if c.is_rows() => {
+            errs.push("rows checkers are for SQL problems (mode = \"sql\")".into())
+        }
         Ok(_) => {}
     }
     if meta.judge.time_limit_ms == 0 || meta.judge.memory_mb == 0 {
@@ -498,6 +526,99 @@ pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<Stri
         check_reference_signatures(dir, &mut errs);
     }
     (Some(meta.difficulty), errs)
+}
+
+/// An SQL package (ADR 0031): `schema.sql`, `rows-*` checker, tests that fit the schema,
+/// `ref.sql` and `wrong.sql` only (SQL problems offer only SQL), and the scripts: gen.py
+/// with brute.py (`solve(tables)` in plain Python) and validate.py. No naive solutions
+/// or profile: the complexity of a query is SQLite's.
+fn validate_sql_package(dir: &Path, meta: &ProblemToml, errs: &mut Vec<String>) {
+    if meta.signature.is_some() {
+        errs.push("an SQL problem has no [signature] (its query reads tables)".into());
+    }
+    match meta.judge.checker.parse::<kb_judge::Checker>() {
+        Err(e) => errs.push(e),
+        Ok(c) if !c.is_rows() => errs.push(
+            "an SQL problem needs a rows checker (rows-ordered | rows-unordered, optionally :<eps>)"
+                .into(),
+        ),
+        Ok(_) => {}
+    }
+    if meta.judge.time_limit_ms == 0 || meta.judge.memory_mb == 0 {
+        errs.push("judge limits must be positive".into());
+    }
+    if meta.profile || meta.profile_sizes.is_some() || dir.join("profile").exists() {
+        errs.push("SQL problems have no complexity profile".into());
+    }
+    for f in [
+        "schema.sql",
+        "statement.md",
+        "statement.es.md",
+        "hints.md",
+        "editorial.md",
+        "gen.py",
+        "validate.py",
+        "solutions/brute.py",
+        "solutions/ref.sql",
+        "solutions/wrong.sql",
+    ] {
+        if !dir.join(f).is_file() {
+            errs.push(format!("missing {f}"));
+        }
+    }
+    for (file, def) in [
+        ("gen.py", "def generate("),
+        ("validate.py", "def validate("),
+        ("solutions/brute.py", "def solve("),
+    ] {
+        if let Ok(src) = fs::read_to_string(dir.join(file))
+            && !src.lines().any(|l| l.trim_start().starts_with(def))
+        {
+            errs.push(format!("{file} must define {def}...)"));
+        }
+    }
+    // Only SQL: no reference or naive solution in another language.
+    if let Ok(entries) = fs::read_dir(dir.join("solutions")) {
+        let allowed = ["ref.sql", "wrong.sql", "brute.py"];
+        for e in entries.flatten() {
+            let name = e.file_name().to_string_lossy().into_owned();
+            if !allowed.contains(&name.as_str()) {
+                errs.push(format!(
+                    "solutions/{name}: an SQL problem has only ref.sql, wrong.sql and brute.py"
+                ));
+            }
+        }
+    }
+    // The dialect is part of the statement.
+    for f in ["statement.md", "statement.es.md"] {
+        if let Ok(text) = fs::read_to_string(dir.join(f))
+            && !text.contains("SQLite")
+        {
+            errs.push(format!("{f} must name the dialect (SQLite)"));
+        }
+    }
+    // Tests: they load against the schema (kb-judge checks tables and results).
+    match kb_judge::Problem::load(dir) {
+        Err(e) => errs.push(e.to_string()),
+        Ok(p) => {
+            let public = p.public_tests().count();
+            if public == 0 {
+                errs.push("needs at least one public test".into());
+            }
+            if p.tests.len() == public {
+                errs.push("needs at least one hidden test".into());
+            }
+            for t in &p.tests {
+                let v = serde_json::json!([t.input, t.expected]);
+                if let Some(n) = unsafe_integer(&v) {
+                    errs.push(format!(
+                        "{:?} test {}: {n} is outside ±(2⁵³ − 1), where JavaScript loses precision",
+                        t.kind, t.index
+                    ));
+                }
+            }
+        }
+    }
 }
 
 /// A program problem's tests (ADR 0028), in file order: `{"stdin": text, "stdout":

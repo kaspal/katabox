@@ -1358,7 +1358,11 @@ export type JudgeEvent =
  * Languages supported by the judge. Adding one means a `languages/<id>/` folder
  * (language.toml + harness template) and a variant here.
  */
-export type Language = "python" | "javascript" | "typescript" | "php" | "rust"
+export type Language = "python" | "javascript" | "typescript" | "php" | "rust" | 
+/**
+ * SQL problems only (ADR 0031): one query, run by the Python host's sqlite3.
+ */
+"sql"
 /**
  * Solved problems per judge language (cross-language practice, ADR 0020).
  */
@@ -1750,7 +1754,12 @@ time_limits: LanguageLimit[];
 /**
  * The time scale in `time_limits` (1.0 = the reference machine; ADR 0017).
  */
-time_scale: number }
+time_scale: number; 
+/**
+ * An SQL problem's tables (ADR 0031): `[{"name", "columns": [{"name", "type",
+ * "primary_key", "not_null", "references"}]}]`, for the schema panel and completion.
+ */
+sql_tables: JsonValue | null }
 /**
  * One measured size: the median of the repetitions, with every sample.
  */

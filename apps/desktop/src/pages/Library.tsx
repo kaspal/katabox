@@ -192,7 +192,7 @@ export function Library() {
           onValueChange={(v) => setSearch({ mode: (v || undefined) as ProblemMode | undefined })}
           data-testid="mode-filter"
         >
-          {(["function", "program"] as const).map((m) => (
+          {(["function", "program", "sql"] as const).map((m) => (
             <ToggleGroupItem key={m} value={m} aria-label={t(`mode.${m}`)}>
               {t(`mode.${m}`)}
             </ToggleGroupItem>

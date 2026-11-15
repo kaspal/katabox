@@ -836,3 +836,141 @@ async fn shrinks_a_failing_input_to_a_small_one_that_still_fails() {
         .unwrap();
     assert_eq!(ok.stop, kb_app::ShrinkStop::NotFailing);
 }
+
+/// SQL problems (ADR 0031) through the app: SQL only, the starter, the tables for the
+/// schema panel, Run and Submit with the reference and a wrong query, and the features an
+/// SQL problem does not have.
+#[tokio::test]
+async fn an_sql_problem_end_to_end() {
+    let app = app("sql").await;
+    let view = app
+        .get_problem("late-returns", kb_store::UiLang::En)
+        .await
+        .unwrap();
+    assert_eq!(view.mode, kb_core::ProblemMode::Sql);
+    let tables = view.sql_tables.as_ref().expect("the schema panel's tables");
+    assert_eq!(tables[0]["name"], "members");
+    assert_eq!(
+        tables[1]["columns"][1]["references"],
+        json!(["members", "id"])
+    );
+
+    // SQL only, and SQL only for SQL problems.
+    let stub = app.get_stub("late-returns", Language::Sql).await.unwrap();
+    assert!(
+        stub.contains("SELECT") && stub.contains("FROM members"),
+        "{stub}"
+    );
+    let e = app
+        .get_stub("late-returns", Language::Python)
+        .await
+        .unwrap_err();
+    assert_eq!(e.code, AppErrorCode::UnsupportedLanguage);
+    let e = app.get_stub("two-sum", Language::Sql).await.unwrap_err();
+    assert_eq!(e.code, AppErrorCode::UnsupportedLanguage);
+    let e = app
+        .run("late-returns", Language::Python, "x", vec![], |_| {})
+        .await
+        .unwrap_err();
+    assert_eq!(e.code, AppErrorCode::UnsupportedLanguage);
+
+    // The reference: Accepted on Run (public tests) and Submit (all of them).
+    let query =
+        std::fs::read_to_string(repo().join("content/problems/late-returns/solutions/ref.sql"))
+            .unwrap();
+    let (events, sink) = recorder();
+    let run = app
+        .run("late-returns", Language::Sql, &query, vec![], sink)
+        .await
+        .unwrap();
+    assert_eq!(run.verdict, Verdict::Accepted, "{:?}", run.first_failure);
+    assert!(
+        events
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|e| matches!(e, JudgeEvent::Finished { .. }))
+    );
+    let ok = app
+        .submit(
+            "late-returns",
+            Language::Sql,
+            &query,
+            &submit_opts(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_eq!(ok.report.verdict, Verdict::Accepted);
+    assert_eq!(
+        app.solved_languages("late-returns").await.unwrap(),
+        [Language::Sql]
+    );
+
+    // wrong.sql: Wrong Answer with both row sets for the diff.
+    let wrong =
+        std::fs::read_to_string(repo().join("content/problems/late-returns/solutions/wrong.sql"))
+            .unwrap();
+    let r = app
+        .submit(
+            "late-returns",
+            Language::Sql,
+            &wrong,
+            &submit_opts(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_eq!(r.report.verdict, Verdict::WrongAnswer);
+    let f = r.report.first_failure.as_ref().unwrap();
+    assert!(f.input.contains_key("tables"));
+    assert!(f.expected["rows"].is_array() && f.actual.as_ref().unwrap()["rows"].is_array());
+
+    // A write is refused before it runs (the harness's authorizer).
+    let r = app
+        .run(
+            "late-returns",
+            Language::Sql,
+            "DELETE FROM loans",
+            vec![],
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_eq!(r.verdict, Verdict::CompilationError);
+
+    // Off for SQL, each with its code.
+    let custom = json!({"tables": {"members": [], "loans": []}})
+        .as_object()
+        .unwrap()
+        .clone();
+    let e = app
+        .run(
+            "late-returns",
+            Language::Sql,
+            &query,
+            vec![custom.clone()],
+            |_| {},
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(e.code, AppErrorCode::InvalidCustomInput);
+    let e = app
+        .debug_start(kb_app::debug::DebugStart {
+            problem: "late-returns".into(),
+            language: Language::Sql,
+            code: query.clone(),
+            input: custom,
+            breakpoints: vec![],
+            watches: vec![],
+            visualize: None,
+        })
+        .await
+        .unwrap_err();
+    assert_eq!(e.code, AppErrorCode::DebugUnsupported);
+    let e = app
+        .profile_solution("late-returns", Language::Sql, &query)
+        .await
+        .unwrap_err();
+    assert_eq!(e.code, AppErrorCode::ProfileUnavailable);
+}

@@ -24,6 +24,12 @@ const loaders: Record<EditorLang, () => Promise<Loaded>> = {
     })),
   php: () => import("@codemirror/lang-php").then((m) => ({ support: m.php(), language: m.phpLanguage })),
   rust: () => import("@codemirror/lang-rust").then((m) => ({ support: m.rust(), language: m.rustLanguage })),
+  // SQL problems (ADR 0031): SQLite's dialect; the schema completion comes separately.
+  sql: () =>
+    import("@codemirror/lang-sql").then((m) => ({
+      support: m.sql({ dialect: m.SQLite, upperCaseKeywords: true }),
+      language: m.SQLite.language,
+    })),
   markdown: () =>
     import("@codemirror/lang-markdown").then((m) => ({
       support: m.markdown(),
@@ -37,6 +43,7 @@ const INDENT: Record<EditorLang, string> = {
   javascript: "  ",
   php: "    ",
   rust: "    ",
+  sql: "  ",
   markdown: "  ",
 };
 
@@ -81,6 +88,8 @@ export function fenceLanguage(fence: string | undefined): EditorLang | null {
     case "rust":
     case "rs":
       return "rust";
+    case "sql":
+      return "sql";
     default:
       return null;
   }

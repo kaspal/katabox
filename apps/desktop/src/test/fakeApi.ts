@@ -104,6 +104,36 @@ export const PROGRAM_ROW: Row = {
   status: null,
 };
 
+/** An SQL problem (ADR 0031), listed only with `createFakeApi({ withSql: true })`. */
+export const SQL_ROW: Row = {
+  id: "late-returns",
+  title: { en: "Late Returns", es: "Devoluciones tardías" },
+  difficulty: "easy",
+  pattern: "sql-basics",
+  rank: 1,
+  mode: "sql",
+  tags: ["join", "dates"],
+  status: null,
+};
+
+export const SQL_TABLES = [
+  {
+    name: "members",
+    columns: [
+      { name: "id", type: "integer", primary_key: true, not_null: false, references: null },
+      { name: "name", type: "text", primary_key: false, not_null: true, references: null },
+    ],
+  },
+  {
+    name: "loans",
+    columns: [
+      { name: "id", type: "integer", primary_key: true, not_null: false, references: null },
+      { name: "member_id", type: "integer", primary_key: false, not_null: true, references: ["members", "id"] },
+      { name: "returned", type: "text", primary_key: false, not_null: false, references: null },
+    ],
+  },
+];
+
 export const PROGRAM_SIGNATURE = {
   name: "main",
   params: [{ name: "stdin", type: "string" }],
@@ -262,6 +292,8 @@ export function createFakeApi(
     notices?: string | null;
     /** List the program problem `line-sum` too (ADR 0028). */
     withProgram?: boolean;
+    /** List the SQL problem too (ADR 0031). */
+    withSql?: boolean;
   } = {},
 ) {
   const installed = new Set<Language>(opts.installed ?? ["python", "typescript", "php"]);
@@ -418,7 +450,7 @@ export function createFakeApi(
     ),
     listProblems: vi.fn(async (f: ProblemFilter) => {
       const lang = f.lang ?? "en";
-      return (opts.withProgram ? [...PROBLEMS, PROGRAM_ROW] : PROBLEMS).filter(
+      return [...PROBLEMS, ...(opts.withProgram ? [PROGRAM_ROW] : []), ...(opts.withSql ? [SQL_ROW] : [])].filter(
         (p) =>
           (!f.mode || p.mode === f.mode) &&
           (!f.difficulty || p.difficulty === f.difficulty) &&
@@ -502,9 +534,10 @@ export function createFakeApi(
         .filter((t) => t.title.toLowerCase().includes(q.toLowerCase())),
     ),
     getProblem: vi.fn(async (id: string, lang: "en" | "es"): Promise<ProblemView> => {
-      const p = [...PROBLEMS, PROGRAM_ROW].find((x) => x.id === id);
+      const p = [...PROBLEMS, PROGRAM_ROW, SQL_ROW].find((x) => x.id === id);
       if (!p) throw { code: "not_found", message: `not found: problem ${id}` };
       const program = p.mode === "program";
+      const sql = p.mode === "sql";
       return {
         ...p,
         title: p.title[lang],
@@ -512,8 +545,8 @@ export function createFakeApi(
         statement: lang === "es" ? "Devuelve los índices `nums`.\n\n```python\nx = 1\n```" : "Return the indices of `nums`.\n\n```python\nx = 1\n```",
         editorial: null,
         hints: ["First hint.", "Second hint.", "Third hint."],
-        signature: program ? PROGRAM_SIGNATURE : SIGNATURE,
-        checker: program ? "tokens" : "unordered",
+        signature: program || sql ? PROGRAM_SIGNATURE : SIGNATURE,
+        checker: sql ? "rows-ordered" : program ? "tokens" : "unordered",
         time_limit_ms: 300,
         memory_mb: 256,
         time_scale: state.calibration?.applied ?? 1,
@@ -528,7 +561,20 @@ export function createFakeApi(
           language,
           time_limit_ms: Math.ceil(300 * factor * (state.calibration?.applied ?? 1)),
         })),
-        public_tests: program
+        public_tests: sql
+          ? [
+              {
+                index: 1,
+                input: {
+                  tables: {
+                    members: [[1, "ana"], [2, "bo"]],
+                    loans: [[10, 1, "2026-03-04"], [11, 2, null]],
+                  },
+                },
+                output: { columns: ["name", "days_late"], rows: [["ana", 3]] },
+              },
+            ]
+          : program
           ? [
               { index: 1, input: { stdin: "2\n3 4\n" }, output: "7\n" },
               { index: 2, input: { stdin: "1\n10\n" }, output: "10\n" },
@@ -539,6 +585,7 @@ export function createFakeApi(
             ],
         has_validator: id === "two-sum",
         profile: id === "two-sum",
+        sql_tables: sql ? SQL_TABLES : null,
       };
     }),
     continueItem: vi.fn(async () => opts.continueItem ?? null),

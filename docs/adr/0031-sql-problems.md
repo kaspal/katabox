@@ -1,7 +1,7 @@
 # 31. SQL problems
 
-Date: 2026-11-14 · Status: proposed (features-content M7). The engine is built and
-tested. Wiring it into the app waits for a kb-bridge decision (below).
+Date: 2026-11-14 · Status: proposed (features-content M7: the engine; M12: the app,
+after the maintainer allowed the kb-bridge arms on 2026-11-15).
 
 ## Context
 SQL is a common interview and practice topic. KataBox already ships Python, whose
@@ -60,16 +60,43 @@ the existing sandbox, through the bundled Python.
     compound terms, too many arguments, a blob, parameters, catalogue reads, and the
     same answer every time. Each is stopped by its code and leaves nothing on disk.
 
-## Not done yet (blocked)
-- **What waits:** SQL in the app — a `Language::Sql` for drafts, submissions, stats and
-  export; the lazy `@codemirror/lang-sql` editor with schema completion; the schema
-  panel; the results table; kb-pack support for SQL packages; content.db schema 8; the
-  `sql-*` patterns; and the SQL content.
-- **Why:** kb-bridge matches exhaustively on `kb_core::Language`, so a new variant
-  needs two small arms there ("no language server"), and this run may not change
-  kb-bridge. The question and the recommendation are in the features-content report.
-- **Until then:** `Problem::from_parts` and `judge()` refuse SQL problems, and none is
-  in the catalogue.
+## In the app (features-content M12)
+- **`Language::Sql`**, its id and extension `sql`. `Language::ALL` stays the five code
+  languages (installs, language servers, debug, stats rows); `Language::EVERY` adds SQL
+  for parsing. An SQL problem takes only SQL and SQL only fits SQL problems:
+  kb-app refuses any other pairing with `unsupported_language`, and the UI offers only
+  SQL on an SQL problem without ever saving it as the editor language.
+- **No toolchain of its own:** kb-toolchain maps SQL to the Python unit, and the UI
+  asks for Python when it is missing.
+- **kb-bridge** (the maintainer's decision of 2026-11-15): SQL is reported unavailable
+  ("no language server for SQL"), its LSP id is `sql`, and it has no project config.
+  No server, settings or message policy changed. The editor uses
+  `@codemirror/lang-sql` 6.10.0 (MIT, exact pin, lazy) with the SQLite dialect and
+  completion of the problem's tables and columns instead of a server.
+- **content.db schema 8:** `problems.schema_sql` (the text the judge runs) and
+  `problems.sql_schema` (the tables as JSON for the panel and completion); a CHECK ties
+  both to `mode = 'sql'`. `Problem::from_sql_parts` rebuilds an SQL problem from them
+  with the same checks as a package.
+- **kb-app:** Run and Submit go through `judge_sql`; the starter is one SELECT over the
+  first table (`sql::starter`); custom tests (`invalid_custom_input`), the debugger
+  (`debug_unsupported`), the shrinker and the profiler (no profile) are off, each with
+  its reason in the UI. Mock interviews never pick an SQL problem, and the daily
+  problem and "next problem" leave SQL out until the user has run or submitted one
+  (`practice::hide_unopened_sql`).
+- **The UI:** a Tables tab (columns, types, keys, five sample rows of public test 1),
+  tests as tables, and a wrong answer as expected rows next to yours with the first
+  difference marked (an arrow, bold and a screen-reader note besides the colour); a
+  column mismatch is named first. The library filters by "SQL".
+- **kb-pack:** SQL packages (`schema.sql`, `ref.sql`, `wrong.sql`, `brute.py` with
+  `solve(tables)`, `validate.py`, `gen.py`; nothing in other languages; no profile).
+  `validate --run` checks the validator, `ref.sql` through the real harness (Accepted,
+  within half its per-test CPU cap), `wrong.sql` (Wrong Answer), and 500 generated
+  inputs on which `ref.sql` agrees with `brute.py`. The stress test runs both in one
+  sandboxed run each (`kb_judge::brute_rows`, `kb_judge::sql_rows`: plain sqlite3,
+  read-only, for package tooling only). `generate` fills outputs from `ref.sql`, and
+  `new --mode sql` scaffolds a package.
+- **Patterns:** `sql-basics`, `sql-joins`, `sql-aggregation`, `sql-advanced`, last in
+  the track; SQL problems use only these, and only SQL problems do.
 
 ## Consequences
 - No new runtime, dependency or runner capability: the attack surface is SQLite's

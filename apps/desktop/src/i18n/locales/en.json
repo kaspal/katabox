@@ -49,7 +49,9 @@
     "label": "Problem type",
     "function": "Function",
     "program": "Program",
-    "badge": "Program · stdin/stdout"
+    "badge": "Program · stdin/stdout",
+    "sql": "SQL",
+    "sqlBadge": "SQL · one query"
   },
   "status": {
     "label": "Status",
@@ -83,7 +85,11 @@
     "bit-manipulation": "Bit manipulation",
     "strings": "Strings",
     "union-find": "Union-find",
-    "design": "Design"
+    "design": "Design",
+    "sql-basics": "SQL basics",
+    "sql-joins": "SQL joins",
+    "sql-aggregation": "SQL aggregation",
+    "sql-advanced": "Advanced SQL"
   },
   "tag": {
     "label": "Tag",
@@ -108,6 +114,7 @@
       "counting": "Counting",
       "cross-product": "Cross product",
       "cycle": "Cycle",
+      "dates": "Dates",
       "design": "Design",
       "dfs": "Depth-first search",
       "digit-dp": "Digit DP",
@@ -127,6 +134,7 @@
       "input-parsing": "Input parsing",
       "interval-dp": "Interval DP",
       "intervals": "Intervals",
+      "join": "Join",
       "kmp": "KMP",
       "knapsack": "Knapsack",
       "lazy-propagation": "Lazy propagation",
@@ -224,7 +232,8 @@
       "editorial": "Editorial",
       "submissions": "Submissions",
       "notes": "Notes",
-      "history": "History"
+      "history": "History",
+      "schema": "Tables"
     },
     "limits": {
       "time": "Time limit",
@@ -403,7 +412,8 @@
     "javascript": "JavaScript",
     "typescript": "TypeScript",
     "php": "PHP",
-    "rust": "Rust"
+    "rust": "Rust",
+    "sql": "SQL"
   },
   "time": {
     "justNow": "just now"
@@ -899,7 +909,8 @@
       "changedCount_one": "{{count}} change",
       "changedCount_other": "{{count}} changes"
     },
-    "programUnsupported": "Program problems can be debugged in Python and JavaScript/TypeScript."
+    "programUnsupported": "Program problems can be debugged in Python and JavaScript/TypeScript.",
+    "sqlUnsupported": "The debugger is not available for SQL problems: a query has no steps to replay."
   },
   "complexity": {
     "button": "Complexity",
@@ -2798,5 +2809,35 @@
       "label": "Welcome",
       "button": "Show the welcome again"
     }
+  },
+  "sqlProblem": {
+    "schemaIntro": "The tables your query reads. The sample rows come from public test 1.",
+    "columnsOf": "Columns of {{table}}",
+    "column": "Column",
+    "type": "Type",
+    "keys": "Keys",
+    "primaryKey": "Primary key",
+    "notNull": "Not null",
+    "references": "References {{table}}.{{column}}",
+    "sample": "Sample rows: {{shown}} of {{count}}",
+    "tableCaption_one": "{{table}} · {{count}} row",
+    "tableCaption_other": "{{table}} · {{count}} rows",
+    "null": "NULL",
+    "noRows": "No rows",
+    "moreRows_one": "… {{count}} more row",
+    "moreRows_other": "… {{count}} more rows",
+    "firstDiff": "first difference",
+    "expected": "Expected rows",
+    "actual": "Your rows",
+    "result": "Rows",
+    "rowsCount_one": "{{count}} row",
+    "rowsCount_other": "{{count}} rows",
+    "ordered": "Row order matters",
+    "unordered": "Row order does not matter",
+    "columnsDiffer": "The columns differ: expected {{expected}}; yours {{actual}}. Fix the columns first (names and order).",
+    "inputTables": "The test's tables",
+    "customUnavailable": "Custom tests are not available for SQL problems yet: editing tables is coming later.",
+    "needsPython": "SQL problems run on Python's SQLite. Install Python to run your query.",
+    "completion": "completion of the tables, columns and keywords"
   }
 }
