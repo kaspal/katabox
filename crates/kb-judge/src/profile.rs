@@ -51,6 +51,20 @@ fn median(mut v: Vec<u32>) -> u32 {
     v[v.len() / 2]
 }
 
+/// The CPU cap of one run at the next size, from the budget `left`. A function profile
+/// runs its [`REPETITIONS`] in one harness process, under one cap; a program runs each
+/// repetition as its own process, each under the cap, so the budget is split between
+/// them: otherwise a size the prediction let through could use [`REPETITIONS`] times
+/// what is left and overrun the budget.
+fn size_cap_ms(mode: ProblemMode, left: Duration) -> u32 {
+    let left_ms = u32::try_from(left.as_millis()).unwrap_or(u32::MAX);
+    let per_run = match mode {
+        ProblemMode::Program => left_ms / REPETITIONS as u32,
+        _ => left_ms,
+    };
+    per_run.clamp(500, SIZE_CAP_MS)
+}
+
 /// The predicted wall time of the next size from the last measured one.
 fn predict(last: &ProfilePoint, last_wall: Duration, next_n: u32) -> Duration {
     let ratio = f64::from(next_n) / f64::from(last.n.max(1));
@@ -188,7 +202,7 @@ pub fn profile(
                 startup_us,
             });
         }
-        let cap_ms = (left.as_millis() as u32).clamp(500, SIZE_CAP_MS);
+        let cap_ms = size_cap_ms(problem.mode, left);
         let mut sized = problem.clone();
         sized.time_limit_ms = base_for_cap(lang, env.time_scale, cap_ms)?;
         let tests: Vec<TestCase> = (0..REPETITIONS)
@@ -288,6 +302,31 @@ mod tests {
         let e = crate::complexity::estimate(&fitted).unwrap();
         assert_eq!(e.class, ComplexityClass::Quadratic, "{e:?}");
         assert!(!program_unreliable(&points, 21_284));
+    }
+
+    /// Catalogue check (2026-11-15): trail-diameter's naive.rs profile ran 18.8 s against
+    /// the 12 s budget, because each of a program's three runs at one size got the whole
+    /// remaining budget as its cap.
+    #[test]
+    fn a_program_size_cannot_overrun_the_budget() {
+        for left_ms in [1_500u64, 4_000, 6_500, 12_000] {
+            let left = Duration::from_millis(left_ms);
+            let program = size_cap_ms(ProblemMode::Program, left);
+            assert!(
+                u64::from(program) * REPETITIONS as u64 <= left_ms,
+                "{left_ms} ms left: {program} ms per run"
+            );
+            // A function's repetitions share one process and one cap.
+            assert_eq!(
+                size_cap_ms(ProblemMode::Function, left),
+                (left_ms as u32).min(SIZE_CAP_MS)
+            );
+        }
+        // The floor still lets a small size run.
+        assert_eq!(
+            size_cap_ms(ProblemMode::Program, Duration::from_millis(300)),
+            500
+        );
     }
 
     #[test]

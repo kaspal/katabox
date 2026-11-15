@@ -98,6 +98,10 @@ inputs are packed into content.db, but **not committed**: only their hashes are.
   - The whole profile has **12 s** of wall time.
   - Each size's CPU cap is the remaining budget, at most 5 s. It is turned into a base
     limit per language and machine scale (ADR 0017).
+  - A program problem runs its 3 repetitions as 3 processes, each under its own cap, so
+    its cap per run is a third of the remaining budget (with a floor of 0.5 s and a
+    ceiling of 5 s). Before this was added (catalogue check, 2026-11-15), one
+    mispredicted size could use 3 times what was left: a naive.rs profile took 18.8 s.
   - Before each size, the cost is predicted from the last point (n² growth plus the
     run's overhead). The profile stops early (`budget`) rather than overrun.
 - **The stops:**
