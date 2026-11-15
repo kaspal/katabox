@@ -1,0 +1,1 @@
+{"input": {"tables": {"members": [[7, "lea"], [3, "max"]], "loans": [[5, 3, "Walden", "2026-02-10", "2026-02-12"], [2, 7, "Walden", "2026-02-01", "2026-02-03"], [9, 7, "Hamlet", "2026-02-05", "2026-02-04"], [4, 3, "Hamlet", "2026-12-30", null]]}}, "output": {"columns": ["name", "title", "days_late"], "rows": [["lea", "Walden", 2], ["max", "Walden", 2]]}}

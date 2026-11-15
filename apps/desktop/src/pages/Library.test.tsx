@@ -85,3 +85,14 @@ describe("Library", () => {
     await waitFor(() => expect(titles()[0]).toBe("Valid Brackets"));
   });
 });
+
+describe("Library: Learn links for a pattern", () => {
+  useFakeApi();
+
+  it("links the Learn topics of the chosen pattern", async () => {
+    renderApp("/library?pattern=arrays-hashing");
+    const links = await screen.findByTestId("learn-links-arrays-hashing");
+    expect(within(links).getByRole("link", { name: "Bubble Sort" })).toHaveAttribute("href", "/learn/sorting/bubble-sort");
+    expect(within(links).getByRole("link", { name: "Quick Sort" })).toBeInTheDocument();
+  });
+});

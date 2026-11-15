@@ -1,0 +1,1 @@
+{"input":{"tables":{"reviews":[[24399,"Splendor",5],[88690,"Catan",null],[844,"Splendor",null],[44346,"Splendor",4],[65901,"Carcassonne",null],[60781,"Carcassonne",null],[79260,"Catan",5],[10593,"Carcassonne",4]]}},"output":{"columns":["game","rated","avg_stars"],"rows":[["Carcassonne",1,4.0],["Catan",1,5.0],["Splendor",2,4.5]]}}

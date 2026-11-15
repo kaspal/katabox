@@ -135,7 +135,8 @@ pub fn definition(lang: Language) -> Result<LanguageDef, JudgeError> {
             lang_file!("rust", "harness.rs.j2"),
             lang_file!("rust", "nodes.rs"),
         ),
-        Language::JavaScript => return Err(JudgeError::Unsupported(lang)),
+        // SQL runs through the Python host's harness (`crate::sql`), not a definition.
+        Language::JavaScript | Language::Sql => return Err(JudgeError::Unsupported(lang)),
     };
     let program_template = match lang {
         Language::Python => lang_file!("python", "program.py.j2"),

@@ -1,0 +1,15 @@
+id = "species-count"
+title = "Species Count"
+title_es = "Recuento de especies"
+difficulty = "hard"
+tags = ["fenwick-tree", "offline-queries", "hash-map"]
+pattern = "range-queries"
+rank = 9
+mode = "program"
+profile = true
+profile_sizes = [1000, 2000, 4000, 8000, 12000, 16000]
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

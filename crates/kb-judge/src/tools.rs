@@ -103,8 +103,9 @@ pub fn run_script(
     spec.read_only_dirs = vec![toolchain.to_path_buf()];
     spec.stdin = stdin.to_vec();
     spec.max_output_bytes = limits.max_output_bytes;
-    spec.wall_time = Duration::from_millis(u64::from(limits.cpu_time_ms) * 3);
-    let outcome = kb_runner::run(&spec)?;
+    spec.wall_time =
+        Duration::from_millis(u64::from(limits.cpu_time_ms) * u64::from(env.wall_factor.max(1)));
+    let outcome = crate::sandbox::run(&spec)?;
     Ok(ScriptOutput {
         stdout: outcome.stdout,
         stderr: String::from_utf8_lossy(&outcome.stderr).into_owned(),
@@ -164,6 +165,46 @@ for inp in request["inputs"]:
         raise TypeError(f"validate(...) returned {type(msg).__name__}, not str or None")
     out.append(msg)
 sys.stdout.write(json.dumps(out))
+sys.stdout.flush()
+"#;
+
+// SQL problems (ADR 0031): `brute.py`'s `solve(tables)` returns the expected result
+// computed in plain Python, `{"columns": [...], "rows": [[...]]}`.
+const BRUTE_ROWS_DRIVER: &str = r#"brute = load("brute")
+out = []
+for inp in request["inputs"]:
+    r = brute.solve(inp["tables"])
+    if not isinstance(r, dict) or set(r) != {"columns", "rows"}:
+        raise TypeError("solve(tables) must return {\"columns\": [...], \"rows\": [...]}")
+    out.append({"columns": list(r["columns"]), "rows": [list(row) for row in r["rows"]]})
+sys.stdout.write(json.dumps(out, allow_nan=False))
+sys.stdout.flush()
+"#;
+
+// An author's query (`ref.sql`, `wrong.sql`) on many inputs in one run, with plain
+// sqlite3 (still in the sandbox, read-only). User queries never come here: they go
+// through the locked-down harness (`crate::sql::judge_sql`).
+const SQL_ROWS_DRIVER: &str = r#"import sqlite3
+query = request["query"].strip()
+while query.endswith(";"):
+    query = query[:-1].rstrip()
+out = []
+for inp in request["inputs"]:
+    conn = sqlite3.connect(":memory:", isolation_level=None)
+    conn.executescript(request["schema"])
+    for name, rows in inp["tables"].items():
+        if rows:
+            marks = ", ".join("?" * len(rows[0]))
+            conn.executemany(f'INSERT INTO "{name}" VALUES ({marks})', rows)
+    conn.execute("PRAGMA query_only = ON")
+    try:
+        cursor = conn.execute(query)
+        columns = [d[0] for d in cursor.description or []]
+        out.append({"columns": columns, "rows": [list(row) for row in cursor.fetchall()]})
+    except sqlite3.Error as e:
+        out.append({"error": str(e)})
+    conn.close()
+sys.stdout.write(json.dumps(out, allow_nan=False))
 sys.stdout.flush()
 "#;
 
@@ -281,4 +322,74 @@ pub fn validate_inputs(
         ));
     }
     Ok(values)
+}
+
+/// Run `brute.py`'s `solve(tables)` on each SQL input, in one sandboxed run: the expected
+/// results, each `{"columns": [...], "rows": [[...]]}` (ADR 0031).
+pub fn brute_rows(
+    env: &JudgeEnv,
+    brute_src: &str,
+    inputs: &[&Map<String, Value>],
+    limits: ScriptLimits,
+) -> Result<Vec<Value>, JudgeError> {
+    let request = json!({ "inputs": inputs }).to_string();
+    let out = run_python(
+        env,
+        &driver(BRUTE_ROWS_DRIVER),
+        &[("brute.py", brute_src)],
+        request.as_bytes(),
+        limits,
+    )?;
+    if !out.succeeded() {
+        return Err(failure("brute.py", &out));
+    }
+    let values: Vec<Value> = serde_json::from_slice(&out.stdout)
+        .map_err(|e| JudgeError::Problem(format!("brute.py: unreadable output: {e}")))?;
+    if values.len() != inputs.len() {
+        return Err(JudgeError::Problem(
+            "brute.py: wrong number of results".into(),
+        ));
+    }
+    for (i, v) in values.iter().enumerate() {
+        crate::sql::check_result_shape(v)
+            .map_err(|e| JudgeError::Problem(format!("brute.py, input {}: {e}", i + 1)))?;
+    }
+    Ok(values)
+}
+
+/// An author's query (`ref.sql`) on each SQL input, in one sandboxed run of plain sqlite3
+/// (read-only): each input's result, or the query's error on it. For package tooling
+/// only; user queries are judged by [`crate::sql::judge_sql`].
+pub fn sql_rows(
+    env: &JudgeEnv,
+    schema_sql: &str,
+    query: &str,
+    inputs: &[&Map<String, Value>],
+    limits: ScriptLimits,
+) -> Result<Vec<Result<Value, String>>, JudgeError> {
+    let request = json!({ "schema": schema_sql, "query": query, "inputs": inputs }).to_string();
+    let out = run_python(
+        env,
+        &driver(SQL_ROWS_DRIVER),
+        &[],
+        request.as_bytes(),
+        limits,
+    )?;
+    if !out.succeeded() {
+        return Err(failure("the query", &out));
+    }
+    let values: Vec<Value> = serde_json::from_slice(&out.stdout)
+        .map_err(|e| JudgeError::Problem(format!("the query: unreadable output: {e}")))?;
+    if values.len() != inputs.len() {
+        return Err(JudgeError::Problem(
+            "the query: wrong number of results".into(),
+        ));
+    }
+    Ok(values
+        .into_iter()
+        .map(|v| match v.get("error").and_then(Value::as_str) {
+            Some(e) => Err(e.to_string()),
+            None => Ok(v),
+        })
+        .collect())
 }

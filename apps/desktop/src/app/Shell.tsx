@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Command as CommandIcon } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -10,20 +10,32 @@ import { CommandPalette } from "@/app/CommandPalette";
 import { DEV_NAV, NAV } from "@/app/nav";
 import { useFocusMode } from "@/lib/focus";
 import { useAppInfo, useLanguages } from "@/lib/queries";
-import { FirstRun } from "@/languages/FirstRun";
+import { Welcome } from "@/onboarding/Welcome";
+import { useOnboardingDone } from "@/onboarding/state";
 import { InterviewTimer } from "@/practice/interview";
 
 /**
- * The first-run screen (ADR 0015): decided once, when the language list first loads, and
- * kept until the user finishes or skips it (so an install's success state stays visible).
+ * The welcome flow (features-content M2; it starts with ADR 0015's language install):
+ * decided once, when the language list and `onboarding.done` first load, and kept until
+ * the user finishes or skips it. Shown when asked again from Settings (`false`), or on a
+ * first start (never decided) with no language installed. An install that already has a
+ * language (an upgrade) is marked done without showing it.
  */
 function useFirstRun() {
   const langs = useLanguages();
+  const onboarding = useOnboardingDone();
   const [show, setShow] = useState<boolean | null>(null);
   useEffect(() => {
-    if (show !== null || !langs.data) return;
-    setShow(langs.data.platform_supported && !langs.data.languages.some((l) => l.runtime_installed));
-  }, [langs.data, show]);
+    if (!langs.data || !onboarding.loaded) return;
+    if (onboarding.done === false) {
+      setShow(true);
+      return;
+    }
+    if (show !== null) return;
+    const none = !langs.data.languages.some((l) => l.runtime_installed);
+    if (onboarding.done === null && !none) onboarding.setDone(true);
+    setShow(onboarding.done === null && langs.data.platform_supported && none);
+  }, [langs.data, onboarding.loaded, onboarding.done, show]);
   return { show: show === true, hide: () => setShow(false) };
 }
 
@@ -34,7 +46,6 @@ export function Shell() {
   const info = useAppInfo();
   const { focus } = useFocusMode();
   const firstRun = useFirstRun();
-  const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Settings and the dev screens stay reachable from the rail.
   const gated = firstRun.show && !pathname.startsWith("/settings") && !pathname.startsWith("/dev");
@@ -57,6 +68,18 @@ export function Shell() {
       }
       data-focus={focus || undefined}
     >
+      <a
+        href="#main"
+        className="sr-only z-50 rounded-md bg-primary text-primary-foreground focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:px-3 focus:py-2 focus:text-sm focus:font-medium"
+        onClick={(e) => {
+          // The router uses the hash: move focus instead of navigating.
+          e.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+        data-testid="skip-link"
+      >
+        {t("app.skipToContent")}
+      </a>
       <nav
         hidden={focus}
         aria-label={t("nav.label")}
@@ -71,6 +94,7 @@ export function Shell() {
               <Link
                 to={item.to}
                 aria-label={t(item.labelKey)}
+                data-tour={item.to === "/learn" ? "learn" : undefined}
                 activeOptions={{ exact: item.to === "/" }}
                 className="flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-foreground"
               >
@@ -113,15 +137,9 @@ export function Shell() {
         </div>
       </header>
 
-      <main className="min-h-0 overflow-auto">
+      <main id="main" tabIndex={-1} className="min-h-0 overflow-auto outline-none">
         {gated ? (
-          <FirstRun
-            onDone={() => {
-              firstRun.hide();
-              void navigate({ to: "/" });
-            }}
-            onSkip={firstRun.hide}
-          />
+          <Welcome onClose={firstRun.hide} />
         ) : (
           <Outlet />
         )}

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowDown, ArrowUp, Search, X } from "lucide-react";
 import type { Difficulty, ProblemMode, ProblemSummary, StatusFilter } from "@/bindings";
 import { Page } from "@/components/Page";
+import { PatternLearnLinks } from "@/components/PatternLearnLinks";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { DifficultyLabel, ModeLabel, StatusIcon, usePatternLabel, useTagLabel } from "@/components/Semantic";
 import { Button } from "@/components/ui/button";
@@ -191,7 +192,7 @@ export function Library() {
           onValueChange={(v) => setSearch({ mode: (v || undefined) as ProblemMode | undefined })}
           data-testid="mode-filter"
         >
-          {(["function", "program"] as const).map((m) => (
+          {(["function", "program", "sql"] as const).map((m) => (
             <ToggleGroupItem key={m} value={m} aria-label={t(`mode.${m}`)}>
               {t(`mode.${m}`)}
             </ToggleGroupItem>
@@ -227,6 +228,8 @@ export function Library() {
           </Button>
         )}
       </div>
+
+      {search.pattern && <PatternLearnLinks pattern={search.pattern} className="mb-3" />}
 
       {filtered.error ? (
         <ErrorNotice error={filtered.error} onRetry={() => void filtered.refetch()} />

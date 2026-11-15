@@ -11,7 +11,7 @@ vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
 describe("First run", () => {
   useFakeApi();
 
-  it("asks for languages when none is installed, installs with progress, then goes Home", async () => {
+  it("asks for languages when none is installed, installs with progress, then asks the level", async () => {
     const fake = setFakeApi({ installed: [] });
     const { user } = renderApp("/library");
     const screenEl = await screen.findByTestId("first-run");
@@ -39,8 +39,12 @@ describe("First run", () => {
     expect(within(list).getByTestId("progress-basedpyright")).toHaveAttribute("data-phase", "installed");
     expect(fake.api.installLanguages).toHaveBeenCalledWith(["python"], expect.any(Function));
     await user.click(within(screenEl).getByRole("button", { name: "Done" }));
-    expect(await screen.findByTestId("solved-easy")).toBeInTheDocument();
+    // The welcome goes on to the level question (features-content M2); skipping it ends on Home.
+    expect(await screen.findByRole("heading", { name: "How much have you practised?" })).toBeInTheDocument();
     expect(screen.queryByTestId("first-run")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Skip the welcome" }));
+    expect(await screen.findByTestId("solved-easy")).toBeInTheDocument();
+    expect(fake.api.finishOnboarding).toHaveBeenCalledWith(null, "en");
   });
 
   it("cancel keeps what was downloaded and Retry resumes", async () => {
@@ -78,6 +82,7 @@ describe("First run", () => {
     await user.click(screen.getByRole("link", { name: "Home" }));
     const screenEl = await screen.findByTestId("first-run");
     await user.click(within(screenEl).getByRole("button", { name: "Not now" }));
+    await user.click(await screen.findByRole("button", { name: "Skip the welcome" }));
     expect(await screen.findByTestId("solved-easy")).toBeInTheDocument();
   });
 

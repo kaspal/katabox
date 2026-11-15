@@ -1,0 +1,13 @@
+id = "running-balance"
+title = "Running Balance"
+title_es = "Saldo acumulado"
+difficulty = "medium"
+tags = ["window-functions", "sorting"]
+pattern = "sql-advanced"
+rank = 2
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

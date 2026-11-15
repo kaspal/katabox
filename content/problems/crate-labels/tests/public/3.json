@@ -1,0 +1,1 @@
+{"stdin": "2\nfig:2;figs:3;fig:4\nfigs:1\n", "stdout": "fig 6\nfigs 4\n"}

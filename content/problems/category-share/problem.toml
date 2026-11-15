@@ -1,0 +1,13 @@
+id = "category-share"
+title = "Category Share"
+title_es = "Cuota por categoría"
+difficulty = "medium"
+tags = ["group-by", "subquery"]
+pattern = "sql-aggregation"
+rank = 5
+mode = "sql"
+
+[judge]
+checker = "rows-ordered:0.001"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

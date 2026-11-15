@@ -72,6 +72,8 @@ pub enum AppErrorCode {
     DebugDiverged,
     /// This problem has no complexity profile (ADR 0024).
     ProfileUnavailable,
+    /// The failing-test shrinker does not work here (a program problem, no reference).
+    ShrinkUnavailable,
     /// Anything else, including the app failing to start.
     Internal,
 }

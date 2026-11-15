@@ -1,0 +1,1 @@
+{"input":{"tables":{"routes":[[59878,"Central","Island"],[22895,"Harbour","Island"],[89898,"Central","Ness"],[39729,"Harbour","Mill"],[86750,"Cove","Mill"],[47526,"Ness","Mill"],[17430,"Cove","Ness"],[59891,"Central","Point"]]}},"output":{"columns":["pier","hops"],"rows":[["Island",1],["Ness",1],["Point",1],["Mill",2]]}}

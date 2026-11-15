@@ -1,0 +1,28 @@
+id = "join-algorithms"
+subject = "databases"
+order = 1
+title = "Join algorithms"
+title_es = "Algoritmos de unión"
+tags = ["sql", "hashing"]
+problems = ["two-sum", "order-customers", "trip-legs", "idle-members", "ledger-mismatch"]
+presets = ["one-to-many", "no-match", "random"]
+default = [3, 1, 10, 2, 20, 3, 30, 2, 5, 3, 7, 3, 8, 4, 9]
+
+[complexity]
+best = "O(|L| + |R|)"
+average = "O(|L| + |R| + output)"
+worst = "O(|L| · |R|) (every row shares one key)"
+space = "O(|R|) for the index"
+stable = true
+in_place = false
+
+[input]
+min_len = 5
+max_len = 25
+min = 0
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = hash_join(a)"
+typescript = "a = hashJoin(a)"

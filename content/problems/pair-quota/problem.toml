@@ -1,0 +1,15 @@
+id = "pair-quota"
+title = "Pair Quota"
+title_es = "Cupo de parejas"
+difficulty = "medium"
+tags = ["two-pointers", "sorting", "input-parsing"]
+pattern = "two-pointers"
+rank = 6
+mode = "program"
+profile = true
+profile_sizes = [2000, 4000, 8000, 16000, 32000, 60000]
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

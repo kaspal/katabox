@@ -6,6 +6,8 @@ tags = ["sparse-table", "array"]
 pattern = "range-queries"
 rank = 8
 mode = "program"
+profile = true
+profile_sizes = [2000, 4000, 8000, 16000, 32000]
 
 [judge]
 checker = "tokens"

@@ -1,0 +1,1 @@
+{"stdin":"13\nSET l 60\nSET l 77\nCOUNT 70\nCOUNT 9\nCOUNT 133\nROLLBACK\nADD l 0\nSET l 29\nSET l 94\nCOUNT 148\nCOUNT 144\nGET l\nCOUNT -43\n","stdout":"0\n0\n0\nNO TRANSACTION\n0\n0\n94\n0\n"}

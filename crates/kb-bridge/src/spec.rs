@@ -116,6 +116,8 @@ pub fn unavailable_reason(language: Language, tc: &Toolchains) -> Option<String>
             tc.tools().join("phpactor").join("phpactor.phar"),
         ],
         Language::Rust => vec![tc.rust_analyzer(), tc.rust_src_library()],
+        // SQL problems (ADR 0031) have no language server; the editor works without one.
+        Language::Sql => return Some("no language server for SQL".into()),
     };
     needed
         .iter()
@@ -183,6 +185,7 @@ pub fn server_for(
     let node = tc.node_dir().join(exe("node"));
     let nm = tc.node_modules();
     let spec = match language {
+        Language::Sql => return Err("no language server for SQL".into()),
         Language::Python => ServerSpec {
             name: "basedpyright",
             program: node,

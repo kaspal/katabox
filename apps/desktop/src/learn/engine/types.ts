@@ -161,6 +161,9 @@ export type SceneData = {
   strings?: StringData;
   /** The plane (Phase 10). */
   plane?: PlaneData;
+  /** Database tables (the Databases subject): input tables, helper tables (a hash index,
+   * groups) and the result as it grows. */
+  relations?: RelationsData;
   /** Extra dashed links on a forest (Aho-Corasick failure links), by node id. */
   links?: { from: number; to: number }[];
   /** What the sample returns, set by the tracer on the last step (topics whose answer is
@@ -187,6 +190,20 @@ export type SlotsData = {
   /** The row's title (`learn.stage.rows.<label>`). */
   label: RowLabel;
 };
+/** One table of the relations scene: column names (code, untranslated) and rows. */
+export type RelationCell = number | string | null;
+export type Relation = {
+  label: RowLabel;
+  columns: readonly string[];
+  rows: { id: number; cells: RelationCell[]; role?: Role }[];
+};
+export type RelationsData = {
+  /** Tables side by side: the inputs, then any helper table. */
+  tables: Relation[];
+  /** The query's result so far, under the tables. */
+  result: Relation;
+};
+
 export type TableData = {
   label: RowLabel;
   rows: { key: number; value: number; role?: Role }[];
@@ -348,7 +365,8 @@ export type SceneKind =
   | "decision"
   | "board"
   | "string"
-  | "plane";
+  | "plane"
+  | "relations";
 
 /** How a topic's input is shaped. Inputs are always one flat list of integers (the DB and
  * the sample driver see only that):

@@ -6,7 +6,7 @@ import { motion, type Transition } from "motion/react";
 import { useReducedMotion } from "../engine/media";
 import type { TFunction } from "i18next";
 import { GROWTH_CLASSES } from "../engine/growth";
-import type { NoteKey, Pointer, Role, Step, TracerDef } from "../engine/types";
+import type { NoteKey, Pointer, Role, RowLabel, Step, TracerDef } from "../engine/types";
 
 export type SceneProps = {
   step: Step;
@@ -166,6 +166,11 @@ export function sceneSummary(t: TFunction, step: Step): string {
   if (step.hash) {
     const buckets = step.hash.buckets.map((b, k) => `${k}: ${b.map((it) => (it.value === -2 ? "✕" : it.value)).join(" ") || "—"}`).join("; ");
     parts.push(t("learn.stage.summary_hash", { buckets }));
+  }
+  if (step.relations) {
+    const show = (r: { label: string; rows: { cells: readonly (number | string | null)[] }[] }) =>
+      `${t(`learn.stage.rows.${r.label as RowLabel}`)}: ${r.rows.map((row) => `(${row.cells.map((c) => (c === null ? "NULL" : c)).join(", ")})`).join(" ") || "—"}`;
+    parts.push(t("learn.stage.summary_relations", { tables: step.relations.tables.map(show).join("; "), result: show(step.relations.result) }));
   }
   if (step.graph) {
     const g = step.graph;

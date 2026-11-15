@@ -58,15 +58,24 @@ export function useSetting<T>(
 
 // --- Editor preferences ---------------------------------------------------------------
 
-export const KEYMAPS = ["default", "vscode", "vim"] as const;
+export const KEYMAPS = ["default", "vscode", "vim", "emacs"] as const;
 export type KeymapPref = (typeof KEYMAPS)[number];
 export const FONT_SIZES = [12, 13, 14, 15, 16, 18, 20] as const;
+/** Spaces per indent; 0 keeps each language's own (4 for Python, PHP and Rust; 2 for TS). */
+export const TAB_WIDTHS = [0, 2, 4, 8] as const;
+/** Editor colour themes; `katabox` follows the app's tokens (styles/tokens.css). */
+export const EDITOR_THEMES = ["katabox", "high-ink", "paper", "dusk"] as const;
+export type EditorTheme = (typeof EDITOR_THEMES)[number];
 export const JUDGE_LANGUAGES: Language[] = ["python", "typescript", "php", "rust"];
 
 export const parseKeymap = (v: JsonValue | null): KeymapPref | undefined =>
   typeof v === "string" && (KEYMAPS as readonly string[]).includes(v) ? (v as KeymapPref) : undefined;
 export const parseFontSize = (v: JsonValue | null): number | undefined =>
   typeof v === "number" && v >= 10 && v <= 28 ? v : undefined;
+export const parseTabWidth = (v: JsonValue | null): number | undefined =>
+  typeof v === "number" && (TAB_WIDTHS as readonly number[]).includes(v) ? v : undefined;
+export const parseEditorTheme = (v: JsonValue | null): EditorTheme | undefined =>
+  typeof v === "string" && (EDITOR_THEMES as readonly string[]).includes(v) ? (v as EditorTheme) : undefined;
 export const parseLanguage = (v: JsonValue | null): Language | undefined =>
   typeof v === "string" && (JUDGE_LANGUAGES as string[]).includes(v) ? (v as Language) : undefined;
 
@@ -83,5 +92,22 @@ export function useEditorPrefs() {
     (v) => (typeof v === "boolean" ? v : undefined),
     { mirror: true },
   );
-  return { keymap, setKeymap, fontSize, setFontSize, ligatures, setLigatures };
+  const [tabWidth, setTabWidth] = useSetting<number>("editor.tab_width", 0, parseTabWidth, {
+    mirror: true,
+  });
+  const [theme, setTheme] = useSetting<EditorTheme>("editor.theme", "katabox", parseEditorTheme, {
+    mirror: true,
+  });
+  return {
+    keymap,
+    setKeymap,
+    fontSize,
+    setFontSize,
+    ligatures,
+    setLigatures,
+    tabWidth,
+    setTabWidth,
+    theme,
+    setTheme,
+  };
 }

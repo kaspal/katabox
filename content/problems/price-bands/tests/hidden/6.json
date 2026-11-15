@@ -1,0 +1,1 @@
+{"input":{"tables":{"products":[[661,"clock ink",6883,0],[3974,"rug",4999,1],[2144,"cup sofa",7058,1],[302,"pen",7394,1],[4,"bowl cup",1698,0],[1193,"mug",6004,1],[4805,"mug pad",8352,0],[3853,"tray",4998,1],[3057,"rug",8705,1],[2617,"clock",2000,1]]}},"output":{"columns":["name","price_cents"],"rows":[["rug",4999],["tray",4998],["clock",2000]]}}

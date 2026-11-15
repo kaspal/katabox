@@ -1,0 +1,1 @@
+{"input":{"tables":{"members":[[9,"ed"],[6,"ed"],[7,"ana"]],"visits":[[8,7,"2026-12-01"]]}},"output":{"columns":["id","name"],"rows":[[7,"ana"],[6,"ed"],[9,"ed"]]}}

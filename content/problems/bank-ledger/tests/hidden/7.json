@@ -1,0 +1,1 @@
+{"stdin":"12\nSET c 12\nSET m 46\nCOMMIT\nGET c\nCOUNT 61\nBEGIN\nCOUNT 91\nBEGIN\nADD c -22\nSET c 73\nCOMMIT\nCOUNT 6\n","stdout":"NO TRANSACTION\n12\n0\n0\n0\n"}

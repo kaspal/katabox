@@ -1,0 +1,1 @@
+{"input":{"tables":{"flights":[[3026,"  Arica","Arica "],[8388,"ARICA","  Arica"],[7795," Quito","BOGOTA"],[3051," Santiago","Arica"],[1543,"arica ","SANTIAGO"],[7317,"quito ","QUITO"],[4971,"santiago","SANTIAGO"],[2324,"ARICA","Quito"]]}},"output":{"columns":["city_a","city_b"],"rows":[["arica","quito"],["arica","santiago"],["bogota","quito"]]}}

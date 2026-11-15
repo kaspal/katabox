@@ -3,10 +3,13 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import type { Failure, JsonValue, ProblemMode, Report, TestKind } from "@/bindings";
 import { VerdictBadge } from "@/components/Verdict";
+import { ShrinkPanel } from "@/workspace/results/Shrink";
 import { describeMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { diffParts } from "@/workspace/results/jsonDiff";
 import { firstLine, normalizeText, textDiff, type Span } from "@/workspace/results/textDiff";
+import { SqlFailureView } from "@/workspace/sql/SqlViews";
+import { asRows } from "@/workspace/sql/tables";
 
 export const ms = (us: number) => (us / 1000).toFixed(us < 10_000 ? 2 : 0);
 export const mb = (kb: number) => (kb / 1024).toFixed(1);
@@ -160,6 +163,11 @@ function ProgramFailureView({ failure, checker }: { failure: Failure; checker: s
           </pre>
         </div>
       )}
+      {SHRINKABLE.has(failure.verdict) && (
+        <p className="text-xs text-muted-foreground" data-testid="shrink-program">
+          {t("results.shrink.programUnavailable")}
+        </p>
+      )}
     </section>
   );
 }
@@ -168,13 +176,17 @@ export function FailureView({
   failure,
   mode = "function",
   checker = "exact",
+  sqlColumns = {},
 }: {
   failure: Failure;
   mode?: ProblemMode;
   checker?: string;
+  /** An SQL problem's column names per table (ADR 0031). */
+  sqlColumns?: Record<string, string[]>;
 }) {
   const { t, i18n } = useTranslation();
   if (mode === "program") return <ProgramFailureView failure={failure} checker={checker} />;
+  if (mode === "sql") return <SqlFailureView failure={failure} checker={checker} columns={sqlColumns} />;
   const hasActual = failure.actual !== null;
   return (
     <section className="space-y-3 rounded-lg border border-verdict-wrong/30 p-3" data-testid="first-failure">
@@ -219,9 +231,13 @@ export function FailureView({
           </pre>
         </div>
       )}
+      {SHRINKABLE.has(failure.verdict) && <ShrinkPanel input={failure.input} />}
     </section>
   );
 }
+
+/** Verdicts the shrinker can chase (ADR 0030). */
+const SHRINKABLE = new Set(["wrong_answer", "runtime_error", "time_limit_exceeded", "memory_limit_exceeded"]);
 
 /** A judge report: verdict header, compiler output, per-test table, first failure. */
 export function ResultView({
@@ -230,17 +246,20 @@ export function ResultView({
   afterSummary,
   mode = "function",
   checker = "exact",
+  sqlColumns,
 }: {
   report: Report;
   celebrate?: boolean;
   /** Shown right under the verdict summary, above the details (the practice outcome). */
   afterSummary?: React.ReactNode;
-  /** A program problem shows text output and stderr (ADR 0028). */
+  /** A program problem shows text output and stderr (ADR 0028); an SQL one rows (ADR 0031). */
   mode?: ProblemMode;
   checker?: string;
+  sqlColumns?: Record<string, string[]>;
 }) {
   const { t, i18n } = useTranslation();
   const program = mode === "program";
+  const sql = mode === "sql";
   const accepted = report.verdict === "accepted";
   const passed = report.tests.filter((r) => r.verdict === "accepted").length;
   return (
@@ -259,7 +278,7 @@ export function ResultView({
         <span className="text-sm text-muted-foreground tabular-nums">
           {t("results.time", { ms: ms(report.time_us) })} · {t("results.memory", { mb: mb(report.memory_kb) })}
         </span>
-        {program && <span className="text-xs text-muted-foreground">{t("results.program.timeNote")}</span>}
+        {(program || sql) && <span className="text-xs text-muted-foreground">{t("results.program.timeNote")}</span>}
       </header>
       {afterSummary}
 
@@ -283,7 +302,9 @@ export function ResultView({
               <th className="py-1 pr-3 font-medium">{t("results.test")}</th>
               <th className="py-1 pr-3 font-medium">{t("results.verdict")}</th>
               <th className="py-1 pr-3 font-medium">{t("results.timeCol")}</th>
-              <th className="py-1 font-medium">{t(program ? "results.program.output" : "results.returned")}</th>
+              <th className="py-1 font-medium">
+                {t(program ? "results.program.output" : sql ? "sqlProblem.result" : "results.returned")}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -301,7 +322,9 @@ export function ResultView({
                       : ""
                     : program
                       ? firstLine(asText(r.actual))
-                      : JSON.stringify(r.actual)}
+                      : sql
+                        ? t("sqlProblem.rowsCount", { count: asRows(r.actual)?.rows.length ?? 0 })
+                        : JSON.stringify(r.actual)}
                 </td>
               </tr>
             ))}
@@ -314,7 +337,9 @@ export function ResultView({
         </p>
       )}
 
-      {report.first_failure && <FailureView failure={report.first_failure} mode={mode} checker={checker} />}
+      {report.first_failure && (
+        <FailureView failure={report.first_failure} mode={mode} checker={checker} sqlColumns={sqlColumns} />
+      )}
     </div>
   );
 }

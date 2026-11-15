@@ -1,0 +1,1 @@
+{"input":{"tables":{"readers":[[1214,"lu","lu@mail.test","Cali"],[1115,"bo","bo@mail.test","Bogota"],[268,"ed","ed@mail.test","Quito"],[758,"max","max@mail.test","Cali"]]}},"output":{"columns":["id","name","city"],"rows":[]}}

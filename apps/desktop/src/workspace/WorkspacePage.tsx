@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
 import type { EditorView } from "@codemirror/view";
+import type { Extension } from "@codemirror/state";
 import { formatDocument } from "@codemirror/lsp-client";
 import type { JsonValue, Language } from "@/bindings";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ErrorNotice } from "@/components/ErrorNotice";
+import { PlacementBanner } from "@/onboarding/PlacementBanner";
+import { Tour } from "@/onboarding/Tour";
 import { InstallDialog } from "@/languages/InstallDialog";
 import { DifficultyLabel, ModeLabel } from "@/components/Semantic";
 import { api } from "@/lib/api";
@@ -52,10 +55,16 @@ import { ScriptModeToggle, useScriptMode } from "@/workspace/editor/ScriptMode";
 import { ResultsPane, type ResultsTab } from "@/workspace/results/ResultsPane";
 import { DebugPanel } from "@/workspace/debug/DebugPanel";
 import { DebugCaseContext, type DebugCase } from "@/workspace/debug/context";
+import { ShrinkContext, type ShrinkCase } from "@/workspace/results/Shrink";
 import { useDebugLanguages, useDebugger } from "@/workspace/debug/useDebugger";
 import { debugExtension } from "@/workspace/editor/debug";
 import type { CustomInput } from "@/lib/api";
-import { parseSignature, validateCustom, type CustomTestDraft } from "@/workspace/results/validate";
+import { parseSignature, validateCustom, valuesFrom, type CustomTestDraft } from "@/workspace/results/validate";
+import { sqlSchemaCompletion } from "@/workspace/sql/completion";
+import { parseSqlTables } from "@/workspace/sql/tables";
+
+/** SQL problems take only SQL (ADR 0031). */
+const SQL_ONLY: Language[] = ["sql"];
 
 const route = getRouteApi("/problems/$problemId");
 
@@ -78,13 +87,14 @@ export function WorkspacePage() {
   const compare = search.compare ?? null;
   const interview = useInterviewActive();
   const inInterview = interview.data?.problems.some((x) => x.id === problemId) === true;
-  const allowed = inInterview ? interview.data!.languages : JUDGE_LANGUAGES;
   const solvedIn = useSolvedLanguages(problemId, !inInterview);
   const reviewState = useReviewState(problemId);
   const reviewActions = useReviewActions();
   const problem = useProblem(problemId);
+  const sqlProblem = problem.data?.mode === "sql";
+  const allowed = sqlProblem ? SQL_ONLY : inInterview ? interview.data!.languages : JUDGE_LANGUAGES;
   const info = useAppInfo();
-  const { keymap, fontSize, ligatures } = useEditorPrefs();
+  const { keymap, fontSize, ligatures, tabWidth, theme: editorTheme } = useEditorPrefs();
   const [lastLanguage, setLastLanguage] = useSetting<Language>("editor.language", "python", parseLanguage, {
     mirror: true,
   });
@@ -92,7 +102,10 @@ export function WorkspacePage() {
   const [language, setLanguage] = useState<Language | null>(null);
   /** A language to offer installing (picked in the selector, or the current one). */
   const [installFor, setInstallFor] = useState<Language | null>(null);
-  const session = useEditorSession(problemId, language, { review: reviewMode });
+  // SQL problems take SQL and nothing else takes SQL: until the language fits the problem
+  // (just after opening one), no document is loaded.
+  const fits = problem.data !== undefined && language !== null && (language === "sql") === sqlProblem;
+  const session = useEditorSession(problemId, fits ? language : null, { review: reviewMode });
   const docLang = session.doc?.lang ?? null;
   // TypeScript can be edited as plain JavaScript (per problem): only the grammar and the
   // language server change; the draft and the judge stay TypeScript (ADR 0024).
@@ -104,9 +117,27 @@ export function WorkspacePage() {
   const server = useLanguageServer(
     problemId,
     editLang,
-    serverInfo && !serverInfo.available ? (serverInfo.reason ?? "") : null,
+    docLang === "sql"
+      ? "no language server for SQL"
+      : serverInfo && !serverInfo.available
+        ? (serverInfo.reason ?? "")
+        : null,
     () => docText.current,
   );
+  // SQL has no language server: complete the problem's tables and columns instead.
+  const sqlTables = useMemo(() => parseSqlTables(problem.data?.sql_tables), [problem.data?.sql_tables]);
+  const [sqlCompletion, setSqlCompletion] = useState<Extension | null>(null);
+  useEffect(() => {
+    if (!sqlProblem) {
+      setSqlCompletion(null);
+      return;
+    }
+    let live = true;
+    void sqlSchemaCompletion(sqlTables).then((ext) => live && setSqlCompletion(ext));
+    return () => {
+      live = false;
+    };
+  }, [sqlProblem, sqlTables]);
   const [editorStatus, setEditorStatus] = useState<EditorStatus | null>(null);
   // PHP has no language server on Windows: offer keywords and common functions instead.
   const basicCompletion = docLang === "php" && server.status.state === "unavailable";
@@ -123,6 +154,14 @@ export function WorkspacePage() {
   const problemPanel = useRef<PanelImperativeHandle | null>(null);
   const resultsPanel = useRef<PanelImperativeHandle | null>(null);
   const layoutTimer = useRef<number | undefined>(undefined);
+
+  // An SQL problem opens in SQL; leaving it for a code problem goes back to the last code
+  // language (SQL is never remembered as the editor language).
+  useEffect(() => {
+    if (!problem.data || language === null) return;
+    if (sqlProblem && language !== "sql") setLanguage("sql");
+    else if (!sqlProblem && language === "sql") setLanguage(lastLanguage);
+  }, [problem.data, sqlProblem, language, lastLanguage]);
 
   // In a mock interview only its languages may be used on its problems.
   useEffect(() => {
@@ -166,8 +205,8 @@ export function WorkspacePage() {
   // The debugger (ADR 0022): replay runs of one test; the editor is read-only meanwhile.
   const dbg = useDebugger(problemId, language, session.docKey);
   const debugLanguages = useDebugLanguages();
-  // Program problems can be debugged in Python only for now (ADR 0028).
-  const programNoDebug = program && language !== "python";
+  // Program problems can be debugged in Python and TypeScript (ADR 0028, 0023).
+  const programNoDebug = program && language !== "python" && language !== "typescript";
   const canDebug = language !== null && (debugLanguages.data ?? []).includes(language) && !programNoDebug;
   // The last test debugged here (F5 debugs it again). Kept per problem: the page is reused
   // when another problem opens, and another problem's input would not fit its signature.
@@ -185,11 +224,26 @@ export function WorkspacePage() {
   const debugCase: DebugCase = {
     onDebug: (input, label) => void startDebug(input, label),
     disabledReason: !canDebug
-      ? t(programNoDebug ? "debug.programUnsupported" : "debug.unsupported")
+      ? t(sqlProblem ? "debug.sqlUnsupported" : programNoDebug ? "debug.programUnsupported" : "debug.unsupported")
       : busy || dbg.busy
         ? t("debug.busy")
         : null,
   };
+  // The failing-test shrinker (ADR 0030): the code in the editor now, never alongside a
+  // judge run or a debug session; its result can join the custom tests.
+  const shrinkCase: ShrinkCase | null =
+    language && signature && !sqlProblem
+      ? {
+          problemId,
+          language,
+          code: () => session.doc?.text ?? "",
+          disabledReason: busy || dbg.busy || dbg.active ? t("results.shrink.busy") : null,
+          addCustom: (input) => {
+            setCustoms((cs) => [...cs, { id: Math.max(0, ...cs.map((c) => c.id)) + 1, values: valuesFrom(signature, input) }]);
+            setTab("testcases");
+          },
+        }
+      : null;
   const debugCurrent = dbg.view?.state.state === "paused" ? dbg.view.state.line : null;
   const debugEditor = useMemo(
     () =>
@@ -336,7 +390,9 @@ export function WorkspacePage() {
     );
   }
   const p = problem.data;
-  const toolchains = new Map((info.data?.toolchains ?? []).map((tc) => [tc.language, tc]));
+  const runtimes = new Map((info.data?.toolchains ?? []).map((tc) => [tc.language, tc]));
+  // SQL runs on Python's sqlite3 (ADR 0031): its "toolchain" is Python's.
+  const toolchains = { get: (l: Language) => runtimes.get(l === "sql" ? "python" : l) };
 
   return (
     <div className="flex h-full min-h-0 flex-col" data-testid="workspace">
@@ -347,6 +403,8 @@ export function WorkspacePage() {
           if (l !== language) void changeLanguage(l);
         }}
       />
+      <PlacementBanner problemId={problemId} />
+      <Tour />
       <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
         {!focus && (
           <Button asChild variant="ghost" size="icon" className="size-8">
@@ -360,7 +418,7 @@ export function WorkspacePage() {
         <ModeLabel mode={p.mode} />
         <div className="ml-auto flex items-center gap-2">
           {inInterview && <InterviewTimer compact />}
-          {!inInterview && (solvedIn.data?.length ?? 0) > 0 && (
+          {!inInterview && !sqlProblem && (solvedIn.data?.length ?? 0) > 0 && (
             <SolveInMenu
               solved={solvedIn.data ?? []}
               current={language}
@@ -408,7 +466,7 @@ export function WorkspacePage() {
               const l = v as Language;
               const tc = toolchains.get(l);
               // Not installed: offer to install instead of switching to a dead end.
-              if (tc !== undefined && !tc.present) setInstallFor(l);
+              if (tc !== undefined && !tc.present) setInstallFor(l === "sql" ? "python" : l);
               else void changeLanguage(l);
             }}
             disabled={busy}
@@ -435,6 +493,7 @@ export function WorkspacePage() {
             <ScriptModeToggle mode={scriptMode} onChange={setScriptMode} disabled={busy} />
           )}
           <ShortcutButton
+            tour="run"
             label={t("workspace.run")}
             keys={KEYS.run}
             onClick={() => void run()}
@@ -443,6 +502,7 @@ export function WorkspacePage() {
             icon={judge.busy === "run" ? <Loader2 className="animate-spin" aria-hidden /> : <Play aria-hidden />}
           />
           <ShortcutButton
+            tour="submit"
             label={t("workspace.submit")}
             keys={KEYS.submit}
             onClick={() => void submit()}
@@ -537,9 +597,15 @@ export function WorkspacePage() {
                       className="flex items-center gap-3 border-b bg-muted/40 px-3 py-2 text-sm"
                     >
                       <span className="min-w-0 flex-1">
-                        {t("install.missingTitle", { language: t(`languages.${session.doc.lang}`) })}
+                        {session.doc.lang === "sql"
+                          ? t("sqlProblem.needsPython")
+                          : t("install.missingTitle", { language: t(`languages.${session.doc.lang}`) })}
                       </span>
-                      <Button size="sm" className="h-7 gap-1.5" onClick={() => setInstallFor(session.doc!.lang)}>
+                      <Button
+                        size="sm"
+                        className="h-7 gap-1.5"
+                        onClick={() => setInstallFor(session.doc!.lang === "sql" ? "python" : session.doc!.lang)}
+                      >
                         <Download aria-hidden className="size-3.5" />
                         {t("install.install")}
                       </Button>
@@ -563,7 +629,11 @@ export function WorkspacePage() {
                       keymap={keymap}
                       fontSize={fontSize}
                       ligatures={ligatures}
-                      lspExtension={basicCompletion ? phpBasicCompletion : server.extension}
+                      tabWidth={tabWidth}
+                      colorTheme={editorTheme}
+                      lspExtension={
+                        sqlProblem ? sqlCompletion : basicCompletion ? phpBasicCompletion : server.extension
+                      }
                       debugExtension={debugEditor}
                       readOnly={dbg.active}
                       ariaLabel={t("workspace.editorLabel", { language: t(`languages.${session.doc.lang}`) })}
@@ -582,6 +652,7 @@ export function WorkspacePage() {
                     language={session.doc.lang}
                     server={server.status}
                     basicCompletion={basicCompletion}
+                    completionNote={session.doc.lang === "sql" ? t("sqlProblem.completion") : undefined}
                     onInstall={() => setInstallFor(session.doc!.lang)}
                     status={editorStatus}
                     onFormat={() => {
@@ -595,6 +666,7 @@ export function WorkspacePage() {
             <ResizablePanel id="results" panelRef={resultsPanel} defaultSize="38" minSize="12" collapsible collapsedSize="0">
               <section aria-label={t("workspace.resultsPane")} className="h-full min-h-0 border-t">
                 <DebugCaseContext.Provider value={debugCase}>
+                <ShrinkContext.Provider value={shrinkCase}>
                 <ResultsPane
                   problem={p}
                   signature={signature}
@@ -617,10 +689,16 @@ export function WorkspacePage() {
                   }
                   debugPanel={
                     canDebug || dbg.view ? (
-                      <DebugPanel dbg={dbg} problem={problemId} params={signature?.params.map((p) => p.name) ?? NO_PARAMS} />
+                      <DebugPanel
+                        dbg={dbg}
+                        problem={problemId}
+                        params={signature?.params.map((p) => p.name) ?? NO_PARAMS}
+                        program={program}
+                      />
                     ) : null
                   }
                 />
+                </ShrinkContext.Provider>
                 </DebugCaseContext.Provider>
               </section>
             </ResizablePanel>
@@ -632,6 +710,7 @@ export function WorkspacePage() {
 }
 
 function ShortcutButton({
+  tour,
   label,
   keys,
   icon,
@@ -639,6 +718,8 @@ function ShortcutButton({
   disabled,
   variant = "default",
 }: {
+  /** The tour's anchor (onboarding/Tour.tsx). */
+  tour?: string;
   label: string;
   keys: string;
   icon: React.ReactNode;
@@ -649,7 +730,7 @@ function ShortcutButton({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button size="sm" variant={variant} onClick={onClick} disabled={disabled} aria-keyshortcuts={keys}>
+        <Button size="sm" variant={variant} onClick={onClick} disabled={disabled} aria-keyshortcuts={keys} data-tour={tour}>
           {icon}
           {label}
         </Button>

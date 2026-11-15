@@ -143,6 +143,20 @@ impl LspManager {
         text: &str,
         sink: Sink,
     ) -> Result<LspConnection, BridgeError> {
+        self.connect_with(problem, language, text, false, sink)
+            .await
+    }
+
+    /// [`Self::connect`], for a program problem when `program` is set (its TypeScript or
+    /// JavaScript project gets the Node typings shim, [`project::NODE_SHIM`]).
+    pub async fn connect_with(
+        &self,
+        problem: &str,
+        language: Language,
+        text: &str,
+        program: bool,
+        sink: Sink,
+    ) -> Result<LspConnection, BridgeError> {
         if !project::valid_problem_id(problem) {
             return Err(BridgeError::InvalidProblem(problem.to_string()));
         }
@@ -151,7 +165,14 @@ impl LspManager {
         if let Some(old) = sessions.remove(&key) {
             old.stop().await;
         }
-        let project = project::prepare(&self.projects_root, problem, language, text, &self.tc)?;
+        let project = project::prepare_with(
+            &self.projects_root,
+            problem,
+            language,
+            text,
+            program,
+            &self.tc,
+        )?;
         let state = self.state_root.join(key.id());
         let made = match (&self.spec, self.unavailable_reason(key)) {
             (Some(f), _) => f(key, &project, &state),

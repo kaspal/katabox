@@ -2,8 +2,24 @@
 import random
 
 
+def sized(rng, n):
+    """Complexity profile input (ADR 0024): n readings and n // 2 questions each covering
+    80-100% of the log, like "max"."""
+    levels = [rng.randint(-1_000_000, 1_000_000) for _ in range(n)]
+    questions = []
+    for _ in range(max(1, n // 2)):
+        width = rng.randint(max(1, n * 8 // 10), n)
+        l = rng.randint(1, n - width + 1)
+        questions.append((l, l + width - 1))
+    lines = [str(n), " ".join(map(str, levels)), str(len(questions))]
+    lines += [f"{l} {r}" for l, r in questions]
+    return "\n".join(lines) + "\n"
+
+
 def generate(seed, size):
     rng = random.Random(seed)
+    if isinstance(size, int):
+        return sized(rng, size)
     if size == "max":
         # 10⁵ readings and 5·10⁴ questions, each covering 80-100% of the log: scanning
         # every stretch is ~4.5·10⁹ steps. Calm water is one digit (about 500 KB of text);

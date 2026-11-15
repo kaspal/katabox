@@ -7,8 +7,22 @@ def pack(runs):
     return "".join(f"{c}{ch}" for c, ch in runs)
 
 
+def sized(rng, n):
+    """Complexity profile input (ADR 0024): one label of n short runs and n // 3 checks
+    near its end, like "max"."""
+    runs = [(rng.randint(1, 9), rng.choice("abcdef")) for _ in range(n)]
+    total = sum(c for c, _ in runs)
+    low = max(1, total - total // 10)
+    q = max(1, n // 3)
+    lines = ["1", pack(runs), str(q)]
+    lines.extend(f"1 {rng.randint(low, total)}" for _ in range(q))
+    return "\n".join(lines) + "\n"
+
+
 def generate(seed, size):
     rng = random.Random(seed)
+    if isinstance(size, int):
+        return sized(rng, size)
     if size == "max":
         # One long label of short runs plus short labels with huge counts, 60 000
         # runs in all: 3 labels of 20 runs, or (odd seeds) 999 single-run labels so

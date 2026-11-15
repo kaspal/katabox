@@ -1,0 +1,13 @@
+id = "crate-labels"
+title = "Crate Labels"
+title_es = "Etiquetas de cajas"
+difficulty = "easy"
+tags = ["string", "input-parsing", "hash-map"]
+pattern = "strings"
+rank = 3
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

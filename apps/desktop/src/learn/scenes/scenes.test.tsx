@@ -136,7 +136,9 @@ describe("every topic's scene", () => {
     const Scene = SCENES[def.scene];
     for (const k of [0, Math.floor(steps.length / 2), steps.length - 1]) {
       const { container, unmount } = render(<Scene step={steps[k]!} instant def={def} maxValue={def.limits.max} />);
-      const svg = container.querySelector("svg[role=img]");
+      // A drawn scene is an <svg role="img">; a scene of HTML tables (relations) labels
+      // its group instead. Either way the summary is its aria-label.
+      const svg = container.querySelector("svg[role=img], [role=group][aria-label]");
       expect(svg, `${def.id} step ${k}`).not.toBeNull();
       // A screen reader gets the summary (aria-label) and the text fallback; together they
       // must describe the step (an empty first step may have nothing to list yet).

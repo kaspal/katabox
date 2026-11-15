@@ -2,7 +2,8 @@
   "app": {
     "name": "KataBox",
     "devData": "DEV DATA",
-    "devDataHint": "Development build: progress is saved in a separate folder, not your real data."
+    "devDataHint": "Development build: progress is saved in a separate folder, not your real data.",
+    "skipToContent": "Skip to main content"
   },
   "nav": {
     "label": "Main navigation",
@@ -48,7 +49,9 @@
     "label": "Problem type",
     "function": "Function",
     "program": "Program",
-    "badge": "Program · stdin/stdout"
+    "badge": "Program · stdin/stdout",
+    "sql": "SQL",
+    "sqlBadge": "SQL · one query"
   },
   "status": {
     "label": "Status",
@@ -82,12 +85,17 @@
     "bit-manipulation": "Bit manipulation",
     "strings": "Strings",
     "union-find": "Union-find",
-    "design": "Design"
+    "design": "Design",
+    "sql-basics": "SQL basics",
+    "sql-joins": "SQL joins",
+    "sql-aggregation": "SQL aggregation",
+    "sql-advanced": "Advanced SQL"
   },
   "tag": {
     "label": "Tag",
     "any": "Any tag",
     "names": {
+      "anti-join": "Anti-join",
       "array": "Array",
       "backtracking": "Backtracking",
       "bellman-ford": "Bellman–Ford",
@@ -103,30 +111,43 @@
       "bridges": "Bridges",
       "chinese-remainder": "Chinese remainder theorem",
       "combinatorics": "Combinatorics",
+      "conditional-aggregation": "Conditional aggregation",
       "convex-hull": "Convex hull",
       "counting": "Counting",
       "cross-product": "Cross product",
       "cycle": "Cycle",
+      "dates": "Dates",
       "design": "Design",
       "dfs": "Depth-first search",
       "digit-dp": "Digit DP",
+      "distinct": "DISTINCT",
       "divide-and-conquer": "Divide and conquer",
       "dynamic-programming": "Dynamic programming",
       "enumeration": "Enumeration",
+      "euler-tour": "Euler tour",
       "expression-parsing": "Expression parsing",
       "fenwick-tree": "Fenwick tree",
+      "filtering": "Filtering",
       "floating-point": "Floating point",
+      "formatting": "Output formatting",
       "fractional-knapsack": "Fractional knapsack",
+      "gaps-and-islands": "Gaps and islands",
       "graph": "Graph",
+      "graphs": "Graphs",
       "greedy": "Greedy",
+      "group-by": "GROUP BY",
       "hash-map": "Hash map",
+      "having": "HAVING",
       "heap": "Heap",
       "input-parsing": "Input parsing",
       "interval-dp": "Interval DP",
       "intervals": "Intervals",
+      "join": "Join",
       "kmp": "KMP",
       "knapsack": "Knapsack",
+      "lag": "LAG",
       "lazy-propagation": "Lazy propagation",
+      "left-join": "Left join",
       "linked-list": "Linked list",
       "math": "Math",
       "matrix": "Matrix",
@@ -136,13 +157,20 @@
       "monotonic-queue": "Monotonic queue",
       "monotonic-stack": "Monotonic stack",
       "natural-sort": "Natural sort",
+      "null-handling": "NULL handling",
       "number-theory": "Number theory",
+      "offline-queries": "Offline queries",
+      "outer-join": "Outer join",
+      "pagination": "Pagination",
       "palindrome": "Palindrome",
       "prefix-sum": "Prefix sums",
       "queue": "Queue",
+      "ranking": "Ranking",
       "ray-casting": "Ray casting",
+      "recursive-cte": "Recursive CTE",
       "rolling-hash": "Rolling hash",
       "segment-tree": "Segment tree",
+      "self-join": "Self-join",
       "shortest-path": "Shortest path",
       "simulation": "Simulation",
       "sliding-window": "Sliding window",
@@ -152,13 +180,16 @@
       "string": "String",
       "string-matching": "String matching",
       "strongly-connected-components": "Strongly connected components",
+      "subquery": "Subquery",
       "sweep-line": "Sweep line",
       "topological-sort": "Topological sort",
       "tree": "Tree",
+      "trees": "Trees",
       "trie": "Trie",
       "two-pointers": "Two pointers",
       "undo-redo": "Undo and redo",
-      "union-find": "Union-find"
+      "union-find": "Union-find",
+      "window-functions": "Window functions"
     }
   },
   "common": {
@@ -220,7 +251,8 @@
       "editorial": "Editorial",
       "submissions": "Submissions",
       "notes": "Notes",
-      "history": "History"
+      "history": "History",
+      "schema": "Tables"
     },
     "limits": {
       "time": "Time limit",
@@ -336,9 +368,23 @@
     "keymaps": {
       "default": "Default",
       "vscode": "VS Code",
-      "vim": "Vim"
+      "vim": "Vim",
+      "emacs": "Emacs"
     },
     "fontSize": "Font size",
+    "tabWidth": "Tab width",
+    "tabWidthLanguage": "Language default",
+    "tabWidthSpaces_one": "{{count}} space",
+    "tabWidthSpaces_other": "{{count}} spaces",
+    "editorTheme": "Colour theme",
+    "editorThemes": {
+      "katabox": "KataBox",
+      "high-ink": "High ink",
+      "paper": "Paper",
+      "dusk": "Dusk"
+    },
+    "preview": "Preview",
+    "previewLabel": "Editor preview (read-only)",
     "ligatures": "Font ligatures",
     "ligaturesOff": "Off",
     "ligaturesOn": "On",
@@ -359,14 +405,34 @@
     "noticesView": "View…",
     "noticesIntro": "KataBox includes the components below, each under its own license.",
     "noticesDev": "The notices are included in release builds (generated by pnpm notices).",
-    "close": "Close"
+    "close": "Close",
+    "diagnostics": {
+      "label": "Diagnostics",
+      "button": "Copy diagnostics…",
+      "title": "Copy diagnostics",
+      "intro": "For a bug report. This is exactly what will be copied: versions, settings flags and recent error codes. No code, file paths or personal data.",
+      "copy": "Copy",
+      "copied": "Copied.",
+      "copyFailed": "Could not copy. Select the text and copy it yourself."
+    },
+    "contrast": "Contrast",
+    "contrasts": {
+      "normal": "Normal",
+      "high": "High"
+    },
+    "motion": "Motion",
+    "motions": {
+      "system": "Follow the system",
+      "reduced": "Reduce"
+    }
   },
   "languages": {
     "python": "Python",
     "javascript": "JavaScript",
     "typescript": "TypeScript",
     "php": "PHP",
-    "rust": "Rust"
+    "rust": "Rust",
+    "sql": "SQL"
   },
   "time": {
     "justNow": "just now"
@@ -403,7 +469,8 @@
     "import_invalid": "This file is not a valid KataBox export.",
     "debug_unsupported": "This language cannot be debugged yet. Debugging is available for Python.",
     "debug_diverged": "This program behaves differently on each run (time, randomness or object identity), so it cannot be replayed step by step.",
-    "profile_unavailable": "This problem has no complexity profile."
+    "profile_unavailable": "This problem has no complexity profile.",
+    "shrink_unavailable": "Finding a smaller failing input is not available here (a program problem, or no reference solution in this language)."
   },
   "judge": {
     "verdict": {
@@ -431,9 +498,16 @@
       "too_much_output": "The test printed too much output.",
       "node_cycle": "The returned list or tree links back to a node it already contains (a cycle, or a node shared by two parents).",
       "time_limit": "The time limit was reached during this test.",
+      "wall_time_limit": "The program stopped responding: the wall-clock limit ended it before it used its CPU time (it waited, or the computer was very busy).",
       "output_limit": "The output limit was reached during this test.",
       "memory_limit": "The memory limit was reached during this test.",
       "process_exited": "The program exited or crashed during this test.",
+      "sql_error": "SQLite could not run the query (a syntax error, or an unknown table or column).",
+      "sql_not_select": "The answer must be one SELECT query (or WITH … SELECT).",
+      "sql_multiple_statements": "Send one statement only.",
+      "sql_not_authorized": "The query tried something other than reading the tables, or used a function that is not allowed.",
+      "sql_too_many_rows": "The query returned too many rows.",
+      "sql_columns": "The result's columns differ from the expected ones (names or number).",
       "harness_silent": "The test harness stopped without reporting.",
       "bad_harness_record": "The test harness reported something unreadable.",
       "incomplete_results": "Some tests have no result."
@@ -497,6 +571,24 @@
       "firstDiff": "first difference",
       "missing": "(the output ends here)",
       "timeNote": "Times include each run's start-up."
+    },
+    "shrink": {
+      "start": "Find a smaller failing input",
+      "starting": "Checking that this input fails…",
+      "progress": "Shrinking: size {{size}} (was {{original}})…",
+      "runs": "{{runs}} of {{max}} sandbox runs",
+      "stop": "Stop",
+      "title": "Smaller failing input",
+      "stopped": {
+        "smallest": "As small as it gets: size {{size}}, down from {{original}} ({{runs}} runs).",
+        "budget": "Stopped at the run budget: size {{size}}, down from {{original}} ({{runs}} runs).",
+        "cancelled": "Stopped: size {{size}}, down from {{original}} ({{runs}} runs).",
+        "not_failing": "Your current code passes this input, so there is nothing to shrink."
+      },
+      "notFailing": "Your current code passes this input, so there is nothing to shrink.",
+      "addToTests": "Add to my tests",
+      "busy": "Wait for the current run or debug session to finish.",
+      "programUnavailable": "Finding a smaller failing input works for function problems only: a program's input has counts and structure lines that can't be cut safely."
     }
   },
   "lsp": {
@@ -653,7 +745,8 @@
       "review": "Review reminders on Home",
       "daily": "Daily problem on Home",
       "on": "On",
-      "off": "Off"
+      "off": "Off",
+      "learnReview": "Review a topic card"
     },
     "interview": {
       "title": "Mock interview",
@@ -726,6 +819,12 @@
       "accepted": "Your accepted {{language}} solution (read-only)",
       "close": "Close",
       "none": "No accepted solution in {{language}}."
+    },
+    "learnReview": {
+      "title": "Review a topic",
+      "intro": "You watched {{topic}}. Try a problem that uses it.",
+      "open": "Open the topic",
+      "try": "Try {{problem}}"
     }
   },
   "debug": {
@@ -748,6 +847,7 @@
     },
     "pausedAt": "Paused at line {{line}} (step {{step}} of {{total}})",
     "returned": "Finished: returned {{value}}",
+    "ended": "Finished: the program ended",
     "raised": "Finished: an exception was raised at line {{line}}",
     "memory": "Finished: out of memory",
     "truncated": "Stopped recording after {{count}} steps; you can still step through them.",
@@ -828,7 +928,8 @@
       "changedCount_one": "{{count}} change",
       "changedCount_other": "{{count}} changes"
     },
-    "programUnsupported": "Program problems can be debugged in Python for now."
+    "programUnsupported": "Program problems can be debugged in Python and JavaScript/TypeScript.",
+    "sqlUnsupported": "The debugger is not available for SQL problems: a query has no steps to replay."
   },
   "complexity": {
     "button": "Complexity",
@@ -864,7 +965,13 @@
       "you": "Yours",
       "ref": "Reference",
       "notRun": "not run"
-    }
+    },
+    "unreliable": "Estimated complexity: not reliable for this run",
+    "unreliableWhy": "A program's time includes starting it (about {{startup}} ms here, taken off every size). Here the sizes that ran took too little time beyond that, or too few sizes ran, so a growth class would be a guess.",
+    "startup": "Program startup (about {{startup}} ms) is taken off every size.",
+    "fast": "Estimated complexity: too fast to tell apart here",
+    "fastWhy": "Every size up to n = {{n}} ran, and your program's work never took longer than starting it (about {{startup}} ms here, taken off every size). Slow solutions, such as O(n²) ones, show clear growth at these sizes; a faster class can't be told apart from start-up noise.",
+    "referenceFast": "Reference solution: also too fast to tell apart here"
   },
   "learn": {
     "title": "Learn",
@@ -1079,7 +1186,18 @@
         "euclid_steps": "a, b → b, a mod b",
         "power_steps": "One row per bit of the exponent",
         "extended_euclid": "Remainders and coefficients",
-        "pascal": "Row n, entry k: C(n, k)"
+        "pascal": "Row n, entry k: C(n, k)",
+        "left_table": "Table L",
+        "right_table": "Table R",
+        "hash_index": "Hash index on R.key",
+        "joined": "Result: L JOIN R",
+        "rows_in": "Table t",
+        "groups": "Hash table of groups",
+        "grouped": "Result: GROUP BY g",
+        "running_totals": "Running total per partition",
+        "with_totals": "Result: with running totals",
+        "employees": "Table emp",
+        "chain": "Result: chain (id, depth)"
       },
       "call_stack": "Call stack",
       "stack_empty": "empty",
@@ -1121,7 +1239,8 @@
       "summary_timeline": "Intervals: {{bars}}. Result: {{output}}.",
       "summary_board": "A {{rows}} by {{cols}} board: {{cells}}.",
       "summary_strings": "{{rows}}.",
-      "summary_plane": "Points: {{points}}."
+      "summary_plane": "Points: {{points}}.",
+      "summary_relations": "Tables: {{tables}}. {{result}}."
     },
     "roles": {
       "idle": "Not yet placed",
@@ -1430,7 +1549,14 @@
         "square": "A square",
         "crossing": "Crossing",
         "end-on-the-line": "An end on the other line",
-        "side-by-side": "Side by side"
+        "side-by-side": "Side by side",
+        "one-to-many": "One key, several matches",
+        "no-match": "No matches",
+        "two-groups": "Two groups",
+        "one-group": "One group",
+        "two-accounts": "Two accounts",
+        "one-partition": "One partition",
+        "small-company": "Small company"
       },
       "custom_label": "Your own input: {{min}} to {{max}} whole numbers from {{lo}} to {{hi}}, separated by commas or spaces",
       "apply": "Apply",
@@ -1494,7 +1620,13 @@
           "power_range": "Use a base up to 999 and a modulus from 2 to 999.",
           "point_pair": "Write each point as x y (\"{{item}}\").",
           "point_count": "Use {{min}} to {{max}} points.",
-          "coordinate_range": "Coordinates go from 0 to {{max}}."
+          "coordinate_range": "Coordinates go from 0 to {{max}}.",
+          "row_pair": "Each row is two numbers, as in \"2 15, 3 7\". {{item}}",
+          "row_count": "{{field}}: {{min}} to {{max}} rows.",
+          "row_range": "The first number of a row goes from {{amin}} to {{amax}}, the second from {{bmin}} to {{bmax}}.",
+          "boss_count": "Enter {{min}} to {{max}} employees.",
+          "boss_range": "A boss is -1 (none) or another employee's number, 0 to {{max}}.",
+          "boss_cycle": "The bosses go round in a loop: someone must be at the top."
         }
       },
       "count_label": "n: a whole number from {{lo}} to {{hi}}",
@@ -1532,7 +1664,11 @@
         "modulus": "Modulus",
         "number": "Number",
         "points": "Points (x y, …)",
-        "segments": "Endpoints P1, P2, P3, P4 (x y, …)"
+        "segments": "Endpoints P1, P2, P3, P4 (x y, …)",
+        "left_rows": "Rows of L (key a)",
+        "right_rows": "Rows of R (key b)",
+        "rows": "Rows",
+        "bosses": "Bosses (-1: none)"
       }
     },
     "tabs": {
@@ -1633,7 +1769,8 @@
       "modular-arithmetic": "Modular arithmetic",
       "combinatorics": "Combinatorics",
       "geometry": "Geometry",
-      "convex-hull": "Convex hull"
+      "convex-hull": "Convex hull",
+      "sql": "SQL"
     },
     "narration": {
       "bubble-sort": {
@@ -2600,6 +2737,33 @@
         "cross": "Each segment's ends lie on opposite sides of the other: they cross.",
         "touch": "{{point}} lies on the other segment: they touch.",
         "apart": "No crossing and no touching: the segments are apart."
+      },
+      "join-algorithms": {
+        "ready": "Join L ({{left}} rows) with R ({{right}} rows) on key. First build a hash index on R.key, then probe it with each L row.",
+        "build": "Build: R row #{{row}} goes into the index under key {{key}}.",
+        "probe": "Probe: L row #{{row}} looks up key {{key}} in the index: {{matches}} matching R row(s).",
+        "match": "Match on key {{key}}: output ({{key}}, {{a}}, {{b}}).",
+        "done": "{{rows}} joined row(s), each R row hashed once and each L row probed once. A nested-loop join would have compared all {{pairs}} pairs."
+      },
+      "group-by": {
+        "ready": "Group {{n}} rows by g, keeping COUNT(*) and SUM(v) for each group in a hash table.",
+        "new_group": "Group {{g}} is new: count 1, sum {{v}}.",
+        "add": "Row in group {{g}} adds {{v}}: count {{num}}, sum {{sum}}.",
+        "emit": "Output group {{g}}: {{num}} row(s), sum {{sum}} (groups come out by g).",
+        "done": "{{n}} rows became {{groups}} group row(s), in one pass over the table."
+      },
+      "window-functions": {
+        "ready": "SUM(v) OVER (PARTITION BY p ORDER BY id): every row stays, with its partition's total so far.",
+        "start": "First row of partition {{p}}: its running total starts at {{v}}.",
+        "add": "Partition {{p}} continues: {{before}} + {{v}} = {{total}}.",
+        "done": "{{n}} rows kept, each with its running total, across {{partitions}} partition(s)."
+      },
+      "recursive-cte": {
+        "ready": "Find every employee's depth below the top, the way WITH RECURSIVE does: an anchor, then rounds.",
+        "anchor": "Anchor: employee {{id}} has no boss, so depth 0.",
+        "round": "Round {{round}}: join the {{rows}} row(s) found last round with the employees who report to them.",
+        "join": "Employee {{id}} reports to {{boss}}: depth {{depth}}.",
+        "done": "All {{n}} employees placed in {{rounds}} round(s); the last round found nothing new."
       }
     },
     "compare": {
@@ -2610,6 +2774,89 @@
       "heading": "Side by side on the same input",
       "exit": "Exit compare",
       "finished": "Finished"
+    },
+    "patternLinks": {
+      "label": "Learn topics for this pattern",
+      "prefix": "Learn:",
+      "more_one": "and {{count}} more",
+      "more_other": "and {{count}} more"
     }
+  },
+  "welcome": {
+    "skip": "Skip the welcome",
+    "levelTitle": "How much have you practised?",
+    "levelIntro": "This sets where KataBox starts you. You can change course any time.",
+    "newTitle": "New to this",
+    "newText": "Start at the fundamentals: reading input, loops, simple data structures.",
+    "practisedTitle": "I've practised before",
+    "practisedText": "Try three short problems (two easy, one medium). Your result sets the starting pattern and difficulty.",
+    "placement": {
+      "label": "Placement",
+      "progress": "Placement: problem {{k}} of {{total}}",
+      "hint": "Solve it if you can, or move on.",
+      "next": "Next problem",
+      "finish": "Finish placement"
+    },
+    "tour": {
+      "count": "{{k}} of {{total}}",
+      "skip": "Skip tour",
+      "back": "Back",
+      "next": "Next",
+      "done": "Done",
+      "run": {
+        "title": "Run",
+        "text": "Runs your code on the public tests and your own tests. Nothing is recorded. Ctrl+' from the editor."
+      },
+      "submit": {
+        "title": "Submit",
+        "text": "Judges your code on every test, hidden ones too, and records the result. Ctrl+Enter from the editor."
+      },
+      "hints": {
+        "title": "Hints",
+        "text": "Stuck? Hints come in three steps, from a nudge to the full idea."
+      },
+      "results": {
+        "title": "Results and debugger",
+        "text": "Results appear here. On a failing test, Debug this case steps through your code line by line."
+      },
+      "learn": {
+        "title": "Learn",
+        "text": "Animated lessons for every algorithm and data structure, linked to the problems that use them."
+      }
+    },
+    "again": {
+      "label": "Welcome",
+      "button": "Show the welcome again"
+    }
+  },
+  "sqlProblem": {
+    "schemaIntro": "The tables your query reads. The sample rows come from public test 1.",
+    "columnsOf": "Columns of {{table}}",
+    "column": "Column",
+    "type": "Type",
+    "keys": "Keys",
+    "primaryKey": "Primary key",
+    "notNull": "Not null",
+    "references": "References {{table}}.{{column}}",
+    "sample": "Sample rows: {{shown}} of {{count}}",
+    "tableCaption_one": "{{table}} · {{count}} row",
+    "tableCaption_other": "{{table}} · {{count}} rows",
+    "null": "NULL",
+    "noRows": "No rows",
+    "moreRows_one": "… {{count}} more row",
+    "moreRows_other": "… {{count}} more rows",
+    "firstDiff": "first difference",
+    "expected": "Expected rows",
+    "actual": "Your rows",
+    "result": "Rows",
+    "rowsCount_one": "{{count}} row",
+    "rowsCount_other": "{{count}} rows",
+    "ordered": "Row order matters",
+    "unordered": "Row order does not matter",
+    "columnsDiffer": "The columns differ: expected {{expected}}; yours {{actual}}. Fix the columns first (names and order).",
+    "inputTables": "The test's tables",
+    "customUnavailable": "Custom tests are not available for SQL problems yet: editing tables is coming later.",
+    "needsPython": "SQL problems run on Python's SQLite. Install Python to run your query.",
+    "completion": "completion of the tables, columns and keywords"
   }
 }

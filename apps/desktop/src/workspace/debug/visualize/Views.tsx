@@ -435,6 +435,20 @@ export function GraphView({ m, changes, zoom }: Props<GraphModel>) {
                 ×{e.count}
               </text>
             )}
+            {e.weight !== undefined && (
+              <text
+                x={(p.x + q.x) / 2 - uy * 9}
+                y={(p.y + q.y) / 2 + ux * 9 + 3}
+                textAnchor="middle"
+                className="fill-foreground text-[10px] font-medium"
+                paintOrder="stroke"
+                stroke="var(--card)"
+                strokeWidth={3}
+                data-weight={e.weight}
+              >
+                {clip(e.weight, 8)}
+              </text>
+            )}
           </g>
         );
       })}

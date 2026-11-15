@@ -1,0 +1,13 @@
+id = "mentor-pairs"
+title = "Mentor Pairs"
+title_es = "Parejas de mentoría"
+difficulty = "medium"
+tags = ["self-join", "left-join"]
+pattern = "sql-joins"
+rank = 4
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

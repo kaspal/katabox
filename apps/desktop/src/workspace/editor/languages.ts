@@ -1,6 +1,6 @@
 // Editor languages load on demand (ADR 0013): each grammar is its own chunk, so opening
 // a Python problem never parses the PHP grammar (which embeds HTML, CSS and JS).
-import type { Extension } from "@codemirror/state";
+import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { indentUnit, type Language as CmLanguage } from "@codemirror/language";
 import type { Language } from "@/bindings";
@@ -24,6 +24,12 @@ const loaders: Record<EditorLang, () => Promise<Loaded>> = {
     })),
   php: () => import("@codemirror/lang-php").then((m) => ({ support: m.php(), language: m.phpLanguage })),
   rust: () => import("@codemirror/lang-rust").then((m) => ({ support: m.rust(), language: m.rustLanguage })),
+  // SQL problems (ADR 0031): SQLite's dialect; the schema completion comes separately.
+  sql: () =>
+    import("@codemirror/lang-sql").then((m) => ({
+      support: m.sql({ dialect: m.SQLite, upperCaseKeywords: true }),
+      language: m.SQLite.language,
+    })),
   markdown: () =>
     import("@codemirror/lang-markdown").then((m) => ({
       support: m.markdown(),
@@ -37,6 +43,7 @@ const INDENT: Record<EditorLang, string> = {
   javascript: "  ",
   php: "    ",
   rust: "    ",
+  sql: "  ",
   markdown: "  ",
 };
 
@@ -51,10 +58,17 @@ function load(lang: EditorLang): Promise<Loaded> {
   return p;
 }
 
-/** The editor extension for `lang` (grammar, indentation, wrapping for Markdown). */
+/** The editor extension for `lang` (grammar, wrapping for Markdown). */
 export async function loadLanguageExtension(lang: EditorLang): Promise<Extension> {
   const { support } = await load(lang);
-  return [support, indentUnit.of(INDENT[lang]), lang === "markdown" ? EditorView.lineWrapping : []];
+  return [support, lang === "markdown" ? EditorView.lineWrapping : []];
+}
+
+/** Indentation for `lang`: the user's tab width (`editor.tab_width`), or 0 for the
+ * language's own. */
+export function indentExtension(lang: EditorLang, tabWidth = 0): Extension {
+  const unit = tabWidth > 0 ? " ".repeat(tabWidth) : INDENT[lang];
+  return [indentUnit.of(unit), EditorState.tabSize.of(unit.length)];
 }
 
 /** Map a Markdown code-fence language to an editor language. */
@@ -74,6 +88,8 @@ export function fenceLanguage(fence: string | undefined): EditorLang | null {
     case "rust":
     case "rs":
       return "rust";
+    case "sql":
+      return "sql";
     default:
       return null;
   }

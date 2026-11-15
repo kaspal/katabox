@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "In each round, which rows does the recursive part join with the employees?",
+    "prompt_es": "En cada ronda, ¿qué filas une la parte recursiva con los empleados?",
+    "options": [
+      { "en": "Every row found so far", "es": "Todas las filas encontradas hasta ahora" },
+      { "en": "Only the rows found in the previous round", "es": "Solo las filas encontradas en la ronda anterior" },
+      { "en": "Only the anchor rows", "es": "Solo las filas del ancla" }
+    ],
+    "answer": 1,
+    "explain_en": "The working table holds just the last round's rows. Joining older rows again would find the same employees twice.",
+    "explain_es": "La tabla de trabajo contiene solo las filas de la última ronda. Volver a unir filas más antiguas encontraría a los mismos empleados dos veces."
+  },
+  {
+    "prompt_en": "Default input [-1, 0, 0, 1, 1, 2]: what is the output?",
+    "prompt_es": "Entrada por defecto [-1, 0, 0, 1, 1, 2]: ¿cuál es la salida?",
+    "options": [
+      { "en": "[0, 1, 1, 2, 2, 3]", "es": "[0, 1, 1, 2, 2, 3]" },
+      { "en": "[0, 1, 2, 3, 4, 5]", "es": "[0, 1, 2, 3, 4, 5]" },
+      { "en": "[0, 1, 1, 2, 2, 2]", "es": "[0, 1, 1, 2, 2, 2]" }
+    ],
+    "answer": 2,
+    "explain_en": "Employee 0 is the top (depth 0); 1 and 2 report to 0 (depth 1); 3 and 4 report to 1 and 5 reports to 2 (depth 2).",
+    "explain_es": "El empleado 0 es la cima (profundidad 0); 1 y 2 dependen de 0 (profundidad 1); 3 y 4 dependen de 1 y 5 depende de 2 (profundidad 2)."
+  },
+  {
+    "prompt_en": "If two employees were each other's boss, what would stop the query from running forever?",
+    "prompt_es": "Si dos empleados fueran jefe el uno del otro, ¿qué evitaría que la consulta se ejecutara para siempre?",
+    "options": [
+      { "en": "A depth limit such as WHERE c.depth < 100 in the recursive part", "es": "Un límite de profundidad como WHERE c.depth < 100 en la parte recursiva" },
+      { "en": "Nothing is needed: a round never finds a row twice", "es": "No hace falta nada: una ronda nunca encuentra una fila dos veces" },
+      { "en": "ORDER BY id in the final SELECT", "es": "ORDER BY id en el SELECT final" }
+    ],
+    "answer": 0,
+    "explain_en": "With a cycle, every round finds a row again and depth keeps growing, so even UNION would see new rows. A depth limit ends the rounds.",
+    "explain_es": "Con un ciclo, cada ronda vuelve a encontrar una fila y la profundidad sigue creciendo, así que hasta UNION vería filas nuevas. Un límite de profundidad termina las rondas."
+  }
+]

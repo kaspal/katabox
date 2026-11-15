@@ -25,9 +25,9 @@ pub mod user;
 use std::path::Path;
 
 pub use content::{
-    CONTENT_SCHEMA_VERSION, ContentDb, ContentMeta, JudgeData, PackMeta, PackProblem, PackText,
-    ProblemFilter, ProblemSummary, ProblemView, ProfileData, PublicTest, StatusFilter, UiLang,
-    build, build_with_learn,
+    CONTENT_SCHEMA_VERSION, ContentDb, ContentMeta, JudgeData, PackMeta, PackProblem, PackSql,
+    PackText, ProblemFilter, ProblemSummary, ProblemView, ProfileData, PublicTest, StatusFilter,
+    UiLang, build, build_with_learn,
 };
 pub use learn::{
     LearnComplexity, LearnInput, LearnPack, LearnPath, LearnSample, LearnSubject, LearnTopic,

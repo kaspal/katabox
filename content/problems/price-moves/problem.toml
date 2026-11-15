@@ -1,0 +1,13 @@
+id = "price-moves"
+title = "Price Moves"
+title_es = "Movimientos de precio"
+difficulty = "hard"
+tags = ["window-functions", "lag"]
+pattern = "sql-advanced"
+rank = 7
+mode = "sql"
+
+[judge]
+checker = "rows-ordered:0.001"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

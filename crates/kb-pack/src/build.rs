@@ -5,7 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use kb_store::{PackMeta, PackProblem, PackText, ProfileData, UiLang};
+use kb_store::{PackMeta, PackProblem, PackSql, PackText, ProfileData, UiLang};
 
 use crate::validate::{problem_dirs, read_problem_toml, validate_all};
 
@@ -84,13 +84,25 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
             .unwrap_or_default(),
     });
 
-    let tests = kb_judge::Problem::load(dir)
-        .map_err(|e| e.to_string())?
-        .tests;
+    let problem = kb_judge::Problem::load(dir).map_err(|e| e.to_string())?;
     let mut solutions = Vec::new();
-    for lang in kb_judge::languages::SUPPORTED {
-        solutions.push((lang, read(&format!("solutions/ref.{}", lang.extension()))?));
-    }
+    let sql = match &problem.sql {
+        // An SQL problem has one reference, its query (ADR 0031).
+        Some(schema) => {
+            solutions.push((kb_core::Language::Sql, read("solutions/ref.sql")?));
+            Some(PackSql {
+                schema_sql: schema.text.clone(),
+                tables: schema.to_json(),
+            })
+        }
+        None => {
+            for lang in kb_judge::languages::SUPPORTED {
+                solutions.push((lang, read(&format!("solutions/ref.{}", lang.extension()))?));
+            }
+            None
+        }
+    };
+    let tests = problem.tests;
 
     Ok(PackProblem {
         id: meta.id,
@@ -121,6 +133,7 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         solutions,
         // The app runs it on custom test inputs (ADR 0016).
         validator: fs::read_to_string(dir.join("validate.py")).ok(),
+        sql,
     })
 }
 

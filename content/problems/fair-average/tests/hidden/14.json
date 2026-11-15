@@ -1,0 +1,1 @@
+{"input":{"tables":{"reviews":[[32367,"Hive",1],[35536,"Hive",4]]}},"output":{"columns":["game","rated","avg_stars"],"rows":[["Hive",2,2.5]]}}

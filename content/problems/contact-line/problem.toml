@@ -1,0 +1,13 @@
+id = "contact-line"
+title = "Contact Line"
+title_es = "Línea de contacto"
+difficulty = "medium"
+tags = ["null-handling", "string"]
+pattern = "sql-basics"
+rank = 6
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

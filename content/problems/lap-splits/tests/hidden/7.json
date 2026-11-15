@@ -1,0 +1,1 @@
+{"stdin":"3\nmub 1 5:04\nls 1 4:49\nbcnn 1 2:33\n","stdout":"mub 5:04 5:04\nls 4:49 4:49\nbcnn 2:33 2:33\n"}

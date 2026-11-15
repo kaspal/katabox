@@ -1,0 +1,1 @@
+{"stdin": "10\nSET ana 50\nSET bo 50\nCOUNT 50\nBEGIN\nADD ana -20\nGET ana\nCOUNT 50\nROLLBACK\nGET ana\nCOUNT 50\n", "stdout": "2\n30\n1\n50\n2\n"}

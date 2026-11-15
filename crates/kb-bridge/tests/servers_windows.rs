@@ -371,3 +371,126 @@ async fn php_is_unavailable_on_windows_with_the_reason() {
     let reason = m.unavailable_reason(Language::Php).unwrap();
     assert!(reason.contains("posix"), "{reason}");
 }
+
+/// Open `code` as `problem`'s solution (`program`: the Node typings shim) and return the
+/// error-or-warning diagnostics (severity, message, line) once the server has published
+/// some containing `wait_for`.
+async fn diagnostics_of(
+    m: &LspManager,
+    problem: &str,
+    code: &str,
+    program: bool,
+    wait_for: &str,
+) -> Vec<(u64, String, u64)> {
+    let ev = Events::default();
+    let conn = m
+        .connect_with(problem, Language::TypeScript, code, program, ev.sink())
+        .await
+        .unwrap();
+    let send = |v: Value| async move {
+        m.send(Language::TypeScript, conn.session, v.to_string())
+            .await
+            .unwrap()
+    };
+    send(
+        json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
+        "processId": null, "rootUri": null,
+        "capabilities": { "textDocument": { "publishDiagnostics": {} } }
+    } }),
+    )
+    .await;
+    assert!(
+        ev.message(60, |x| x["id"] == 1).await.is_some(),
+        "{problem}: initialize"
+    );
+    send(json!({ "jsonrpc": "2.0", "method": "initialized", "params": {} })).await;
+    send(json!({ "jsonrpc": "2.0", "method": "textDocument/didOpen", "params": {
+        "textDocument": { "uri": conn.file_uri, "languageId": conn.language_id, "version": 1, "text": code }
+    } }))
+    .await;
+    let diag = ev
+        .message(90, |x| {
+            x["method"] == "textDocument/publishDiagnostics"
+                && x["params"]["diagnostics"].as_array().is_some_and(|d| {
+                    d.iter()
+                        .any(|y| y["message"].as_str().unwrap_or_default().contains(wait_for))
+                })
+        })
+        .await
+        .unwrap_or_else(|| panic!("{problem}: no diagnostics mentioning {wait_for:?}"));
+    diag["params"]["diagnostics"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|d| d["severity"].as_u64().unwrap_or(1) <= 2)
+        .map(|d| {
+            (
+                d["severity"].as_u64().unwrap_or(1),
+                d["message"].as_str().unwrap_or_default().to_string(),
+                d["range"]["start"]["line"].as_u64().unwrap_or(0),
+            )
+        })
+        .collect()
+}
+
+/// Program problems in TypeScript (ADR 0028) see Node's stdin/stdout APIs through the
+/// hand-written shim: every catalogue reference has no error but a deliberate probe on
+/// its last line. A function problem's project has no shim: the same code is flagged.
+#[tokio::test(flavor = "multi_thread")]
+async fn typescript_program_references_have_no_false_errors() {
+    let data = root()
+        .join("..")
+        .join(format!("kb-bridge-program-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&data);
+    let m = LspManager::new(root(), &data);
+    assert_eq!(
+        m.unavailable_reason(Language::TypeScript),
+        None,
+        "run scripts/fetch-toolchains.ps1"
+    );
+    let problems = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content/problems");
+    let probe = "\nconst kbProbe: number = \"not a number\";\n";
+    let mut checked = 0;
+    let mut dirs: Vec<_> = std::fs::read_dir(&problems)
+        .unwrap()
+        .flatten()
+        .map(|e| e.path())
+        .collect();
+    dirs.sort();
+    for dir in dirs {
+        let toml = std::fs::read_to_string(dir.join("problem.toml")).unwrap_or_default();
+        if !toml.contains("mode = \"program\"") {
+            continue;
+        }
+        let id = dir.file_name().unwrap().to_string_lossy().into_owned();
+        let code = std::fs::read_to_string(dir.join("solutions/ref.ts")).unwrap() + probe;
+        let probe_line = code.lines().count() as u64 - 1;
+        let found = diagnostics_of(&m, &id, &code, true, "not assignable").await;
+        let others: Vec<_> = found
+            .iter()
+            .filter(|(_, _, line)| *line != probe_line)
+            .collect();
+        assert!(
+            others.is_empty(),
+            "{id}: false errors with the shim: {others:?}"
+        );
+        assert_eq!(
+            found.len(),
+            1,
+            "{id}: the probe is the only diagnostic: {found:?}"
+        );
+        checked += 1;
+    }
+    assert!(checked >= 35, "{checked} program problems");
+    // Function mode: no shim, so `process` and `node:fs` are unknown.
+    let code =
+        std::fs::read_to_string(problems.join("tide-lows/solutions/ref.ts")).unwrap() + probe;
+    let found = diagnostics_of(&m, "tide-lows", &code, false, "not assignable").await;
+    assert!(
+        found
+            .iter()
+            .any(|(_, msg, _)| msg.contains("process") || msg.contains("node:fs")),
+        "function mode must not see the shim: {found:?}"
+    );
+    m.shutdown().await;
+}

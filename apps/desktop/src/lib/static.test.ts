@@ -119,6 +119,49 @@ const SEMANTIC = [
   "syntax-invalid",
 ];
 
+// Editor colour themes (editor.theme): every syntax colour and the gutter text on the
+// theme's own editor surface, in light and dark.
+const EDITOR_THEMES = ["high-ink", "paper", "dusk"];
+const EDITOR_TEXT = [...SEMANTIC.filter((k) => k.startsWith("syntax-")), "muted-foreground", "foreground"];
+describe.each(
+  EDITOR_THEMES.flatMap((id): [string, Record<string, string>][] => [
+    [`${id} light`, block(`.cm-theme-${id}`)],
+    [`${id} dark`, { ...block(`.cm-theme-${id}`), ...block(`.dark .cm-theme-${id}`) }],
+  ]),
+)("editor theme %s contrast (WCAG AA)", (_, t) => {
+  it.each(EDITOR_TEXT)("%s is ≥ 4.5:1 on the editor surface", (fg) => {
+    expect(t[fg], fg).toBeDefined();
+    expect(contrast(t[fg], t.card), `${fg} on card`).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+// High contrast (ui.contrast): text tokens reach 7:1 (WCAG AAA) on every surface; the
+// semantic colours keep AA; borders, inputs and the focus ring reach 3:1 (WCAG 1.4.11).
+const HC_TEXT = ["foreground", "muted-foreground", "primary", "card-foreground", "popover-foreground", "accent-foreground"];
+describe.each([
+  ["light high contrast", { ...block(":root"), ...block(".hc") }],
+  ["dark high contrast", { ...block(":root"), ...block(".dark"), ...block(".dark.hc") }],
+])("%s (WCAG AAA text)", (_, t) => {
+  it.each(HC_TEXT)("%s text is ≥ 7:1 on every surface", (fg) => {
+    for (const bg of TEXT_ON) {
+      expect(contrast(t[fg], t[bg]), `${fg} on ${bg}`).toBeGreaterThanOrEqual(7);
+    }
+  });
+  it.each(SEMANTIC)("%s stays ≥ 4.5:1 on every surface", (fg) => {
+    for (const bg of TEXT_ON) {
+      expect(contrast(t[fg], t[bg]), `${fg} on ${bg}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+  it("borders, inputs and the focus ring are ≥ 3:1 on the surfaces", () => {
+    for (const line of ["border", "input", "ring"]) {
+      for (const bg of ["background", "card"]) {
+        expect(contrast(t[line], t[bg]), `${line} on ${bg}`).toBeGreaterThanOrEqual(3);
+      }
+    }
+    expect(contrast(t["primary-foreground"], t.primary)).toBeGreaterThanOrEqual(7);
+  });
+});
+
 describe.each([
   ["light", block(":root")],
   ["dark", { ...block(":root"), ...block(".dark") }],

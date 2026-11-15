@@ -40,3 +40,27 @@ describe("Home", () => {
     expect(relativeTime(now, "en", now)).toBe("now");
   });
 });
+
+describe("Home: Review a topic (Learn ↔ practice)", () => {
+  useFakeApi();
+
+  it("suggests the latest viewed topic that still has an unsolved linked problem", async () => {
+    const fake = setFakeApi();
+    // Bubble Sort links only two-sum (solved); Quick Sort, viewed last, also links valid-brackets.
+    await fake.api.setSetting("learn.viewed", ["bubble-sort", "quick-sort"]);
+    renderApp("/");
+    const card = await screen.findByTestId("topic-review-card");
+    expect(card).toHaveTextContent("You watched Quick Sort.");
+    expect(screen.getByRole("link", { name: "Open the topic" })).toHaveAttribute("href", "/learn/sorting/quick-sort");
+    expect(screen.getByRole("link", { name: /^Try / })).toHaveAttribute("href", "/problems/valid-brackets");
+  });
+
+  it("shows nothing when every viewed topic's problems are solved", async () => {
+    const fake = setFakeApi();
+    await fake.api.setSetting("learn.viewed", ["bubble-sort"]);
+    renderApp("/");
+    await screen.findByTestId("solved-easy");
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.queryByTestId("topic-review-card")).toBeNull();
+  });
+});

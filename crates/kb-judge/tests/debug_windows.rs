@@ -853,9 +853,44 @@ fn program_problems_report_errors_and_exit_codes() {
     let t = trace(&p, "x = 1\nraise ValueError('boom')\n", &inp);
     let o = t.outcome.as_ref().unwrap();
     assert_eq!((o.status, o.line), (OutcomeStatus::Error, Some(2)));
-    // TypeScript cannot debug program problems yet.
+    // PHP has no debugger (TypeScript replays programs too: debug_js_windows).
     assert!(matches!(
-        debug::trace(&p, Language::TypeScript, "console.log(1);\n", &inp, &env()),
-        Err(JudgeError::Unsupported(Language::TypeScript))
+        debug::trace(&p, Language::Php, "<?php echo 1;\n", &inp, &env()),
+        Err(JudgeError::Unsupported(Language::Php))
     ));
+}
+
+/// Every Python program reference in the catalogue replays its first public test and
+/// prints what the judge expects (the TypeScript twin is in debug_js_windows).
+#[test]
+fn every_program_reference_is_debuggable_in_python() {
+    let dir = repo().join("content/problems");
+    let mut checked = 0;
+    for e in std::fs::read_dir(&dir).unwrap().flatten() {
+        let toml = std::fs::read_to_string(e.path().join("problem.toml")).unwrap_or_default();
+        if !toml.contains("mode = \"program\"") {
+            continue;
+        }
+        let id = e.file_name().to_string_lossy().into_owned();
+        let p = Problem::load(&e.path()).unwrap();
+        let src = std::fs::read_to_string(e.path().join("solutions/ref.py")).unwrap();
+        let first = p
+            .tests
+            .iter()
+            .find(|t| t.kind == kb_core::TestKind::Public)
+            .unwrap();
+        let t = trace(&p, &src, &first.input);
+        assert!(t.truncated.is_none(), "{id}: truncated");
+        let o = t.outcome.as_ref().unwrap();
+        assert_eq!(o.status, OutcomeStatus::Ok, "{id}: {o:?}");
+        let printed: String = t.prints.iter().map(|c| c.text.as_str()).collect();
+        let words = |s: &str| s.split_whitespace().map(str::to_string).collect::<Vec<_>>();
+        assert_eq!(
+            words(&printed),
+            words(first.expected.as_str().unwrap()),
+            "{id}"
+        );
+        checked += 1;
+    }
+    assert!(checked >= 25, "{checked} program problems");
 }

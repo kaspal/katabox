@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import type { ProblemView } from "@/bindings";
-import { BookOpen, FileText, History, Lightbulb, ListChecks, Lock, NotebookPen } from "lucide-react";
+import { BookOpen, FileText, History, Lightbulb, ListChecks, Lock, NotebookPen, Table2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePatternLabel, useTagLabel } from "@/components/Semantic";
@@ -11,13 +11,16 @@ import { EditorialTab } from "@/workspace/problem/EditorialTab";
 import { SubmissionsTab } from "@/workspace/problem/SubmissionsTab";
 import { NotesTab } from "@/workspace/problem/NotesTab";
 import { HistoryTab } from "@/workspace/problem/HistoryTab";
+import { SchemaPanel } from "@/workspace/sql/SchemaPanel";
 import type { Language } from "@/bindings";
 
 export const PROBLEM_TABS = ["description", "hints", "editorial", "submissions", "notes", "history"] as const;
-export type ProblemTab = (typeof PROBLEM_TABS)[number];
+/** `schema`: the Tables tab of an SQL problem (ADR 0031), right after the description. */
+export type ProblemTab = (typeof PROBLEM_TABS)[number] | "schema";
 
 const TAB_ICON: Record<ProblemTab, typeof FileText> = {
   description: FileText,
+  schema: Table2,
   hints: Lightbulb,
   editorial: BookOpen,
   submissions: ListChecks,
@@ -84,17 +87,24 @@ export function ProblemPane({
   const note = locks ? <LockedNote reason={locks.reason} /> : null;
   const patternLabel = usePatternLabel();
   const tagLabel = useTagLabel();
+  const tabs: readonly ProblemTab[] =
+    problem.mode === "sql" ? ["description", "schema", ...PROBLEM_TABS.slice(1)] : PROBLEM_TABS;
   return (
     <Tabs defaultValue="description" className="@container flex h-full min-h-0 flex-col gap-0">
       {/* Narrow panes show icons only (with a tooltip and an accessible name); never overflow. */}
       <TabsList className="mx-2 mt-2 h-8 w-auto max-w-full justify-start" data-testid="problem-tabs">
-        {PROBLEM_TABS.map((tab) => {
+        {tabs.map((tab) => {
           const Icon = TAB_ICON[tab];
           const label = t(`workspace.tabs.${tab}`);
           return (
             <Tooltip key={tab}>
               <TooltipTrigger asChild>
-                <TabsTrigger value={tab} aria-label={label} className="group min-w-0 gap-1 px-2 text-xs">
+                <TabsTrigger
+                  value={tab}
+                  aria-label={label}
+                  className="group min-w-0 gap-1 px-2 text-xs"
+                  data-tour={tab === "hints" ? "hints" : undefined}
+                >
                   <Icon aria-hidden className="size-3.5 shrink-0" />
                   {/* Narrow panes show icons only, except the active tab's name (aria-selected: the tooltip owns data-state). */}
                   <span
@@ -123,6 +133,11 @@ export function ProblemPane({
             <dd>{problem.tags.map(tagLabel).join(", ")}</dd>
           </dl>
         </TabsContent>
+        {problem.mode === "sql" && (
+          <TabsContent value="schema">
+            <SchemaPanel problem={problem} />
+          </TabsContent>
+        )}
         <TabsContent value="hints">
           {locked("hints") ? note : <HintsTab problem={problem} />}
         </TabsContent>

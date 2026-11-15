@@ -19,6 +19,7 @@ import { ListScene } from "./ListScene";
 import { PlaneScene } from "./PlaneScene";
 import { MonoStackScene } from "./MonoStackScene";
 import { RecursionScene } from "./RecursionScene";
+import { RelationsScene } from "./RelationsScene";
 import { SlotsScene } from "./SlotsScene";
 import { StringScene } from "./StringScene";
 import { TimelineScene } from "./TimelineScene";
@@ -48,4 +49,5 @@ export const SCENES: Record<SceneKind, ComponentType<SceneProps>> = {
   board: BoardScene,
   string: StringScene,
   plane: PlaneScene,
+  relations: RelationsScene,
 };

@@ -1,0 +1,15 @@
+id = "gig-planner"
+title = "Gig Planner"
+title_es = "Agenda de bolos"
+difficulty = "hard"
+tags = ["dynamic-programming", "binary-search", "intervals"]
+pattern = "dynamic-programming"
+rank = 9
+mode = "program"
+profile = true
+profile_sizes = [1000, 2000, 4000, 8000, 16000, 30000]
+
+[judge]
+checker = "tokens"
+time_limit_ms = 150 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

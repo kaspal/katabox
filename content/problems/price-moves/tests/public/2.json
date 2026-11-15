@@ -1,0 +1,1 @@
+{"input":{"tables":{"prices":[[6,"CORA","2026-03-02",777]]}},"output":{"columns":["ticker","day","close_cents","prev_cents","change_pct"],"rows":[]}}

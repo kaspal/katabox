@@ -118,3 +118,23 @@ machine is Windows.
   few seconds near the caps. Typical solutions on public tests run well under the caps
   (two-sum: 20 steps).
 - PHP and Rust stay unavailable (ADR 0022 lists their options).
+
+## Program problems (2026-11, features-content M4)
+A TypeScript program is replayed as one function.
+- **Preparing the text:**
+  - its types are stripped with `module.stripTypeScriptTypes`, which keeps positions;
+  - imports of Node's built-in modules become `const … = __kb_require(…)` on the same
+    lines; other imports are refused with a reason;
+  - the text is compiled with `vm.compileFunction` under the solution's file URL, so the
+    recorder sees `solution.ts` with its own line numbers.
+- **Running it:**
+  - `fs.readFileSync(0 | "/dev/stdin")` and `fs.readSync(0, …)` read the test's stdin;
+  - `process.exit(code)` throws a sentinel: 0 is a normal end, another code an error;
+  - the recorder ends the process with a saved `exit` (`__katabox_exit`).
+- **Not replayable:**
+  - top-level `await`, which can't run inside a synchronous function, is refused with a
+    reason;
+  - programs that read stdin through `process.stdin` events.
+
+Every catalogue TypeScript program reference replays its first public test with the
+judge's output (`debug_js_windows`). No sockets and no runner change.

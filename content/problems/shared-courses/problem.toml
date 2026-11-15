@@ -1,0 +1,13 @@
+id = "shared-courses"
+title = "Shared Courses"
+title_es = "Cursos compartidos"
+difficulty = "medium"
+tags = ["self-join", "distinct"]
+pattern = "sql-joins"
+rank = 5
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

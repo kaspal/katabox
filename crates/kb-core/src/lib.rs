@@ -25,15 +25,29 @@ pub enum Language {
     TypeScript,
     Php,
     Rust,
+    /// SQL problems only (ADR 0031): one query, run by the Python host's sqlite3.
+    Sql,
 }
 
 impl Language {
+    /// The code languages: every problem mode but SQL offers these. SQL is not in this
+    /// list, so per-language loops (references, calibration, toolchains) never meet it.
     pub const ALL: [Language; 5] = [
         Language::Python,
         Language::JavaScript,
         Language::TypeScript,
         Language::Php,
         Language::Rust,
+    ];
+
+    /// Every language, SQL included (parsing, display).
+    pub const EVERY: [Language; 6] = [
+        Language::Python,
+        Language::JavaScript,
+        Language::TypeScript,
+        Language::Php,
+        Language::Rust,
+        Language::Sql,
     ];
 
     /// Stable identifier used in file names and the database.
@@ -44,6 +58,7 @@ impl Language {
             Language::TypeScript => "typescript",
             Language::Php => "php",
             Language::Rust => "rust",
+            Language::Sql => "sql",
         }
     }
 
@@ -55,6 +70,7 @@ impl Language {
             Language::TypeScript => "ts",
             Language::Php => "php",
             Language::Rust => "rs",
+            Language::Sql => "sql",
         }
     }
 
@@ -77,15 +93,16 @@ pub struct UnknownLanguage(pub String);
 impl FromStr for Language {
     type Err = UnknownLanguage;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Language::ALL
+        Language::EVERY
             .into_iter()
             .find(|l| l.id() == s || l.extension() == s)
             .ok_or_else(|| UnknownLanguage(s.to_string()))
     }
 }
 
-/// How a problem is solved (ADR 0028): a function the harness calls, or a whole program
-/// that reads stdin and writes stdout.
+/// How a problem is solved (ADR 0028): a function the harness calls, a whole program
+/// that reads stdin and writes stdout, or one SQL query over the problem's tables
+/// (ADR 0031).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
@@ -93,6 +110,7 @@ pub enum ProblemMode {
     #[default]
     Function,
     Program,
+    Sql,
 }
 
 impl ProblemMode {
@@ -100,6 +118,7 @@ impl ProblemMode {
         match self {
             ProblemMode::Function => "function",
             ProblemMode::Program => "program",
+            ProblemMode::Sql => "sql",
         }
     }
 }
@@ -110,7 +129,10 @@ impl std::str::FromStr for ProblemMode {
         match s {
             "function" => Ok(ProblemMode::Function),
             "program" => Ok(ProblemMode::Program),
-            _ => Err(format!("unknown mode {s:?} (expected function | program)")),
+            "sql" => Ok(ProblemMode::Sql),
+            _ => Err(format!(
+                "unknown mode {s:?} (expected function | program | sql)"
+            )),
         }
     }
 }
@@ -241,14 +263,32 @@ pub enum MessageCode {
     /// node shared by two parents (ADR 0025).
     NodeCycle,
     // Runtime, decided by the judge from the sandbox outcome.
-    /// The batch hit its CPU or wall-clock limit during this test.
+    /// The batch hit its CPU limit during this test.
     TimeLimit,
+    /// The batch hit its wall-clock limit during this test, before using its CPU limit:
+    /// the program waited (sleep, a blocked read) or the machine was too busy.
+    WallTimeLimit,
     /// The batch hit the sandbox's total output limit during this test.
     OutputLimit,
     /// The batch hit the memory limit during this test.
     MemoryLimit,
     /// The process exited or crashed during this test (exit code in the text).
     ProcessExited,
+    // SQL problems (ADR 0031), reported by the SQL harness.
+    /// SQLite rejected the query: a syntax error, an unknown table or column (its message
+    /// in the text).
+    SqlError,
+    /// The query is not a single SELECT (or WITH … SELECT).
+    SqlNotSelect,
+    /// More than one statement was sent.
+    SqlMultipleStatements,
+    /// The query tried something only reading is allowed for (ATTACH, PRAGMA, writes, a
+    /// denied function such as random()).
+    SqlNotAuthorized,
+    /// The query returned more rows than the cap.
+    SqlTooManyRows,
+    /// The result's columns (names or count) differ from the expected ones.
+    SqlColumns,
     // Internal errors (never the user's fault).
     /// The harness stopped without reporting anything.
     HarnessSilent,

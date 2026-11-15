@@ -1,0 +1,13 @@
+id = "trip-legs"
+title = "Trip Legs"
+title_es = "Tramos del viaje"
+difficulty = "medium"
+tags = ["join", "sorting"]
+pattern = "sql-joins"
+rank = 6
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

@@ -1,0 +1,1 @@
+{"input":{"tables":{"routes":[[53318,"Sands","Central"],[72256,"Cape","Rock"],[10906,"Central","Mill"],[92775,"Sands","Mill"],[33292,"Rock","Fort"],[41325,"Rock","Cape"],[99352,"Cape","Central"],[30103,"Sands","Cape"],[67225,"Mill","Sands"],[37886,"Mill","Cape"]]}},"output":{"columns":["pier","hops"],"rows":[["Mill",1],["Cape",2],["Sands",2],["Rock",3]]}}

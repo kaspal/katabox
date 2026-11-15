@@ -1,0 +1,1 @@
+{"input":{"tables":{"customers":[[2,"Felix","Porto"],[1,"Gala","Faro"]],"orders":[[1,2,"2026-05-01",30000],[2,1,"2026-05-02",30000],[3,2,"2026-05-02",45000]]}},"output":{"columns":["order_id","name","city","total_cents"],"rows":[[3,"Felix","Porto",45000],[1,"Felix","Porto",30000],[2,"Gala","Faro",30000]]}}

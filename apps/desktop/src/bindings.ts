@@ -16,6 +16,40 @@ async appInfo() : Promise<Result<AppInfo, AppError>> {
 }
 },
 /**
+ * Shrink a failing input to a smaller one that still fails (ADR 0030); progress goes to
+ * `on_event` after each round.
+ */
+async shrink(problem: string, language: Language, code: string, input: Partial<{ [key in string]: JsonValue }>, onEvent: TAURI_CHANNEL<ShrinkEvent>) : Promise<Result<ShrinkResult, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("shrink", { problem, language, code, input, onEvent }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Stop the running shrink after its current sandbox run.
+ */
+async cancelShrink() : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("cancel_shrink") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * What "Copy diagnostics" shows: versions and flags, never paths or user data.
+ */
+async diagnostics() : Promise<Result<Diagnostics, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("diagnostics") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Settings → About → Third-party notices (the bundled text; `None` in dev builds).
  */
 async thirdPartyNotices() : Promise<Result<string | null, AppError>> {
@@ -103,6 +137,52 @@ async learnCatalog(uiLang: UiLang) : Promise<Result<LearnSubject[], AppError>> {
 async learnPaths(uiLang: UiLang) : Promise<Result<LearnPath[], AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("learn_paths", { uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The Learn topics of each practice pattern (Library and Progress link to them).
+ */
+async learnByPattern(uiLang: UiLang) : Promise<Result<PatternTopics[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("learn_by_pattern", { uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The welcome flow's three placement problems.
+ */
+async placementProblems(uiLang: UiLang) : Promise<Result<ProblemSummary[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("placement_problems", { uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Finish the welcome flow: sets where practice starts (from the placement's solves, or
+ * fundamentals) and returns the problem to open first.
+ */
+async finishOnboarding(placement: string[] | null, uiLang: UiLang) : Promise<Result<ProblemSummary | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("finish_onboarding", { placement, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Home's "Review a topic": a viewed topic (`learn.viewed`, in order) with an unsolved
+ * linked problem.
+ */
+async topicToReview(viewed: string[], uiLang: UiLang) : Promise<Result<TopicReview | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("topic_to_review", { viewed, uiLang }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -876,6 +956,10 @@ export type AppErrorCode =
  */
 "profile_unavailable" | 
 /**
+ * The failing-test shrinker does not work here (a program problem, no reference).
+ */
+"shrink_unavailable" | 
+/**
  * Anything else, including the app failing to start.
  */
 "internal"
@@ -1090,6 +1174,31 @@ steps: number;
  * The program's prints up to the current step.
  */
 prints: PrintChunk[]; prints_truncated: boolean }
+export type Diagnostics = { app_version: string; 
+/**
+ * `windows`, `linux`, ...
+ */
+os: string; 
+/**
+ * `x86_64`, `aarch64`, ...
+ */
+arch: string; dev_data: boolean; 
+/**
+ * `<pack id> <pack version>`.
+ */
+content_pack: string; user_schema_version: number; 
+/**
+ * Where the sandbox root came from (never the path itself).
+ */
+sandbox_root_source: RootSource; 
+/**
+ * This machine's measured speed factor (ADR 0017), if measured.
+ */
+time_scale: number | null; runtimes: RuntimeDiag[]; 
+/**
+ * Optional app features that are on (`updater`); the desktop shell fills it in.
+ */
+features: string[] }
 export type Difficulty = "easy" | "medium" | "hard"
 /**
  * Solved and total problems of one difficulty or tag.
@@ -1249,7 +1358,11 @@ export type JudgeEvent =
  * Languages supported by the judge. Adding one means a `languages/<id>/` folder
  * (language.toml + harness template) and a variant here.
  */
-export type Language = "python" | "javascript" | "typescript" | "php" | "rust"
+export type Language = "python" | "javascript" | "typescript" | "php" | "rust" | 
+/**
+ * SQL problems only (ADR 0031): one query, run by the Python host's sqlite3.
+ */
+"sql"
 /**
  * Solved problems per judge language (cross-language practice, ADR 0020).
  */
@@ -1444,9 +1557,14 @@ export type MessageCode =
  */
 "node_cycle" | 
 /**
- * The batch hit its CPU or wall-clock limit during this test.
+ * The batch hit its CPU limit during this test.
  */
 "time_limit" | 
+/**
+ * The batch hit its wall-clock limit during this test, before using its CPU limit:
+ * the program waited (sleep, a blocked read) or the machine was too busy.
+ */
+"wall_time_limit" | 
 /**
  * The batch hit the sandbox's total output limit during this test.
  */
@@ -1459,6 +1577,32 @@ export type MessageCode =
  * The process exited or crashed during this test (exit code in the text).
  */
 "process_exited" | 
+/**
+ * SQLite rejected the query: a syntax error, an unknown table or column (its message
+ * in the text).
+ */
+"sql_error" | 
+/**
+ * The query is not a single SELECT (or WITH … SELECT).
+ */
+"sql_not_select" | 
+/**
+ * More than one statement was sent.
+ */
+"sql_multiple_statements" | 
+/**
+ * The query tried something only reading is allowed for (ATTACH, PRAGMA, writes, a
+ * denied function such as random()).
+ */
+"sql_not_authorized" | 
+/**
+ * The query returned more rows than the cap.
+ */
+"sql_too_many_rows" | 
+/**
+ * The result's columns (names or count) differ from the expected ones.
+ */
+"sql_columns" | 
 /**
  * The harness stopped without reporting anything.
  */
@@ -1483,6 +1627,10 @@ export type PatternProgress = { pattern: string; solved: number; total: number;
  * The lowest-ranked unsolved problem of the pattern.
  */
 next: ProblemSummary | null }
+/**
+ * The Learn topics for one practice pattern, in Learn's own order.
+ */
+export type PatternTopics = { pattern: string; topics: LearnTopicSummary[] }
 /**
  * One component of an install plan.
  */
@@ -1537,10 +1685,11 @@ query: string | null;
  */
 lang: UiLang | null }
 /**
- * How a problem is solved (ADR 0028): a function the harness calls, or a whole program
- * that reads stdin and writes stdout.
+ * How a problem is solved (ADR 0028): a function the harness calls, a whole program
+ * that reads stdin and writes stdout, or one SQL query over the problem's tables
+ * (ADR 0031).
  */
-export type ProblemMode = "function" | "program"
+export type ProblemMode = "function" | "program" | "sql"
 /**
  * One problem of a scorecard.
  */
@@ -1605,7 +1754,12 @@ time_limits: LanguageLimit[];
 /**
  * The time scale in `time_limits` (1.0 = the reference machine; ADR 0017).
  */
-time_scale: number }
+time_scale: number; 
+/**
+ * An SQL problem's tables (ADR 0031): `[{"name", "columns": [{"name", "type",
+ * "primary_key", "not_null", "references"}]}]`, for the schema panel and completion.
+ */
+sql_tables: JsonValue | null }
 /**
  * One measured size: the median of the repetitions, with every sample.
  */
@@ -1662,7 +1816,31 @@ stopped: ProfileStop | null;
 /**
  * The machine's time scale the reference times were multiplied by (ADR 0017).
  */
-time_scale: number }
+time_scale: number; 
+/**
+ * Time the profile waited for other sandbox users, in ms (not counted in its budget).
+ */
+queued_ms: number; 
+/**
+ * A program problem's process startup, taken off every point (microseconds).
+ */
+startup_us: number; 
+/**
+ * A program problem whose estimate would not be trustworthy (startup dominates, or
+ * too few sizes): shown without an estimate, saying why.
+ */
+unreliable: boolean; 
+/**
+ * An unreliable program profile where every size ran, yet the work stayed below the
+ * startup at all of them: the program is too fast to classify here (a slow class,
+ * such as O(n²), shows clear growth at these sizes).
+ */
+fast: boolean; 
+/**
+ * The same for the reference in this language (judged against this run's startup):
+ * its line is drawn, but no class is fitted to it.
+ */
+reference_fast: boolean }
 /**
  * A public test as shown in the UI.
  */
@@ -1769,10 +1947,43 @@ export type RootSource =
  */
 "app_data"
 /**
+ * One judge language: whether its runtime is installed, and the pinned version folder.
+ */
+export type RuntimeDiag = { language: Language; installed: boolean; 
+/**
+ * The pinned runtime, e.g. `python-3.14` (the toolchain folder's name, no path).
+ */
+version: string | null; language_server: boolean }
+/**
+ * Progress, after each round.
+ */
+export type ShrinkEvent = { runs: number; max_runs: number; original_size: number; size: number }
+/**
+ * The smallest failing input found, with what the reference and the user's code gave.
+ */
+export type ShrinkResult = { input: Partial<{ [key in string]: JsonValue }>; expected: JsonValue; actual: JsonValue | null; verdict: Verdict; message: Message | null; original_size: number; size: number; runs: number; stop: ShrinkStop }
+export type ShrinkStop = 
+/**
+ * No smaller candidate fails: this is as small as the moves get.
+ */
+"smallest" | 
+/**
+ * The run or time budget ran out.
+ */
+"budget" | 
+/**
+ * The user pressed Stop.
+ */
+"cancelled" | 
+/**
+ * The starting input does not fail (any more) with this code.
+ */
+"not_failing"
+/**
  * A container or a node. `len` is the real length; `items` / `entries` may list fewer
  * (the snapshot's caps).
  */
-export type SnapObject = { kind: "list"; type: string; items: SnapValue[]; len: number } | { kind: "map"; type: string; entries: ([SnapValue, SnapValue])[]; len: number } | { kind: "set"; type: string; items: SnapValue[]; len: number } | { kind: "list_node"; val: SnapValue; next: SnapValue; input?: number | null } | { kind: "tree_node"; val: SnapValue; left: SnapValue; right: SnapValue; input?: number | null }
+export type SnapObject = { kind: "list"; type: string; items: SnapValue[]; len: number; typed?: boolean } | { kind: "map"; type: string; entries: ([SnapValue, SnapValue])[]; len: number } | { kind: "set"; type: string; items: SnapValue[]; len: number } | { kind: "list_node"; val: SnapValue; next: SnapValue; input?: number | null } | { kind: "tree_node"; val: SnapValue; left: SnapValue; right: SnapValue; input?: number | null }
 export type SnapRoot = { name: string; value: SnapValue }
 /**
  * A value in a snapshot: a reference to an object, or a scalar as display text (so big
@@ -1897,6 +2108,10 @@ program: string | null;
  * Why it is missing, when not present.
  */
 problem: string | null }
+/**
+ * Home's "Review a topic": a topic the user watched, and a linked problem not solved yet.
+ */
+export type TopicReview = { topic: LearnTopicSummary; problem: ProblemSummary }
 /**
  * How many records of each kind a file holds.
  */

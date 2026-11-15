@@ -420,6 +420,12 @@ fn read_topic(dir: &Path, subject: &str, problems: &Path) -> Result<TopicDir, Ve
     if t.id != folder {
         errors.push(format!("id {:?} does not match the folder", t.id));
     }
+    for file in crate::scaffold::files_with_todo(dir) {
+        errors.push(format!(
+            "{file}: still has {} markers from `kb-pack new-topic`",
+            crate::scaffold::TODO_MARKER
+        ));
+    }
     if t.subject != subject {
         errors.push(format!(
             "subject {:?} does not match the folder {subject:?}",
@@ -791,13 +797,17 @@ mod tests {
             &repo().join("content/problems"),
         )
         .unwrap_or_else(|e| panic!("{e:#?}"));
-        assert_eq!(l.pack.subjects.len(), 13);
+        assert_eq!(l.pack.subjects.len(), 14);
         let ids: Vec<_> = l.topics.iter().map(|t| t.topic.id.as_str()).collect();
         // Every topic shipped so far (read in folder order; the app orders by `order`).
         let mut ids: Vec<_> = ids;
         ids.sort_unstable();
         for want in [
             "big-o-growth",
+            "join-algorithms",
+            "group-by",
+            "window-functions",
+            "recursive-cte",
             "bit-manipulation",
             "bubble-sort",
             "dynamic-array",

@@ -2,10 +2,14 @@
 // commands: unwraps `{status, data | error}` and throws the typed AppError. Components
 // use the hooks in `queries.ts` (or call `api` for actions); tests mock this module.
 import { Channel } from "@tauri-apps/api/core";
+import { recordError } from "@/lib/diagnostics";
 import {
   commands,
   type AppError,
   type AppInfo,
+  type Diagnostics,
+  type ShrinkEvent,
+  type ShrinkResult,
   type AcceptedSolution,
   type DebugAction,
   type DebugInspect,
@@ -39,6 +43,8 @@ import {
   type Language,
   type LanguagesInfo,
   type LearnPath,
+  type PatternTopics,
+  type TopicReview,
   LearnSubject,
   type LearnTopicSummary,
   type LearnTopicView,
@@ -61,7 +67,11 @@ export type CustomInput = Partial<{ [key in string]: JsonValue }>;
 
 export async function call<T>(p: Promise<Result<T, AppError>>): Promise<T> {
   const r = await p;
-  if (r.status === "error") throw r.error;
+  if (r.status === "error") {
+    // The code only, for Copy diagnostics: messages can name files or users.
+    recordError(r.error.code);
+    throw r.error;
+  }
   return r.data;
 }
 
@@ -74,6 +84,7 @@ function progress(onEvent: (e: JudgeEvent) => void): Channel<JudgeEvent> {
 
 export const api = {
   appInfo: (): Promise<AppInfo> => call(commands.appInfo()),
+  diagnostics: (): Promise<Diagnostics> => call(commands.diagnostics()),
   thirdPartyNotices: (): Promise<string | null> => call(commands.thirdPartyNotices()),
   activity: (sinceMs: number): Promise<ActivityRow[]> => call(commands.activity(sinceMs)),
   solvedBreakdown: (lang: UiLang): Promise<SolvedBreakdown> => call(commands.solvedBreakdown(lang)),
@@ -85,6 +96,12 @@ export const api = {
   // Learn (ADR 0029)
   learnCatalog: (lang: UiLang): Promise<LearnSubject[]> => call(commands.learnCatalog(lang)),
   learnPaths: (lang: UiLang): Promise<LearnPath[]> => call(commands.learnPaths(lang)),
+  placementProblems: (lang: UiLang): Promise<ProblemSummary[]> => call(commands.placementProblems(lang)),
+  finishOnboarding: (placement: string[] | null, lang: UiLang): Promise<ProblemSummary | null> =>
+    call(commands.finishOnboarding(placement, lang)),
+  learnByPattern: (lang: UiLang): Promise<PatternTopics[]> => call(commands.learnByPattern(lang)),
+  topicToReview: (viewed: string[], lang: UiLang): Promise<TopicReview | null> =>
+    call(commands.topicToReview(viewed, lang)),
   learnTopic: (id: string, lang: UiLang): Promise<LearnTopicView> =>
     call(commands.learnTopic(id, lang)),
   searchLearn: (query: string, lang: UiLang): Promise<LearnTopicSummary[]> =>
@@ -116,6 +133,18 @@ export const api = {
     custom: CustomInput[],
     onEvent: (e: JudgeEvent) => void,
   ): Promise<Report> => call(commands.run(problem, language, code, custom, progress(onEvent))),
+  shrink: (
+    problem: string,
+    language: Language,
+    code: string,
+    input: CustomInput,
+    onEvent: (e: ShrinkEvent) => void,
+  ): Promise<ShrinkResult> => {
+    const ch = new Channel<ShrinkEvent>();
+    ch.onmessage = onEvent;
+    return call(commands.shrink(problem, language, code, input, ch));
+  },
+  cancelShrink: (): Promise<null> => call(commands.cancelShrink()),
   submit: (
     problem: string,
     language: Language,

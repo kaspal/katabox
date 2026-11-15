@@ -6,6 +6,8 @@ tags = ["string", "binary-search", "prefix-sum"]
 pattern = "strings"
 rank = 7
 mode = "program"
+profile = true
+profile_sizes = [2000, 4000, 8000, 16000, 32000, 60000]
 
 [judge]
 checker = "tokens"

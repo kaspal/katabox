@@ -1,0 +1,1 @@
+{"stdin":"7\nSET me 90\nCOUNT -15\nCOUNT 79\nCOUNT 114\nCOUNT 74\nBEGIN\nROLLBACK\n","stdout":"0\n0\n0\n0\n"}

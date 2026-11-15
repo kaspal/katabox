@@ -51,6 +51,10 @@ import { rodCutting } from "./rod-cutting";
 import { lis } from "./lis";
 import { lcs } from "./lcs";
 import { editDistance } from "./edit-distance";
+import { joinAlgorithms } from "./join-algorithms";
+import { groupBy } from "./group-by";
+import { windowFunctions } from "./window-functions";
+import { recursiveCte } from "./recursive-cte";
 import { gridPaths } from "./grid-paths";
 import { wordBreak } from "./word-break";
 import { matrixChain } from "./matrix-chain";
@@ -203,6 +207,10 @@ export const TRACERS: Record<string, TracerDef> = {
   lis,
   lcs,
   "edit-distance": editDistance,
+  "join-algorithms": joinAlgorithms,
+  "group-by": groupBy,
+  "window-functions": windowFunctions,
+  "recursive-cte": recursiveCte,
   "grid-paths": gridPaths,
   "word-break": wordBreak,
   "matrix-chain": matrixChain,

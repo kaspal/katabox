@@ -13,6 +13,11 @@
 //!    naive.py gets Time Limit Exceeded under Python's limit; naive.rs is measured under
 //!    3× the Rust cap and must need at least 1.5× it (the weak-test margin).
 //!
+//! An SQL problem (ADR 0031) gets its own set ([`check_sql_problem`]): the validator,
+//! `ref.sql` Accepted through the real harness within half its CPU cap per test,
+//! `wrong.sql` caught (Wrong Answer), and the stress test: 500 generated inputs on which
+//! `ref.sql` (plain sqlite3, one run) agrees with `brute.py`'s rows.
+//!
 //! Limits are judged at the env's time scale; `kb-pack validate` uses 1.0, the reference
 //! machine, and prints this machine's factor so a slower machine can be spotted.
 
@@ -92,6 +97,8 @@ pub enum Check {
     Stress,
     Naive(Language),
     Profile,
+    /// `wrong.sql` must be caught (SQL problems).
+    Wrong,
 }
 
 impl Check {
@@ -103,6 +110,7 @@ impl Check {
             Check::Stress => "stress".into(),
             Check::Naive(l) => format!("naive.{}", l.extension()),
             Check::Profile => "profile".into(),
+            Check::Wrong => "wrong.sql".into(),
         }
     }
 }
@@ -122,7 +130,47 @@ pub fn env_for(root: &Path) -> Result<JudgeEnv, String> {
         .map_err(|e| format!("{}: {e}", root.display()))?;
     // Expected outputs and stress comparisons need a program's whole stdout (ADR 0028).
     env.full_program_output = true;
+    // Checks measure CPU time; the wall limit only has to catch hangs, so a busy machine
+    // can't end a CPU-bounded run early.
+    env.wall_factor = MEASURE_WALL_FACTOR;
     Ok(env)
+}
+
+/// kb-pack's wall-clock limit, in multiples of the CPU limit (the app uses 3).
+pub const MEASURE_WALL_FACTOR: u32 = 10;
+/// Runs stopped by the wall clock (not the CPU limit) are retried this many times before
+/// the check gives up as inconclusive.
+const WALL_RETRIES: u32 = 2;
+
+/// Whether a Time Limit Exceeded came from the wall clock, not the CPU limit.
+fn stopped_by_wall(r: &kb_judge::Report) -> bool {
+    r.verdict == Verdict::TimeLimitExceeded
+        && r.first_failure
+            .as_ref()
+            .and_then(|f| f.message.as_ref())
+            .is_some_and(|m| m.code == kb_core::MessageCode::WallTimeLimit)
+}
+
+/// `kb_judge::judge` for a timing check: a run the wall clock stopped says nothing about
+/// CPU time, so it is run again; if every try ends that way the check is inconclusive (an
+/// error), never a pass.
+fn judge_timed(
+    problem: &kb_judge::Problem,
+    lang: Language,
+    source: &str,
+    env: &JudgeEnv,
+) -> Result<kb_judge::Report, String> {
+    for _ in 0..=WALL_RETRIES {
+        let r = kb_judge::judge(problem, &problem.tests, lang, source, env)
+            .map_err(|e| e.to_string())?;
+        if !stopped_by_wall(&r) {
+            return Ok(r);
+        }
+    }
+    Err(format!(
+        "inconclusive: the wall clock stopped the run {} times before its CPU limit (the machine is too busy to measure)",
+        WALL_RETRIES + 1
+    ))
 }
 
 /// Run every sandbox check on one problem folder.
@@ -150,36 +198,22 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
     };
     let script = |name: &str| fs::read_to_string(dir.join(name)).ok();
     let validator = script("validate.py");
+    if problem.mode == kb_core::ProblemMode::Sql {
+        drop(add);
+        out.extend(check_sql_problem(
+            dir,
+            &id,
+            &problem,
+            env,
+            validator.as_deref(),
+        ));
+        return out;
+    }
 
     // 1. The validator accepts every committed test.
     if let Some(v) = &validator {
-        let inputs: Vec<&Map<String, Value>> = problem.tests.iter().map(|t| &t.input).collect();
-        match kb_judge::validate_inputs(env, v, &inputs, ScriptLimits::default()) {
-            Ok(answers) => {
-                let bad: Vec<String> = answers
-                    .iter()
-                    .zip(&problem.tests)
-                    .filter_map(|(a, t)| {
-                        a.as_ref()
-                            .map(|m| format!("{} test {}: {m}", kind_name(t.kind), t.index))
-                    })
-                    .collect();
-                if bad.is_empty() {
-                    add(
-                        Check::Validator,
-                        true,
-                        format!("{} tests valid", problem.tests.len()),
-                    );
-                } else {
-                    add(
-                        Check::Validator,
-                        false,
-                        format!("validate.py rejects {}", bad.join("; ")),
-                    );
-                }
-            }
-            Err(e) => add(Check::Validator, false, e.to_string()),
-        }
+        let (ok, detail) = validator_finding(&problem, env, v);
+        add(Check::Validator, ok, detail);
     }
 
     // 2. References: Accepted, within half of their language's CPU budget.
@@ -207,7 +241,7 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                 continue;
             }
         };
-        match kb_judge::judge(&problem, &problem.tests, lang, &src, env) {
+        match judge_timed(&problem, lang, &src, env) {
             Ok(r) if r.verdict.is_accepted() && limited_cpu(&problem, &r) <= budget_us => {
                 add(
                     Check::Reference(lang),
@@ -236,7 +270,7 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                 ),
             ),
             Ok(r) => add(Check::Reference(lang), false, describe_failure(&r)),
-            Err(e) => add(Check::Reference(lang), false, e.to_string()),
+            Err(e) => add(Check::Reference(lang), false, e),
         }
         references.push((lang, src));
     }
@@ -287,7 +321,7 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                     let mut relaxed = problem.clone();
                     relaxed.time_limit_ms =
                         relaxed_base_ms(problem.time_limit_ms, &def, env.time_scale, NAIVE_PROBE);
-                    match kb_judge::judge(&relaxed, &relaxed.tests, lang, &naive, env) {
+                    match judge_timed(&relaxed, lang, &naive, env) {
                         Ok(r) if r.verdict == Verdict::TimeLimitExceeded => {
                             naive_margin(&name, None, cap)
                         }
@@ -301,14 +335,14 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                                 describe_failure(&r)
                             ),
                         ),
-                        Err(e) => (false, e.to_string()),
+                        Err(e) => (false, e),
                     }
                 }
             };
             add(Check::Naive(lang), ok, detail);
             continue;
         }
-        let (ok, detail) = match kb_judge::judge(&problem, &problem.tests, lang, &naive, env) {
+        let (ok, detail) = match judge_timed(&problem, lang, &naive, env) {
             Ok(r) if r.verdict == Verdict::TimeLimitExceeded => {
                 let at = r
                     .first_failure
@@ -332,7 +366,7 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                     describe_failure(&r)
                 ),
             ),
-            Err(e) => (false, e.to_string()),
+            Err(e) => (false, e),
         };
         add(Check::Naive(lang), ok, detail);
     }
@@ -351,11 +385,207 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
     out
 }
 
+/// The validator's verdict on every committed test (check 1).
+fn validator_finding(problem: &Problem, env: &JudgeEnv, v: &str) -> (bool, String) {
+    let inputs: Vec<&Map<String, Value>> = problem.tests.iter().map(|t| &t.input).collect();
+    match kb_judge::validate_inputs(env, v, &inputs, ScriptLimits::default()) {
+        Ok(answers) => {
+            let bad: Vec<String> = answers
+                .iter()
+                .zip(&problem.tests)
+                .filter_map(|(a, t)| {
+                    a.as_ref()
+                        .map(|m| format!("{} test {}: {m}", kind_name(t.kind), t.index))
+                })
+                .collect();
+            if bad.is_empty() {
+                (true, format!("{} tests valid", problem.tests.len()))
+            } else {
+                (false, format!("validate.py rejects {}", bad.join("; ")))
+            }
+        }
+        Err(e) => (false, e.to_string()),
+    }
+}
+
+/// The SQL judge (ADR 0031), retried like [`judge_timed`] when the wall clock stopped it.
+fn judge_sql_timed(
+    problem: &Problem,
+    query: &str,
+    env: &JudgeEnv,
+) -> Result<kb_judge::Report, String> {
+    for _ in 0..=WALL_RETRIES {
+        let r = kb_judge::sql::judge_sql(problem, &problem.tests, query, env, &mut |_| {})
+            .map_err(|e| e.to_string())?;
+        if !stopped_by_wall(&r) {
+            return Ok(r);
+        }
+    }
+    Err(format!(
+        "inconclusive: the wall clock stopped the run {} times before its CPU limit (the machine is too busy to measure)",
+        WALL_RETRIES + 1
+    ))
+}
+
+/// The sandbox checks of an SQL problem (ADR 0031).
+pub fn check_sql_problem(
+    dir: &Path,
+    id: &str,
+    problem: &Problem,
+    env: &JudgeEnv,
+    validator: Option<&str>,
+) -> Vec<Finding> {
+    let mut out = Vec::new();
+    let mut add = |check: Check, ok: bool, detail: String| {
+        out.push(Finding {
+            problem: id.to_string(),
+            check,
+            ok,
+            detail,
+        })
+    };
+    let read = |name: &str| fs::read_to_string(dir.join(name)).map_err(|e| format!("{name}: {e}"));
+    // 1. The validator accepts every committed test.
+    if let Some(v) = validator {
+        let (ok, detail) = validator_finding(problem, env, v);
+        add(Check::Validator, ok, detail);
+    }
+    // 2. ref.sql: Accepted, its slowest test within half the per-test CPU cap.
+    let reference = read("solutions/ref.sql");
+    let (ok, detail) = match (&reference, languages::definition(kb_judge::sql::HOST)) {
+        (Err(e), _) => (false, e.clone()),
+        (_, Err(e)) => (false, e.to_string()),
+        (Ok(query), Ok(def)) => {
+            let cap_ms = limits::cpu_cap_ms(problem.time_limit_ms, &def, env.time_scale);
+            let budget_us = u64::from(cap_ms) * 1000 * SPEED_SHARE / 100;
+            match judge_sql_timed(problem, query, env) {
+                Ok(r) if r.verdict.is_accepted() && limited_cpu(problem, &r) <= budget_us => (
+                    true,
+                    format!(
+                        "AC {}/{} tests, {} ms CPU (slowest test) of {} ms allowed ({SPEED_SHARE}% of {cap_ms} ms); tests {} ms",
+                        r.total_tests,
+                        r.total_tests,
+                        ms(limited_cpu(problem, &r)),
+                        ms(budget_us),
+                        ms(r.time_us)
+                    ),
+                ),
+                Ok(r) if r.verdict.is_accepted() => (
+                    false,
+                    format!(
+                        "too slow: {} ms CPU (slowest test), over {SPEED_SHARE}% of the {cap_ms} ms budget",
+                        ms(limited_cpu(problem, &r))
+                    ),
+                ),
+                Ok(r) => (false, describe_failure(&r)),
+                Err(e) => (false, e),
+            }
+        }
+    };
+    add(Check::Reference(Language::Sql), ok, detail);
+    // 3. wrong.sql: a plausible mistake the tests must catch with Wrong Answer.
+    let (ok, detail) = match read("solutions/wrong.sql") {
+        Err(e) => (false, e),
+        Ok(query) => match judge_sql_timed(problem, &query, env) {
+            Ok(r) if r.verdict == Verdict::WrongAnswer => {
+                let at = r
+                    .first_failure
+                    .as_ref()
+                    .map(|f| format!("{} test {}", kind_name(f.kind), f.index))
+                    .unwrap_or_default();
+                (true, format!("wrong.sql gets WA at {at}"))
+            }
+            Ok(r) if r.verdict.is_accepted() => (
+                false,
+                "wrong.sql passed every test: the tests do not catch its mistake".into(),
+            ),
+            Ok(r) => (
+                false,
+                format!(
+                    "wrong.sql must run and give wrong rows; it got {}",
+                    describe_failure(&r)
+                ),
+            ),
+            Err(e) => (false, e),
+        },
+    };
+    add(Check::Wrong, ok, detail);
+    // 4. Stress: ref.sql agrees with brute.py on 500 generated inputs.
+    let (ok, detail) = match (read("gen.py"), read("solutions/brute.py"), &reference) {
+        (Ok(generator), Ok(brute), Ok(query)) => {
+            match sql_stress(problem, env, &generator, &brute, validator, query) {
+                Ok(n) => (true, format!("{n} inputs: ref.sql agrees with brute.py")),
+                Err(e) => (false, e),
+            }
+        }
+        (Err(e), _, _) | (_, Err(e), _) => (false, e),
+        (_, _, Err(e)) => (false, e.clone()),
+    };
+    add(Check::Stress, ok, detail);
+    out
+}
+
+fn sql_stress(
+    problem: &Problem,
+    env: &JudgeEnv,
+    generator: &str,
+    brute: &str,
+    validator: Option<&str>,
+    query: &str,
+) -> Result<usize, String> {
+    let schema = problem.sql.as_ref().ok_or("not an SQL problem")?;
+    let seeds: Vec<u64> = (1..=STRESS_SEEDS).collect();
+    let inputs =
+        kb_judge::generate_inputs(env, generator, &seeds, "small", ScriptLimits::default())
+            .map_err(|e| e.to_string())?;
+    for (i, inp) in inputs.iter().enumerate() {
+        kb_judge::sql::check_tables(schema, inp).map_err(|e| {
+            format!(
+                "gen.py made tables that do not fit schema.sql (seed {}): {e}",
+                i + 1
+            )
+        })?;
+    }
+    let refs: Vec<&Map<String, Value>> = inputs.iter().collect();
+    if let Some(v) = validator {
+        let answers = kb_judge::validate_inputs(env, v, &refs, ScriptLimits::default())
+            .map_err(|e| e.to_string())?;
+        if let Some((i, msg)) = answers
+            .iter()
+            .enumerate()
+            .find_map(|(i, a)| a.as_ref().map(|m| (i, m)))
+        {
+            return Err(format!(
+                "gen.py made an input validate.py rejects (seed {}): {msg}\n        input: {}",
+                i + 1,
+                Value::Object(inputs[i].clone())
+            ));
+        }
+    }
+    let expected = kb_judge::brute_rows(env, brute, &refs, ScriptLimits::default())
+        .map_err(|e| e.to_string())?;
+    let actual = kb_judge::sql_rows(env, &schema.text, query, &refs, ScriptLimits::default())
+        .map_err(|e| e.to_string())?;
+    for (i, (e, a)) in expected.iter().zip(actual).enumerate() {
+        let a = a.map_err(|err| format!("ref.sql fails on seed {}: {err}", i + 1))?;
+        if let kb_judge::CheckOutcome::Wrong(m) = problem.checker.check(e, &a) {
+            return Err(format!(
+                "ref.sql disagrees with brute.py on seed {} ({})\n        input:    {}\n        brute.py: {e}\n        ref.sql:  {a}",
+                i + 1,
+                m.text,
+                Value::Object(inputs[i].clone())
+            ));
+        }
+    }
+    Ok(inputs.len())
+}
+
 /// Microseconds as whole milliseconds, for messages.
 /// The CPU the time limit measures: the whole run for a function problem, the slowest
 /// test's run for a program problem (one run per test; ADR 0028).
 fn limited_cpu(problem: &kb_judge::Problem, r: &kb_judge::Report) -> u64 {
-    if problem.mode == kb_core::ProblemMode::Program {
+    // SQL problems also run once per test (ADR 0031).
+    if problem.mode != kb_core::ProblemMode::Function {
         r.tests.iter().map(|t| t.result.time_us).max().unwrap_or(0)
     } else {
         r.cpu_us
@@ -532,10 +762,25 @@ pub fn generate_tests(
 ) -> Result<Vec<std::path::PathBuf>, String> {
     let problem = Problem::load(dir).map_err(|e| e.to_string())?;
     let generator = fs::read_to_string(dir.join("gen.py")).map_err(|e| format!("gen.py: {e}"))?;
-    let reference = fs::read_to_string(dir.join("solutions/ref.py"))
-        .map_err(|e| format!("solutions/ref.py: {e}"))?;
+    let reference_file = if problem.mode == kb_core::ProblemMode::Sql {
+        "solutions/ref.sql"
+    } else {
+        "solutions/ref.py"
+    };
+    let reference = fs::read_to_string(dir.join(reference_file))
+        .map_err(|e| format!("{reference_file}: {e}"))?;
     let inputs = kb_judge::generate_inputs(env, &generator, seeds, size, ScriptLimits::default())
         .map_err(|e| e.to_string())?;
+    if let Some(schema) = &problem.sql {
+        for (i, inp) in inputs.iter().enumerate() {
+            kb_judge::sql::check_tables(schema, inp).map_err(|e| {
+                format!(
+                    "gen.py made tables that do not fit schema.sql (seed {}): {e}",
+                    seeds[i]
+                )
+            })?;
+        }
+    }
     if let Ok(v) = fs::read_to_string(dir.join("validate.py")) {
         let refs: Vec<&Map<String, Value>> = inputs.iter().collect();
         let answers = kb_judge::validate_inputs(env, &v, &refs, ScriptLimits::default())
@@ -554,14 +799,32 @@ pub fn generate_tests(
     let mut relaxed = problem.clone();
     relaxed.time_limit_ms = RELAXED_BASE_MS;
     let tests = generated_tests(inputs);
-    let outputs = outputs_of(
-        &relaxed,
-        &tests,
-        Language::Python,
-        &reference,
-        env,
-        "ref.py",
-    )?;
+    let outputs = match &problem.sql {
+        // An SQL problem's expected rows come from ref.sql (ADR 0031).
+        Some(schema) => {
+            let refs: Vec<&Map<String, Value>> = tests.iter().map(|t| &t.input).collect();
+            kb_judge::sql_rows(
+                env,
+                &schema.text,
+                &reference,
+                &refs,
+                ScriptLimits::default(),
+            )
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .enumerate()
+            .map(|(i, r)| r.map_err(|e| format!("ref.sql fails on seed {}: {e}", seeds[i])))
+            .collect::<Result<Vec<_>, _>>()?
+        }
+        None => outputs_of(
+            &relaxed,
+            &tests,
+            Language::Python,
+            &reference,
+            env,
+            "ref.py",
+        )?,
+    };
     let hidden = dir.join("tests").join("hidden");
     fs::create_dir_all(&hidden).map_err(|e| e.to_string())?;
     let mut written = Vec::new();

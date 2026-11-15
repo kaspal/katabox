@@ -1,0 +1,1 @@
+{"stdin":"12\nSET f 60\nSET oq 80\nSET f 12\nBEGIN\nCOUNT 87\nADD f 26\nGET oq\nSET f 79\nCOUNT 85\nCOUNT -41\nCOUNT 11\nSET oq 41\n","stdout":"0\n80\n0\n0\n0\n"}

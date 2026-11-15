@@ -32,7 +32,17 @@ const PATTERNS: &[&str] = &[
     "strings",
     "union-find",
     "design",
+    // SQL problems (ADR 0031)
+    "sql-basics",
+    "sql-joins",
+    "sql-aggregation",
+    "sql-advanced",
 ];
+
+/// The patterns of SQL problems: an SQL problem has one of these, and only SQL problems
+/// do (ADR 0031).
+pub(crate) const SQL_PATTERNS: &[&str] =
+    &["sql-basics", "sql-joins", "sql-aggregation", "sql-advanced"];
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -99,8 +109,30 @@ pub(crate) fn problem_dirs(dir: &Path) -> std::io::Result<Vec<PathBuf>> {
     Ok(dirs)
 }
 
-/// Every sandbox check (crate::checks) on every problem; prints one line per check.
-pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
+/// The problem folders named in `only` (every folder when it is empty). An id that names
+/// no problem is an error, so a typo never passes as "0 failed".
+pub fn select_problems(dirs: Vec<PathBuf>, only: &[String]) -> Result<Vec<PathBuf>, String> {
+    if only.is_empty() {
+        return Ok(dirs);
+    }
+    let name = |p: &PathBuf| p.file_name().map(|n| n.to_string_lossy().into_owned());
+    let unknown: Vec<&str> = only
+        .iter()
+        .filter(|id| !dirs.iter().any(|p| name(p).as_deref() == Some(id.as_str())))
+        .map(String::as_str)
+        .collect();
+    if !unknown.is_empty() {
+        return Err(format!("unknown problem id(s): {}", unknown.join(", ")));
+    }
+    Ok(dirs
+        .into_iter()
+        .filter(|p| name(p).is_some_and(|n| only.contains(&n)))
+        .collect())
+}
+
+/// Every sandbox check (crate::checks) on every problem, or only on the problems in `only`
+/// (then the Learn samples are skipped); prints one line per check.
+pub fn run_references(dir: &Path, root: &Path, only: &[String]) -> ExitCode {
     let env = match crate::checks::env_for(root) {
         Ok(e) => e,
         Err(e) => {
@@ -112,6 +144,13 @@ pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
         Ok(d) => d,
         Err(e) => {
             eprintln!("cannot read {}: {e}", dir.display());
+            return ExitCode::FAILURE;
+        }
+    };
+    let dirs = match select_problems(dirs, only) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("{e}");
             return ExitCode::FAILURE;
         }
     };
@@ -148,7 +187,7 @@ pub fn run_references(dir: &Path, root: &Path) -> ExitCode {
         dirs.len()
     );
     let learn = crate::learn::learn_dir_for(dir);
-    if learn.is_dir() {
+    if only.is_empty() && learn.is_dir() {
         println!();
         failed += crate::learn::run_samples(&learn, dir, &env, &Default::default());
     }
@@ -289,7 +328,7 @@ fn size_text(b: TestBytes) -> String {
 }
 
 /// Returns the parsed difficulty (when readable) and the list of errors.
-fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
+pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
     let mut errs = Vec::new();
     let folder = dir.file_name().and_then(|s| s.to_str()).unwrap_or_default();
 
@@ -302,6 +341,12 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
         errs.push(format!(
             "id {:?} must match folder name {:?}",
             meta.id, folder
+        ));
+    }
+    for file in crate::scaffold::files_with_todo(dir) {
+        errs.push(format!(
+            "{file}: still has {} markers from `kb-pack new`",
+            crate::scaffold::TODO_MARKER
         ));
     }
     if meta.title.trim().is_empty() {
@@ -324,6 +369,21 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
         errs.push(format!("rank must be 1-10, got {}", meta.rank));
     }
     let program = meta.mode == kb_core::ProblemMode::Program;
+    let sql = meta.mode == kb_core::ProblemMode::Sql;
+    if sql != SQL_PATTERNS.contains(&meta.pattern.as_str()) {
+        errs.push(if sql {
+            format!("an SQL problem's pattern is one of {SQL_PATTERNS:?}")
+        } else {
+            format!(
+                "pattern {:?} is for SQL problems (mode = \"sql\")",
+                meta.pattern
+            )
+        });
+    }
+    if sql {
+        validate_sql_package(dir, &meta, &mut errs);
+        return (Some(meta.difficulty), errs);
+    }
     match (&meta.signature, program) {
         (Some(sig), false) => {
             if sig.name.is_empty() || sig.returns.is_empty() {
@@ -353,10 +413,10 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
         } else {
             "text checkers (tokens, lines) are for program problems".into()
         }),
+        Ok(c) if c.is_rows() => {
+            errs.push("rows checkers are for SQL problems (mode = \"sql\")".into())
+        }
         Ok(_) => {}
-    }
-    if program && meta.profile {
-        errs.push("the complexity profiler is not available for program problems yet".into());
     }
     if meta.judge.time_limit_ms == 0 || meta.judge.memory_mb == 0 {
         errs.push("judge limits must be positive".into());
@@ -466,6 +526,99 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
         check_reference_signatures(dir, &mut errs);
     }
     (Some(meta.difficulty), errs)
+}
+
+/// An SQL package (ADR 0031): `schema.sql`, `rows-*` checker, tests that fit the schema,
+/// `ref.sql` and `wrong.sql` only (SQL problems offer only SQL), and the scripts: gen.py
+/// with brute.py (`solve(tables)` in plain Python) and validate.py. No naive solutions
+/// or profile: the complexity of a query is SQLite's.
+fn validate_sql_package(dir: &Path, meta: &ProblemToml, errs: &mut Vec<String>) {
+    if meta.signature.is_some() {
+        errs.push("an SQL problem has no [signature] (its query reads tables)".into());
+    }
+    match meta.judge.checker.parse::<kb_judge::Checker>() {
+        Err(e) => errs.push(e),
+        Ok(c) if !c.is_rows() => errs.push(
+            "an SQL problem needs a rows checker (rows-ordered | rows-unordered, optionally :<eps>)"
+                .into(),
+        ),
+        Ok(_) => {}
+    }
+    if meta.judge.time_limit_ms == 0 || meta.judge.memory_mb == 0 {
+        errs.push("judge limits must be positive".into());
+    }
+    if meta.profile || meta.profile_sizes.is_some() || dir.join("profile").exists() {
+        errs.push("SQL problems have no complexity profile".into());
+    }
+    for f in [
+        "schema.sql",
+        "statement.md",
+        "statement.es.md",
+        "hints.md",
+        "editorial.md",
+        "gen.py",
+        "validate.py",
+        "solutions/brute.py",
+        "solutions/ref.sql",
+        "solutions/wrong.sql",
+    ] {
+        if !dir.join(f).is_file() {
+            errs.push(format!("missing {f}"));
+        }
+    }
+    for (file, def) in [
+        ("gen.py", "def generate("),
+        ("validate.py", "def validate("),
+        ("solutions/brute.py", "def solve("),
+    ] {
+        if let Ok(src) = fs::read_to_string(dir.join(file))
+            && !src.lines().any(|l| l.trim_start().starts_with(def))
+        {
+            errs.push(format!("{file} must define {def}...)"));
+        }
+    }
+    // Only SQL: no reference or naive solution in another language.
+    if let Ok(entries) = fs::read_dir(dir.join("solutions")) {
+        let allowed = ["ref.sql", "wrong.sql", "brute.py"];
+        for e in entries.flatten() {
+            let name = e.file_name().to_string_lossy().into_owned();
+            if !allowed.contains(&name.as_str()) {
+                errs.push(format!(
+                    "solutions/{name}: an SQL problem has only ref.sql, wrong.sql and brute.py"
+                ));
+            }
+        }
+    }
+    // The dialect is part of the statement.
+    for f in ["statement.md", "statement.es.md"] {
+        if let Ok(text) = fs::read_to_string(dir.join(f))
+            && !text.contains("SQLite")
+        {
+            errs.push(format!("{f} must name the dialect (SQLite)"));
+        }
+    }
+    // Tests: they load against the schema (kb-judge checks tables and results).
+    match kb_judge::Problem::load(dir) {
+        Err(e) => errs.push(e.to_string()),
+        Ok(p) => {
+            let public = p.public_tests().count();
+            if public == 0 {
+                errs.push("needs at least one public test".into());
+            }
+            if p.tests.len() == public {
+                errs.push("needs at least one hidden test".into());
+            }
+            for t in &p.tests {
+                let v = serde_json::json!([t.input, t.expected]);
+                if let Some(n) = unsafe_integer(&v) {
+                    errs.push(format!(
+                        "{:?} test {}: {n} is outside ±(2⁵³ − 1), where JavaScript loses precision",
+                        t.kind, t.index
+                    ));
+                }
+            }
+        }
+    }
 }
 
 /// A program problem's tests (ADR 0028), in file order: `{"stdin": text, "stdout":
@@ -777,6 +930,26 @@ pub(crate) mod tests {
     use super::*;
 
     #[test]
+    fn a_problem_filter_keeps_only_named_problems_and_refuses_typos() {
+        let dirs: Vec<PathBuf> = ["a/two-sum", "a/budget-pair", "a/tide-lows"]
+            .iter()
+            .map(PathBuf::from)
+            .collect();
+        assert_eq!(select_problems(dirs.clone(), &[]).unwrap(), dirs);
+        let only = ["tide-lows".to_string(), "two-sum".to_string()];
+        assert_eq!(
+            select_problems(dirs.clone(), &only).unwrap(),
+            [PathBuf::from("a/two-sum"), PathBuf::from("a/tide-lows")]
+        );
+        let typo = ["two-sun".to_string()];
+        assert!(
+            select_problems(dirs, &typo)
+                .unwrap_err()
+                .contains("two-sun")
+        );
+    }
+
+    #[test]
     fn normalize_collapses_whitespace() {
         assert_eq!(
             normalize("  def  f(a:  int) -> int:  "),
@@ -1047,7 +1220,8 @@ pub(crate) mod tests {
         );
         assert!(!e.iter().any(|m| m.starts_with("statement.md")), "{e:?}");
 
-        // A missing format heading; a signature; a value checker; a profile.
+        // A missing format heading; a signature; a value checker; a profile without its
+        // reference.
         fresh();
         let en = fs::read_to_string(dir.join("statement.md")).unwrap();
         fs::write(
@@ -1069,7 +1243,8 @@ pub(crate) mod tests {
         for want in [
             "missing the \"## Output format\" heading",
             "needs a text checker",
-            "profiler is not available",
+            // Program problems can be profiled (ADR 0024), and the profile is checked.
+            "reference.json",
         ] {
             assert!(e.iter().any(|m| m.contains(want)), "{want}: {e:?}");
         }

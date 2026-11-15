@@ -47,6 +47,15 @@ pub struct JudgeEnv {
     /// Keep a program's whole stdout in reports (ADR 0028), instead of the 64 KB kept for
     /// storage: kb-pack writes expected outputs and compares solutions from it.
     pub full_program_output: bool,
+    /// A run's wall-clock limit is this many times its CPU limit. The CPU limit decides
+    /// Time Limit Exceeded (ADR 0017); the wall limit only stops programs that wait
+    /// (sleep, blocked reads). The app uses 3. kb-pack's measurement runs use more, so
+    /// a busy machine can't end a CPU-bounded run early (`MessageCode::WallTimeLimit`).
+    pub wall_factor: u32,
+    /// Program problems (ADR 0028) report each test's wall time instead of its CPU time.
+    /// For the complexity profiler only: Windows reports a process's CPU time in 15.6 ms
+    /// steps, too coarse for a fast program; the profiler subtracts the startup.
+    pub program_wall_time: bool,
     toolchains: Vec<(Language, PathBuf)>,
 }
 
@@ -59,6 +68,8 @@ impl JudgeEnv {
             sandbox_root,
             time_scale: 1.0,
             full_program_output: false,
+            wall_factor: 3,
+            program_wall_time: false,
             toolchains: Vec::new(),
         }
     }
@@ -163,6 +174,12 @@ fn judge_inner(
             problem.id
         )));
     }
+    if problem.mode == crate::ProblemMode::Sql {
+        return Err(JudgeError::Problem(format!(
+            "{}: an SQL problem is judged by kb_judge::sql::judge_sql (ADR 0031)",
+            problem.id
+        )));
+    }
     let def = definition(language)?;
     let toolchain = env.toolchain(language)?;
     let files = workspace_files(&def, &problem.signature, source)?;
@@ -213,10 +230,11 @@ fn judge_inner(
     spec.read_only_dirs = vec![read_only];
     spec.stdin = serde_json::to_vec(&request).map_err(|e| JudgeError::Internal(e.to_string()))?;
     spec.max_output_bytes = RECORD_OUTPUT_ALLOWANCE + print_cap * (tests.len() + 1);
+    spec.wall_time = spec.cpu_time * env.wall_factor.max(1);
     on_event(JudgeEvent::Running {
         total: u32::try_from(tests.len()).unwrap_or(u32::MAX),
     });
-    let outcome = kb_runner::run(&spec)?;
+    let outcome = crate::sandbox::run(&spec)?;
 
     let facts = RunFacts {
         termination: outcome.termination,
@@ -293,7 +311,7 @@ pub(crate) fn compile_cached(
     spec.max_output_bytes = COMPILE_OUTPUT_LIMIT;
     // Keep the folder so the binary can be copied out; WorkDir deletes it afterwards.
     spec.keep_work_dir = true;
-    let outcome = kb_runner::run(&spec)?;
+    let outcome = crate::sandbox::run(&spec)?;
     let info = CompileInfo {
         cached: false,
         time_us: u64::try_from(outcome.wall_time.as_micros()).unwrap_or(u64::MAX),
@@ -580,12 +598,24 @@ fn stop_reason(
         ));
     }
     match facts.termination {
-        Termination::CpuTimeLimit | Termination::WallTimeLimit => {
+        Termination::CpuTimeLimit => {
             return Some((
                 Verdict::TimeLimitExceeded,
                 Message::new(
                     MessageCode::TimeLimit,
                     format!("time limit of {} ms exceeded", facts.time_limit_ms),
+                ),
+            ));
+        }
+        Termination::WallTimeLimit => {
+            return Some((
+                Verdict::TimeLimitExceeded,
+                Message::new(
+                    MessageCode::WallTimeLimit,
+                    format!(
+                        "stopped by the wall-clock limit before using its {} ms of CPU time",
+                        facts.time_limit_ms
+                    ),
                 ),
             ));
         }

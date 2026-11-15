@@ -1,0 +1,1 @@
+{"input":{"tables":{"routes":[[16126,"Rock","Reef"],[77965,"Rock","Central"],[44180,"Reef","Rock"],[3643,"Central","Rock"],[10907,"Reef","Central"]]}},"output":{"columns":["pier","hops"],"rows":[["Rock",1],["Reef",2]]}}

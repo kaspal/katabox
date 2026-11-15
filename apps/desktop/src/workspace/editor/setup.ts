@@ -5,6 +5,7 @@ import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirro
 import { syntaxHighlighting } from "@codemirror/language";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
+import { emacs } from "@replit/codemirror-emacs";
 import { vim } from "@replit/codemirror-vim";
 import { vscodeKeymap } from "@replit/codemirror-vscode-keymap";
 import type { KeymapPref } from "@/lib/settings";
@@ -20,6 +21,9 @@ export function keymapExtension(pref: KeymapPref): Extension {
     case "vim":
       // vim() must come before other keymaps.
       return [vim(), keymap.of([...defaultKeymap, ...base])];
+    case "emacs":
+      // Like vim(), emacs() must come before other keymaps.
+      return [emacs(), keymap.of([...defaultKeymap, ...base])];
     default:
       return keymap.of([...defaultKeymap, ...base]);
   }

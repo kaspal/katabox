@@ -1,0 +1,1 @@
+{"input":{"tables":{"products":[[4586,"sofa",1642,1],[3815,"pad",786,1],[3702,"ink",2680,1],[4161,"rug lamp",2000,1],[4812,"tray ink",3300,1],[1556,"ink",1999,1],[1513,"pad",1463,1],[4194,"mug",587,1]]}},"output":{"columns":["name","price_cents"],"rows":[["tray ink",3300],["ink",2680],["rug lamp",2000]]}}

@@ -1,0 +1,1 @@
+{"input":{"tables":{"staff":[[3974,"Jen",2144],[2144,"Fran",3974]]}},"output":{"columns":["name","mentor"],"rows":[["Fran","Jen"],["Jen","Fran"]]}}

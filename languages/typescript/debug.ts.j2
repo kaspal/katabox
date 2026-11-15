@@ -15,9 +15,18 @@
 import { Worker, isMainThread, parentPort, workerData } from "node:worker_threads";
 import { readFileSync, writeSync } from "node:fs";
 import { inspect, types as utilTypes } from "node:util";
+{% if program %}
+import * as nodeFs from "node:fs";
+import { builtinModules, createRequire, stripTypeScriptTypes } from "node:module";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { compileFunction } from "node:vm";
+{% endif %}
 
 const SOLUTION: string = {{ solution_file | tojson }};
 const FUNCTION: string = {{ function | tojson }};
+/** A program problem (ADR 0028): the solution is replayed as one function. */
+const PROGRAM: boolean = {% if program %}true{% else %}false{% endif %};
 const PARAMS: string[] = {{ param_keys | tojson }};
 {% if uses_nodes %}
 const PARAM_SHAPES: [string, number][] = {{ param_shapes | tojson }};
@@ -72,6 +81,10 @@ const S = {
   isProxy: utilTypes.isProxy,
   isMap: utilTypes.isMap,
   isSet: utilTypes.isSet,
+  // Typed arrays (Int32Array, ...) are drawn as lists, marked `typed`. Their length is a
+  // getter on the shared prototype; their elements are own data properties.
+  isTypedArray: utilTypes.isTypedArray,
+  typedLength: Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Int8Array.prototype), "length")!.get!,
   objectProto: Object.prototype,
   mapEntries: Map.prototype.entries,
   mapSize: Object.getOwnPropertyDescriptor(Map.prototype, "size")!.get!,
@@ -224,7 +237,7 @@ function snapshot(names: unknown[], localNames: string[], globalNames: string[],
     if (typeof v !== "object" || v === null || S.isProxy(v)) return opaque(v);
     let node: ReturnType<typeof snapNode> = null;
     const plain = S.getProto(v) === S.objectProto || S.getProto(v) === null;
-    if (!S.isArray(v) && !S.isMap(v) && !S.isSet(v) && !plain) {
+    if (!S.isArray(v) && !S.isMap(v) && !S.isSet(v) && !S.isTypedArray(v) && !plain) {
       node = snapNode(v);
       if (node === null) return opaque(v);
     }
@@ -258,7 +271,7 @@ function snapshot(names: unknown[], localNames: string[], globalNames: string[],
       for (let i = 0; i < links.length; i++) o[links[i]] = valueOf(node[1][links[i]], depth + 1);
       const n = S.apply(S.mapGet, INPUT_IDS, [v]);
       if (n !== undefined) o.input = n;
-    } else if (S.isMap(v) || (!S.isArray(v) && !S.isSet(v))) {
+    } else if (S.isMap(v) || (!S.isArray(v) && !S.isSet(v) && !S.isTypedArray(v))) {
       const entries: unknown[] = [];
       const add = (k: unknown, x: unknown): boolean => {
         if (entries.length >= SNAP_MAX_ITEMS || budget <= 1 || full()) {
@@ -315,7 +328,12 @@ function snapshot(names: unknown[], localNames: string[], globalNames: string[],
         }
       } else {
         o.kind = "list";
-        len = snapOwn(v as object, "length").value as number;
+        if (S.isTypedArray(v)) {
+          o.typed = true;
+          len = S.apply(S.typedLength, v, []) as number;
+        } else {
+          len = snapOwn(v as object, "length").value as number;
+        }
         for (let i = 0; i < len; i++) {
           // An index may be an accessor: never call its getter.
           const d = S.getDesc(v as object, `${i}`);
@@ -408,6 +426,83 @@ function describeError(e: unknown): string {
 }
 
 // --- Main thread: the program -----------------------------------------------------------
+{% if program %}
+
+/** A program problem (ADR 0028) is replayed as one function: its text, types stripped
+ * (positions kept), its imports of Node's built-in modules turned into `require` on the
+ * same lines, compiled with the solution's own file URL so the recorder steps it from its
+ * first line. Other imports, and top-level await, cannot be replayed this way. */
+class ProgramExit {
+  code: number;
+  constructor(code: number) {
+    this.code = code;
+  }
+}
+
+function importsToRequire(js: string): string {
+  const builtin = (m: string) => m.startsWith("node:") || builtinModules.includes(m);
+  const names = (clause: string) => clause.replace(/\b([\w$]+)\s+as\s+([\w$]+)/g, "$1: $2");
+  return js.replace(
+    /\bimport\s+([^;]*?)\s+from\s+(["'])([^"']+)\2\s*;?/g,
+    (all, clause: string, _q: string, from: string) => {
+      if (!builtin(from)) throw new Error(`only Node's built-in modules can be imported when debugging a program, not "${from}"`);
+      const req = `__kb_require(${JSON.stringify(from)})`;
+      const c = clause.trim();
+      let out: string;
+      if (c.startsWith("* as ")) out = `const ${c.slice(5).trim()} = ${req};`;
+      else if (c.startsWith("{")) out = `const ${names(c)} = ${req};`;
+      else if (/^[\w$]+\s*,\s*\{/.test(c)) {
+        const [def, rest] = [c.slice(0, c.indexOf(",")).trim(), c.slice(c.indexOf(",") + 1).trim()];
+        out = `const ${def} = ${req}; const ${names(rest)} = ${req};`;
+      } else out = `const ${c} = ${req};`;
+      // Keep the line count: the clause's own line breaks stay in `names(...)`; pad the rest.
+      const breaks = (all.match(/\n/g) ?? []).length - (out.match(/\n/g) ?? []).length;
+      return out + "\n".repeat(Math.max(0, breaks));
+    },
+  );
+}
+
+/** The program as a function of `__kb_require`, reading `stdinText` as its stdin. */
+function programFunction(source: string): (req: (m: string) => unknown) => unknown {
+  // Node warns that type stripping is experimental: not the program's output.
+  const warn = process.emitWarning;
+  process.emitWarning = (() => {}) as typeof process.emitWarning;
+  let js: string;
+  try {
+    js = stripTypeScriptTypes(source, { mode: "strip" });
+  } finally {
+    process.emitWarning = warn;
+  }
+  js = importsToRequire(js).replace(/^(\s*)export\s+(?=(async\s+)?function|const|let|var|class)/gm, "$1");
+  return compileFunction(js, ["__kb_require"], {
+    filename: pathToFileURL(resolve(SOLUTION)).href,
+  }) as (req: (m: string) => unknown) => unknown;
+}
+
+/** `require` for the program: `fs` reads the test's stdin (stdin.txt) for fd 0. */
+function programRequire(stdinText: string): (m: string) => unknown {
+  const require = createRequire(import.meta.url);
+  const data = Buffer.from(stdinText, "utf8");
+  let offset = 0;
+  const isStdin = (p: unknown) => p === 0 || p === "/dev/stdin";
+  const fs = {
+    ...nodeFs,
+    readFileSync: (p: unknown, options?: unknown) => {
+      if (!isStdin(p)) return (nodeFs.readFileSync as (...a: unknown[]) => unknown)(p, options);
+      const enc = typeof options === "string" ? options : (options as { encoding?: string } | undefined)?.encoding;
+      return enc ? data.toString(enc as BufferEncoding) : Buffer.from(data);
+    },
+    readSync: (fd: unknown, buffer: Uint8Array, ...rest: unknown[]) => {
+      if (fd !== 0) return (nodeFs.readSync as (...a: unknown[]) => number)(fd, buffer, ...rest);
+      const n = Math.min(buffer.length, data.length - offset);
+      data.copy(buffer, 0, offset, offset + n);
+      offset += n;
+      return n;
+    },
+  };
+  return (m: string) => (m === "fs" || m === "node:fs" ? fs : require(m));
+}
+{% endif %}
 
 function short(text: string): string {
   return text.length > REPR_MAX ? text.slice(0, REPR_MAX - 1) + "…" : text;
@@ -563,9 +658,26 @@ async function mainThread(): Promise<void> {
   };
   g.__katabox_prints = () => JSON.stringify({ prints, prints_truncated: printsTruncated });
 
-  let mod: Record<string, unknown>;
   process.stdout.write = hookedWrite as typeof process.stdout.write;
   process.stderr.write = hookedWrite as typeof process.stderr.write;
+  // The recorder ends the process with this (a program's own process.exit is replaced).
+  const realExit = process.exit.bind(process);
+  g.__katabox_exit = realExit;
+{% if program %}
+  let program: (req: (m: string) => unknown) => unknown;
+  try {
+    program = programFunction(readFileSync(SOLUTION, "utf8"));
+  } catch (e) {
+    const text = describeError(e);
+    emit({
+      kind: "load_error",
+      message: /await/.test(text) && e instanceof SyntaxError ? "top-level await can't be replayed by the debugger: " + text : text,
+    });
+    realExit(0);
+  }
+  const req = programRequire(readFileSync("stdin.txt", "utf8"));
+{% else %}
+  let mod: Record<string, unknown>;
   evalOut = ""; // output while the module loads is discarded
   try {
     mod = await import("./" + SOLUTION);
@@ -579,6 +691,7 @@ async function mainThread(): Promise<void> {
     emit({ kind: "load_error", message: `function ${FUNCTION}() is not exported` });
     process.exit(0);
   }
+{% endif %}
 
   // The recorder: it must be connected before the call. Wait for it asynchronously, so
   // this thread can answer the inspector (Atomics.wait here would deadlock).
@@ -590,7 +703,8 @@ async function mainThread(): Promise<void> {
   });
   await new Promise((ok) => recorder.once("message", ok));
 
-{% if uses_nodes %}
+{% if program %}
+{% elif uses_nodes %}
   const classes = nodeClasses(mod);
   const args = PARAMS.map((p, k) => fromJson(PARAM_SHAPES[k][0], PARAM_SHAPES[k][1], request.input[p], classes));
   if (Array.isArray(request.visualize)) numberInputs(args);
@@ -598,19 +712,47 @@ async function mainThread(): Promise<void> {
   const args = PARAMS.map((p) => request.input[p]);
 {% endif %}
   const outcome: Rec = { kind: "outcome" };
+{% if program %}
+  // process.exit(code) ends the program: 0 is a normal end, another code an error.
+  process.exit = ((code?: number) => {
+    throw new ProgramExit(code ?? 0);
+  }) as typeof process.exit;
+{% endif %}
   // The recorder starts stepping at this statement (this file is not blackboxed yet).
   debugger;
   try {
+{% if program %}
+    program!(req);
+    outcome.status = "ok";
+    outcome.value = null;
+{% else %}
     const value = (fn as (...a: unknown[]) => unknown)(...args);
     outcome.status = "ok";
     outcome.value = value === undefined ? null : value;
+{% endif %}
   } catch (e) {
+{% if program %}
+    if (e instanceof ProgramExit) {
+      outcome.status = e.code === 0 ? "ok" : "error";
+      if (e.code === 0) outcome.value = null;
+      else {
+        outcome.error = `process.exit(${e.code})`;
+        outcome.line = null;
+      }
+    } else {
+{% endif %}
     outcome.status = "error";
     outcome.error = describeError(e);
     const at = e instanceof Error ? (e.stack ?? "").match(new RegExp(SOLUTION.replace(/\./g, "\\.") + ":(\\d+):\\d+")) : null;
     outcome.line = at ? Number(at[1]) : null;
+{% if program %}
+    }
+{% endif %}
   }
-{% if uses_nodes %}
+{% if program %}
+  process.exit = realExit as typeof process.exit;
+{% endif %}
+{% if uses_nodes and not program %}
   if (outcome.status === "ok") {
     try {
       outcome.value = toJson(RETURN_SHAPE[0], RETURN_SHAPE[1], outcome.value);
@@ -635,7 +777,7 @@ async function mainThread(): Promise<void> {
   recorder.postMessage({ prints, prints_truncated: printsTruncated, outcome: outcomeText });
   await written;
   clearInterval(keepAlive);
-  process.exit(0);
+  realExit(0);
 }
 
 // --- Worker thread: the recorder --------------------------------------------------------
@@ -684,7 +826,7 @@ async function recorderThread(): Promise<void> {
 
   /** End the whole process from inside the paused main thread: nothing after runs. */
   const endHere = async (frameId: string): Promise<void> => {
-    await post("Debugger.evaluateOnCallFrame", { callFrameId: frameId, expression: "globalThis.process.exit(0)" });
+    await post("Debugger.evaluateOnCallFrame", { callFrameId: frameId, expression: "globalThis.__katabox_exit(0)" });
   };
 
   const onFrame = (frameId: string, expression: string, returnByValue = true) =>
@@ -715,7 +857,8 @@ async function recorderThread(): Promise<void> {
   const scopeVars = async (scope: any): Promise<[string, any][]> => {
     const r = await post("Runtime.getProperties", { objectId: scope.object.objectId, ownProperties: true });
     return (r.result as any[])
-      .filter((p) => p.value !== undefined)
+      // `__kb_require` is the program wrapper's parameter (harness, not the user's).
+      .filter((p) => p.value !== undefined && p.name !== "__kb_require")
       .map((p) => [p.name, p.value] as [string, any]);
   };
 
@@ -776,7 +919,11 @@ async function recorderThread(): Promise<void> {
     const record: Rec = {
       kind: "stop",
       step: target,
-      stack: frames.map((f) => ({ function: f.functionName || "(anonymous)", line: f.location.lineNumber + 1 })),
+      // A program's outermost frame is the program itself, not an anonymous function.
+      stack: frames.map((f, k) => ({
+        function: f.functionName || (PROGRAM && k === frames.length - 1 ? "(program)" : "(anonymous)"),
+        line: f.location.lineNumber + 1,
+      })),
       frame: index,
       locals: await Promise.all(locals.map(([n, v]) => describeRemote(n, v))),
       globals: await Promise.all(globals.map(([n, v]) => describeRemote(n, v))),

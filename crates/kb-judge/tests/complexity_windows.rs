@@ -155,3 +155,90 @@ fn the_fit_names_the_right_class_at_least_85_percent_of_the_time() {
     );
     assert!(rate >= 0.85, "hit rate {rate:.2}");
 }
+
+/// Program problems (features-content M4): their samples are run wall times less the
+/// startup. A reference is fast, so its startup usually dominates: "unreliable" is the
+/// honest answer for it, and counts as a hit, as does the right class. A naive solution
+/// must get a reliable estimate of its class. The bar is the same 85%.
+#[test]
+fn program_profiles_name_the_slow_class_and_never_guess_the_fast_one() {
+    let env = env();
+    // fertile-plot (R²·C: no single-n class), bus-sync (no size parameter) and
+    // signal-decodes (its exponential naive is either too fast to measure or out of time)
+    // have no program profile.
+    let problems: [(&str, ComplexityClass, ComplexityClass); 6] = [
+        ("badge-visits", Linear, Quadratic),
+        ("score-ranks", Linearithmic, Quadratic),
+        ("packed-labels", Linearithmic, Quadratic),
+        ("tide-lows", Linearithmic, Quadratic),
+        ("trail-diameter", Linear, Quadratic),
+        ("depot-routes", Linearithmic, Quadratic),
+    ];
+    let mut cases = 0;
+    let mut hits = 0;
+    let mut slowest = Duration::ZERO;
+    for (id, fast, slow) in problems {
+        let dir = repo().join("content/problems").join(id);
+        let problem = Problem::load(&dir).unwrap();
+        let inputs = inputs(&dir, &env);
+        for lang in [Language::Python, Language::Rust] {
+            for (file, want) in [("ref", fast), ("naive", slow)] {
+                let source = std::fs::read_to_string(
+                    dir.join(format!("solutions/{file}.{}", lang.extension())),
+                )
+                .unwrap();
+                let started = Instant::now();
+                let run = kb_judge::profile::profile(
+                    &problem,
+                    lang,
+                    &source,
+                    &inputs,
+                    &env,
+                    kb_judge::profile::BUDGET,
+                )
+                .unwrap();
+                let wall = started.elapsed();
+                slowest = slowest.max(wall);
+                let unreliable = kb_judge::profile::program_unreliable(&run.points, run.startup_us);
+                let points: Vec<(u32, u32)> =
+                    run.points.iter().map(|p| (p.n, p.median_us)).collect();
+                let got = if unreliable {
+                    None
+                } else {
+                    kb_judge::complexity::estimate(&kb_judge::profile::program_fit_points(
+                        &run.points,
+                        run.startup_us,
+                    ))
+                    .map(|e| e.class)
+                };
+                let hit = if file == "ref" {
+                    got.is_none() || got == Some(want)
+                } else {
+                    got == Some(want)
+                };
+                cases += 1;
+                hits += usize::from(hit);
+                println!(
+                    "{} {id:<15} {file:<5} {:<6} want {:<12} got {:<14} startup {:>6} µs {wall:>6.1?} {points:?} stop {:?}",
+                    if hit { "ok  " } else { "MISS" },
+                    lang.id(),
+                    want.notation(),
+                    got.map(|c| c.notation().to_string())
+                        .unwrap_or_else(|| "unreliable".into()),
+                    run.startup_us,
+                    run.stopped
+                );
+                assert!(
+                    wall < Duration::from_secs(15),
+                    "{id} {file} {lang:?} took {wall:?}"
+                );
+            }
+        }
+    }
+    let rate = hits as f64 / cases as f64;
+    println!(
+        "program hit rate {hits}/{cases} = {:.0}%; slowest run {slowest:.1?}",
+        rate * 100.0
+    );
+    assert!(rate >= 0.85, "hit rate {rate:.2}");
+}

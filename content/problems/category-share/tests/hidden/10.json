@@ -1,0 +1,1 @@
+{"input":{"tables":{"sales":[[63251,"cards",100],[75772,"cards",100],[1945,"cards",200],[27014,"cards",2484],[60632,"cards",100],[64396,"cards",363],[36376,"cards",100],[85652,"cards",1968],[21002,"cards",3692],[4510,"cards",4789]]}},"output":{"columns":["category","total_cents","share_pct"],"rows":[["cards",13896,100.0]]}}

@@ -1,13 +1,14 @@
 // Home's practice cards (ADR 0019): the daily problem with the streak, and today's reviews.
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, CalendarDays, CheckCircle2, Clock, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, Clock, GraduationCap, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { DifficultyLabel, usePatternLabel } from "@/components/Semantic";
 import { useDailyProblem, useReviewActions, useReviewsDue } from "@/lib/practice";
-import { useProblems } from "@/lib/queries";
+import { useProblems, useTopicToReview } from "@/lib/queries";
+import { useViewed } from "@/learn/engine/progress";
 import { StreakBadge } from "@/practice/shared";
 
 export function HomeCard({
@@ -138,6 +139,34 @@ export function ReviewCard() {
           ))}
         </ul>
       )}
+    </HomeCard>
+  );
+}
+
+/** "Review a topic": a Learn topic the user watched whose linked problems are not all
+ * solved yet, with the next one to try. Hidden when there is none. */
+export function TopicReviewCard() {
+  const { t } = useTranslation();
+  const { viewed } = useViewed();
+  const review = useTopicToReview(viewed, viewed.length > 0);
+  const r = review.data;
+  if (viewed.length === 0 || !r) return null;
+  return (
+    <HomeCard title={t("practice.learnReview.title")} icon={<GraduationCap aria-hidden className="size-4" />} testId="topic-review-card">
+      <p className="text-sm text-muted-foreground">{t("practice.learnReview.intro", { topic: r.topic.title })}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild variant="outline" size="sm">
+          <Link to="/learn/$subject/$topic" params={{ subject: r.topic.subject, topic: r.topic.id }}>
+            {t("practice.learnReview.open")}
+          </Link>
+        </Button>
+        <Button asChild size="sm">
+          <Link to="/problems/$problemId" params={{ problemId: r.problem.id }}>
+            {t("practice.learnReview.try", { problem: r.problem.title })}
+            <ArrowRight aria-hidden />
+          </Link>
+        </Button>
+      </div>
     </HomeCard>
   );
 }

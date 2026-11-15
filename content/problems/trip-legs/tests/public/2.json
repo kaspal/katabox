@@ -1,0 +1,1 @@
+{"input":{"tables":{"airports":[["LIM","Lima"],["CUZ","Cusco"]],"bookings":[],"flights":[[4,"KB300","CUZ","LIM","2026-07-01 12:00"]]}},"output":{"columns":["passenger","flight_no","from_city","to_city"],"rows":[]}}

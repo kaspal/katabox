@@ -1,0 +1,1 @@
+{"input":{"tables":{"teams":[[1,"Rovers","A",30],[2,"United","A",27],[3,"Albion","A",30],[4,"Town","A",25],[5,"City","B",12]]}},"output":{"columns":["division","name","points","place"],"rows":[["A","Albion",30,1],["A","Rovers",30,1],["A","United",27,2],["A","Town",25,3],["B","City",12,1]]}}

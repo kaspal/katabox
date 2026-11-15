@@ -32,6 +32,42 @@ pub struct ProfileView {
     pub stopped: Option<ProfileStop>,
     /// The machine's time scale the reference times were multiplied by (ADR 0017).
     pub time_scale: f64,
+    /// Time the profile waited for other sandbox users, in ms (not counted in its budget).
+    pub queued_ms: u32,
+    /// A program problem's process startup, taken off every point (microseconds).
+    pub startup_us: u32,
+    /// A program problem whose estimate would not be trustworthy (startup dominates, or
+    /// too few sizes): shown without an estimate, saying why.
+    pub unreliable: bool,
+    /// An unreliable program profile where every size ran, yet the work stayed below the
+    /// startup at all of them: the program is too fast to classify here (a slow class,
+    /// such as O(n²), shows clear growth at these sizes).
+    pub fast: bool,
+    /// The same for the reference in this language (judged against this run's startup):
+    /// its line is drawn, but no class is fitted to it.
+    pub reference_fast: bool,
+}
+
+pub use kb_judge::profile::{
+    PROGRAM_MIN_POINTS, PROGRAM_STARTUP_SHARE, program_fit_points, program_unreliable,
+};
+
+/// Whether an unreliable program profile is "fast" rather than cut short: every size
+/// ran (no stop), with at least the minimum number of points.
+pub(crate) fn program_fast(points: &[ProfilePoint], sizes: usize, stopped: bool) -> bool {
+    !stopped && points.len() >= PROGRAM_MIN_POINTS && points.len() == sizes
+}
+
+/// A program reference's line as profile points, to judge it by the same rule.
+fn reference_points(reference: &[ReferencePoint]) -> Vec<ProfilePoint> {
+    reference
+        .iter()
+        .map(|r| ProfilePoint {
+            n: r.n,
+            median_us: r.us,
+            samples_us: vec![r.us],
+        })
+        .collect()
 }
 
 /// The reference times (factor 1.0) at the machine's time scale.
@@ -84,6 +120,7 @@ impl App {
             .unwrap_or_default();
         let code = code.to_string();
         let inputs = data.inputs;
+        let is_program = p.mode == kb_core::ProblemMode::Program;
         let run = tokio::task::spawn_blocking(move || {
             kb_judge::profile::profile(
                 &p,
@@ -96,13 +133,39 @@ impl App {
         })
         .await??;
         let fit = |pts: Vec<(u32, u32)>| kb_judge::complexity::estimate(&pts);
+        let unreliable = is_program && program_unreliable(&run.points, run.startup_us);
+        let fast = unreliable && program_fast(&run.points, sizes.len(), run.stopped.is_some());
+        let reference_fast = is_program
+            && !reference.is_empty()
+            && program_unreliable(&reference_points(&reference), run.startup_us);
         Ok(ProfileView {
-            estimate: fit(run.points.iter().map(|p| (p.n, p.median_us)).collect()),
-            reference_estimate: fit(reference.iter().map(|r| (r.n, r.us)).collect()),
+            estimate: if unreliable {
+                None
+            } else if is_program {
+                fit(program_fit_points(&run.points, run.startup_us))
+            } else {
+                fit(run.points.iter().map(|p| (p.n, p.median_us)).collect())
+            },
+            startup_us: run.startup_us,
+            unreliable,
+            fast,
+            reference_fast,
+            reference_estimate: if reference_fast {
+                None
+            } else if is_program {
+                // Its times were recorded without startup; this run's startup stands in.
+                fit(program_fit_points(
+                    &reference_points(&reference),
+                    run.startup_us,
+                ))
+            } else {
+                fit(reference.iter().map(|r| (r.n, r.us)).collect())
+            },
             points: run.points,
             reference,
             stopped: run.stopped,
             time_scale: scale,
+            queued_ms: run.queued_ms,
         })
     }
 }
@@ -110,6 +173,47 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn pts(us: &[u32]) -> Vec<ProfilePoint> {
+        us.iter()
+            .enumerate()
+            .map(|(k, u)| ProfilePoint {
+                n: 100 * (k as u32 + 1),
+                median_us: *u,
+                samples_us: vec![*u],
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_program_profile_is_unreliable_when_startup_dominates_or_points_are_few() {
+        // Work grows to 400 ms; 40 ms of startup is fine.
+        assert!(!program_unreliable(
+            &pts(&[10_000, 40_000, 160_000, 400_000]),
+            40_000
+        ));
+        // Startup is most of the largest point's time.
+        assert!(program_unreliable(&pts(&[100, 200, 400, 800]), 40_000));
+        // Too few sizes.
+        assert!(program_unreliable(&pts(&[10_000, 40_000]), 1_000));
+        assert!(!program_unreliable(&pts(&[10_000, 40_000, 160_000]), 1_000));
+        assert!(program_unreliable(&[], 0));
+    }
+
+    #[test]
+    fn a_fast_program_ran_every_size_and_a_cut_short_one_is_not_fast() {
+        let p = pts(&[100, 200, 400, 800]);
+        assert!(program_fast(&p, 4, false));
+        // A size stopped it (time limit, budget): not "fast".
+        assert!(!program_fast(&p, 4, true));
+        assert!(!program_fast(&p, 6, false));
+        // Too few sizes to say anything.
+        assert!(!program_fast(&p[..2], 2, false));
+        // The reference's line is judged the same way.
+        let r = reference_points(&scale_reference(&[1, 2, 3], &[50, 60, 70], 1.0));
+        assert!(program_unreliable(&r, 40_000));
+        assert_eq!(r[2].median_us, 70);
+    }
 
     #[test]
     fn reference_times_follow_the_machine_scale() {

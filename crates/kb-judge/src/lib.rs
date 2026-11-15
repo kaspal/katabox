@@ -19,7 +19,10 @@ pub mod problem;
 pub mod profile;
 pub mod program;
 mod protocol;
+pub mod sandbox;
+pub mod shrink;
 pub mod signature;
+pub mod sql;
 pub mod tools;
 
 pub use checker::{CheckOutcome, Checker};
@@ -31,8 +34,8 @@ pub use kb_core::{CompileInfo, Failure, JudgeEvent, Report, TestCase, TestOutcom
 pub use problem::{Problem, ProblemMode, check_input, program_signature};
 pub use signature::{Param, Signature, Type};
 pub use tools::{
-    ScriptLimits, ScriptOutput, generate_inputs, generate_sized, run_python, run_script,
-    validate_inputs,
+    ScriptLimits, ScriptOutput, brute_rows, generate_inputs, generate_sized, run_python,
+    run_script, sql_rows, validate_inputs,
 };
 
 use kb_core::Language;

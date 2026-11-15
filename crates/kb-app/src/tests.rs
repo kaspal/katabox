@@ -656,7 +656,7 @@ async fn submits_drive_reviews_daily_problem_and_streak() {
 /// `PATTERN_TRACK` and the ranks); after one solve the usual daily and next rules apply.
 #[tokio::test]
 async fn a_brand_new_user_starts_at_fundamentals() {
-    use crate::practice::{PATTERN_TRACK, daily_pick, next_problem};
+    use crate::practice::{PATTERN_TRACK, daily_pick, hide_unopened_sql, next_problem};
     let app = app("brand-new").await;
     let today = "2026-11-14";
     let all = app.all_problems(UiLang::En).await.unwrap();
@@ -685,7 +685,9 @@ async fn a_brand_new_user_starts_at_fundamentals() {
         )
         .await
         .unwrap();
-    let all = app.all_problems(UiLang::En).await.unwrap();
+    // No SQL problem opened yet: SQL is never suggested (ADR 0031).
+    let all = hide_unopened_sql(app.all_problems(UiLang::En).await.unwrap(), "");
+    assert!(all.iter().all(|p| p.mode != kb_core::ProblemMode::Sql));
     let next = app
         .next_problem("two-sum", UiLang::En)
         .await
@@ -704,6 +706,7 @@ async fn a_brand_new_user_starts_at_fundamentals() {
     let install = app.store.user.install_id().await.unwrap();
     let expected = daily_pick(&all, tomorrow.parse().unwrap(), &install).unwrap();
     assert_eq!(daily.problem.id, expected.id);
+    assert_ne!(daily.problem.mode, kb_core::ProblemMode::Sql);
     app.close().await;
 }
 
@@ -1337,7 +1340,7 @@ async fn import_rejects_bad_files_and_imports_nothing() {
 async fn learn_commands_read_the_bundled_topics() {
     let a = app("learn").await;
     let catalog = a.learn_catalog(UiLang::En).await.unwrap();
-    assert_eq!(catalog.len(), 13, "every subject, with or without topics");
+    assert_eq!(catalog.len(), 14, "every subject, with or without topics");
     let sorting = catalog.iter().find(|s| s.id == "sorting").unwrap();
     let ids: Vec<_> = sorting.topics.iter().map(|t| t.id.as_str()).collect();
     // In topic.toml `order`: the Phase 0 sorts first, then the Phase 1 ones.
@@ -1385,4 +1388,81 @@ async fn learn_commands_read_the_bundled_topics() {
     assert_eq!(err.code, AppErrorCode::NotFound);
     let found = a.search_learn("pivote", UiLang::En).await.unwrap();
     assert_eq!(found[0].id, "quick-sort");
+}
+
+#[tokio::test]
+async fn diagnostics_name_versions_but_no_paths_or_user() {
+    let p = paths("diagnostics");
+    let app = App::open(&p).await.unwrap();
+    let d = app.diagnostics().await.unwrap();
+    assert_eq!(d.app_version, env!("CARGO_PKG_VERSION"));
+    assert_eq!(d.os, std::env::consts::OS);
+    assert!(d.content_pack.starts_with("test "), "{}", d.content_pack);
+    assert_eq!(d.runtimes.len(), kb_judge::languages::SUPPORTED.len());
+    if kb_toolchain::Platform::current().is_some() {
+        let py = d
+            .runtimes
+            .iter()
+            .find(|r| r.language == kb_core::Language::Python)
+            .unwrap();
+        assert!(
+            py.version
+                .as_deref()
+                .is_some_and(|v| v.starts_with("python-")),
+            "{py:?}"
+        );
+    }
+    let text = serde_json::to_string(&d).unwrap();
+    let mut private: Vec<String> = vec![
+        p.user_db.parent().unwrap().display().to_string(),
+        app.sandbox_root().display().to_string(),
+    ];
+    for var in ["USERNAME", "USER", "USERPROFILE", "HOME"] {
+        if let Ok(v) = std::env::var(var)
+            && v.len() > 2
+        {
+            private.push(v);
+        }
+    }
+    for needle in private {
+        assert!(
+            !text.contains(&needle),
+            "diagnostics contain {needle:?}: {text}"
+        );
+        let escaped = serde_json::to_string(&needle).unwrap();
+        assert!(
+            !text.contains(escaped.trim_matches('"')),
+            "diagnostics contain {needle:?}"
+        );
+    }
+    assert!(!text.contains(":\\") && !text.contains("/home/"), "{text}");
+}
+
+#[tokio::test]
+async fn finishing_the_welcome_sets_the_start_floor_and_picks_a_problem() {
+    let p = paths("onboarding");
+    let app = App::open(&p).await.unwrap();
+    let placement = app.placement_problems(kb_store::UiLang::En).await.unwrap();
+    assert_eq!(placement.len(), 3);
+    assert!(
+        placement
+            .iter()
+            .all(|x| x.mode == kb_core::ProblemMode::Function)
+    );
+    // Nothing solved: the placement starts the user at fundamentals.
+    let ids = placement.iter().map(|x| x.id.clone()).collect();
+    let start = app
+        .finish_onboarding(Some(ids), kb_store::UiLang::En)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(start.pattern, "fundamentals");
+    let floor = app.start_floor().await.unwrap().unwrap();
+    assert_eq!(floor.pattern, "fundamentals");
+    assert_eq!(
+        app.get_setting(crate::practice::ONBOARDING_SETTING)
+            .await
+            .unwrap(),
+        Some(serde_json::Value::Bool(true))
+    );
 }

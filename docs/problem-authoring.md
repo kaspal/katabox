@@ -107,7 +107,8 @@ A **program problem** is solved by a whole program that reads standard input and
 - Every integer token in stdin and stdout stays within ±(2⁵³ − 1) (kb-pack checks it): a TypeScript solution reads numbers with `Number`. Modular answers use p = 1 000 003 so products stay exact.
 - Scripts: `gen.py`'s `generate(seed, size)` returns the stdin **text**; `validate.py`'s `validate(text)` gets the text and returns the broken constraint or `None`. `brute.py`, `naive.py`, `naive.rs` and the references are programs.
 - References read all of stdin at once (`sys.stdin.buffer.read()`, `readFileSync(0)`, `stream_get_contents(STDIN)`, `read_to_string`) and write the output once (Rust: a `BufWriter`). Standard library only.
-- `validate --run` judges speed by the **slowest test's** CPU (each test is its own run). The complexity profiler is not available for program problems yet (`profile = true` is refused).
+- `validate --run` judges speed by the **slowest test's** CPU (each test is its own run).
+- The complexity profiler works for program problems too (ADR 0024, "Program problems"): gen.py's int branch returns the stdin text for size n, and samples are wall times minus the language's startup. Pick sizes where the reference's work is not dwarfed by the startup if you can; a fast reference is shown as "too fast to tell apart", which is honest but less useful. Skip the profile when the naive solution's class is not in the fit's set (constant, log, linear, n log n, quadratic, exponential), e.g. a cubic naive.
 - The model package is `content/problems/ticket-tally/`.
 
 ## Time limit (ADR 0017)

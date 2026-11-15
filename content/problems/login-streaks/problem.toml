@@ -1,0 +1,13 @@
+id = "login-streaks"
+title = "Login Streaks"
+title_es = "Rachas de acceso"
+difficulty = "hard"
+tags = ["window-functions", "gaps-and-islands", "dates"]
+pattern = "sql-advanced"
+rank = 6
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

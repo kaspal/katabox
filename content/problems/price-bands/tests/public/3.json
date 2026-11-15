@@ -1,0 +1,1 @@
+{"input":{"tables":{"products":[[1,"sofa",120000,1],[2,"cup",450,1]]}},"output":{"columns":["name","price_cents"],"rows":[]}}

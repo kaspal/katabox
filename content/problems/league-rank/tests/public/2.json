@@ -1,0 +1,1 @@
+{"input":{"tables":{"teams":[[6,"Rangers","C",0]]}},"output":{"columns":["division","name","points","place"],"rows":[["C","Rangers",0,1]]}}

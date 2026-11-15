@@ -65,6 +65,18 @@ work-folder lifecycle, the sandbox root, and kernel time in the CPU limit.
   small reusable pool) and the same storage sealing for every profile.
 - The lock is per process. Two KataBox processes running sandboxes at once would still
   share the SID; the app should stay single-instance until per-run profiles exist.
+- **Cross-process lock (2026-11, features-content M0):** kb-judge's `sandbox::run` wraps
+  every `kb_runner::run` in an exclusive file lock on `<sandbox_root>/.sandbox.lock`
+  (fs4), and the uninstall cleanup holds it too. So the app, kb-pack and test binaries
+  queue instead of overlapping, with no kb-runner change. The lock wraps single runs,
+  never two (a debug assertion catches nesting). Callers with a time budget (the
+  complexity profiler) leave out the time spent queued (`sandbox::queued`).
+- **Wall-clock stops (same change):** a run the wall clock stopped before its CPU limit
+  reports `MessageCode::WallTimeLimit`, not `TimeLimit`. The app keeps a wall limit of
+  3 × CPU. kb-pack and the profiler use 10 ×: they measure CPU time, and on a busy
+  machine a tight wall limit ended CPU-bounded runs early, which kb-pack used to read as
+  "the naive solution is slow". kb-pack retries a wall-clock stop twice, and then
+  reports the check as inconclusive, never as passed.
 - Known gap: the sandbox can read files Windows grants to ALL APPLICATION PACKAGES
   (much of `C:\Windows`, `Program Files`). Recorded by `known_gap_system_files_readable_without_lpac`.
 - Not yet proven: whether UDP datagrams are dropped before leaving the machine (no reply

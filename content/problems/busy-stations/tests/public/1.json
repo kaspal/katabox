@@ -1,0 +1,1 @@
+{"input":{"tables":{"trips":[[1,"Market","Park",12],[2,"Park","Market",15],[3,"Museum","Museum",40],[4,"Market","Museum",9],[5,"Museum","Park",20]]}},"output":{"columns":["station","trips"],"rows":[["Market",3],["Museum",3],["Park",3]]}}

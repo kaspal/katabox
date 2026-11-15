@@ -647,3 +647,195 @@ fn content_150_m5_problems_are_debuggable_in_typescript() {
         ("popular-pages", "popularPages"),
     ]);
 }
+
+// ---- Program problems (features-content M4) ------------------------------------------
+
+fn program_problem() -> Problem {
+    let mut input = Map::new();
+    input.insert("stdin".into(), json!("3\n4 5 6 7\n"));
+    let tests = vec![kb_core::TestCase {
+        kind: kb_core::TestKind::Public,
+        index: 1,
+        input,
+        expected: json!("sum 15\n"),
+    }];
+    Problem::from_parts(
+        "program-debug-ts",
+        kb_judge::ProblemMode::Program,
+        &Value::Null,
+        "tokens",
+        300,
+        256,
+        tests,
+    )
+    .unwrap()
+}
+
+const PROGRAM: &str = "import { readFileSync } from \"node:fs\";
+
+function total(xs: number[]): number {
+  let s = 0;
+  for (const x of xs) s += x;
+  return s;
+}
+
+const tokens: number[] = readFileSync(0, \"utf8\").split(/\\s+/).filter((t) => t.length > 0).map(Number);
+const n = tokens[0];
+const data = tokens.slice(1);
+console.log(`sum ${total(data.slice(0, n))}`);
+";
+
+/// A TypeScript program is replayed as one function from its first line: stdin through
+/// `readFileSync(0)`, its own line numbers, its variables, a snapshot, and a function call
+/// one level deeper.
+#[test]
+fn typescript_programs_are_traced_as_whole_programs() {
+    let p = program_problem();
+    let inp = p.tests[0].input.clone();
+    let t = trace(&p, PROGRAM, &inp);
+    assert!(t.truncated.is_none(), "{:?}", t.truncated);
+    let o = t.outcome.as_ref().unwrap();
+    assert_eq!(o.status, OutcomeStatus::Ok, "{o:?}");
+    let printed: String = t.prints.iter().map(|c| c.text.as_str()).collect();
+    assert_eq!(printed.replace("\r\n", "\n"), "sum 15\n");
+    let line_of =
+        |needle: &str| PROGRAM.lines().position(|l| l.contains(needle)).unwrap() as u32 + 1;
+    assert_eq!(t.steps[0].line, 1, "{:?}", lines(&t));
+    assert!(
+        t.steps
+            .iter()
+            .any(|s| s.depth == 2 && s.line == line_of("s += x")),
+        "{:?}",
+        t.steps
+    );
+
+    let at_print = t
+        .steps
+        .iter()
+        .position(|s| s.line == line_of("console.log"))
+        .unwrap();
+    let s = stop(
+        &p,
+        PROGRAM,
+        &inp,
+        &t,
+        StopRequest {
+            step: at_print as u32,
+            visualize: Some(vec!["data".into()]),
+            ..Default::default()
+        },
+    );
+    assert_eq!(local(&s, "n"), "3");
+    // The wrapper's own parameter is the harness's, never shown.
+    assert!(
+        s.locals.iter().all(|v| v.name != "__kb_require"),
+        "{:?}",
+        s.locals
+    );
+    assert_eq!(s.stack[0].function, "(program)", "{:?}", s.stack);
+    assert!(
+        local(&s, "data").contains("4, 5, 6, 7"),
+        "{}",
+        local(&s, "data")
+    );
+    let snap = s.snapshot.as_ref().unwrap();
+    assert_eq!(snap.roots[0].name, "data");
+    assert!(matches!(
+        &snap.objects[0],
+        kb_core::debug::SnapObject::List { len: 4, .. }
+    ));
+
+    let inner = t
+        .steps
+        .iter()
+        .position(|s| s.depth == 2 && s.line == line_of("s += x"))
+        .unwrap();
+    let s = stop(&p, PROGRAM, &inp, &t, at(inner));
+    assert_eq!(s.stack.len(), 2, "{:?}", s.stack);
+    assert_eq!(s.stack[0].function, "total");
+    assert_eq!(s.stack[1].function, "(program)");
+}
+
+#[test]
+fn typescript_programs_report_exits_errors_and_what_cannot_be_replayed() {
+    let p = program_problem();
+    let inp = p.tests[0].input.clone();
+    // process.exit(0) is a normal end; another code is an error.
+    let t = trace(
+        &p,
+        "console.log(\"a\");\nprocess.exit(0);\nconsole.log(\"b\");\n",
+        &inp,
+    );
+    assert_eq!(t.outcome.as_ref().unwrap().status, OutcomeStatus::Ok);
+    let printed: String = t.prints.iter().map(|c| c.text.as_str()).collect();
+    assert_eq!(printed.replace("\r\n", "\n"), "a\n");
+    let t = trace(&p, "process.exit(3);\n", &inp);
+    let o = t.outcome.as_ref().unwrap();
+    assert_eq!(o.status, OutcomeStatus::Error);
+    assert!(
+        o.error.as_deref().unwrap().contains("process.exit(3)"),
+        "{o:?}"
+    );
+    // An exception names its line.
+    let t = trace(&p, "const x = 1;\nthrow new Error(\"boom\");\n", &inp);
+    let o = t.outcome.as_ref().unwrap();
+    assert_eq!((o.status, o.line), (OutcomeStatus::Error, Some(2)), "{o:?}");
+    // Imports outside Node's built-ins, and top-level await, cannot be replayed.
+    match debug::trace(
+        &p,
+        Language::TypeScript,
+        "import x from \"lodash\";\nconsole.log(x);\n",
+        &inp,
+        &env(),
+    )
+    .unwrap()
+    {
+        DebugRun::LoadError(m) => assert!(m.contains("built-in"), "{m}"),
+        other => panic!("{other:?}"),
+    }
+    match debug::trace(
+        &p,
+        Language::TypeScript,
+        "await Promise.resolve(1);\n",
+        &inp,
+        &env(),
+    )
+    .unwrap()
+    {
+        DebugRun::LoadError(m) => assert!(m.contains("await"), "{m}"),
+        other => panic!("{other:?}"),
+    }
+}
+
+/// Every TypeScript program reference in the catalogue replays its first public test and
+/// prints what the judge expects.
+#[test]
+fn every_program_reference_is_debuggable_in_typescript() {
+    let dir = repo().join("content/problems");
+    let mut checked = 0;
+    for e in std::fs::read_dir(&dir).unwrap().flatten() {
+        let toml = std::fs::read_to_string(e.path().join("problem.toml")).unwrap_or_default();
+        if !toml.contains("mode = \"program\"") {
+            continue;
+        }
+        let id = e.file_name().to_string_lossy().into_owned();
+        let p = problem(&id);
+        let first = p
+            .tests
+            .iter()
+            .find(|t| t.kind == kb_core::TestKind::Public)
+            .unwrap();
+        let t = trace(&p, &reference(&id), &first.input);
+        let o = t.outcome.as_ref().unwrap();
+        assert_eq!(o.status, OutcomeStatus::Ok, "{id}: {o:?}");
+        let printed: String = t.prints.iter().map(|c| c.text.as_str()).collect();
+        let words = |s: &str| s.split_whitespace().map(str::to_string).collect::<Vec<_>>();
+        assert_eq!(
+            words(&printed),
+            words(first.expected.as_str().unwrap()),
+            "{id}"
+        );
+        checked += 1;
+    }
+    assert!(checked >= 15, "{checked} program problems");
+}

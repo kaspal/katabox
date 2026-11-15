@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import type { Report } from "@/bindings";
 import { renderApp } from "@/test/renderApp";
 import { setFakeApi, useFakeApi } from "@/test/mockApi";
@@ -126,12 +126,22 @@ describe("Program problems in the workspace (ADR 0028)", () => {
     expect(view).toHaveTextContent("Times include each run's start-up.");
   });
 
-  it("cannot be debugged in TypeScript yet, and says why", async () => {
+  it("can be debugged in TypeScript too (features-content M4), but not in PHP", async () => {
     setFakeApi({ withProgram: true, lastLanguage: "typescript" });
-    renderApp("/problems/line-sum");
+    const { user } = renderApp("/problems/line-sum");
     await screen.findByRole("heading", { name: "Line Sum" });
     const sample = await screen.findByTestId("public-1");
-    expect(within(sample).getByRole("button", { name: "Debug this case" })).toBeDisabled();
+    await waitFor(() => expect(within(sample).getByRole("button", { name: "Debug this case" })).toBeEnabled());
+    // With no breakpoint it runs to the end: a program ends, it returns nothing.
+    await user.click(within(sample).getByRole("button", { name: "Debug this case" }));
+    await waitFor(() => expect(screen.getByTestId("debug-status")).toHaveTextContent("Public 1 · Finished: the program ended"));
+    expect(screen.getByTestId("debug-status")).not.toHaveTextContent("returned");
+    cleanup();
+    setFakeApi({ withProgram: true, lastLanguage: "php" });
+    renderApp("/problems/line-sum");
+    await screen.findByRole("heading", { name: "Line Sum" });
+    const php = await screen.findByTestId("public-1");
+    expect(within(php).getByRole("button", { name: "Debug this case" })).toBeDisabled();
   });
 });
 

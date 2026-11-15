@@ -1,0 +1,13 @@
+id = "pixel-zoom"
+title = "Pixel Zoom"
+title_es = "Zoom de píxeles"
+difficulty = "easy"
+tags = ["input-parsing", "matrix", "formatting"]
+pattern = "fundamentals"
+rank = 5
+mode = "program"
+
+[judge]
+checker = "lines"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

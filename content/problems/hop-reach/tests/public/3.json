@@ -1,0 +1,1 @@
+{"input":{"tables":{"routes":[[8,"Central","Dock"],[9,"Dock","Bay"],[10,"Bay","Dock"],[11,"Dock","Reef"],[12,"Reef","Cape"],[13,"Cape","Point"]]}},"output":{"columns":["pier","hops"],"rows":[["Dock",1],["Bay",2],["Reef",2],["Cape",3]]}}

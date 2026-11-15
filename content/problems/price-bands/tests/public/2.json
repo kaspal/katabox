@@ -1,0 +1,1 @@
+{"input":{"tables":{"products":[[1,"pen",2500,1],[2,"ink",2500,1],[3,"pad",2500,1]]}},"output":{"columns":["name","price_cents"],"rows":[["ink",2500],["pad",2500],["pen",2500]]}}

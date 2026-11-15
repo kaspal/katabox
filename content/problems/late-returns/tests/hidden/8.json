@@ -1,0 +1,1 @@
+{"input":{"tables":{"loans":[[74116,405,"Emma","2026-10-23","2026-10-20"],[16227,50,"Emma","2026-05-29","2026-05-28"]],"members":[[405,"rd"],[667,"sbqgbc"],[50,"nchcrnb"]]}},"output":{"columns":["name","title","days_late"],"rows":[]}}

@@ -9,6 +9,7 @@
 # runs the test once and records each step's line and user-frame depth. "stop" replays
 # to one step, describes the frames there and exits at once: nothing after it runs, and
 # evaluations never reach a later step.
+import array
 import builtins
 import collections
 import importlib.util
@@ -77,6 +78,8 @@ _SET = builtins.set
 _FROZENSET = builtins.frozenset
 _NONE = builtins.type(None)
 _DEQUE = collections.deque
+# array.array (typed numbers) is drawn as a list, marked `typed`.
+_ARRAY = array.array
 _DEFAULTDICT = collections.defaultdict
 _COUNTER = collections.Counter
 _ORDEREDDICT = collections.OrderedDict
@@ -90,7 +93,7 @@ _INT_STR = builtins.int.__repr__
 _INT_BITS = builtins.int.bit_length
 _FLOAT_REPR = builtins.float.__repr__
 _DUMPS = json.dumps
-_SNAP_LISTS = (_LIST, _TUPLE, _DEQUE)
+_SNAP_LISTS = (_LIST, _TUPLE, _DEQUE, _ARRAY)
 _SNAP_MAPS = (_DICT, _DEFAULTDICT, _COUNTER, _ORDEREDDICT)
 _SNAP_SETS = (_SET, _FROZENSET)
 # Input nodes, numbered when the harness builds them (identity across steps).
@@ -474,6 +477,8 @@ def snapshot(frame, names):
                 _LIST_APPEND(items, value_of(v, depth + 1))
             kind = "set" if t in _SNAP_SETS else "list"
             obj = {"kind": kind, "type": snap_type_name(value), "items": items, "len": _LEN(value)}
+            if t is _ARRAY:
+                obj["typed"] = True
         objects[index] = obj
 
     try:

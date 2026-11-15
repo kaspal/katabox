@@ -15,6 +15,8 @@ path = "src/bin/kb-judge.rs"
 [dependencies]
 kb-core.workspace = true
 kb-runner.workspace = true
+# Same pin as kb-toolchain (already in Cargo.lock): the cross-process sandbox lock.
+fs4 = "1.1.0"
 minijinja = { version = "3.1", default-features = false, features = ["builtins", "json"] }
 serde.workspace = true
 serde_json.workspace = true

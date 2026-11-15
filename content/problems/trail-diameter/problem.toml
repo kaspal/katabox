@@ -6,6 +6,8 @@ tags = ["graph", "bfs", "tree"]
 pattern = "graphs"
 rank = 6
 mode = "program"
+profile = true
+profile_sizes = [1000, 2000, 4000, 8000, 14000, 20000]
 
 [judge]
 checker = "tokens"

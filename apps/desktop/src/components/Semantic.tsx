@@ -1,6 +1,6 @@
 // Semantic badges (ADR 0012): color is always paired with an icon and a text label.
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, CircleDashed, CircleDot, SquareTerminal } from "lucide-react";
+import { CheckCircle2, CircleDashed, CircleDot, Database, SquareTerminal } from "lucide-react";
 import type { Difficulty, ProblemMode, ProblemStatus } from "@/bindings";
 import { cn } from "@/lib/utils";
 
@@ -59,15 +59,18 @@ export function ModeLabel({
   className?: string;
 }) {
   const { t } = useTranslation();
-  if (mode !== "program") return null;
+  if (mode === "function") return null;
+  const sql = mode === "sql";
+  const Icon = sql ? Database : SquareTerminal;
+  const badge = t(sql ? "mode.sqlBadge" : "mode.badge");
   return (
     <span
       className={cn("inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground", className)}
       data-testid="mode-label"
-      title={t("mode.badge")}
+      title={badge}
     >
-      <SquareTerminal aria-hidden className="size-3.5" />
-      {compact ? t("mode.program") : t("mode.badge")}
+      <Icon aria-hidden className="size-3.5" />
+      {compact ? t(sql ? "mode.sql" : "mode.program") : badge}
     </span>
   );
 }

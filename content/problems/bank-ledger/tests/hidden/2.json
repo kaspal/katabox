@@ -1,0 +1,1 @@
+{"stdin":"9\nSET c 21\nSET c 32\nSET c 74\nSET c 81\nBEGIN\nSET c 69\nGET c\nGET c\nBEGIN\n","stdout":"69\n69\n"}

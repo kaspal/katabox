@@ -1,0 +1,1 @@
+{"input":{"tables":{"reviews":[[15456,"Azul",4],[64938,"Splendor",null],[99741,"Splendor",4]]}},"output":{"columns":["game","rated","avg_stars"],"rows":[["Azul",1,4.0],["Splendor",1,4.0]]}}

@@ -13,11 +13,14 @@
 
 mod calibration;
 pub mod debug;
+pub mod diagnostics;
 mod error;
 pub mod interview;
+pub mod learn_links;
 pub mod practice;
 pub mod profile;
 mod root;
+pub mod shrink;
 pub mod transfer;
 pub mod uninstall;
 
@@ -59,8 +62,11 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 
 pub use calibration::{CALIBRATION_SETTING, CalibrationInfo};
+pub use diagnostics::{Diagnostics, RuntimeDiag};
 pub use error::{AppError, AppErrorCode};
+pub use learn_links::{PatternTopics, TopicReview};
 pub use root::{RootSource, SANDBOX_ROOT_ENV, SANDBOX_ROOT_SETTING};
+pub use shrink::{ShrinkEvent, ShrinkResult, ShrinkStop};
 
 pub type Result<T, E = AppError> = std::result::Result<T, E>;
 
@@ -241,6 +247,8 @@ pub struct App {
     pending_import: std::sync::Mutex<Option<transfer::PendingImport>>,
     /// The debug session (ADR 0022): a recorded trace and the debugger's position in it.
     debug: std::sync::Mutex<Option<debug::Session>>,
+    /// Stop requested for the running shrink (ADR 0030).
+    shrink_cancel: std::sync::atomic::AtomicBool,
 }
 
 /// Solved problems per judge language (cross-language practice, ADR 0020).
@@ -294,6 +302,7 @@ impl App {
                 .map(Path::to_path_buf)
                 .unwrap_or_default(),
             judging: tokio::sync::Mutex::new(()),
+            shrink_cancel: std::sync::atomic::AtomicBool::new(false),
             calibration: RwLock::new(calibration),
             clock: std::sync::Mutex::new(None),
             pending_import: std::sync::Mutex::new(None),
@@ -540,6 +549,11 @@ impl App {
     /// The starter code for `problem` in `language`.
     pub async fn get_stub(&self, problem: &str, language: Language) -> Result<String> {
         let p = self.problem(problem).await?;
+        ensure_language_fits(&p, language)?;
+        // An SQL problem starts from one SELECT over its first table (ADR 0031).
+        if let Some(schema) = &p.sql {
+            return Ok(kb_judge::sql::starter(schema));
+        }
         // A program problem starts from a whole program reading stdin (ADR 0028).
         if p.mode == kb_core::ProblemMode::Program {
             return Ok(kb_judge::program_starter(language)?);
@@ -549,6 +563,19 @@ impl App {
 
     async fn problem(&self, id: &str) -> Result<Problem> {
         let d = self.store.content.judge_data(id).await?;
+        if d.mode == kb_core::ProblemMode::Sql {
+            let schema = d.schema_sql.as_deref().ok_or_else(|| {
+                AppError::new(AppErrorCode::Store, format!("{id} has no schema.sql"))
+            })?;
+            return Ok(Problem::from_sql_parts(
+                &d.id,
+                schema,
+                &d.checker,
+                d.time_limit_ms,
+                d.memory_mb,
+                d.tests,
+            )?);
+        }
         Ok(Problem::from_parts(
             &d.id,
             d.mode,
@@ -609,6 +636,13 @@ impl App {
         self.ensure_interview_language(problem, language).await?;
         self.ensure_calibrated().await;
         let p = self.problem(problem).await?;
+        ensure_language_fits(&p, language)?;
+        if p.mode == kb_core::ProblemMode::Sql && !custom.is_empty() {
+            return Err(AppError::new(
+                AppErrorCode::InvalidCustomInput,
+                "custom tests are not available for SQL problems",
+            ));
+        }
         let mut tests: Vec<TestCase> = p.public_tests().cloned().collect();
         if !custom.is_empty() {
             tests.extend(self.custom_tests(&p, language, custom).await?);
@@ -639,6 +673,7 @@ impl App {
         self.ensure_interview_language(problem, language).await?;
         self.ensure_calibrated().await;
         let p = self.problem(problem).await?;
+        ensure_language_fits(&p, language)?;
         let tests = p.tests.clone();
         let mut report = self.judge(p, tests, language, code, on_event).await?;
         let was_solved = self
@@ -694,7 +729,19 @@ impl App {
         let env = self.env();
         let code = code.to_string();
         let report = tokio::task::spawn_blocking(move || {
-            kb_judge::judge_with_progress(&problem, &tests, language, &code, &env, &mut on_event)
+            if problem.mode == kb_core::ProblemMode::Sql {
+                // One SELECT over the problem's tables (ADR 0031).
+                kb_judge::sql::judge_sql(&problem, &tests, &code, &env, &mut on_event)
+            } else {
+                kb_judge::judge_with_progress(
+                    &problem,
+                    &tests,
+                    language,
+                    &code,
+                    &env,
+                    &mut on_event,
+                )
+            }
         })
         .await??;
         Ok(report)
@@ -831,9 +878,20 @@ impl App {
     where
         F: Fn(kb_bridge::LspEvent) + Send + Sync + 'static,
     {
+        // The bridge validates the id; an unknown problem is simply not a program one.
+        let program = matches!(
+            self.store.content.problem_mode(problem).await,
+            Ok(kb_core::ProblemMode::Program)
+        );
         Ok(self
             .lsp
-            .connect(problem, language, text, std::sync::Arc::new(on_event))
+            .connect_with(
+                problem,
+                language,
+                text,
+                program,
+                std::sync::Arc::new(on_event),
+            )
             .await?)
     }
 
@@ -996,3 +1054,19 @@ pub(crate) mod testutil;
 
 #[cfg(test)]
 mod tests;
+
+/// SQL problems take only SQL, and SQL is only for SQL problems (ADR 0031).
+fn ensure_language_fits(problem: &Problem, language: Language) -> Result<()> {
+    let sql_problem = problem.mode == kb_core::ProblemMode::Sql;
+    if sql_problem != (language == Language::Sql) {
+        return Err(AppError::new(
+            AppErrorCode::UnsupportedLanguage,
+            if sql_problem {
+                format!("{} is an SQL problem: write one SQL query", problem.id)
+            } else {
+                format!("{} takes code, not SQL", problem.id)
+            },
+        ));
+    }
+    Ok(())
+}

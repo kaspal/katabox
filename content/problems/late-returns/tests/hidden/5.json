@@ -1,0 +1,1 @@
+{"input":{"tables":{"loans":[[70344,739,"Walden","2026-04-20","2026-04-16"],[47219,739,"Odyssey","2026-06-08","2026-06-08"],[36266,106,"Odyssey","2026-07-18","2026-07-19"],[22632,739,"Garden","2026-06-03",null]],"members":[[106,"peccamr"],[739,"zybhq"]]}},"output":{"columns":["name","title","days_late"],"rows":[["peccamr","Odyssey",1]]}}

@@ -1,0 +1,13 @@
+id = "median-heights"
+title = "Median Heights"
+title_es = "Alturas medianas"
+difficulty = "easy"
+tags = ["sorting", "input-parsing"]
+pattern = "sorting"
+rank = 3
+mode = "program"
+
+[judge]
+checker = "tokens"
+time_limit_ms = 300 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

@@ -161,7 +161,9 @@ function Picker({
 export function VisualizeTab({ dbg, problem, params }: { dbg: Debugger; problem: string; params: string[] }) {
   const { t } = useTranslation();
   const [settings, setSettings] = useVizSettings(problem);
-  const [large, setLarge] = useState(false);
+  // Remembered per problem: stepping, re-running or a new session reopen it.
+  const large = settings.large === true;
+  const setLarge = (open: boolean) => setSettings({ ...settings, large: open || undefined });
   const [zoom, setZoom] = useState(1.5);
   const names = useMemo(() => chosenNames(settings, params), [settings, params]);
   const stop = dbg.view?.state.state === "paused" ? dbg.view.state.stop : null;

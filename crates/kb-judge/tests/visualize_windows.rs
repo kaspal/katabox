@@ -663,3 +663,48 @@ fn cost_per_stop_at_the_caps() {
         );
     }
 }
+
+/// Typed number arrays (Python `array.array`, a JavaScript `Int32Array`) are snapshotted
+/// as lists marked `typed`, with their values, not as opaque objects.
+#[test]
+fn typed_arrays_are_lists() {
+    let p = problem("two-sum");
+    let inp = first_public(&p);
+    for lang in LANGS {
+        let src = match lang {
+            Language::Python => {
+                "import array\n\ndef two_sum(nums, target):\n    buf = array.array(\"i\", nums)\n    for i in range(len(buf)):\n        for j in range(i + 1, len(buf)):\n            if buf[i] + buf[j] == target:\n                return [i, j]\n    return []\n"
+            }
+            _ => {
+                "export function twoSum(nums: number[], target: number): number[] {\n  const buf = Int32Array.from(nums);\n  for (let i = 0; i < buf.length; i++) {\n    for (let j = i + 1; j < buf.length; j++) {\n      if (buf[i] + buf[j] === target) return [i, j];\n    }\n  }\n  return [];\n}\n"
+            }
+        };
+        let t = trace(&p, lang, src, &inp);
+        // A stop inside the loops, where `buf` exists.
+        let s = stop(&p, lang, src, &inp, &t, 3, Some(&["buf"]));
+        let sn = snap(&s);
+        match object(sn, root(sn, "buf")) {
+            SnapObject::List {
+                typed, items, len, ..
+            } => {
+                assert!(*typed, "{lang}: {:?}", object(sn, root(sn, "buf")));
+                assert_eq!(*len as usize, items.len(), "{lang}");
+                let want: Vec<String> = inp["nums"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|v| v.to_string())
+                    .collect();
+                assert_eq!(
+                    items
+                        .iter()
+                        .map(|i| text(i).to_string())
+                        .collect::<Vec<_>>(),
+                    want,
+                    "{lang}"
+                );
+            }
+            other => panic!("{lang}: not a list: {other:?}"),
+        }
+    }
+}

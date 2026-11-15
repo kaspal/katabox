@@ -1,0 +1,1 @@
+{"input":{"tables":{"customers":[[249,"Bruno","Evora"],[391,"Gala","Faro"],[134,"Clara","Porto"],[19,"Clara","Evora"],[1,"Gala","Braga"]],"orders":[[2990,249,"2026-10-04",35778]]}},"output":{"columns":["order_id","name","city","total_cents"],"rows":[[2990,"Bruno","Evora",35778]]}}

@@ -12,6 +12,43 @@ use std::path::{Path, PathBuf};
 use kb_core::Language;
 use kb_pack::{Check, Finding, check_problem, env_for};
 
+/// Test helper, off in normal runs: with `KB_TEST_BURN_THREADS=<n>` it keeps n threads
+/// busy until dropped, to reproduce timing behaviour on a loaded machine.
+struct CpuBurner(
+    Vec<std::thread::JoinHandle<()>>,
+    std::sync::Arc<std::sync::atomic::AtomicBool>,
+);
+
+impl CpuBurner {
+    fn from_env() -> Option<CpuBurner> {
+        let n: usize = std::env::var("KB_TEST_BURN_THREADS").ok()?.parse().ok()?;
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let threads = (0..n)
+            .map(|_| {
+                let stop = stop.clone();
+                std::thread::spawn(move || {
+                    let mut x = 1u64;
+                    while !stop.load(std::sync::atomic::Ordering::Relaxed) {
+                        x = std::hint::black_box(
+                            x.wrapping_mul(6364136223846793005).wrapping_add(1),
+                        );
+                    }
+                })
+            })
+            .collect();
+        Some(CpuBurner(threads, stop))
+    }
+}
+
+impl Drop for CpuBurner {
+    fn drop(&mut self) {
+        self.1.store(true, std::sync::atomic::Ordering::Relaxed);
+        for t in self.0.drain(..) {
+            let _ = t.join();
+        }
+    }
+}
+
 fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -105,6 +142,7 @@ fn a_reference_that_disagrees_with_brute_is_reported_with_the_input() {
 
 #[test]
 fn naive_passing_means_the_tests_are_too_weak() {
+    let _load = CpuBurner::from_env();
     let (_base, dir) = two_sum("weak");
     // Without the max-size test, the O(n²) solutions are fast enough in both languages.
     std::fs::remove_file(dir.join("tests/hidden/15.json")).unwrap();

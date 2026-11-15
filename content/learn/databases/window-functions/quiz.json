@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "How many rows does SUM(v) OVER (PARTITION BY p ORDER BY id) return for a table of 5 rows in 2 partitions?",
+    "prompt_es": "¿Cuántas filas devuelve SUM(v) OVER (PARTITION BY p ORDER BY id) para una tabla de 5 filas en 2 particiones?",
+    "options": [
+      { "en": "2, one per partition", "es": "2, una por partición" },
+      { "en": "5, every row stays", "es": "5, todas las filas se quedan" },
+      { "en": "7, rows plus one total per partition", "es": "7, las filas más un total por partición" }
+    ],
+    "answer": 1,
+    "explain_en": "Unlike GROUP BY, a window function keeps every row and only adds a value to each one.",
+    "explain_es": "A diferencia de GROUP BY, una función de ventana conserva todas las filas y solo añade un valor a cada una."
+  },
+  {
+    "prompt_en": "Default input: what running total does row 4, (1, 5), get?",
+    "prompt_es": "Entrada por defecto: ¿qué total acumulado recibe la fila 4, (1, 5)?",
+    "options": [
+      { "en": "70: 50 + 15 + 5 from partition 1", "es": "70: 50 + 15 + 5 de la partición 1" },
+      { "en": "90: every v before it plus 5", "es": "90: todos los v anteriores más 5" },
+      { "en": "5: its own value only", "es": "5: solo su propio valor" }
+    ],
+    "answer": 0,
+    "explain_en": "Only partition 1 counts: rows 1 and 3 brought it to 65, and row 4 adds 5. Row 2 belongs to partition 2.",
+    "explain_es": "Solo cuenta la partición 1: las filas 1 y 3 la llevaron a 65, y la fila 4 suma 5. La fila 2 pertenece a la partición 2."
+  },
+  {
+    "prompt_en": "What happens if you drop ORDER BY id and write SUM(v) OVER (PARTITION BY p)?",
+    "prompt_es": "¿Qué pasa si quitas ORDER BY id y escribes SUM(v) OVER (PARTITION BY p)?",
+    "options": [
+      { "en": "The query fails: a window needs an order", "es": "La consulta falla: una ventana necesita un orden" },
+      { "en": "Nothing changes: rows are already in id order", "es": "No cambia nada: las filas ya están en orden de id" },
+      { "en": "Every row gets its partition's grand total", "es": "Cada fila recibe el total completo de su partición" }
+    ],
+    "answer": 2,
+    "explain_en": "Without ORDER BY the window is the whole partition, so all rows of partition 1 would show 70 and those of partition 2 would show 60.",
+    "explain_es": "Sin ORDER BY la ventana es toda la partición, así que todas las filas de la partición 1 mostrarían 70 y las de la partición 2 mostrarían 60."
+  }
+]

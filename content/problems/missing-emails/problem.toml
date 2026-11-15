@@ -1,0 +1,13 @@
+id = "missing-emails"
+title = "Missing Emails"
+title_es = "Correos que faltan"
+difficulty = "easy"
+tags = ["null-handling", "sorting"]
+pattern = "sql-basics"
+rank = 2
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

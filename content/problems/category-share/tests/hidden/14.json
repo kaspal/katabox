@@ -1,0 +1,1 @@
+{"input":{"tables":{"sales":[[33526,"ink",2483],[38145,"tape",3250]]}},"output":{"columns":["category","total_cents","share_pct"],"rows":[["tape",3250,56.7],["ink",2483,43.3]]}}

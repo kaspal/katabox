@@ -1,0 +1,15 @@
+id = "ration-plan"
+title = "Ration Plan"
+title_es = "Plan de raciones"
+difficulty = "medium"
+tags = ["binary-search", "prefix-sum", "sorting"]
+pattern = "binary-search"
+rank = 6
+mode = "program"
+profile = true
+profile_sizes = [1000, 2000, 4000, 8000, 16000, 30000]
+
+[judge]
+checker = "tokens"
+time_limit_ms = 200 # base (Rust), per test for a program problem (ADR 0017, 0028)
+memory_mb = 256

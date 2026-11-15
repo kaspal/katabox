@@ -1381,6 +1381,31 @@ export const REFERENCE: Record<string, (input: readonly number[]) => number[]> =
     return [best, start];
   },
   "monotonic-stack": (a) => a.map((v, i) => a.slice(i + 1).find((x) => x > v) ?? -1),
+  // Databases: written differently from the tracers (nested loops, filters, walking up).
+  "join-algorithms": (input) => {
+    const n = input[0]!;
+    const left = Array.from({ length: n }, (_, i) => [input[1 + 2 * i]!, input[2 + 2 * i]!]);
+    const rest = input.slice(1 + 2 * n);
+    const right = Array.from({ length: rest.length / 2 }, (_, i) => [rest[2 * i]!, rest[2 * i + 1]!]);
+    return left.flatMap(([k, a]) => right.filter(([rk]) => rk === k).flatMap(([, b]) => [k!, a!, b!]));
+  },
+  "group-by": (input) => {
+    const rows = Array.from({ length: input.length / 2 }, (_, i) => [input[2 * i]!, input[2 * i + 1]!]);
+    return sorted([...new Set(rows.map(([g]) => g!))]).flatMap((g) => {
+      const mine = rows.filter(([x]) => x === g).map(([, v]) => v!);
+      return [g, mine.length, sum(mine)];
+    });
+  },
+  "window-functions": (input) => {
+    const rows = Array.from({ length: input.length / 2 }, (_, i) => [input[2 * i]!, input[2 * i + 1]!]);
+    return rows.map(([p], i) => sum(rows.slice(0, i + 1).filter(([q]) => q === p).map(([, v]) => v!)));
+  },
+  "recursive-cte": (bosses) =>
+    bosses.map((_, i) => {
+      let depth = 0;
+      for (let x = bosses[i]!; x !== -1; x = bosses[x]!) depth++;
+      return depth;
+    }),
 };
 
 /** Hand-checked golden runs: the input, then the marker behind each step and its line in
@@ -1393,6 +1418,31 @@ export type Golden = {
 };
 
 export const GOLDEN: Record<string, Golden> = {
+  // Databases (worked out by hand from the samples).
+  "join-algorithms": {
+    input: [1, 2, 7, 2, 5, 3, 9],
+    markers: [null, "build", "build", "probe", "match", null],
+    py: [null, 11, 11, 14, 16, null],
+    ts: [null, 10, 10, 14, 16, null],
+  },
+  "group-by": {
+    input: [1, 5, 2, 3, 1, 4],
+    markers: [null, "add", "add", "add", "emit", "emit", null],
+    py: [null, 9, 9, 9, 12, 12, null],
+    ts: [null, 6, 6, 6, 10, 10, null],
+  },
+  "window-functions": {
+    input: [1, 5, 2, 3, 1, 4],
+    markers: [null, "start", "start", "add", null],
+    py: [null, 10, 10, 12, null],
+    ts: [null, 7, 7, 9, null],
+  },
+  "recursive-cte": {
+    input: [-1, 0, 1],
+    markers: [null, "anchor", null, "join", null, "join", null, null],
+    py: [null, 10, null, 17, null, 17, null, null],
+    ts: [null, 7, null, 16, null, 16, null, null],
+  },
   "euclid-gcd": {
     input: [6, 4],
     markers: [null, "divide", "divide", null],

@@ -1,0 +1,1 @@
+{"input":{"tables":{"bank":[[40389,"P1500",562]],"books":[[32976,"P1500",662]]}},"output":{"columns":["ref","bank_cents","books_cents"],"rows":[["P1500",562,662]]}}

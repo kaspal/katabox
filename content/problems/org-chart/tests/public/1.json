@@ -1,0 +1,1 @@
+{"stdin": "6\n1 1 2 2 4\n5\n1 6\n2 6\n3 6\n6 2\n4 4\n", "stdout": "YES\nYES\nNO\nNO\nNO\n"}

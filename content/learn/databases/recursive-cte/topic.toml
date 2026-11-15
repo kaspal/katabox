@@ -1,0 +1,28 @@
+id = "recursive-cte"
+subject = "databases"
+order = 4
+title = "Recursive queries"
+title_es = "Consultas recursivas"
+tags = ["sql", "recursion", "tree"]
+problems = ["org-chart", "family-generations", "chain-depth", "hop-reach"]
+presets = ["small-company", "long-chain", "random"]
+default = [-1, 0, 0, 1, 1, 2]
+
+[complexity]
+best = "O(n) with an index on boss"
+average = "O(n · rounds) scanning the table each round"
+worst = "O(n²) (one long chain)"
+space = "O(n)"
+stable = true
+in_place = false
+
+[input]
+min_len = 2
+max_len = 10
+min = -1
+max = 9
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = chain_depths(a)"
+typescript = "a = chainDepths(a)"

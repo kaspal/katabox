@@ -2,7 +2,8 @@
   "app": {
     "name": "KataBox",
     "devData": "DATOS DE DESARROLLO",
-    "devDataHint": "Versión de desarrollo: el progreso se guarda en una carpeta aparte, no en tus datos reales."
+    "devDataHint": "Versión de desarrollo: el progreso se guarda en una carpeta aparte, no en tus datos reales.",
+    "skipToContent": "Saltar al contenido principal"
   },
   "nav": {
     "label": "Navegación principal",
@@ -48,7 +49,9 @@
     "label": "Tipo de problema",
     "function": "Función",
     "program": "Programa",
-    "badge": "Programa · stdin/stdout"
+    "badge": "Programa · stdin/stdout",
+    "sql": "SQL",
+    "sqlBadge": "SQL · una consulta"
   },
   "status": {
     "label": "Estado",
@@ -82,12 +85,17 @@
     "bit-manipulation": "Manipulación de bits",
     "strings": "Cadenas",
     "union-find": "Union-find",
-    "design": "Diseño"
+    "design": "Diseño",
+    "sql-basics": "SQL básico",
+    "sql-joins": "Uniones SQL (JOIN)",
+    "sql-aggregation": "Agregación SQL",
+    "sql-advanced": "SQL avanzado"
   },
   "tag": {
     "label": "Etiqueta",
     "any": "Cualquier etiqueta",
     "names": {
+      "anti-join": "Anti-unión (anti-join)",
       "array": "Arreglo",
       "backtracking": "Backtracking",
       "bellman-ford": "Bellman–Ford",
@@ -103,30 +111,43 @@
       "bridges": "Puentes",
       "chinese-remainder": "Teorema chino del resto",
       "combinatorics": "Combinatoria",
+      "conditional-aggregation": "Agregación condicional",
       "convex-hull": "Envolvente convexa",
       "counting": "Conteo",
       "cross-product": "Producto cruzado",
       "cycle": "Ciclo",
+      "dates": "Fechas",
       "design": "Diseño",
       "dfs": "Búsqueda en profundidad",
       "digit-dp": "DP por dígitos",
+      "distinct": "DISTINCT",
       "divide-and-conquer": "Divide y vencerás",
       "dynamic-programming": "Programación dinámica",
       "enumeration": "Enumeración",
+      "euler-tour": "Recorrido de Euler",
       "expression-parsing": "Análisis de expresiones",
       "fenwick-tree": "Árbol de Fenwick",
+      "filtering": "Filtrado",
       "floating-point": "Coma flotante",
+      "formatting": "Formato de salida",
       "fractional-knapsack": "Mochila fraccionaria",
+      "gaps-and-islands": "Huecos e islas",
       "graph": "Grafo",
+      "graphs": "Grafos",
       "greedy": "Voraz",
+      "group-by": "GROUP BY",
       "hash-map": "Mapa hash",
+      "having": "HAVING",
       "heap": "Montículo",
       "input-parsing": "Lectura de entrada",
       "interval-dp": "DP por intervalos",
       "intervals": "Intervalos",
+      "join": "Unión (JOIN)",
       "kmp": "KMP",
       "knapsack": "Mochila",
+      "lag": "LAG",
       "lazy-propagation": "Propagación perezosa",
+      "left-join": "Unión izquierda (LEFT JOIN)",
       "linked-list": "Lista enlazada",
       "math": "Matemáticas",
       "matrix": "Matriz",
@@ -136,13 +157,20 @@
       "monotonic-queue": "Cola monótona",
       "monotonic-stack": "Pila monótona",
       "natural-sort": "Orden natural",
+      "null-handling": "Manejo de NULL",
       "number-theory": "Teoría de números",
+      "offline-queries": "Consultas offline",
+      "outer-join": "Unión externa (OUTER JOIN)",
+      "pagination": "Paginación",
       "palindrome": "Palíndromo",
       "prefix-sum": "Sumas prefijas",
       "queue": "Cola",
+      "ranking": "Clasificación (ranking)",
       "ray-casting": "Lanzamiento de rayos",
+      "recursive-cte": "CTE recursiva",
       "rolling-hash": "Hash rodante",
       "segment-tree": "Árbol de segmentos",
+      "self-join": "Autounión (self-join)",
       "shortest-path": "Camino más corto",
       "simulation": "Simulación",
       "sliding-window": "Ventana deslizante",
@@ -152,13 +180,16 @@
       "string": "Cadena",
       "string-matching": "Búsqueda de patrones",
       "strongly-connected-components": "Componentes fuertemente conexas",
+      "subquery": "Subconsulta",
       "sweep-line": "Línea de barrido",
       "topological-sort": "Orden topológico",
       "tree": "Árbol",
+      "trees": "Árboles",
       "trie": "Trie",
       "two-pointers": "Dos punteros",
       "undo-redo": "Deshacer y rehacer",
-      "union-find": "Unión-búsqueda"
+      "union-find": "Unión-búsqueda",
+      "window-functions": "Funciones de ventana"
     }
   },
   "common": {
@@ -220,7 +251,8 @@
       "editorial": "Solución",
       "submissions": "Envíos",
       "notes": "Notas",
-      "history": "Historial"
+      "history": "Historial",
+      "schema": "Tablas"
     },
     "limits": {
       "time": "Tiempo límite",
@@ -336,9 +368,23 @@
     "keymaps": {
       "default": "Predeterminado",
       "vscode": "VS Code",
-      "vim": "Vim"
+      "vim": "Vim",
+      "emacs": "Emacs"
     },
     "fontSize": "Tamaño de letra",
+    "tabWidth": "Ancho de tabulación",
+    "tabWidthLanguage": "El del lenguaje",
+    "tabWidthSpaces_one": "{{count}} espacio",
+    "tabWidthSpaces_other": "{{count}} espacios",
+    "editorTheme": "Tema de colores",
+    "editorThemes": {
+      "katabox": "KataBox",
+      "high-ink": "Tinta intensa",
+      "paper": "Papel",
+      "dusk": "Anochecer"
+    },
+    "preview": "Vista previa",
+    "previewLabel": "Vista previa del editor (solo lectura)",
     "ligatures": "Ligaduras de la fuente",
     "ligaturesOff": "Desactivadas",
     "ligaturesOn": "Activadas",
@@ -359,14 +405,34 @@
     "noticesView": "Ver…",
     "noticesIntro": "KataBox incluye los componentes siguientes, cada uno con su propia licencia.",
     "noticesDev": "Los avisos se incluyen en las versiones publicadas (los genera pnpm notices).",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "diagnostics": {
+      "label": "Diagnóstico",
+      "button": "Copiar diagnóstico…",
+      "title": "Copiar diagnóstico",
+      "intro": "Para informar de un error. Esto es exactamente lo que se copiará: versiones, opciones y códigos de errores recientes. Sin código, rutas de archivos ni datos personales.",
+      "copy": "Copiar",
+      "copied": "Copiado.",
+      "copyFailed": "No se pudo copiar. Selecciona el texto y cópialo tú."
+    },
+    "contrast": "Contraste",
+    "contrasts": {
+      "normal": "Normal",
+      "high": "Alto"
+    },
+    "motion": "Movimiento",
+    "motions": {
+      "system": "Seguir al sistema",
+      "reduced": "Reducir"
+    }
   },
   "languages": {
     "python": "Python",
     "javascript": "JavaScript",
     "typescript": "TypeScript",
     "php": "PHP",
-    "rust": "Rust"
+    "rust": "Rust",
+    "sql": "SQL"
   },
   "time": {
     "justNow": "ahora mismo"
@@ -403,7 +469,8 @@
     "import_invalid": "Este archivo no es una exportación válida de KataBox.",
     "debug_unsupported": "Este lenguaje todavía no se puede depurar. La depuración está disponible para Python.",
     "debug_diverged": "Este programa se comporta distinto en cada ejecución (hora, azar o identidad de objetos), así que no se puede reproducir paso a paso.",
-    "profile_unavailable": "Este problema no tiene perfil de complejidad."
+    "profile_unavailable": "Este problema no tiene perfil de complejidad.",
+    "shrink_unavailable": "Aquí no se puede buscar una entrada más pequeña que falle (es un problema de programa o no hay solución de referencia en este lenguaje)."
   },
   "judge": {
     "verdict": {
@@ -431,9 +498,16 @@
       "too_much_output": "La prueba imprimió demasiada salida.",
       "node_cycle": "La lista o el árbol devuelto vuelve a un nodo que ya contiene (un ciclo, o un nodo compartido por dos padres).",
       "time_limit": "Se alcanzó el tiempo límite durante esta prueba.",
+      "wall_time_limit": "El programa dejó de responder: el límite de tiempo real lo detuvo antes de usar su tiempo de CPU (estaba esperando o el equipo estaba muy ocupado).",
       "output_limit": "Se alcanzó el límite de salida durante esta prueba.",
       "memory_limit": "Se alcanzó el límite de memoria durante esta prueba.",
       "process_exited": "El programa terminó o falló durante esta prueba.",
+      "sql_error": "SQLite no pudo ejecutar la consulta (un error de sintaxis, o una tabla o columna desconocida).",
+      "sql_not_select": "La respuesta debe ser una sola consulta SELECT (o WITH … SELECT).",
+      "sql_multiple_statements": "Envía una sola sentencia.",
+      "sql_not_authorized": "La consulta intentó algo distinto de leer las tablas, o usó una función no permitida.",
+      "sql_too_many_rows": "La consulta devolvió demasiadas filas.",
+      "sql_columns": "Las columnas del resultado no son las esperadas (nombres o cantidad).",
       "harness_silent": "El arnés de pruebas se detuvo sin informar.",
       "bad_harness_record": "El arnés de pruebas informó algo ilegible.",
       "incomplete_results": "Algunas pruebas no tienen resultado."
@@ -497,6 +571,24 @@
       "firstDiff": "primera diferencia",
       "missing": "(la salida termina aquí)",
       "timeNote": "Los tiempos incluyen el arranque de cada ejecución."
+    },
+    "shrink": {
+      "start": "Buscar una entrada más pequeña que falle",
+      "starting": "Comprobando que esta entrada falla…",
+      "progress": "Reduciendo: tamaño {{size}} (era {{original}})…",
+      "runs": "{{runs}} de {{max}} ejecuciones en el sandbox",
+      "stop": "Detener",
+      "title": "Entrada más pequeña que falla",
+      "stopped": {
+        "smallest": "No se puede reducir más: tamaño {{size}}, desde {{original}} ({{runs}} ejecuciones).",
+        "budget": "Se alcanzó el límite de ejecuciones: tamaño {{size}}, desde {{original}} ({{runs}} ejecuciones).",
+        "cancelled": "Detenido: tamaño {{size}}, desde {{original}} ({{runs}} ejecuciones).",
+        "not_failing": "Tu código actual supera esta entrada, así que no hay nada que reducir."
+      },
+      "notFailing": "Tu código actual supera esta entrada, así que no hay nada que reducir.",
+      "addToTests": "Añadir a mis pruebas",
+      "busy": "Espera a que termine la ejecución o la sesión de depuración actual.",
+      "programUnavailable": "Buscar una entrada más pequeña solo funciona en problemas de función: la entrada de un programa tiene recuentos y líneas de estructura que no se pueden recortar sin romperla."
     }
   },
   "lsp": {
@@ -653,7 +745,8 @@
       "review": "Recordatorios de repaso en Inicio",
       "daily": "Problema del día en Inicio",
       "on": "Sí",
-      "off": "No"
+      "off": "No",
+      "learnReview": "Tarjeta «Repasar un tema»"
     },
     "interview": {
       "title": "Entrevista simulada",
@@ -726,6 +819,12 @@
       "accepted": "Tu solución aceptada en {{language}} (solo lectura)",
       "close": "Cerrar",
       "none": "No hay una solución aceptada en {{language}}."
+    },
+    "learnReview": {
+      "title": "Repasar un tema",
+      "intro": "Viste {{topic}}. Prueba un problema que lo usa.",
+      "open": "Abrir el tema",
+      "try": "Probar {{problem}}"
     }
   },
   "debug": {
@@ -748,6 +847,7 @@
     },
     "pausedAt": "En pausa en la línea {{line}} (paso {{step}} de {{total}})",
     "returned": "Terminado: devolvió {{value}}",
+    "ended": "Terminado: el programa acabó",
     "raised": "Terminado: se lanzó una excepción en la línea {{line}}",
     "memory": "Terminado: sin memoria",
     "truncated": "Se dejó de grabar tras {{count}} pasos; aún puedes recorrerlos.",
@@ -828,7 +928,8 @@
       "changedCount_one": "{{count}} cambio",
       "changedCount_other": "{{count}} cambios"
     },
-    "programUnsupported": "Por ahora, los problemas de programa se pueden depurar en Python."
+    "programUnsupported": "Los problemas de programa se pueden depurar en Python y JavaScript/TypeScript.",
+    "sqlUnsupported": "El depurador no está disponible en los problemas SQL: una consulta no tiene pasos que reproducir."
   },
   "complexity": {
     "button": "Complejidad",
@@ -864,7 +965,13 @@
       "you": "Tuyos",
       "ref": "Referencia",
       "notRun": "no ejecutado"
-    }
+    },
+    "unreliable": "Complejidad estimada: no es fiable en esta ejecución",
+    "unreliableWhy": "El tiempo de un programa incluye arrancarlo (unos {{startup}} ms aquí, descontados de cada tamaño). Aquí los tamaños que se ejecutaron tardaron muy poco más que eso, o se ejecutaron muy pocos, así que una clase de crecimiento sería una suposición.",
+    "startup": "El arranque del programa (unos {{startup}} ms) se descuenta de cada tamaño.",
+    "fast": "Complejidad estimada: demasiado rápido para distinguirla aquí",
+    "fastWhy": "Se ejecutaron todos los tamaños hasta n = {{n}}, y el trabajo de tu programa nunca tardó más que arrancarlo (unos {{startup}} ms aquí, descontados de cada tamaño). Las soluciones lentas, como las O(n²), crecen claramente con estos tamaños; una clase más rápida no se distingue del ruido del arranque.",
+    "referenceFast": "Solución de referencia: también demasiado rápida para distinguirla aquí"
   },
   "learn": {
     "title": "Aprender",
@@ -1079,7 +1186,18 @@
         "euclid_steps": "a, b → b, a mod b",
         "power_steps": "Una fila por bit del exponente",
         "extended_euclid": "Restos y coeficientes",
-        "pascal": "Fila n, entrada k: C(n, k)"
+        "pascal": "Fila n, entrada k: C(n, k)",
+        "left_table": "Tabla L",
+        "right_table": "Tabla R",
+        "hash_index": "Índice hash sobre R.key",
+        "joined": "Resultado: L JOIN R",
+        "rows_in": "Tabla t",
+        "groups": "Tabla hash de grupos",
+        "grouped": "Resultado: GROUP BY g",
+        "running_totals": "Total acumulado por partición",
+        "with_totals": "Resultado: con totales acumulados",
+        "employees": "Tabla emp",
+        "chain": "Resultado: chain (id, depth)"
       },
       "call_stack": "Pila de llamadas",
       "stack_empty": "vacía",
@@ -1121,7 +1239,8 @@
       "summary_timeline": "Intervalos: {{bars}}. Resultado: {{output}}.",
       "summary_board": "Un tablero de {{rows}} por {{cols}}: {{cells}}.",
       "summary_strings": "{{rows}}.",
-      "summary_plane": "Puntos: {{points}}."
+      "summary_plane": "Puntos: {{points}}.",
+      "summary_relations": "Tablas: {{tables}}. {{result}}."
     },
     "roles": {
       "idle": "Aún sin colocar",
@@ -1430,7 +1549,14 @@
         "square": "Un cuadrado",
         "crossing": "Se cruzan",
         "end-on-the-line": "Un extremo sobre la otra recta",
-        "side-by-side": "Uno al lado del otro"
+        "side-by-side": "Uno al lado del otro",
+        "one-to-many": "Una clave, varias coincidencias",
+        "no-match": "Sin coincidencias",
+        "two-groups": "Dos grupos",
+        "one-group": "Un grupo",
+        "two-accounts": "Dos cuentas",
+        "one-partition": "Una partición",
+        "small-company": "Empresa pequeña"
       },
       "custom_label": "Tu entrada: de {{min}} a {{max}} números enteros entre {{lo}} y {{hi}}, separados por comas o espacios",
       "apply": "Aplicar",
@@ -1494,7 +1620,13 @@
           "power_range": "Usa una base de hasta 999 y un módulo de 2 a 999.",
           "point_pair": "Escribe cada punto como x y (\"{{item}}\").",
           "point_count": "Usa de {{min}} a {{max}} puntos.",
-          "coordinate_range": "Las coordenadas van de 0 a {{max}}."
+          "coordinate_range": "Las coordenadas van de 0 a {{max}}.",
+          "row_pair": "Cada fila son dos números, como en \"2 15, 3 7\". {{item}}",
+          "row_count": "{{field}}: de {{min}} a {{max}} filas.",
+          "row_range": "El primer número de una fila va de {{amin}} a {{amax}}, el segundo de {{bmin}} a {{bmax}}.",
+          "boss_count": "Escribe de {{min}} a {{max}} empleados.",
+          "boss_range": "Un jefe es -1 (ninguno) o el número de otro empleado, de 0 a {{max}}.",
+          "boss_cycle": "Los jefes forman un ciclo: alguien tiene que estar en la cima."
         }
       },
       "count_label": "n: un número entero de {{lo}} a {{hi}}",
@@ -1532,7 +1664,11 @@
         "modulus": "Módulo",
         "number": "Número",
         "points": "Puntos (x y, …)",
-        "segments": "Extremos P1, P2, P3, P4 (x y, …)"
+        "segments": "Extremos P1, P2, P3, P4 (x y, …)",
+        "left_rows": "Filas de L (key a)",
+        "right_rows": "Filas de R (key b)",
+        "rows": "Filas",
+        "bosses": "Jefes (-1: ninguno)"
       }
     },
     "tabs": {
@@ -1633,7 +1769,8 @@
       "modular-arithmetic": "Aritmética modular",
       "combinatorics": "Combinatoria",
       "geometry": "Geometría",
-      "convex-hull": "Envolvente convexa"
+      "convex-hull": "Envolvente convexa",
+      "sql": "SQL"
     },
     "narration": {
       "bubble-sort": {
@@ -2600,6 +2737,33 @@
         "cross": "Los extremos de cada segmento quedan a lados opuestos del otro: se cruzan.",
         "touch": "{{point}} está sobre el otro segmento: se tocan.",
         "apart": "Ni se cruzan ni se tocan: los segmentos están separados."
+      },
+      "join-algorithms": {
+        "ready": "Unir L ({{left}} filas) con R ({{right}} filas) por key. Primero se construye un índice hash sobre R.key y luego se consulta con cada fila de L.",
+        "build": "Construcción: la fila #{{row}} de R entra en el índice con la clave {{key}}.",
+        "probe": "Consulta: la fila #{{row}} de L busca la clave {{key}} en el índice: {{matches}} fila(s) de R coinciden.",
+        "match": "Coincidencia en la clave {{key}}: sale ({{key}}, {{a}}, {{b}}).",
+        "done": "{{rows}} fila(s) unidas: cada fila de R se insertó una vez y cada fila de L consultó una vez. Una unión con bucles anidados habría comparado los {{pairs}} pares."
+      },
+      "group-by": {
+        "ready": "Agrupar {{n}} filas por g, llevando COUNT(*) y SUM(v) de cada grupo en una tabla hash.",
+        "new_group": "El grupo {{g}} es nuevo: cuenta 1, suma {{v}}.",
+        "add": "Una fila del grupo {{g}} suma {{v}}: cuenta {{num}}, suma {{sum}}.",
+        "emit": "Sale el grupo {{g}}: {{num}} fila(s), suma {{sum}} (los grupos salen ordenados por g).",
+        "done": "{{n}} filas se convirtieron en {{groups}} fila(s) de grupo, en una sola pasada por la tabla."
+      },
+      "window-functions": {
+        "ready": "SUM(v) OVER (PARTITION BY p ORDER BY id): todas las filas se quedan, cada una con el total de su partición hasta ella.",
+        "start": "Primera fila de la partición {{p}}: su total acumulado empieza en {{v}}.",
+        "add": "La partición {{p}} sigue: {{before}} + {{v}} = {{total}}.",
+        "done": "Se conservan las {{n}} filas, cada una con su total acumulado, en {{partitions}} partición(es)."
+      },
+      "recursive-cte": {
+        "ready": "Hallar la profundidad de cada empleado bajo la cima, como hace WITH RECURSIVE: un ancla y luego rondas.",
+        "anchor": "Ancla: el empleado {{id}} no tiene jefe, así que profundidad 0.",
+        "round": "Ronda {{round}}: unir las {{rows}} fila(s) halladas en la ronda anterior con los empleados que dependen de ellas.",
+        "join": "El empleado {{id}} depende de {{boss}}: profundidad {{depth}}.",
+        "done": "Los {{n}} empleados quedan colocados en {{rounds}} ronda(s); la última no halló nada nuevo."
       }
     },
     "compare": {
@@ -2610,6 +2774,89 @@
       "heading": "Lado a lado con la misma entrada",
       "exit": "Salir de la comparación",
       "finished": "Terminado"
+    },
+    "patternLinks": {
+      "label": "Temas de Aprender de este patrón",
+      "prefix": "Aprender:",
+      "more_one": "y {{count}} más",
+      "more_other": "y {{count}} más"
     }
+  },
+  "welcome": {
+    "skip": "Omitir la bienvenida",
+    "levelTitle": "¿Cuánto has practicado?",
+    "levelIntro": "Así KataBox sabe por dónde empezar. Puedes cambiar de rumbo cuando quieras.",
+    "newTitle": "Empiezo de cero",
+    "newText": "Empieza por los fundamentos: leer la entrada, bucles y estructuras de datos sencillas.",
+    "practisedTitle": "Ya he practicado",
+    "practisedText": "Haz tres problemas cortos (dos fáciles y uno medio). Tu resultado fija el patrón y la dificultad de partida.",
+    "placement": {
+      "label": "Prueba de nivel",
+      "progress": "Prueba de nivel: problema {{k}} de {{total}}",
+      "hint": "Resuélvelo si puedes o pasa al siguiente.",
+      "next": "Siguiente problema",
+      "finish": "Terminar la prueba"
+    },
+    "tour": {
+      "count": "{{k}} de {{total}}",
+      "skip": "Saltar el recorrido",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "done": "Hecho",
+      "run": {
+        "title": "Ejecutar",
+        "text": "Ejecuta tu código con las pruebas públicas y las tuyas. No se guarda nada. Ctrl+' desde el editor."
+      },
+      "submit": {
+        "title": "Enviar",
+        "text": "Evalúa tu código con todas las pruebas, también las ocultas, y guarda el resultado. Ctrl+Enter desde el editor."
+      },
+      "hints": {
+        "title": "Pistas",
+        "text": "¿Atascado? Las pistas llegan en tres pasos, de un empujoncito a la idea completa."
+      },
+      "results": {
+        "title": "Resultados y depurador",
+        "text": "Aquí aparecen los resultados. En una prueba que falla, Depurar este caso recorre tu código línea a línea."
+      },
+      "learn": {
+        "title": "Aprender",
+        "text": "Lecciones animadas de cada algoritmo y estructura de datos, enlazadas con los problemas que los usan."
+      }
+    },
+    "again": {
+      "label": "Bienvenida",
+      "button": "Mostrar de nuevo la bienvenida"
+    }
+  },
+  "sqlProblem": {
+    "schemaIntro": "Las tablas que lee tu consulta. Las filas de ejemplo vienen de la prueba pública 1.",
+    "columnsOf": "Columnas de {{table}}",
+    "column": "Columna",
+    "type": "Tipo",
+    "keys": "Claves",
+    "primaryKey": "Clave primaria",
+    "notNull": "No nulo",
+    "references": "Referencia a {{table}}.{{column}}",
+    "sample": "Filas de ejemplo: {{shown}} de {{count}}",
+    "tableCaption_one": "{{table}} · {{count}} fila",
+    "tableCaption_other": "{{table}} · {{count}} filas",
+    "null": "NULL",
+    "noRows": "Sin filas",
+    "moreRows_one": "… {{count}} fila más",
+    "moreRows_other": "… {{count}} filas más",
+    "firstDiff": "primera diferencia",
+    "expected": "Filas esperadas",
+    "actual": "Tus filas",
+    "result": "Filas",
+    "rowsCount_one": "{{count}} fila",
+    "rowsCount_other": "{{count}} filas",
+    "ordered": "El orden de las filas importa",
+    "unordered": "El orden de las filas no importa",
+    "columnsDiffer": "Las columnas no coinciden: se esperaba {{expected}}; las tuyas son {{actual}}. Corrige primero las columnas (nombres y orden).",
+    "inputTables": "Las tablas de la prueba",
+    "customUnavailable": "Las pruebas personalizadas aún no están disponibles en los problemas SQL: editar tablas llegará más adelante.",
+    "needsPython": "Los problemas SQL se ejecutan con el SQLite de Python. Instala Python para ejecutar tu consulta.",
+    "completion": "autocompletado de tablas, columnas y palabras clave"
   }
 }

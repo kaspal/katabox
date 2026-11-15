@@ -296,6 +296,8 @@ impl Manifest {
 pub fn unit_id(language: Language) -> &'static str {
     match language {
         Language::JavaScript | Language::TypeScript => "typescript",
+        // SQL runs on the Python runtime's sqlite3 (ADR 0031).
+        Language::Sql => "python",
         other => other.id(),
     }
 }

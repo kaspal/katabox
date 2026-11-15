@@ -1,0 +1,1 @@
+{"input":{"tables":{"sales":[[1,"pens",300],[2,"paper",500],[3,"pens",200],[4,"ink",1000]]}},"output":{"columns":["category","total_cents","share_pct"],"rows":[["ink",1000,50.0],["paper",500,25.0],["pens",500,25.0]]}}

@@ -1,0 +1,1 @@
+{"input":{"tables":{"readers":[[9,"max",null,"Lima"],[3,"max","","Lima"],[5,"amy",null,"Lima"]]}},"output":{"columns":["id","name","city"],"rows":[[5,"amy","Lima"],[3,"max","Lima"],[9,"max","Lima"]]}}

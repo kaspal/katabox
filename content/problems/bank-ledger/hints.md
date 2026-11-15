@@ -1,0 +1,5 @@
+Copying every balance at each `BEGIN`, and looking at every account for each `COUNT`, costs as much as the number of accounts per command. What is the least you need to remember so that a `ROLLBACK` can put things back?
+---
+Keep one **undo log**: before each change made while a transaction is open, record the account and its old balance (or "did not exist"). `BEGIN` remembers how long the log is; `ROLLBACK` undoes entries, newest first, back to that mark. For `COUNT`, keep a second map from each balance to the number of accounts holding it, and update it on every change, including undone ones.
+---
+State: `balance` (name → amount), `holders` (amount → count), `log` of `(name, old or None)`, and a stack `marks`. One helper `put(name, value)` updates both maps (`value = None` deletes the account). `SET`/`ADD` log the old value if `marks` is not empty, then `put`. `BEGIN` pushes `len(log)`. `ROLLBACK` pops a mark and undoes log entries until the log is that long. `COMMIT` only pops the mark: the entries stay, so the enclosing transaction can still undo them (when no mark is left, the log can be cleared). With no mark, both print `NO TRANSACTION`.

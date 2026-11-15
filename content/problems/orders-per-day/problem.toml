@@ -1,0 +1,13 @@
+id = "orders-per-day"
+title = "Orders per Day"
+title_es = "Pedidos por día"
+difficulty = "easy"
+tags = ["group-by", "dates"]
+pattern = "sql-aggregation"
+rank = 1
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

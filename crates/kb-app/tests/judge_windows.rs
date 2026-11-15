@@ -26,6 +26,43 @@ fn submit_opts() -> kb_app::SubmitOptions {
     }
 }
 
+/// Test helper, off in normal runs: with `KB_TEST_BURN_THREADS=<n>` it keeps n threads
+/// busy until dropped, to reproduce timing behaviour on a loaded machine.
+struct CpuBurner(
+    Vec<std::thread::JoinHandle<()>>,
+    std::sync::Arc<std::sync::atomic::AtomicBool>,
+);
+
+impl CpuBurner {
+    fn from_env() -> Option<CpuBurner> {
+        let n: usize = std::env::var("KB_TEST_BURN_THREADS").ok()?.parse().ok()?;
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let threads = (0..n)
+            .map(|_| {
+                let stop = stop.clone();
+                std::thread::spawn(move || {
+                    let mut x = 1u64;
+                    while !stop.load(std::sync::atomic::Ordering::Relaxed) {
+                        x = std::hint::black_box(
+                            x.wrapping_mul(6364136223846793005).wrapping_add(1),
+                        );
+                    }
+                })
+            })
+            .collect();
+        Some(CpuBurner(threads, stop))
+    }
+}
+
+impl Drop for CpuBurner {
+    fn drop(&mut self) {
+        self.1.store(true, std::sync::atomic::Ordering::Relaxed);
+        for t in self.0.drain(..) {
+            let _ = t.join();
+        }
+    }
+}
+
 fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -682,6 +719,7 @@ async fn a_typescript_debug_session_on_two_sum() {
 #[tokio::test]
 async fn profiles_a_solution_and_estimates_the_class() {
     use kb_core::profile::ComplexityClass;
+    let _load = CpuBurner::from_env();
     let app = app("profile").await;
     // A fresh app measures the machine once first (ADR 0017); that is not the profile.
     app.recalibrate().await.unwrap();
@@ -697,7 +735,12 @@ async fn profiles_a_solution_and_estimates_the_class() {
             .profile_solution("balanced-streaks", Language::Python, &read("ref.py"))
             .await
             .unwrap();
-        assert!(started.elapsed() < std::time::Duration::from_secs(15));
+        // The profile's own time: waiting for other sandbox users (this file's tests
+        // run alongside) is not part of its budget.
+        let own = started
+            .elapsed()
+            .saturating_sub(std::time::Duration::from_millis(u64::from(view.queued_ms)));
+        assert!(own < std::time::Duration::from_secs(15), "{own:?}");
         if view.points.len() >= 4 || attempt == 3 {
             break view;
         }
@@ -745,4 +788,189 @@ async fn profiles_a_solution_and_estimates_the_class() {
         none.err().map(|e| e.code),
         Some(AppErrorCode::ProfileUnavailable)
     );
+}
+
+/// The failing-test shrinker (ADR 0030): a two-sum solution that fails whenever a number
+/// is negative shrinks from eight numbers to a valid input of at most three that still has
+/// a negative number, within the run budget.
+#[tokio::test]
+async fn shrinks_a_failing_input_to_a_small_one_that_still_fails() {
+    let app = app("shrink").await;
+    let wrong = "def two_sum(nums, target):\n    if any(x < 0 for x in nums):\n        return [0, 0]\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n    return []\n";
+    let input = json!({"nums": [10, 20, -3, 40, 50, 60, 1, 2], "target": 3});
+    let r = app
+        .shrink(
+            "two-sum",
+            Language::Python,
+            wrong,
+            input.as_object().unwrap().clone(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_ne!(r.stop, kb_app::ShrinkStop::NotFailing, "{r:?}");
+    let nums: Vec<i64> = r.input["nums"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_i64().unwrap())
+        .collect();
+    assert!(nums.len() <= 3 && nums.iter().any(|x| *x < 0), "{r:?}");
+    assert!(r.size < r.original_size, "{r:?}");
+    assert!(r.runs <= kb_app::shrink::MAX_RUNS, "{r:?}");
+    assert_eq!(r.verdict, Verdict::WrongAnswer, "{r:?}");
+    assert_eq!(r.actual, Some(json!([0, 0])));
+
+    // A correct solution does not fail: nothing to shrink.
+    let right =
+        std::fs::read_to_string(repo().join("content/problems/two-sum/solutions/ref.py")).unwrap();
+    let ok = app
+        .shrink(
+            "two-sum",
+            Language::Python,
+            &right,
+            input.as_object().unwrap().clone(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_eq!(ok.stop, kb_app::ShrinkStop::NotFailing);
+}
+
+/// SQL problems (ADR 0031) through the app: SQL only, the starter, the tables for the
+/// schema panel, Run and Submit with the reference and a wrong query, and the features an
+/// SQL problem does not have.
+#[tokio::test]
+async fn an_sql_problem_end_to_end() {
+    let app = app("sql").await;
+    let view = app
+        .get_problem("late-returns", kb_store::UiLang::En)
+        .await
+        .unwrap();
+    assert_eq!(view.mode, kb_core::ProblemMode::Sql);
+    let tables = view.sql_tables.as_ref().expect("the schema panel's tables");
+    assert_eq!(tables[0]["name"], "members");
+    assert_eq!(
+        tables[1]["columns"][1]["references"],
+        json!(["members", "id"])
+    );
+
+    // SQL only, and SQL only for SQL problems.
+    let stub = app.get_stub("late-returns", Language::Sql).await.unwrap();
+    assert!(
+        stub.contains("SELECT") && stub.contains("FROM members"),
+        "{stub}"
+    );
+    let e = app
+        .get_stub("late-returns", Language::Python)
+        .await
+        .unwrap_err();
+    assert_eq!(e.code, AppErrorCode::UnsupportedLanguage);
+    let e = app.get_stub("two-sum", Language::Sql).await.unwrap_err();
+    assert_eq!(e.code, AppErrorCode::UnsupportedLanguage);
+    let e = app
+        .run("late-returns", Language::Python, "x", vec![], |_| {})
+        .await
+        .unwrap_err();
+    assert_eq!(e.code, AppErrorCode::UnsupportedLanguage);
+
+    // The reference: Accepted on Run (public tests) and Submit (all of them).
+    let query =
+        std::fs::read_to_string(repo().join("content/problems/late-returns/solutions/ref.sql"))
+            .unwrap();
+    let (events, sink) = recorder();
+    let run = app
+        .run("late-returns", Language::Sql, &query, vec![], sink)
+        .await
+        .unwrap();
+    assert_eq!(run.verdict, Verdict::Accepted, "{:?}", run.first_failure);
+    assert!(
+        events
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|e| matches!(e, JudgeEvent::Finished { .. }))
+    );
+    let ok = app
+        .submit(
+            "late-returns",
+            Language::Sql,
+            &query,
+            &submit_opts(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_eq!(ok.report.verdict, Verdict::Accepted);
+    assert_eq!(
+        app.solved_languages("late-returns").await.unwrap(),
+        [Language::Sql]
+    );
+
+    // wrong.sql: Wrong Answer with both row sets for the diff.
+    let wrong =
+        std::fs::read_to_string(repo().join("content/problems/late-returns/solutions/wrong.sql"))
+            .unwrap();
+    let r = app
+        .submit(
+            "late-returns",
+            Language::Sql,
+            &wrong,
+            &submit_opts(),
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_eq!(r.report.verdict, Verdict::WrongAnswer);
+    let f = r.report.first_failure.as_ref().unwrap();
+    assert!(f.input.contains_key("tables"));
+    assert!(f.expected["rows"].is_array() && f.actual.as_ref().unwrap()["rows"].is_array());
+
+    // A write is refused before it runs (the harness's authorizer).
+    let r = app
+        .run(
+            "late-returns",
+            Language::Sql,
+            "DELETE FROM loans",
+            vec![],
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert_eq!(r.verdict, Verdict::CompilationError);
+
+    // Off for SQL, each with its code.
+    let custom = json!({"tables": {"members": [], "loans": []}})
+        .as_object()
+        .unwrap()
+        .clone();
+    let e = app
+        .run(
+            "late-returns",
+            Language::Sql,
+            &query,
+            vec![custom.clone()],
+            |_| {},
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(e.code, AppErrorCode::InvalidCustomInput);
+    let e = app
+        .debug_start(kb_app::debug::DebugStart {
+            problem: "late-returns".into(),
+            language: Language::Sql,
+            code: query.clone(),
+            input: custom,
+            breakpoints: vec![],
+            watches: vec![],
+            visualize: None,
+        })
+        .await
+        .unwrap_err();
+    assert_eq!(e.code, AppErrorCode::DebugUnsupported);
+    let e = app
+        .profile_solution("late-returns", Language::Sql, &query)
+        .await
+        .unwrap_err();
+    assert_eq!(e.code, AppErrorCode::ProfileUnavailable);
 }

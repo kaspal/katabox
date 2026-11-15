@@ -27,7 +27,7 @@ function snapshot(objects: SnapObject[], roots: Record<string, SnapValue>): Debu
   return { objects, roots: Object.entries(roots).map(([name, value]) => ({ name, value })), truncated: false, error: null };
 }
 
-const list = (items: SnapValue[], len = items.length): SnapObject => ({ kind: "list", type: "list", items, len });
+const list = (items: SnapValue[], len = items.length): SnapObject => ({ kind: "list", type: "list", items, len, typed: false });
 
 /** A linked list of `vals` (objects 0..n-1), with optional input numbers and a cycle. */
 function linked(vals: number[], opts: { inputs?: (number | null)[]; cycleTo?: number } = {}): SnapObject[] {
@@ -129,6 +129,43 @@ describe("Visualizer model (ADR 0027)", () => {
     expect(mg.edges).toEqual([{ a: 0, b: 1, count: 1, both: false }]);
   });
 
+  it("labels weighted edges from [neighbour, weight] pairs, once for an undirected edge", () => {
+    // adj[0] = [[1, 5], [2, 7]], adj[1] = [[0, 5]], adj[2] = [[0, 9]] (directions differ).
+    const s = snapshot(
+      [
+        list([ref(1), ref(2), ref(3)]),
+        list([ref(4), ref(5)]),
+        list([ref(6)]),
+        list([ref(7)]),
+        list([int(1), int(5)]),
+        list([int(2), int(7)]),
+        list([int(0), int(5)]),
+        list([int(0), int(9)]),
+      ],
+      { adj: ref(0) },
+    );
+    const g = model(s, "adj", [], { ...DEFAULT_SETTINGS, as: { adj: "graph" } }) as GraphModel;
+    expect(g.edges).toEqual([
+      { a: 0, b: 1, count: 1, both: true, weight: "5" },
+      { a: 0, b: 2, count: 1, both: true, weight: "7 / 9" },
+    ]);
+    // A dict of lists of pairs: {"a": [("b", 3)]}.
+    const str = (v: string): SnapValue => ({ t: "str", v });
+    const d = snapshot(
+      [{ kind: "map", type: "dict", entries: [[str("a"), ref(1)]], len: 1 }, list([ref(2)]), list([str("b"), int(3)])],
+      { g: ref(0) },
+    );
+    const dg = model(d, "g", [], { ...DEFAULT_SETTINGS, as: { g: "graph" } }) as GraphModel;
+    expect(dg.nodes.length).toBe(2);
+    expect(dg.edges).toEqual([{ a: 0, b: 1, count: 1, both: false, weight: "3" }]);
+  });
+
+  it("draws a typed number array (array.array, Int32Array) as an array", () => {
+    const typed: SnapObject = { kind: "list", type: "Int32Array", items: [int(3), int(1), int(2)], len: 3, typed: true };
+    const m = model(snapshot([typed], { nums: ref(0) }), "nums");
+    expect(m.kind).toBe("array");
+  });
+
   it(`keeps at most ${MAX_GRAPH_NODES} graph nodes and says how many there are`, () => {
     const n = 80;
     const rows = Array.from({ length: n }, (_, i) => list([int((i + 1) % n)]));
@@ -172,6 +209,9 @@ describe("Visualizer model (ADR 0027)", () => {
       as: { a: "graph" },
       pointers: { i: false },
     });
+    // The larger view stays open until the user closes it.
+    expect(parseSettings({ show: null, as: {}, pointers: {}, large: true })?.large).toBe(true);
+    expect(parseSettings({ show: null, as: {}, pointers: {}, large: "yes" })?.large).toBeUndefined();
     expect(chosenNames(DEFAULT_SETTINGS, ["nums", "target"])).toEqual(["nums", "target"]);
     expect(chosenNames({ ...DEFAULT_SETTINGS, show: ["seen"] }, ["nums"])).toEqual(["seen"]);
   });

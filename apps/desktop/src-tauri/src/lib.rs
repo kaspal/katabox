@@ -47,6 +47,61 @@ async fn app_info(state: State<'_, AppState>) -> Res<AppInfo> {
     state.app()?.app_info().await
 }
 
+/// The Learn topics of each practice pattern (Library and Progress link to them).
+#[tauri::command]
+#[specta::specta]
+async fn learn_by_pattern(
+    state: State<'_, AppState>,
+    ui_lang: UiLang,
+) -> Res<Vec<kb_app::PatternTopics>> {
+    state.app()?.learn_by_pattern(ui_lang).await
+}
+
+/// Home's "Review a topic": a viewed topic (`learn.viewed`, in order) with an unsolved
+/// linked problem.
+#[tauri::command]
+#[specta::specta]
+async fn topic_to_review(
+    state: State<'_, AppState>,
+    viewed: Vec<String>,
+    ui_lang: UiLang,
+) -> Res<Option<kb_app::TopicReview>> {
+    state.app()?.topic_to_review(&viewed, ui_lang).await
+}
+
+/// The welcome flow's three placement problems.
+#[tauri::command]
+#[specta::specta]
+async fn placement_problems(
+    state: State<'_, AppState>,
+    ui_lang: UiLang,
+) -> Res<Vec<ProblemSummary>> {
+    state.app()?.placement_problems(ui_lang).await
+}
+
+/// Finish the welcome flow: sets where practice starts (from the placement's solves, or
+/// fundamentals) and returns the problem to open first.
+#[tauri::command]
+#[specta::specta]
+async fn finish_onboarding(
+    state: State<'_, AppState>,
+    placement: Option<Vec<String>>,
+    ui_lang: UiLang,
+) -> Res<Option<ProblemSummary>> {
+    state.app()?.finish_onboarding(placement, ui_lang).await
+}
+
+/// What "Copy diagnostics" shows: versions and flags, never paths or user data.
+#[tauri::command]
+#[specta::specta]
+async fn diagnostics(state: State<'_, AppState>) -> Res<kb_app::Diagnostics> {
+    let mut d = state.app()?.diagnostics().await?;
+    if cfg!(feature = "updater") {
+        d.features.push("updater".into());
+    }
+    Ok(d)
+}
+
 #[tauri::command]
 #[specta::specta]
 async fn list_problems(
@@ -168,6 +223,35 @@ async fn run(
         .app()?
         .run(&problem, language, &code, custom, send)
         .await
+}
+
+/// Shrink a failing input to a smaller one that still fails (ADR 0030); progress goes to
+/// `on_event` after each round.
+#[tauri::command]
+#[specta::specta]
+async fn shrink(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+    code: String,
+    input: CustomInput,
+    on_event: Channel<kb_app::ShrinkEvent>,
+) -> Res<kb_app::ShrinkResult> {
+    let send = move |e| {
+        let _ = on_event.send(e);
+    };
+    state
+        .app()?
+        .shrink(&problem, language, &code, input, send)
+        .await
+}
+
+/// Stop the running shrink after its current sandbox run.
+#[tauri::command]
+#[specta::specta]
+async fn cancel_shrink(state: State<'_, AppState>) -> Res<()> {
+    state.app()?.cancel_shrink();
+    Ok(())
 }
 
 /// Every test; the submission is recorded. Progress goes to `on_event`.
@@ -728,6 +812,9 @@ async fn uninstall_language(state: State<'_, AppState>, language: Language) -> R
 fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::<tauri::Wry>::new().commands(tauri_specta::collect_commands![
         app_info,
+        shrink,
+        cancel_shrink,
+        diagnostics,
         third_party_notices,
         activity,
         solved_breakdown,
@@ -737,6 +824,10 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         get_problem,
         learn_catalog,
         learn_paths,
+        learn_by_pattern,
+        placement_problems,
+        finish_onboarding,
+        topic_to_review,
         learn_topic,
         search_learn,
         editorial,

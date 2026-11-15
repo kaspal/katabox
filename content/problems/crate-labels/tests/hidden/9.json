@@ -1,0 +1,1 @@
+{"stdin":"4\nk:11;k:4;liefv:9;liefv:50\nliefv:19;k:44;k:47;wbxmf:6\nk:26;otckr:22;liefv:13\nwbxmf:4\n","stdout":"k 132\nliefv 91\notckr 22\nwbxmf 10\n"}

@@ -1,0 +1,1 @@
+{"input":{"tables":{"sales":[[1,"North",5000],[2,"North",9000],[3,"North",7000],[4,"South",3000],[5,"South",3000],[6,"South",1000]]}},"output":{"columns":["region","runner_up_cents"],"rows":[["North",7000],["South",1000]]}}

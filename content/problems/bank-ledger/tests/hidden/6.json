@@ -1,0 +1,1 @@
+{"stdin":"13\nSET ba 60\nSET p 97\nSET v 94\nBEGIN\nADD p 12\nADD v 2\nGET v\nSET ba 72\nCOMMIT\nADD p 34\nADD v -39\nADD p -39\nBEGIN\n","stdout":"96\n"}

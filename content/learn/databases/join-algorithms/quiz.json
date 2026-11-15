@@ -1,0 +1,38 @@
+[
+  {
+    "prompt_en": "In the hash join shown here, which table goes into the hash index?",
+    "prompt_es": "En la unión por hash que se muestra aquí, ¿qué tabla entra en el índice hash?",
+    "options": [
+      { "en": "R, indexed by key; L then probes it", "es": "R, indexada por key; después L la sondea" },
+      { "en": "L, indexed by a", "es": "L, indexada por a" },
+      { "en": "Both tables, merged into one index", "es": "Las dos tablas, juntas en un solo índice" }
+    ],
+    "answer": 0,
+    "explain_en": "The build phase hashes every R row under its key. The probe phase reads L once and looks each key up, so each table is read only once.",
+    "explain_es": "La fase de construcción guarda cada fila de R bajo su key. La fase de sondeo lee L una vez y busca cada clave, así que cada tabla se lee una sola vez."
+  },
+  {
+    "prompt_en": "Default input: how many rows does the L row (3, 30) produce?",
+    "prompt_es": "Entrada por defecto: ¿cuántas filas produce la fila (3, 30) de L?",
+    "options": [
+      { "en": "One: the first R row with key 3", "es": "Una: la primera fila de R con clave 3" },
+      { "en": "Two: (3, 30, 7) and (3, 30, 8)", "es": "Dos: (3, 30, 7) y (3, 30, 8)" },
+      { "en": "None: key 3 appears twice in R", "es": "Ninguna: la clave 3 aparece dos veces en R" }
+    ],
+    "answer": 1,
+    "explain_en": "R has two rows with key 3, (3, 7) and (3, 8), and a join outputs one row per matching pair.",
+    "explain_es": "R tiene dos filas con clave 3, (3, 7) y (3, 8), y una unión produce una fila por cada pareja que coincide."
+  },
+  {
+    "prompt_en": "When does a hash join cost as much as a nested-loop join, O(|L| · |R|)?",
+    "prompt_es": "¿Cuándo cuesta una unión por hash tanto como una por bucles anidados, O(|L| · |R|)?",
+    "options": [
+      { "en": "When no keys match", "es": "Cuando ninguna clave coincide" },
+      { "en": "When R is larger than L", "es": "Cuando R es más grande que L" },
+      { "en": "When every row shares one key", "es": "Cuando todas las filas comparten una clave" }
+    ],
+    "answer": 2,
+    "explain_en": "Then every L row matches every R row, and the output itself has |L| · |R| rows to write. With no matches the hash join is only O(|L| + |R|).",
+    "explain_es": "Entonces cada fila de L coincide con cada fila de R, y la propia salida tiene |L| · |R| filas que escribir. Sin coincidencias, la unión por hash cuesta solo O(|L| + |R|)."
+  }
+]

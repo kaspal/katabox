@@ -1,0 +1,1 @@
+{"stdin":"8\nSET i 37\nSET i 38\nBEGIN\nADD i 49\nGET i\nCOUNT 30\nBEGIN\nCOUNT 111\n","stdout":"87\n0\n0\n"}

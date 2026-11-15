@@ -34,7 +34,7 @@ cargo deny check licenses        # license check (hakoniwa is an approved LGPL e
 kb-sandbox probe                 # Linux: what this kernel supports (cargo run -p kb-runner --bin kb-sandbox -- probe)
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo run -p kb-pack -- validate # validate every problem, with each problem's compressed test size (budget 512 KB; --run: machine factor, then sandbox checks: validator, reference speed per language, 500-seed stress vs brute.py, naive.py TLE, naive.rs needs ≥ 1.5× the Rust CPU cap (ratio printed); Windows)
+cargo run -p kb-pack -- validate # validate every problem, with each problem's compressed test size (budget 512 KB; --run: machine factor, then sandbox checks: validator, reference speed per language, 500-seed stress vs brute.py, naive.py TLE, naive.rs needs ≥ 1.5× the Rust CPU cap (ratio printed); `--run --problems a,b` or `--from FILE` checks only those problems; Windows)
 cargo run -p kb-pack -- generate content/problems/<id> --size max --seeds 1,2  # write hidden tests from gen.py (sandbox; committed)
 cargo run --release -p kb-pack -- profile content/problems/<id>  # complexity profile: input hashes + reference times in every language into profile/reference.json (sandbox; committed; ADR 0024)
 cargo run --release -p kb-pack -- profile --inputs  # regenerate the gitignored profile input caches from gen.py and verify their hashes (sandbox; the build packs profiles only from these)
@@ -43,6 +43,7 @@ cargo run -p kb-pack -- validate --learn --run  # Learn topics only: structure, 
 pnpm learn:cases                 # regenerate content/learn/*/*/cases.json from the tracers (Vitest fails when stale)
 cargo test -p kb-pack --test learn_samples_windows -- --nocapture  # Learn samples vs tracers in the sandbox (Windows; KB_LEARN_TOPICS=a,b to scope)
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE) and content/learn
+cargo run -p kb-pack -- new <id> [--mode function|program|sql]  # scaffold a problem package with TODO(kb-pack) markers (validate refuses them); new-topic SUBJECT ID for Learn; preview PROBLEM_DIR renders statements to target/preview (docs/contributing-content.md)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
 cargo test -p kb-judge --test debug_windows -- --nocapture  # debugger e2e in the sandbox (prints the replay timings; debug_js_windows for JS/TS)
 cargo test -p kb-judge --release --test visualize_windows -- --nocapture  # visualizer snapshots, Python + TS: shapes, identity, caps, no user code, cost per stop (ADR 0027)
@@ -86,6 +87,7 @@ pnpm release:build -- --bundles nsis,msi  # Windows installers into target/relea
 - Solutions use each language's standard library only.
 - Debugger (ADR 0022): replay only. Every debugger action is an ordinary sandboxed run of the language's debug harness (`languages/python/debug.py.j2`; `languages/typescript/debug.ts.j2` steps the solution through Node's in-process inspector from a worker thread, ADR 0023; `kb-judge/src/debug.rs`); never add sockets, a loopback exemption, a network capability or a kb-runner change for debugging. Harness frames stay hidden (only `solution.*` is traced). The debug run's output budget (`TRACE_BUDGET_BYTES` + `RECORD_ALLOWANCE` + prints) is its `max_output_bytes`; truncate the trace gracefully, never raise the cap. The editor is read-only during a session.
 - Learn (ADR 0029): tracers are pure TypeScript teaching content in `apps/desktop/src/learn/tracers/`, the one exception to "business logic in `crates/`"; they never touch I/O, emit i18n narration keys only, and their samples are checked against them in the sandbox by `kb-pack validate --run`. Steps are snapshots with stable item ids; a topic counts as viewed only when its last step is reached by playing or stepping. `learn.viewed` and `learn.last` travel with an export; the scenes use only `--viz-*` tokens.
+- SQL problems (ADR 0031): `mode = "sql"`, one SELECT judged by `languages/sql/harness.py` on the Python host (read-only, authorizer, SQLite limits; never loosen them). `Language::Sql` fits only SQL problems and SQL problems take only SQL; SQL has no language server (kb-bridge reports it unavailable) and no debugger, profiler or custom tests. Packages have `schema.sql`, `ref.sql`, `wrong.sql` (caught with Wrong Answer), `brute.py` (`solve(tables)` in plain Python), `validate.py`, `gen.py`, and a `sql-*` pattern. The daily problem and "next problem" never suggest SQL before the user has run or submitted one.
 - Record significant decisions as a new ADR in `docs/adr/`.
 
 ## Problem package format

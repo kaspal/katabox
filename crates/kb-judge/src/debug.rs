@@ -121,9 +121,10 @@ pub fn supported(lang: Language) -> bool {
     definition(lang).is_ok_and(|d| d.debug.is_some())
 }
 
-/// Whether `lang` can debug a program problem (ADR 0028): Python only for now.
+/// Whether `lang` can debug a program problem (ADR 0028): Python, and TypeScript, which
+/// replays the program as one compiled function (features-content M4).
 pub fn program_supported(lang: Language) -> bool {
-    lang == Language::Python
+    matches!(lang, Language::Python | Language::TypeScript)
 }
 
 /// Record every step of one test (`input` is checked against the signature by the caller).
@@ -205,8 +206,9 @@ fn run(
     if def.debug.is_none() {
         return Err(JudgeError::Unsupported(language));
     }
-    // A program problem (ADR 0028) is traced as a whole program, in Python only for now:
-    // TypeScript's module evaluation is asynchronous to the inspector (deferred).
+    // A program problem (ADR 0028) is traced as a whole program: Python runs it as
+    // __main__; TypeScript compiles it into one function (module evaluation itself is
+    // asynchronous to the inspector).
     let is_program = problem.mode == kb_core::ProblemMode::Program;
     if is_program && !program_supported(language) {
         return Err(JudgeError::Unsupported(language));
@@ -249,7 +251,7 @@ fn run(
     spec.stdin = serde_json::to_vec(&request).map_err(|e| JudgeError::Internal(e.to_string()))?;
     // An explicit budget: the encoded trace, the records around it and the prints.
     spec.max_output_bytes = TRACE_BUDGET_BYTES + RECORD_ALLOWANCE + 2 * print_cap;
-    let outcome = kb_runner::run(&spec)?;
+    let outcome = crate::sandbox::run(&spec)?;
 
     let facts = RunFacts {
         termination: outcome.termination,

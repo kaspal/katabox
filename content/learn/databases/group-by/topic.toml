@@ -1,0 +1,28 @@
+id = "group-by"
+subject = "databases"
+order = 2
+title = "GROUP BY"
+title_es = "GROUP BY"
+tags = ["sql", "hashing"]
+problems = ["crate-labels", "orders-per-day", "busy-stations", "fair-average", "quarter-pivot"]
+presets = ["two-groups", "one-group", "random"]
+default = [1, 10, 2, 5, 1, 30, 2, 7, 1, 2]
+
+[complexity]
+best = "O(n)"
+average = "O(n + g log g)"
+worst = "O(n + g log g)"
+space = "O(g) for g groups"
+stable = true
+in_place = false
+
+[input]
+min_len = 2
+max_len = 20
+min = 0
+max = 99
+
+# The call the sample check makes on the array `a` (ADR 0029).
+[sample]
+python = "a = group_by(a)"
+typescript = "a = groupBy(a)"

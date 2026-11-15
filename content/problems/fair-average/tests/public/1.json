@@ -1,0 +1,1 @@
+{"input":{"tables":{"reviews":[[1,"Hive",5],[2,"Hive",null],[3,"Hive",4],[4,"Dixit",3],[5,"Dixit",4],[6,"Dixit",4],[7,"Azul",null]]}},"output":{"columns":["game","rated","avg_stars"],"rows":[["Azul",0,null],["Dixit",3,3.67],["Hive",2,4.5]]}}

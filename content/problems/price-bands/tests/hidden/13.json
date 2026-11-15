@@ -1,0 +1,1 @@
+{"input":{"tables":{"products":[[2382,"vase",4999,0],[1522,"lamp pen",5000,1],[1889,"clock",1491,0],[1206,"clock ink",2385,0],[1845,"mug",9106,1]]}},"output":{"columns":["name","price_cents"],"rows":[]}}

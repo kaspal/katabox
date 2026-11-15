@@ -1,0 +1,13 @@
+id = "late-returns"
+title = "Late Returns"
+title_es = "Devoluciones tardías"
+difficulty = "easy"
+tags = ["join", "dates", "sorting"]
+pattern = "sql-basics"
+rank = 1
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256
