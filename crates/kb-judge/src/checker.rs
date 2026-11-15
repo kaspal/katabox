@@ -26,6 +26,11 @@ pub enum Checker {
     /// Program problems: lines must be equal after removing trailing spaces and tabs;
     /// trailing empty lines (the final newline) do not count.
     Lines,
+    /// SQL problems (ADR 0031): `{"columns", "rows"}` results. Column names must match
+    /// (case-insensitively, in order); rows in order (`ordered`) or as a multiset.
+    /// Numbers compare by value (2 equals 2.0), within `eps` when given; text exactly;
+    /// NULL only equals NULL.
+    Rows { ordered: bool, eps: Option<f64> },
 }
 
 impl FromStr for Checker {
@@ -52,9 +57,23 @@ impl FromStr for Checker {
                 if let Some(eps) = s.strip_prefix("float:") {
                     return tolerance(eps).map(Checker::Float);
                 }
+                for (prefix, ordered) in [("rows-ordered", true), ("rows-unordered", false)] {
+                    if let Some(rest) = s.strip_prefix(prefix) {
+                        if rest.is_empty() {
+                            return Ok(Checker::Rows { ordered, eps: None });
+                        }
+                        if let Some(eps) = rest.strip_prefix(':') {
+                            return tolerance(eps).map(|e| Checker::Rows {
+                                ordered,
+                                eps: Some(e),
+                            });
+                        }
+                    }
+                }
                 Err(format!(
                     "unknown checker {s:?} (expected exact | unordered | float:<eps> | custom | \
-                     tokens | tokens-float:<eps> | lines)"
+                     tokens | tokens-float:<eps> | lines | rows-ordered[:<eps>] | \
+                     rows-unordered[:<eps>])"
                 ))
             }
         }
@@ -76,6 +95,11 @@ impl Checker {
         )
     }
 
+    /// Whether this checker compares SQL results (SQL problems only).
+    pub fn is_rows(&self) -> bool {
+        matches!(self, Checker::Rows { .. })
+    }
+
     /// Compare `actual` against `expected`. `Custom` always returns an error message
     /// because it must be executed by the runner. Text checkers expect JSON strings (the
     /// test's expected stdout and the program's stdout).
@@ -92,8 +116,16 @@ impl Checker {
                 Some(why) => CheckOutcome::Wrong(Message::new(MessageCode::OutputMismatch, why)),
             };
         }
+        if let Checker::Rows { ordered, eps } = self {
+            return match check_rows(expected, actual, *ordered, *eps) {
+                None => CheckOutcome::Ok,
+                Some(m) => CheckOutcome::Wrong(m),
+            };
+        }
         let ok = match self {
-            Checker::Tokens | Checker::TokensFloat(_) | Checker::Lines => unreachable!(),
+            Checker::Tokens | Checker::TokensFloat(_) | Checker::Lines | Checker::Rows { .. } => {
+                unreachable!()
+            }
             Checker::Exact => expected == actual,
             Checker::Unordered => unordered_eq(expected, actual),
             Checker::Float(eps) => float_eq(expected, actual, *eps),
@@ -113,6 +145,139 @@ impl Checker {
             ))
         }
     }
+}
+
+// ---- Rows checkers (SQL problems, ADR 0031) ----------------------------------------------
+
+fn sql_value_eq(a: &Value, b: &Value, eps: Option<f64>) -> bool {
+    match (a, b) {
+        (Value::Null, Value::Null) => true,
+        (Value::String(x), Value::String(y)) => x == y,
+        (Value::Number(x), Value::Number(y)) => {
+            if let (Some(x), Some(y)) = (x.as_i64(), y.as_i64()) {
+                return x == y || eps.is_some_and(|e| float_eq(a, b, e));
+            }
+            match (x.as_f64(), y.as_f64()) {
+                (Some(fx), Some(fy)) => fx == fy || eps.is_some_and(|e| float_eq(a, b, e)),
+                _ => false,
+            }
+        }
+        _ => false,
+    }
+}
+
+/// A total order on SQL values for sorting rows: NULL, then numbers, then text.
+fn sql_value_cmp(a: &Value, b: &Value) -> std::cmp::Ordering {
+    let rank = |v: &Value| match v {
+        Value::Null => 0,
+        Value::Number(_) => 1,
+        _ => 2,
+    };
+    rank(a).cmp(&rank(b)).then_with(|| match (a, b) {
+        (Value::Number(x), Value::Number(y)) => x
+            .as_f64()
+            .unwrap_or(0.0)
+            .total_cmp(&y.as_f64().unwrap_or(0.0)),
+        (Value::String(x), Value::String(y)) => x.cmp(y),
+        _ => std::cmp::Ordering::Equal,
+    })
+}
+
+fn row_cmp(a: &[Value], b: &[Value]) -> std::cmp::Ordering {
+    a.iter()
+        .zip(b)
+        .map(|(x, y)| sql_value_cmp(x, y))
+        .find(|o| o.is_ne())
+        .unwrap_or(std::cmp::Ordering::Equal)
+}
+
+fn shown_row(row: &[Value]) -> String {
+    let text = serde_json::to_string(row).unwrap_or_default();
+    if text.chars().count() <= 120 {
+        text
+    } else {
+        format!("{}…", text.chars().take(120).collect::<String>())
+    }
+}
+
+/// `None` when the SQL results match, else why not: the columns first, then the count of
+/// rows, then the first row that differs.
+fn check_rows(
+    expected: &Value,
+    actual: &Value,
+    ordered: bool,
+    eps: Option<f64>,
+) -> Option<Message> {
+    let mismatch = |text: String| Some(Message::new(MessageCode::OutputMismatch, text));
+    let parts = |v: &Value| -> Option<(Vec<String>, Vec<Vec<Value>>)> {
+        let columns = v
+            .get("columns")?
+            .as_array()?
+            .iter()
+            .map(|c| c.as_str().map(str::to_string))
+            .collect::<Option<Vec<_>>>()?;
+        let rows = v
+            .get("rows")?
+            .as_array()?
+            .iter()
+            .map(|r| r.as_array().cloned())
+            .collect::<Option<Vec<_>>>()?;
+        Some((columns, rows))
+    };
+    let Some((ecols, mut erows)) = parts(expected) else {
+        return mismatch("the expected result is malformed".into());
+    };
+    let Some((acols, mut arows)) = parts(actual) else {
+        return mismatch("the result is malformed".into());
+    };
+    let same_columns = ecols.len() == acols.len()
+        && ecols
+            .iter()
+            .zip(&acols)
+            .all(|(e, a)| e.eq_ignore_ascii_case(a));
+    if !same_columns {
+        return Some(Message::new(
+            MessageCode::SqlColumns,
+            format!(
+                "columns differ: expected {}, got {}",
+                serde_json::to_string(&ecols).unwrap_or_default(),
+                serde_json::to_string(&acols).unwrap_or_default()
+            ),
+        ));
+    }
+    if erows.len() != arows.len() {
+        return mismatch(format!(
+            "expected {} row{}, got {}",
+            erows.len(),
+            if erows.len() == 1 { "" } else { "s" },
+            arows.len()
+        ));
+    }
+    if !ordered {
+        erows.sort_by(|a, b| row_cmp(a, b));
+        arows.sort_by(|a, b| row_cmp(a, b));
+    }
+    for (k, (e, a)) in erows.iter().zip(&arows).enumerate() {
+        let same = e.len() == a.len() && e.iter().zip(a).all(|(x, y)| sql_value_eq(x, y, eps));
+        if !same {
+            return mismatch(if ordered {
+                format!(
+                    "row {}: expected {}, got {}",
+                    k + 1,
+                    shown_row(e),
+                    shown_row(a)
+                )
+            } else {
+                format!(
+                    "rows differ (in sorted order, row {}): expected {}, got {}",
+                    k + 1,
+                    shown_row(e),
+                    shown_row(a)
+                )
+            });
+        }
+    }
+    None
 }
 
 // ---- Text checkers (program problems, ADR 0028) -----------------------------------------
@@ -279,6 +444,22 @@ mod tests {
         assert!("float:-1".parse::<Checker>().is_err());
         assert!("fuzzy".parse::<Checker>().is_err());
         assert_eq!("tokens".parse(), Ok(Checker::Tokens));
+        assert_eq!(
+            "rows-ordered".parse(),
+            Ok(Checker::Rows {
+                ordered: true,
+                eps: None
+            })
+        );
+        assert_eq!(
+            "rows-unordered:0.01".parse(),
+            Ok(Checker::Rows {
+                ordered: false,
+                eps: Some(0.01)
+            })
+        );
+        assert!("rows-sorted".parse::<Checker>().is_err());
+        assert!("rows-ordered:-1".parse::<Checker>().is_err());
         assert_eq!("lines".parse(), Ok(Checker::Lines));
         assert_eq!("tokens-float:1e-6".parse(), Ok(Checker::TokensFloat(1e-6)));
         assert!("tokens-float:0".parse::<Checker>().is_err());
@@ -435,5 +616,62 @@ mod tests {
             c.check(&json!(0.1), &json!(0.2)),
             CheckOutcome::Wrong(_)
         ));
+    }
+
+    #[test]
+    fn rows_checkers_compare_columns_then_rows() {
+        use serde_json::json;
+        let un: Checker = "rows-unordered".parse().unwrap();
+        let ord: Checker = "rows-ordered".parse().unwrap();
+        let exp =
+            json!({"columns": ["name", "total"], "rows": [["ana", 2], ["bo", 1.5], [null, 0]]});
+        // Order ignored; 2 equals 2.0; column names case-insensitive.
+        let shuffled =
+            json!({"columns": ["NAME", "Total"], "rows": [[null, 0], ["ana", 2.0], ["bo", 1.5]]});
+        assert_eq!(un.check(&exp, &shuffled), CheckOutcome::Ok);
+        assert!(matches!(ord.check(&exp, &shuffled), CheckOutcome::Wrong(_)));
+        // A wrong column name is reported first, with both lists.
+        let renamed = json!({"columns": ["name", "sum"], "rows": [["x", 9]]});
+        match un.check(&exp, &renamed) {
+            CheckOutcome::Wrong(m) => {
+                assert_eq!(m.code, MessageCode::SqlColumns);
+                assert!(
+                    m.text.contains("[\"name\",\"total\"]") && m.text.contains("sum"),
+                    "{}",
+                    m.text
+                );
+            }
+            other => panic!("{other:?}"),
+        }
+        // Row count, then the first differing row; NULL only equals NULL; text is exact.
+        let fewer = json!({"columns": ["name", "total"], "rows": [["ana", 2]]});
+        assert!(
+            matches!(un.check(&exp, &fewer), CheckOutcome::Wrong(m) if m.text.contains("expected 3 rows, got 1"))
+        );
+        let null_vs_zero =
+            json!({"columns": ["name", "total"], "rows": [["ana", 2], ["bo", 1.5], [null, null]]});
+        assert!(matches!(
+            un.check(&exp, &null_vs_zero),
+            CheckOutcome::Wrong(_)
+        ));
+        let case =
+            json!({"columns": ["name", "total"], "rows": [["Ana", 2], ["bo", 1.5], [null, 0]]});
+        assert!(matches!(un.check(&exp, &case), CheckOutcome::Wrong(_)));
+        let text_number =
+            json!({"columns": ["name", "total"], "rows": [["ana", "2"], ["bo", 1.5], [null, 0]]});
+        assert!(matches!(
+            un.check(&exp, &text_number),
+            CheckOutcome::Wrong(_)
+        ));
+        // A multiset: duplicates count.
+        let dup_e = json!({"columns": ["a"], "rows": [[1], [1], [2]]});
+        let dup_a = json!({"columns": ["a"], "rows": [[1], [2], [2]]});
+        assert!(matches!(un.check(&dup_e, &dup_a), CheckOutcome::Wrong(_)));
+        // A tolerance when asked for.
+        let eps: Checker = "rows-ordered:0.001".parse().unwrap();
+        let near = json!({"columns": ["a"], "rows": [[0.3333]]});
+        let third = json!({"columns": ["a"], "rows": [[0.33333333]]});
+        assert_eq!(eps.check(&near, &third), CheckOutcome::Ok);
+        assert!(matches!(ord.check(&near, &third), CheckOutcome::Wrong(_)));
     }
 }

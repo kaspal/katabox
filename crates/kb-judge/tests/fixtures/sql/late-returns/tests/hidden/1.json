@@ -1,0 +1,1 @@
+{"input": {"tables": {"members": [[1, "ana"]], "loans": []}}, "output": {"columns": ["name", "title", "days_late"], "rows": []}}

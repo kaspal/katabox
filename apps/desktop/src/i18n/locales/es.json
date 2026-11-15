@@ -462,6 +462,12 @@
       "output_limit": "Se alcanzó el límite de salida durante esta prueba.",
       "memory_limit": "Se alcanzó el límite de memoria durante esta prueba.",
       "process_exited": "El programa terminó o falló durante esta prueba.",
+      "sql_error": "SQLite no pudo ejecutar la consulta (un error de sintaxis, o una tabla o columna desconocida).",
+      "sql_not_select": "La respuesta debe ser una sola consulta SELECT (o WITH … SELECT).",
+      "sql_multiple_statements": "Envía una sola sentencia.",
+      "sql_not_authorized": "La consulta intentó algo distinto de leer las tablas, o usó una función no permitida.",
+      "sql_too_many_rows": "La consulta devolvió demasiadas filas.",
+      "sql_columns": "Las columnas del resultado no son las esperadas (nombres o cantidad).",
       "harness_silent": "El arnés de pruebas se detuvo sin informar.",
       "bad_harness_record": "El arnés de pruebas informó algo ilegible.",
       "incomplete_results": "Algunas pruebas no tienen resultado."

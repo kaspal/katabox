@@ -44,6 +44,8 @@ pub struct Problem {
     pub memory_mb: u32,
     /// Public tests first, then hidden, each in file-name order (numeric when possible).
     pub tests: Vec<TestCase>,
+    /// An SQL problem's schema (ADR 0031); `None` for the other modes.
+    pub sql: Option<crate::sql::SqlSchema>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -97,27 +99,42 @@ impl Problem {
             (ProblemMode::Function, None) => {
                 return Err(bad("problem.toml: missing [signature]".into()));
             }
-            (ProblemMode::Program, None) => program_signature(),
+            (ProblemMode::Program | ProblemMode::Sql, None) => program_signature(),
             (ProblemMode::Program, Some(_)) => {
                 return Err(bad(
                     "problem.toml: a program problem has no [signature] (its program reads stdin)"
                         .into(),
                 ));
             }
+            (ProblemMode::Sql, Some(_)) => {
+                return Err(bad(
+                    "problem.toml: an SQL problem has no [signature] (its query reads tables)"
+                        .into(),
+                ));
+            }
+        };
+        let sql = if mode == ProblemMode::Sql {
+            let text = std::fs::read_to_string(dir.join("schema.sql"))
+                .map_err(|e| bad(format!("schema.sql: {e}")))?;
+            Some(crate::sql::parse_schema(&text).map_err(|e| bad(format!("schema.sql: {e}")))?)
+        } else {
+            None
         };
         let mut tests = load_tests(
             &dir.join("tests/public"),
             TestKind::Public,
             mode,
             &signature,
+            sql.as_ref(),
         )?;
         tests.extend(load_tests(
             &dir.join("tests/hidden"),
             TestKind::Hidden,
             mode,
             &signature,
+            sql.as_ref(),
         )?);
-        Problem::new(
+        let mut problem = Problem::new(
             meta.id,
             dir.to_path_buf(),
             mode,
@@ -127,7 +144,9 @@ impl Problem {
             meta.judge.memory_mb,
             tests,
         )
-        .map_err(bad)
+        .map_err(bad)?;
+        problem.sql = sql;
+        Ok(problem)
     }
 
     /// Build a problem from stored parts (kb-store's `JudgeData`), with the same checks
@@ -147,6 +166,12 @@ impl Problem {
         let signature = match mode {
             ProblemMode::Function => Signature::from_json(signature).map_err(bad)?,
             ProblemMode::Program => program_signature(),
+            ProblemMode::Sql => {
+                return Err(bad(
+                    "SQL problems are judged from their package until the app supports them (ADR 0031)"
+                        .into(),
+                ));
+            }
         };
         for t in &tests {
             check_input(&t.input, &signature)
@@ -186,16 +211,27 @@ impl Problem {
         if checker == Checker::Custom {
             return Err("custom checkers are not supported by the judge yet".into());
         }
-        // Text checkers compare stdout text; value checkers compare returned JSON.
-        match (mode, checker.is_text()) {
-            (ProblemMode::Program, false) => {
+        // Text checkers compare stdout text; rows checkers SQL results; value checkers
+        // compare returned JSON.
+        match (mode, checker.is_text(), checker.is_rows()) {
+            (ProblemMode::Program, false, _) => {
                 return Err(
                     "a program problem needs a text checker (tokens | tokens-float:<eps> | lines)"
                         .into(),
                 );
             }
-            (ProblemMode::Function, true) => {
+            (ProblemMode::Function, true, _) => {
                 return Err("text checkers are for program problems (mode = \"program\")".into());
+            }
+            (ProblemMode::Sql, _, false) => {
+                return Err(
+                    "an SQL problem needs a rows checker (rows-ordered | rows-unordered, \
+                     optionally :<eps>)"
+                        .into(),
+                );
+            }
+            (ProblemMode::Function | ProblemMode::Program, _, true) => {
+                return Err("rows checkers are for SQL problems (mode = \"sql\")".into());
             }
             _ => {}
         }
@@ -214,6 +250,7 @@ impl Problem {
             time_limit_ms,
             memory_mb,
             tests,
+            sql: None,
         })
     }
 
@@ -227,6 +264,7 @@ fn load_tests(
     kind: TestKind,
     mode: ProblemMode,
     sig: &Signature,
+    sql: Option<&crate::sql::SqlSchema>,
 ) -> Result<Vec<TestCase>, JudgeError> {
     let entries = match std::fs::read_dir(dir) {
         Ok(e) => e,
@@ -247,6 +285,20 @@ fn load_tests(
         let bad = |msg: String| JudgeError::Problem(format!("{}: {msg}", path.display()));
         let src = std::fs::read_to_string(path).map_err(|e| bad(e.to_string()))?;
         let (input, expected) = match mode {
+            ProblemMode::Sql => {
+                let t: TestFile = serde_json::from_str(&src).map_err(|e| bad(e.to_string()))?;
+                let schema = sql.expect("an SQL problem's schema is loaded first");
+                crate::sql::check_tables(schema, &t.input).map_err(bad)?;
+                crate::sql::check_result_shape(&t.output)
+                    .map_err(|e| bad(format!("output: {e}")))?;
+                tests.push(TestCase {
+                    kind,
+                    index: u32::try_from(i + 1).unwrap_or(u32::MAX),
+                    input: t.input,
+                    expected: t.output,
+                });
+                continue;
+            }
             ProblemMode::Function => {
                 let t: TestFile = serde_json::from_str(&src).map_err(|e| bad(e.to_string()))?;
                 (t.input, t.output)

@@ -22,6 +22,7 @@ mod protocol;
 pub mod sandbox;
 pub mod shrink;
 pub mod signature;
+pub mod sql;
 pub mod tools;
 
 pub use checker::{CheckOutcome, Checker};

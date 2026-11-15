@@ -1574,6 +1574,32 @@ export type MessageCode =
  */
 "process_exited" | 
 /**
+ * SQLite rejected the query: a syntax error, an unknown table or column (its message
+ * in the text).
+ */
+"sql_error" | 
+/**
+ * The query is not a single SELECT (or WITH … SELECT).
+ */
+"sql_not_select" | 
+/**
+ * More than one statement was sent.
+ */
+"sql_multiple_statements" | 
+/**
+ * The query tried something only reading is allowed for (ATTACH, PRAGMA, writes, a
+ * denied function such as random()).
+ */
+"sql_not_authorized" | 
+/**
+ * The query returned more rows than the cap.
+ */
+"sql_too_many_rows" | 
+/**
+ * The result's columns (names or count) differ from the expected ones.
+ */
+"sql_columns" | 
+/**
  * The harness stopped without reporting anything.
  */
 "harness_silent" | 
@@ -1655,10 +1681,11 @@ query: string | null;
  */
 lang: UiLang | null }
 /**
- * How a problem is solved (ADR 0028): a function the harness calls, or a whole program
- * that reads stdin and writes stdout.
+ * How a problem is solved (ADR 0028): a function the harness calls, a whole program
+ * that reads stdin and writes stdout, or one SQL query over the problem's tables
+ * (ADR 0031).
  */
-export type ProblemMode = "function" | "program"
+export type ProblemMode = "function" | "program" | "sql"
 /**
  * One problem of a scorecard.
  */

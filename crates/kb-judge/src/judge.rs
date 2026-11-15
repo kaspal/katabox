@@ -174,6 +174,12 @@ fn judge_inner(
             problem.id
         )));
     }
+    if problem.mode == crate::ProblemMode::Sql {
+        return Err(JudgeError::Problem(format!(
+            "{}: an SQL problem is judged by kb_judge::sql::judge_sql (ADR 0031)",
+            problem.id
+        )));
+    }
     let def = definition(language)?;
     let toolchain = env.toolchain(language)?;
     let files = workspace_files(&def, &problem.signature, source)?;

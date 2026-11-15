@@ -84,8 +84,9 @@ impl FromStr for Language {
     }
 }
 
-/// How a problem is solved (ADR 0028): a function the harness calls, or a whole program
-/// that reads stdin and writes stdout.
+/// How a problem is solved (ADR 0028): a function the harness calls, a whole program
+/// that reads stdin and writes stdout, or one SQL query over the problem's tables
+/// (ADR 0031).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
@@ -93,6 +94,7 @@ pub enum ProblemMode {
     #[default]
     Function,
     Program,
+    Sql,
 }
 
 impl ProblemMode {
@@ -100,6 +102,7 @@ impl ProblemMode {
         match self {
             ProblemMode::Function => "function",
             ProblemMode::Program => "program",
+            ProblemMode::Sql => "sql",
         }
     }
 }
@@ -110,7 +113,10 @@ impl std::str::FromStr for ProblemMode {
         match s {
             "function" => Ok(ProblemMode::Function),
             "program" => Ok(ProblemMode::Program),
-            _ => Err(format!("unknown mode {s:?} (expected function | program)")),
+            "sql" => Ok(ProblemMode::Sql),
+            _ => Err(format!(
+                "unknown mode {s:?} (expected function | program | sql)"
+            )),
         }
     }
 }
@@ -252,6 +258,21 @@ pub enum MessageCode {
     MemoryLimit,
     /// The process exited or crashed during this test (exit code in the text).
     ProcessExited,
+    // SQL problems (ADR 0031), reported by the SQL harness.
+    /// SQLite rejected the query: a syntax error, an unknown table or column (its message
+    /// in the text).
+    SqlError,
+    /// The query is not a single SELECT (or WITH … SELECT).
+    SqlNotSelect,
+    /// More than one statement was sent.
+    SqlMultipleStatements,
+    /// The query tried something only reading is allowed for (ATTACH, PRAGMA, writes, a
+    /// denied function such as random()).
+    SqlNotAuthorized,
+    /// The query returned more rows than the cap.
+    SqlTooManyRows,
+    /// The result's columns (names or count) differ from the expected ones.
+    SqlColumns,
     // Internal errors (never the user's fault).
     /// The harness stopped without reporting anything.
     HarnessSilent,

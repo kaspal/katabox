@@ -1,0 +1,7 @@
+id = "late-returns"
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust); SQL runs on the Python host (ADR 0031)
+memory_mb = 256

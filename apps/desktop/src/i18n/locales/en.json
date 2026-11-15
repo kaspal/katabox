@@ -462,6 +462,12 @@
       "output_limit": "The output limit was reached during this test.",
       "memory_limit": "The memory limit was reached during this test.",
       "process_exited": "The program exited or crashed during this test.",
+      "sql_error": "SQLite could not run the query (a syntax error, or an unknown table or column).",
+      "sql_not_select": "The answer must be one SELECT query (or WITH … SELECT).",
+      "sql_multiple_statements": "Send one statement only.",
+      "sql_not_authorized": "The query tried something other than reading the tables, or used a function that is not allowed.",
+      "sql_too_many_rows": "The query returned too many rows.",
+      "sql_columns": "The result's columns differ from the expected ones (names or number).",
       "harness_silent": "The test harness stopped without reporting.",
       "bad_harness_record": "The test harness reported something unreadable.",
       "incomplete_results": "Some tests have no result."
