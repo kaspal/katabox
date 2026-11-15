@@ -1,0 +1,1 @@
+{"input":{"tables":{"airports":[["SCL","Santiago"],["LIM","Lima"]],"bookings":[[94574,"bo",769]],"flights":[[3110,"KB955","LIM","SCL","2026-12-05 05:00"],[1720,"KB722","LIM","SCL","2026-11-03 20:15"],[769,"KB372","SCL","LIM","2026-11-19 09:15"]]}},"output":{"columns":["passenger","flight_no","from_city","to_city"],"rows":[["bo","KB372","Santiago","Lima"]]}}

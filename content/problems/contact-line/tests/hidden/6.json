@@ -1,0 +1,1 @@
+{"input":{"tables":{"clients":[[3974,"Ana","Rios",null,"ana@rios.test",null],[2144,"Felix","Vega","555-4467","felix@vega.test","phone"]]}},"output":{"columns":["id","contact_line"],"rows":[[3974,"Rios, Ana: ana@rios.test"],[2144,"Vega, Felix: 555-4467"]]}}

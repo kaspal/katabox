@@ -1,0 +1,1 @@
+{"input":{"tables":{"enrollments":[[97609,932,"ENG101"],[38622,702,"ENG101"]],"students":[[702,"cy"],[932,"fay"],[701,"bo"]]}},"output":{"columns":["student_a","student_b"],"rows":[["cy","fay"]]}}

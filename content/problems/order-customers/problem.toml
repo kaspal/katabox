@@ -1,0 +1,13 @@
+id = "order-customers"
+title = "Big Orders"
+title_es = "Pedidos grandes"
+difficulty = "easy"
+tags = ["join", "sorting"]
+pattern = "sql-joins"
+rank = 1
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

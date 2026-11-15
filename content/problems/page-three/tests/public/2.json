@@ -1,0 +1,1 @@
+{"input":{"tables":{"listings":[[8,"boots",4,0],[12,"kettle radio",5,0],[11,"bike",3,0],[47,"boots boots",5,0],[22,"lamp",2,0],[95,"chair chair",5,0],[86,"radio",4,0],[40,"tent coat",3,0],[33,"chair boots",4,0],[78,"radio",3,0],[28,"radio radio",3,0],[5,"radio lamp",3,0]]}},"output":{"columns":["id","title","rating"],"rows":[]}}

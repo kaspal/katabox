@@ -1,0 +1,1 @@
+{"input":{"tables":{"customers":[[220,"Dario","Evora"],[248,"Gala","Faro"],[296,"Felix","Braga"],[8,"Ana","Evora"],[106,"Clara","Porto"]],"orders":[]}},"output":{"columns":["order_id","name","city","total_cents"],"rows":[]}}

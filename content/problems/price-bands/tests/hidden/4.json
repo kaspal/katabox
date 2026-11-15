@@ -1,0 +1,1 @@
+{"input":{"tables":{"products":[[2485,"rug",4999,0],[846,"lamp mug",6002,1],[3245,"rug",1999,0],[3923,"clock mug",2001,1]]}},"output":{"columns":["name","price_cents"],"rows":[["clock mug",2001]]}}

@@ -1,0 +1,1 @@
+{"input":{"tables":{"products":[[4663,"ink",6319,0],[517,"lamp",6486,1],[2090,"lamp bowl",3848,1]]}},"output":{"columns":["name","price_cents"],"rows":[["lamp bowl",3848]]}}

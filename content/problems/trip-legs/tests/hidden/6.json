@@ -1,0 +1,1 @@
+{"input":{"tables":{"airports":[["LIM","Lima"],["BOG","Bogota"],["UIO","Quito"],["AQP","Arequipa"]],"bookings":[[64074,"fay",3057],[25967,"ed",3057]],"flights":[[3057,"KB379","UIO","LIM","2026-11-18 00:30"]]}},"output":{"columns":["passenger","flight_no","from_city","to_city"],"rows":[["ed","KB379","Quito","Lima"],["fay","KB379","Quito","Lima"]]}}

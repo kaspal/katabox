@@ -1,0 +1,1 @@
+{"input":{"tables":{"products":[[4319,"clock",1999,1],[2023,"cup",6552,0]]}},"output":{"columns":["name","price_cents"],"rows":[]}}

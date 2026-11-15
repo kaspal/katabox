@@ -1,0 +1,1 @@
+{"input":{"tables":{"airports":[["BOG","Bogota"],["SCL","Santiago"]],"bookings":[[4,"cy",5],[7,"cy",6]],"flights":[[5,"KB410","SCL","BOG","2026-08-01 09:00"],[6,"KB411","BOG","SCL","2026-07-20 10:00"]]}},"output":{"columns":["passenger","flight_no","from_city","to_city"],"rows":[["cy","KB411","Bogota","Santiago"],["cy","KB410","Santiago","Bogota"]]}}

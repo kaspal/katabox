@@ -1,0 +1,13 @@
+id = "page-three"
+title = "Page Three"
+title_es = "La tercera página"
+difficulty = "medium"
+tags = ["pagination", "sorting"]
+pattern = "sql-basics"
+rank = 5
+mode = "sql"
+
+[judge]
+checker = "rows-ordered"
+time_limit_ms = 100 # base (Rust), per test; SQL runs on the Python host (ADR 0031)
+memory_mb = 256

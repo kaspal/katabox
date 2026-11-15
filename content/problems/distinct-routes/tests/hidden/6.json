@@ -1,0 +1,1 @@
+{"input":{"tables":{"flights":[[604,"Bogota"," Cusco "],[8," Bogota","  Cusco "],[2386,"BOGOTA "," Cusco"],[9609,"Bogota "," bogota "],[7705,"Bogota"," Bogota"],[6114,"BOGOTA ","Bogota"],[5233,"  bogota","  CUSCO"],[359,"  BOGOTA","Cusco "],[4468,"  Cusco","  cusco"],[8010,"bogota","CUSCO"]]}},"output":{"columns":["city_a","city_b"],"rows":[["bogota","cusco"]]}}

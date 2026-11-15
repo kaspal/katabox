@@ -1,0 +1,1 @@
+{"input":{"tables":{"flights":[[7846,"Lima"," Santiago"],[2540,"LIMA "," Santiago"],[1477," Lima"," Bogota "],[1090," SANTIAGO"," Lima"]]}},"output":{"columns":["city_a","city_b"],"rows":[["bogota","lima"],["lima","santiago"]]}}
