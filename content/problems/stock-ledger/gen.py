@@ -2,10 +2,10 @@
 import random
 
 
-def day(rng, n, q, top, wide):
+def day(rng, n, q, top, wide, sets=0.25):
     ops, args = [], []
     for _ in range(q):
-        if rng.random() < 0.25:
+        if rng.random() < sets:
             ops.append("set")
             args.append([rng.randrange(n), rng.randint(0, top)])
         else:
@@ -26,8 +26,10 @@ def generate(seed, size):
         ops, args = day(rng, size, max(1, size // 2), 9, True)
         return {"stock": [rng.randint(0, 9) for _ in range(size)], "ops": ops, "args": args}
     if size == "max":
+        # 10⁵ shelves and 10⁵ operations, nearly all totals over almost every shelf:
+        # walking the shelves per total is about 10¹⁰ additions.
         n = 100_000
-        ops, args = day(rng, n, 90_000, 9, True)
+        ops, args = day(rng, n, 100_000, 9, True, 0.02)
         return {"stock": [rng.randint(0, 9) for _ in range(n)], "ops": ops, "args": args}
     n = rng.randint(1, 7)
     ops, args = day(rng, n, rng.randint(1, 8), 20, False)
