@@ -384,9 +384,6 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
         }),
         Ok(_) => {}
     }
-    if program && meta.profile {
-        errs.push("the complexity profiler is not available for program problems yet".into());
-    }
     if meta.judge.time_limit_ms == 0 || meta.judge.memory_mb == 0 {
         errs.push("judge limits must be positive".into());
     }
@@ -1096,7 +1093,8 @@ pub(crate) mod tests {
         );
         assert!(!e.iter().any(|m| m.starts_with("statement.md")), "{e:?}");
 
-        // A missing format heading; a signature; a value checker; a profile.
+        // A missing format heading; a signature; a value checker; a profile without its
+        // reference.
         fresh();
         let en = fs::read_to_string(dir.join("statement.md")).unwrap();
         fs::write(
@@ -1118,7 +1116,8 @@ pub(crate) mod tests {
         for want in [
             "missing the \"## Output format\" heading",
             "needs a text checker",
-            "profiler is not available",
+            // Program problems can be profiled (ADR 0024), and the profile is checked.
+            "reference.json",
         ] {
             assert!(e.iter().any(|m| m.contains(want)), "{want}: {e:?}");
         }

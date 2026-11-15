@@ -853,9 +853,9 @@ fn program_problems_report_errors_and_exit_codes() {
     let t = trace(&p, "x = 1\nraise ValueError('boom')\n", &inp);
     let o = t.outcome.as_ref().unwrap();
     assert_eq!((o.status, o.line), (OutcomeStatus::Error, Some(2)));
-    // TypeScript cannot debug program problems yet.
+    // PHP has no debugger (TypeScript replays programs too: debug_js_windows).
     assert!(matches!(
-        debug::trace(&p, Language::TypeScript, "console.log(1);\n", &inp, &env()),
-        Err(JudgeError::Unsupported(Language::TypeScript))
+        debug::trace(&p, Language::Php, "<?php echo 1;\n", &inp, &env()),
+        Err(JudgeError::Unsupported(Language::Php))
     ));
 }

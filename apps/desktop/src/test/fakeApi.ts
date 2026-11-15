@@ -188,6 +188,10 @@ export function linearProfile(): ProfileView {
     stopped: null,
     time_scale: 1,
     queued_ms: 0,
+    startup_us: 0,
+    unreliable: false,
+    fast: false,
+    reference_fast: false,
   };
 }
 

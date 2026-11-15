@@ -798,6 +798,7 @@
     },
     "pausedAt": "En pausa en la línea {{line}} (paso {{step}} de {{total}})",
     "returned": "Terminado: devolvió {{value}}",
+    "ended": "Terminado: el programa acabó",
     "raised": "Terminado: se lanzó una excepción en la línea {{line}}",
     "memory": "Terminado: sin memoria",
     "truncated": "Se dejó de grabar tras {{count}} pasos; aún puedes recorrerlos.",
@@ -878,7 +879,7 @@
       "changedCount_one": "{{count}} cambio",
       "changedCount_other": "{{count}} cambios"
     },
-    "programUnsupported": "Por ahora, los problemas de programa se pueden depurar en Python."
+    "programUnsupported": "Los problemas de programa se pueden depurar en Python y JavaScript/TypeScript."
   },
   "complexity": {
     "button": "Complejidad",
@@ -914,7 +915,13 @@
       "you": "Tuyos",
       "ref": "Referencia",
       "notRun": "no ejecutado"
-    }
+    },
+    "unreliable": "Complejidad estimada: no es fiable en esta ejecución",
+    "unreliableWhy": "El tiempo de un programa incluye arrancarlo (unos {{startup}} ms aquí, descontados de cada tamaño). Aquí los tamaños que se ejecutaron tardaron muy poco más que eso, o se ejecutaron muy pocos, así que una clase de crecimiento sería una suposición.",
+    "startup": "El arranque del programa (unos {{startup}} ms) se descuenta de cada tamaño.",
+    "fast": "Complejidad estimada: demasiado rápido para distinguirla aquí",
+    "fastWhy": "Se ejecutaron todos los tamaños hasta n = {{n}}, y el trabajo de tu programa nunca tardó más que arrancarlo (unos {{startup}} ms aquí, descontados de cada tamaño). Las soluciones lentas, como las O(n²), crecen claramente con estos tamaños; una clase más rápida no se distingue del ruido del arranque.",
+    "referenceFast": "Solución de referencia: también demasiado rápida para distinguirla aquí"
   },
   "learn": {
     "title": "Aprender",

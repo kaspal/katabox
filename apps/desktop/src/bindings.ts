@@ -1784,7 +1784,27 @@ time_scale: number;
 /**
  * Time the profile waited for other sandbox users, in ms (not counted in its budget).
  */
-queued_ms: number }
+queued_ms: number; 
+/**
+ * A program problem's process startup, taken off every point (microseconds).
+ */
+startup_us: number; 
+/**
+ * A program problem whose estimate would not be trustworthy (startup dominates, or
+ * too few sizes): shown without an estimate, saying why.
+ */
+unreliable: boolean; 
+/**
+ * An unreliable program profile where every size ran, yet the work stayed below the
+ * startup at all of them: the program is too fast to classify here (a slow class,
+ * such as O(n²), shows clear growth at these sizes).
+ */
+fast: boolean; 
+/**
+ * The same for the reference in this language (judged against this run's startup):
+ * its line is drawn, but no class is fitted to it.
+ */
+reference_fast: boolean }
 /**
  * A public test as shown in the UI.
  */

@@ -169,8 +169,8 @@ export function WorkspacePage() {
   // The debugger (ADR 0022): replay runs of one test; the editor is read-only meanwhile.
   const dbg = useDebugger(problemId, language, session.docKey);
   const debugLanguages = useDebugLanguages();
-  // Program problems can be debugged in Python only for now (ADR 0028).
-  const programNoDebug = program && language !== "python";
+  // Program problems can be debugged in Python and TypeScript (ADR 0028, 0023).
+  const programNoDebug = program && language !== "python" && language !== "typescript";
   const canDebug = language !== null && (debugLanguages.data ?? []).includes(language) && !programNoDebug;
   // The last test debugged here (F5 debugs it again). Kept per problem: the page is reused
   // when another problem opens, and another problem's input would not fit its signature.
@@ -642,7 +642,12 @@ export function WorkspacePage() {
                   }
                   debugPanel={
                     canDebug || dbg.view ? (
-                      <DebugPanel dbg={dbg} problem={problemId} params={signature?.params.map((p) => p.name) ?? NO_PARAMS} />
+                      <DebugPanel
+                        dbg={dbg}
+                        problem={problemId}
+                        params={signature?.params.map((p) => p.name) ?? NO_PARAMS}
+                        program={program}
+                      />
                     ) : null
                   }
                 />

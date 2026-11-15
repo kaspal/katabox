@@ -2,8 +2,20 @@
 import random
 
 
+def sized(rng, n):
+    """Complexity profile input (ADR 0024): n scans and n prefix questions, like "max"."""
+    pool = rng.sample(range(1, 100_000), max(1, min(99_999, n // 2)))
+    scans = [rng.choice(pool) for _ in range(n)]
+    ps = [rng.randint(1, n) for _ in range(n)]
+    lines = [str(n), " ".join(map(str, scans)), str(n)]
+    lines.extend(map(str, ps))
+    return "\n".join(lines) + "\n"
+
+
 def generate(seed, size):
     rng = random.Random(seed)
+    if isinstance(size, int):
+        return sized(rng, size)
     if size == "max":
         # 30 000 scans and 30 000 questions with p spread over 1..N (few repeats, so
         # caching answers per p does not help): recounting each prefix from scratch

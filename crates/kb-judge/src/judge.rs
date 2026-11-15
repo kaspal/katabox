@@ -52,6 +52,10 @@ pub struct JudgeEnv {
     /// (sleep, blocked reads). The app uses 3. kb-pack's measurement runs use more, so
     /// a busy machine can't end a CPU-bounded run early (`MessageCode::WallTimeLimit`).
     pub wall_factor: u32,
+    /// Program problems (ADR 0028) report each test's wall time instead of its CPU time.
+    /// For the complexity profiler only: Windows reports a process's CPU time in 15.6 ms
+    /// steps, too coarse for a fast program; the profiler subtracts the startup.
+    pub program_wall_time: bool,
     toolchains: Vec<(Language, PathBuf)>,
 }
 
@@ -65,6 +69,7 @@ impl JudgeEnv {
             time_scale: 1.0,
             full_program_output: false,
             wall_factor: 3,
+            program_wall_time: false,
             toolchains: Vec::new(),
         }
     }

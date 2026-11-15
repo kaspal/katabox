@@ -209,3 +209,42 @@ inputs are packed into content.db, but **not committed**: only their hashes are.
   - feature-flags' Python reference is dominated by a fixed 2¹⁶ precomputation.
 
   They still separate the naive solutions.
+
+## Program problems (2026-11, features-content M4)
+- **Inputs and references:** program problems with `naive.py` + `naive.rs` can be
+  profiled too.
+  - gen.py's int branch returns the stdin text for size n.
+  - `kb-pack profile` records references and hashes as for functions.
+- **Samples are wall times:** a program has no harness to time a call, and Windows
+  reports a process's CPU time in 15.6 ms steps, too coarse for a fast program. So each
+  sample is the run's **wall time** (`JudgeEnv::program_wall_time`, profiler only). Runs
+  never overlap (the sandbox lock).
+- **Startup is subtracted:** it is measured once per profile with the language's empty
+  program (the fastest of 3 runs) and taken off every sample (`ProfileRun.startup_us`).
+- **Unreliable:** the estimate is withheld, with an honest message, when the work at the
+  largest size is less than the startup (startup over 50% of that size's whole time), or
+  when fewer than 3 sizes ran. A fast reference is usually unreliable this way; a slow
+  solution's growth shows clearly.
+- **Fast, not just unreliable:** when every size ran and the work still stayed under the
+  startup, the UI says "too fast to tell apart here", with the largest n. A slow class,
+  such as O(n²), shows clear growth at these sizes. The reference's line follows the same
+  rule against this run's startup: it is drawn either way, but gets no class when it is
+  that fast.
+- **The fit sees whole times:** the class is fitted to each sample *with* the startup
+  added back (`program_fit_points`). The fit's constant term absorbs the startup, and
+  its relative weights then match the noise, which is the startup's jitter (a few ms at
+  any size).
+  - Fitted on the subtracted samples, a 1 ms point (± 3 ms) outweighed the rest. A
+    quadratic naive.rs (depot-routes) came out O(1).
+  - The chart and the unreliable rule keep the subtracted samples.
+- **Calibration** (`complexity_windows`, program set): six problems × Python and Rust ×
+  ref and naive. References count as hits when unreliable or right; naives must be
+  right.
+  - Fitted on subtracted samples: 23/24 and 21/24 in two runs.
+  - With whole times: 23/24 and 24/24. The one miss was tide-lows naive.rs (O(n log n);
+    its work at the largest size is only about 100 ms).
+- **Not profiled:**
+  - fertile-plot: its reference is R²·C, which has no single-n class;
+  - bus-sync: no size parameter;
+  - signal-decodes: its exponential naive is either too fast to measure or out of time
+    at every useful size.

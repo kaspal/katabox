@@ -28,8 +28,17 @@ def tree(rng, n, shape):
     return out
 
 
+def sized(rng, n):
+    """Complexity profile input (ADR 0024): one park of n junctions, a random tree."""
+    lines = ["1", str(n)]
+    lines.extend(f"{a} {b}" for a, b in tree(rng, n, "random"))
+    return "\n".join(lines) + "\n"
+
+
 def generate(seed, size):
     rng = random.Random(seed)
+    if isinstance(size, int):
+        return sized(rng, size)
     if size == "max":
         # One park with 20 000 junctions: a BFS from every junction costs 4·10⁸ steps.
         # Odd seeds: T = 1000, the big park plus 999 parks of 1-2 junctions (the big

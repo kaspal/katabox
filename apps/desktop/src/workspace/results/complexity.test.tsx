@@ -62,6 +62,41 @@ describe("ComplexityResult", () => {
     expect(screen.getByTestId("complexity-stopped")).toHaveTextContent("Stopped at n = 3,000: it ran out of time.");
   });
 
+  it("a program profile whose startup dominates says it is not reliable, with no class", () => {
+    render(<ComplexityResult view={{ ...linearProfile(), estimate: null, unreliable: true, startup_us: 45_000 }} />);
+    expect(screen.getByTestId("complexity-label")).toHaveTextContent("Estimated complexity: not reliable for this run");
+    expect(screen.getByTestId("complexity-unreliable")).toHaveTextContent("about 45 ms here");
+    expect(screen.queryByText(/Estimated: O\(/)).toBeNull();
+  });
+
+  it("a fast program (every size ran, work under the startup) says so, and so does its reference", () => {
+    const view = linearProfile();
+    render(
+      <ComplexityResult
+        view={{
+          ...view,
+          estimate: null,
+          reference_estimate: null,
+          unreliable: true,
+          fast: true,
+          reference_fast: true,
+          startup_us: 60_000,
+        }}
+      />,
+    );
+    const largest = view.points.at(-1)!.n.toLocaleString("en");
+    expect(screen.getByTestId("complexity-label")).toHaveTextContent("Estimated complexity: too fast to tell apart here");
+    expect(screen.getByTestId("complexity-unreliable")).toHaveTextContent(`Every size up to n = ${largest} ran`);
+    expect(screen.getByTestId("complexity-unreliable")).toHaveTextContent("about 60 ms here");
+    expect(screen.getByText("Reference solution: also too fast to tell apart here")).toBeInTheDocument();
+    expect(screen.queryByText(/Estimated: O\(|about O\(/)).toBeNull();
+  });
+
+  it("a reliable program profile says its startup was taken off", () => {
+    render(<ComplexityResult view={{ ...linearProfile(), startup_us: 18_000 }} />);
+    expect(screen.getByText("Program startup (about 18 ms) is taken off every size.")).toBeInTheDocument();
+  });
+
   it("reads in Spanish", async () => {
     await act(() => i18n.changeLanguage("es"));
     try {

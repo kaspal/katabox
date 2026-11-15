@@ -307,7 +307,7 @@ function DebugConsole({ dbg }: { dbg: Debugger }) {
   );
 }
 
-function Status({ dbg }: { dbg: Debugger }) {
+function Status({ dbg, program }: { dbg: Debugger; program: boolean }) {
   const { t } = useTranslation();
   const v = dbg.view;
   if (!v) return null;
@@ -318,7 +318,8 @@ function Status({ dbg }: { dbg: Debugger }) {
   } else if (s.state === "finished") {
     const o = s.outcome;
     if (s.truncated) text = t("debug.truncated", { count: v.steps });
-    else if (o?.status === "ok") text = t("debug.returned", { value: JSON.stringify(o.value) });
+    else if (o?.status === "ok")
+      text = program ? t("debug.ended") : t("debug.returned", { value: JSON.stringify(o.value) });
     else if (o?.status === "error") text = t("debug.raised", { line: o.line ?? "?" });
     else text = t("debug.memory");
   } else {
@@ -343,7 +344,18 @@ function Status({ dbg }: { dbg: Debugger }) {
   );
 }
 
-export function DebugPanel({ dbg, problem, params }: { dbg: Debugger; problem: string; params: string[] }) {
+export function DebugPanel({
+  dbg,
+  problem,
+  params,
+  program = false,
+}: {
+  dbg: Debugger;
+  problem: string;
+  params: string[];
+  /** A program problem (ADR 0028): it ends rather than returning a value. */
+  program?: boolean;
+}) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<"variables" | "visualize">("variables");
   const stop = dbg.view?.state.state === "paused" ? dbg.view.state.stop : null;
@@ -353,7 +365,7 @@ export function DebugPanel({ dbg, problem, params }: { dbg: Debugger; problem: s
   return (
     <div className="space-y-3" data-testid="debug-panel">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Status dbg={dbg} />
+        <Status dbg={dbg} program={program} />
         <DebugToolbar dbg={dbg} />
       </div>
       {dbg.error !== null && <ErrorNotice error={dbg.error} />}

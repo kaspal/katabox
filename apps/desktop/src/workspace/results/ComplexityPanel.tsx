@@ -199,10 +199,19 @@ function Legend() {
 /** The finished profile: label, chart, explanation and measurements. */
 export function ComplexityResult({ view }: { view: ProfileView }) {
   const { t, i18n } = useTranslation();
-  const label = view.estimate ? estimateLabel(t, view.estimate) : t("complexity.notEnough");
+  const label = view.estimate
+    ? estimateLabel(t, view.estimate)
+    : view.fast
+      ? t("complexity.fast")
+      : view.unreliable
+        ? t("complexity.unreliable")
+        : t("complexity.notEnough");
   const refLabel = view.reference_estimate
     ? t("complexity.reference", { class: notation(view.reference_estimate.class) })
-    : null;
+    : view.reference_fast
+      ? t("complexity.referenceFast")
+      : null;
+  const largest = view.points.at(-1)?.n ?? 0;
   const summary = [label, refLabel].filter(Boolean).join(". ");
   const measured = new Map(view.points.map((p) => [p.n, p.median_us]));
   const sizes = [...new Set([...view.reference.map((r) => r.n), ...view.points.map((p) => p.n)])].sort((a, b) => a - b);
@@ -220,6 +229,16 @@ export function ComplexityResult({ view }: { view: ProfileView }) {
           {confidenceText(t, view.estimate)}
           {view.estimate.noisy && <> {t("complexity.noisy")}</>}
         </p>
+      )}
+      {view.unreliable && (
+        <p className="text-sm text-muted-foreground" data-testid="complexity-unreliable">
+          {view.fast
+            ? t("complexity.fastWhy", { n: largest.toLocaleString(i18n.language), startup: Math.round(view.startup_us / 1000) })
+            : t("complexity.unreliableWhy", { startup: Math.round(view.startup_us / 1000) })}
+        </p>
+      )}
+      {view.startup_us > 0 && !view.unreliable && (
+        <p className="text-xs text-muted-foreground">{t("complexity.startup", { startup: Math.round(view.startup_us / 1000) })}</p>
       )}
       {view.stopped && (
         <p className="text-sm text-muted-foreground" data-testid="complexity-stopped">

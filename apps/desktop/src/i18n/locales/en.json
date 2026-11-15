@@ -798,6 +798,7 @@
     },
     "pausedAt": "Paused at line {{line}} (step {{step}} of {{total}})",
     "returned": "Finished: returned {{value}}",
+    "ended": "Finished: the program ended",
     "raised": "Finished: an exception was raised at line {{line}}",
     "memory": "Finished: out of memory",
     "truncated": "Stopped recording after {{count}} steps; you can still step through them.",
@@ -878,7 +879,7 @@
       "changedCount_one": "{{count}} change",
       "changedCount_other": "{{count}} changes"
     },
-    "programUnsupported": "Program problems can be debugged in Python for now."
+    "programUnsupported": "Program problems can be debugged in Python and JavaScript/TypeScript."
   },
   "complexity": {
     "button": "Complexity",
@@ -914,7 +915,13 @@
       "you": "Yours",
       "ref": "Reference",
       "notRun": "not run"
-    }
+    },
+    "unreliable": "Estimated complexity: not reliable for this run",
+    "unreliableWhy": "A program's time includes starting it (about {{startup}} ms here, taken off every size). Here the sizes that ran took too little time beyond that, or too few sizes ran, so a growth class would be a guess.",
+    "startup": "Program startup (about {{startup}} ms) is taken off every size.",
+    "fast": "Estimated complexity: too fast to tell apart here",
+    "fastWhy": "Every size up to n = {{n}} ran, and your program's work never took longer than starting it (about {{startup}} ms here, taken off every size). Slow solutions, such as O(n²) ones, show clear growth at these sizes; a faster class can't be told apart from start-up noise.",
+    "referenceFast": "Reference solution: also too fast to tell apart here"
   },
   "learn": {
     "title": "Learn",

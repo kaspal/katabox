@@ -340,6 +340,8 @@ pub(crate) fn judge_program(
         };
         let time_us = if verdict == Verdict::TimeLimitExceeded {
             u64::from(shown_limit_ms) * 1000
+        } else if env.program_wall_time {
+            u64::try_from(outcome.wall_time.as_micros()).unwrap_or(u64::MAX)
         } else {
             cpu_us
         };

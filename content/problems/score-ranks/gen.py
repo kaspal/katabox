@@ -2,8 +2,19 @@
 import random
 
 
+def sized(rng, n):
+    """Complexity profile input (ADR 0024): n scores and n rank questions, like "max"."""
+    pool = rng.sample(range(1_000_000), max(1, n // 2))
+    scores = [rng.choice(pool) for _ in range(n)]
+    asked = [rng.choice(scores) if rng.random() < 0.85 else rng.randrange(1_000_000) for _ in range(n)]
+    lines = [str(n), " ".join(map(str, scores)), str(n), " ".join(map(str, asked))]
+    return "\n".join(lines) + "\n"
+
+
 def generate(seed, size):
     rng = random.Random(seed)
+    if isinstance(size, int):
+        return sized(rng, size)
     if size == "max":
         # 20 000 scores and 20 000 questions, most of them scores someone got, so
         # scanning every score per question costs about 4·10⁸ steps. Scores stay below

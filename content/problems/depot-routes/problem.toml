@@ -6,6 +6,8 @@ tags = ["graph", "shortest-path", "heap"]
 pattern = "graphs"
 rank = 9
 mode = "program"
+profile = true
+profile_sizes = [500, 1000, 2000, 4000, 7000, 10000]
 
 [judge]
 checker = "tokens"

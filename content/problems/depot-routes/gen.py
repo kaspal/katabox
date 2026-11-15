@@ -19,8 +19,21 @@ def network(rng, linked, count, w_hi, chain):
     return [(b, a, w) if rng.random() < 0.5 else (a, b, w) for a, b, w in roads]
 
 
+def sized(rng, n):
+    """Complexity profile input (ADR 0024): n junctions, 2n streets (at most 2·10⁴), n calls."""
+    roads = network(rng, n, min(2 * n, 20_000), 10_000, chain=False)
+    queries = [rng.randint(1, n) for _ in range(n)]
+    lines = [f"{n} {len(roads)}"]
+    lines += [f"{a} {b} {w}" for a, b, w in roads]
+    lines.append(str(len(queries)))
+    lines += [str(t) for t in queries]
+    return "\n".join(lines) + "\n"
+
+
 def generate(seed, size):
     rng = random.Random(seed)
+    if isinstance(size, int):
+        return sized(rng, size)
     if size == "max":
         # 10 000 junctions, 13 000 streets, 10 000 calls (about 290 KB): one search per
         # question is ~10⁴ full searches over the network.
