@@ -5,6 +5,7 @@ mod build;
 pub mod checks;
 pub mod learn;
 pub mod profile;
+pub mod scaffold;
 mod validate;
 
 pub use build::{BuildOptions, build};

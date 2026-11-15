@@ -420,6 +420,12 @@ fn read_topic(dir: &Path, subject: &str, problems: &Path) -> Result<TopicDir, Ve
     if t.id != folder {
         errors.push(format!("id {:?} does not match the folder", t.id));
     }
+    for file in crate::scaffold::files_with_todo(dir) {
+        errors.push(format!(
+            "{file}: still has {} markers from `kb-pack new-topic`",
+            crate::scaffold::TODO_MARKER
+        ));
+    }
     if t.subject != subject {
         errors.push(format!(
             "subject {:?} does not match the folder {subject:?}",

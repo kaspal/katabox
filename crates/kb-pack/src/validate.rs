@@ -318,7 +318,7 @@ fn size_text(b: TestBytes) -> String {
 }
 
 /// Returns the parsed difficulty (when readable) and the list of errors.
-fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
+pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
     let mut errs = Vec::new();
     let folder = dir.file_name().and_then(|s| s.to_str()).unwrap_or_default();
 
@@ -331,6 +331,12 @@ fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
         errs.push(format!(
             "id {:?} must match folder name {:?}",
             meta.id, folder
+        ));
+    }
+    for file in crate::scaffold::files_with_todo(dir) {
+        errs.push(format!(
+            "{file}: still has {} markers from `kb-pack new`",
+            crate::scaffold::TODO_MARKER
         ));
     }
     if meta.title.trim().is_empty() {

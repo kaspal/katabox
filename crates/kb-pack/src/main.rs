@@ -32,6 +32,16 @@
 //! above (without `--run`), then compiles every problem into content.db (default
 //! `target/content.db`, pack `core`, this crate's version). Refuses to build if any
 //! problem fails validation.
+//!
+//! `kb-pack new ID [--mode function|program] [DIR]` — scaffolds `DIR/ID` (default
+//! `content/problems`) with every file a package needs, each marked `TODO(kb-pack)` where
+//! something must be written; validation refuses a file that still has the marker.
+//!
+//! `kb-pack new-topic SUBJECT ID [LEARN_DIR]` — the same for a Learn topic (default
+//! `content/learn`); the tracer in `apps/desktop/src/learn/tracers` comes next.
+//!
+//! `kb-pack preview PROBLEM_DIR [--out DIR]` — renders the statements (EN and ES), hints
+//! and editorial into `DIR/<id>.html` (default `target/preview`) to read them as a page.
 
 use kb_pack::{BuildOptions, build, run_references, validate_all, validate_learn_only};
 use std::path::PathBuf;
@@ -41,7 +51,10 @@ const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run [--problems ID,ID |
                      kb-pack generate PROBLEM_DIR [--size max|small] --seeds 1,2 [--from N] [--root ROOT]\n  \
                      kb-pack profile PROBLEM_DIR [--root ROOT]\n  \
                      kb-pack profile --inputs [DIR] [--root ROOT]
-                       kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]";
+                       kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]
+                       kb-pack new ID [--mode function|program] [DIR]
+                       kb-pack new-topic SUBJECT ID [LEARN_DIR]
+                       kb-pack preview PROBLEM_DIR [--out DIR]";
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
@@ -50,6 +63,9 @@ fn main() -> ExitCode {
         Some("build") => build_cmd(args),
         Some("generate") => generate_cmd(args),
         Some("profile") => profile_cmd(args),
+        Some("new") => new_cmd(args),
+        Some("new-topic") => new_topic_cmd(args),
+        Some("preview") => preview_cmd(args),
         _ => usage(""),
     }
 }
@@ -60,6 +76,91 @@ fn usage(problem: &str) -> ExitCode {
     }
     eprintln!("{USAGE}");
     ExitCode::from(2)
+}
+
+fn new_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
+    use kb_pack::scaffold::{NewMode, new_problem};
+    let mut id: Option<String> = None;
+    let mut dir = PathBuf::from("content/problems");
+    let mut mode = NewMode::Function;
+    while let Some(a) = args.next() {
+        match a.as_str() {
+            "--mode" => match args.next().as_deref() {
+                Some("function") => mode = NewMode::Function,
+                Some("program") => mode = NewMode::Program,
+                Some("sql") => {
+                    return usage(
+                        "--mode sql waits for SQL in the app (ADR 0031); use function or program",
+                    );
+                }
+                _ => return usage("--mode is function or program"),
+            },
+            s if s.starts_with("--") => return usage(&format!("unknown option {s}")),
+            _ if id.is_none() => id = Some(a),
+            _ => dir = a.into(),
+        }
+    }
+    let Some(id) = id else {
+        return usage("new needs an id");
+    };
+    match new_problem(&dir, &id, mode) {
+        Ok(files) => {
+            println!("wrote {} files in {}", files.len(), dir.join(&id).display());
+            println!(
+                "next: fill every TODO(kb-pack), then `kb-pack generate {0} --seeds 1,2,…`, `kb-pack validate --run --problems {id}` and `kb-pack preview {0}`",
+                dir.join(&id).display()
+            );
+            ExitCode::SUCCESS
+        }
+        Err(e) => usage(&format!("kb-pack new: {e}")),
+    }
+}
+
+fn new_topic_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
+    let (Some(subject), Some(id)) = (args.next(), args.next()) else {
+        return usage("new-topic needs a subject and an id");
+    };
+    let learn = args
+        .next()
+        .map_or_else(|| PathBuf::from("content/learn"), PathBuf::from);
+    match kb_pack::scaffold::new_topic(&learn, &subject, &id) {
+        Ok(files) => {
+            println!(
+                "wrote {} files in {}",
+                files.len(),
+                learn.join(&subject).join(&id).display()
+            );
+            println!(
+                "next: fill every TODO(kb-pack); add the tracer apps/desktop/src/learn/tracers/{id}.ts and its narration keys (en.json, es.json); `pnpm learn:cases`; `kb-pack validate --learn --run --topics {id}`"
+            );
+            ExitCode::SUCCESS
+        }
+        Err(e) => usage(&format!("kb-pack new-topic: {e}")),
+    }
+}
+
+fn preview_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
+    let mut problem: Option<PathBuf> = None;
+    let mut out = PathBuf::from("target/preview");
+    while let Some(a) = args.next() {
+        match a.as_str() {
+            "--out" => match args.next() {
+                Some(v) => out = v.into(),
+                None => return usage("--out needs a folder"),
+            },
+            _ => problem = Some(a.into()),
+        }
+    }
+    let Some(problem) = problem else {
+        return usage("preview needs a problem folder");
+    };
+    match kb_pack::scaffold::preview(&problem, &out) {
+        Ok(path) => {
+            println!("wrote {}", path.display());
+            ExitCode::SUCCESS
+        }
+        Err(e) => usage(&format!("kb-pack preview: {e}")),
+    }
 }
 
 fn validate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {

@@ -43,6 +43,7 @@ cargo run -p kb-pack -- validate --learn --run  # Learn topics only: structure, 
 pnpm learn:cases                 # regenerate content/learn/*/*/cases.json from the tracers (Vitest fails when stale)
 cargo test -p kb-pack --test learn_samples_windows -- --nocapture  # Learn samples vs tracers in the sandbox (Windows; KB_LEARN_TOPICS=a,b to scope)
 cargo run -p kb-pack -- build    # validate, then compile content/problems into target/content.db (--out FILE) and content/learn
+cargo run -p kb-pack -- new <id> [--mode function|program]  # scaffold a problem package with TODO(kb-pack) markers (validate refuses them); new-topic SUBJECT ID for Learn; preview PROBLEM_DIR renders statements to target/preview (docs/contributing-content.md)
 cargo run -p kb-judge -- run two-sum --lang <python|typescript|php|rust> <file>  # judge a file (Windows; --public, --json)
 cargo test -p kb-judge --test debug_windows -- --nocapture  # debugger e2e in the sandbox (prints the replay timings; debug_js_windows for JS/TS)
 cargo test -p kb-judge --release --test visualize_windows -- --nocapture  # visualizer snapshots, Python + TS: shapes, identity, caps, no user code, cost per stop (ADR 0027)
