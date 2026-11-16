@@ -14,8 +14,13 @@ fn main() {
         "cargo:rerun-if-changed={}",
         manifest.join("../src/learn/tracers").display()
     );
+    // The pack's id, version and date (shown on Settings → About).
+    println!(
+        "cargo:rerun-if-changed={}",
+        kb_pack::pack::pack_file_for(&problems).display()
+    );
     let version = std::env::var("CARGO_PKG_VERSION").expect("package version");
-    if let Err(e) = kb_pack::build_pack(&problems, &out, "core", &version) {
+    if let Err(e) = kb_pack::build_content(&problems, &out, &version) {
         panic!("building {}: {e}", out.display());
     }
     notices(&manifest);

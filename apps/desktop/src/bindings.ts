@@ -1051,6 +1051,10 @@ export type ComplexityClass =
 export type ComponentPhase = "queued" | "downloading" | "verifying" | "extracting" | "installing" | "installed"
 export type ContentMeta = { pack_id: string; pack_version: string; 
 /**
+ * The content's release date, `YYYY-MM-DD`; absent in packs built without one.
+ */
+pack_date: string | null; 
+/**
  * UTC, ISO 8601 (`2026-11-11T09:30:00Z`).
  */
 built_at: string }

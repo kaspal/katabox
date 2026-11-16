@@ -285,6 +285,14 @@ pub fn validate_all(dir: &Path) -> ExitCode {
         println!();
         failed += crate::learn::validate_learn(&learn, dir);
     }
+    match crate::pack::read_pack_info(dir) {
+        Ok(Some(p)) => println!("\nok    pack {} {} ({})", p.id, p.version, p.date),
+        Ok(None) => {}
+        Err(e) => {
+            failed += 1;
+            println!("\nFAIL  {e}");
+        }
+    }
     if failed == 0 {
         ExitCode::SUCCESS
     } else {

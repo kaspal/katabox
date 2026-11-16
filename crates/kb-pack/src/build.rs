@@ -14,6 +14,8 @@ pub struct BuildOptions {
     pub out: PathBuf,
     pub pack_id: String,
     pub pack_version: String,
+    /// `YYYY-MM-DD`, from `content/pack.toml`.
+    pub pack_date: Option<String>,
 }
 
 /// Validate, read every package and write content.db. Returns the problem count.
@@ -29,6 +31,7 @@ pub fn build(opts: &BuildOptions) -> Result<usize, String> {
     let meta = PackMeta {
         pack_id: opts.pack_id.clone(),
         pack_version: opts.pack_version.clone(),
+        pack_date: opts.pack_date.clone(),
     };
     // Learn topics (ADR 0029) from content/learn next to the problems, when present.
     let learn = crate::learn::read_learn(&crate::learn::learn_dir_for(&opts.dir), &opts.dir)
@@ -207,6 +210,7 @@ mod tests {
             out,
             pack_id: "core".into(),
             pack_version: "0.1.0".into(),
+            pack_date: Some("2026-11-15".into()),
         }
     }
 
