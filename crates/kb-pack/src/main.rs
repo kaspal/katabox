@@ -359,8 +359,9 @@ fn build_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
     let mut opts = BuildOptions {
         dir: "content/problems".into(),
         out: "target/content.db".into(),
-        pack_id: "core".into(),
-        pack_version: env!("CARGO_PKG_VERSION").into(),
+        pack_id: String::new(),
+        pack_version: String::new(),
+        pack_date: None,
     };
     while let Some(a) = args.next() {
         let mut value = |name: &str| args.next().ok_or_else(|| format!("{name} needs a value"));
@@ -378,6 +379,23 @@ fn build_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
             return usage(&e);
         }
     }
+    // The pack's identity: content/pack.toml next to the problems, unless overridden.
+    let info = match kb_pack::pack::read_pack_info(&opts.dir) {
+        Ok(info) => info,
+        Err(e) => {
+            eprintln!("kb-pack build: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    if opts.pack_id.is_empty() {
+        opts.pack_id = info.as_ref().map_or("core".into(), |i| i.id.clone());
+    }
+    if opts.pack_version.is_empty() {
+        opts.pack_version = info
+            .as_ref()
+            .map_or(env!("CARGO_PKG_VERSION").into(), |i| i.version.clone());
+    }
+    opts.pack_date = info.map(|i| i.date);
     match build(&opts) {
         Ok(n) => {
             println!("built {} ({n} problem(s))", opts.out.display());

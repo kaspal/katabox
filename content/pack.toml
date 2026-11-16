@@ -1,0 +1,6 @@
+# The content pack: problems/ and learn/ (CC BY-SA 4.0). Its id, version and date are
+# built into content.db and shown on Settings → About. Bump the version and the date
+# when the content changes in a release (docs/release-checklist.md).
+id = "core"
+version = "1.0.0"
+date = "2026-11-15"

@@ -1,0 +1,300 @@
+# KataBox user guide
+
+KataBox is a free, offline desktop app for coding practice. You solve problems in
+Python, JavaScript/TypeScript, PHP or Rust (and SQL for SQL problems); your code runs on
+your own computer, inside a sandbox, and is judged against public and hidden tests.
+Nothing is sent anywhere: the only downloads are the language runtimes you choose to
+install.
+
+What is inside:
+- **209 problems:** 150 function, 35 program (stdin/stdout) and 24 SQL; 68 easy,
+  90 medium and 51 hard, grouped into 27 patterns.
+- **Learn:** 118 animated topics in 14 subjects, plus 3 learning paths.
+
+Button names below are the English labels; the Spanish guide uses the Spanish ones.
+
+## Getting started
+
+### Install
+- KataBox runs on **Windows 10/11 (x64)**. Run the `KataBox_<version>_x64-setup.exe`
+  installer: it installs for your user only, with no administrator rights.
+- The installer is not code-signed yet, so Windows SmartScreen may warn on first
+  launch: choose **More info**, then **Run anyway**.
+
+### The welcome flow
+On the first start KataBox walks you through four short steps. **Skip the welcome**
+(top right) is there at every step.
+1. **Interface language:** English or Español, at the top of the welcome screen.
+2. **Choose languages to install:** pick one or more of Python, JavaScript /
+   TypeScript, PHP and Rust, then **Install selected** (or **Not now**). Each runtime
+   is downloaded once from its official site, checked against a pinned checksum and
+   kept inside KataBox's folder. The download and disk sizes are shown before you
+   install.
+3. **How much have you practised?**
+   - **New to this:** start at the fundamentals.
+   - **I've practised before:** a short **Placement** of three problems (two easy, one
+     medium). Solve each one if you can, or press **Next problem**; **Finish
+     placement** sets your starting pattern and difficulty.
+4. **The tour:** five coach marks in the workspace (Run, Submit, Hints, Results and
+   debugger, Learn). Use **Next** / **Back**, or → / ←; Esc or **Skip tour** ends it.
+
+You can run it again from **Settings → Practice → Show the welcome again**.
+
+### Finding your way
+The rail on the left opens **Home**, **Library**, **Learn**, **Interview**,
+**Progress** and **Settings**. The **Command palette** (Ctrl+K, or the button in the
+top bar) jumps to any page, problem or Learn topic, and switches theme and language.
+
+- **Home:** **Continue** (your last draft), **Solved**, the **Daily problem**, your
+  **Review** queue and a **Review a topic** card.
+- **Library:** search (press `/`), filter by difficulty, status, pattern, tag and
+  problem type (Function, Program, SQL), sort by any column. ↑ / ↓ move, Enter opens.
+  The **Lists** tab holds your own lists.
+- **Progress:** solved counts, a 12-month **Activity** heatmap, **Solved by
+  difficulty**, the **Patterns** map, **Solved by language**, the **Review queue** and
+  **Past mock interviews**.
+
+## Problems and the workspace
+
+### Three problem types
+- **Function** (the default): write the function in the starter code; the judge calls
+  it with each test's arguments and compares the returned value.
+- **Program** (badge **Program · stdin/stdout**): your file is the whole program. Read
+  all of standard input, write the answer to standard output. Output is compared
+  token by token (some problems compare lines or allow a float tolerance). Print debug
+  messages to **stderr**, since stdout is the answer. Times include each run's
+  start-up.
+- **SQL** (badge **SQL · one query**): write one `SELECT` (or `WITH … SELECT`) over the
+  problem's tables, shown in the **Tables** tab with columns, keys and sample rows.
+  Queries run read-only on SQLite through the bundled Python, so **Python must be
+  installed**. The problem says whether row order matters. SQL problems only take
+  SQL, and SQL has no custom tests, debugger, profiler or shrinker.
+
+### The layout
+- **Left, Problem:** tabs **Description**, **Hints**, **Editorial**, **Submissions**,
+  **Notes**, **History** (and **Tables** for SQL), with the time and memory limits.
+  **See it animated** links to Learn topics that use the problem.
+- **Top right, the editor:** pick the **Language** in the header. Drafts save
+  automatically (**Saving… / Saved**), per problem and per language. With TypeScript,
+  **Check the code as** switches between **JavaScript checking** (no type annotations
+  needed) and **TypeScript checking** (strict); Run and Submit work the same either
+  way.
+- **Bottom right, Tests and results:** **Testcases**, **Result** and **Debug**.
+- Toggle panes with **Show or hide the problem** / **Show or hide tests and results**,
+  or drag the dividers. **Focus mode** (Ctrl+Shift+F) hides everything but the editor
+  and results.
+- Code intelligence comes from language servers: basedpyright (Python),
+  typescript-language-server (JavaScript/TypeScript) and rust-analyzer (Rust).
+  PHP has basic completion of keywords and common functions; SQL completes the
+  problem's tables and columns. The status line under the editor shows the server
+  state, errors and warnings, the cursor position and a **Format** button.
+
+### Run vs Submit
+- **Run** (Ctrl+'): judges the **public** tests plus your **custom** tests. It does not
+  record a submission.
+- **Submit** (Ctrl+Enter): judges **every** test, hidden ones too, and records the
+  result in **Submissions**. Only Submit counts towards solving, reviews, the daily
+  problem and the streak.
+- Every Run and Submit also saves a snapshot in **History**: select two to compare
+  them, or one to compare it with the editor, and **Restore** an old version (the
+  replaced code is kept as a snapshot too).
+- **Solve in…** (on a solved problem) shows your accepted solution in another language,
+  read-only, next to the editor, so you can port it.
+
+### Tests
+- **Public** tests (and the statement's examples) show their input and expected
+  output. **Hidden** tests do not, except that the **first failure** of a Submit shows
+  its input.
+- **Add custom test:** enter your own input (JSON values per parameter, or one stdin
+  text for a program). The expected output comes from the reference solution. Inputs
+  are checked as you type; with Python installed they are also checked against the
+  problem's constraints. Custom tests are not saved when you leave the problem.
+- On a failing test: **Input**, **Expected** and **Your output**, the first difference
+  marked, plus anything printed and, for programs, **Error output (stderr)**.
+
+### Verdicts
+**Accepted**, **Wrong answer**, **Time limit exceeded**, **Memory limit exceeded**,
+**Output limit exceeded**, **Runtime error**, **Compilation error** and **Internal
+error** (a judge failure, not yours). Each comes with a short message explaining it.
+
+### Time limits per language
+A problem's time limit is set for Rust; other languages get more time. The workspace
+shows the limit for the language you picked, e.g. **Time limit (Python)**.
+- Rust ×1, TypeScript ×2, PHP ×5, Python ×10, plus a start-up allowance per language.
+- KataBox also measures your computer once (**Judge speed**, see Settings) and scales
+  every limit between ×0.5 and ×3; the workspace then says **adjusted ×N for this
+  computer**.
+
+## Hints, editorial, notes and reviews
+- **Hints:** three tiers, from a nudge to the full idea. Reveal them in order
+  (**Reveal hint 1**, then 2, then 3).
+- **Editorial:** locked until you solve the problem, or after 3 failed submissions.
+- **Notes:** one Markdown note per problem (**Edit** / **Preview**), saved
+  automatically.
+- **Spaced reviews:** your first Accepted on a problem schedules a review in 3 days.
+  - Start one from Home (**Review**) or Progress (**Review now**). In review mode every
+    language starts from the starter code, and your earlier code (History,
+    Submissions) is hidden until you pass.
+  - Passing moves the review to 7 days, then 21; passing the 21-day review means the
+    problem is mastered and leaves the queue. Failing restarts it at 3 days.
+  - **Snooze 1 day**, **Remove from review**, or add a problem back with **Review in 3
+    days** from the workspace.
+- **Daily problem:** a new pick every local day, leaning toward your weakest pattern
+  and never a solved problem while unsolved ones remain. Solving it with Submit on
+  that day extends your **Daily streak**.
+- **Next problem:** after an Accepted Submit, **Next** suggests the next unsolved
+  problem in the same pattern, then in the following patterns. SQL problems are left
+  out of the daily problem and "Next" until you have tried one.
+- **Lists:** **Add to list** from a Library row or the workspace header; manage lists
+  in **Library → Lists** (**New list**, **Rename**, **Delete**, drag rows or Alt+↑ /
+  Alt+↓ to reorder).
+- Turn the Home cards on or off in **Settings → Practice**.
+
+## Mock interviews
+**Interview → Start a mock interview:**
+- choose the **Duration** (30, 45 or 60 min), the **Difficulty** mix of two problems
+  (e.g. Easy · Medium) and the allowed **Languages**, then **Start**;
+- you get two unsolved problems you have never opened (never SQL);
+- a timer shows in the top bar and the workspace, even in focus mode, and keeps
+  running if you close the app;
+- hints, the editorial, earlier submissions, History and **Solve in…** are **Locked
+  during the mock interview**. Run, Submit, Notes and the complexity profiler still
+  work;
+- it ends when time is up or on **End interview**, with a **Scorecard** (solved,
+  first-try passes, time used, time and submits per problem). Past interviews are on
+  Progress.
+
+## Debugger and visualizer
+- **Languages:** Python and JavaScript/TypeScript, for function and program problems.
+  Not PHP, Rust or SQL yet.
+- **Start:** **Debug this case** on any test (or a failure), or F5 to debug the first
+  public test. Set breakpoints by clicking just right of a line number, or F9 on the
+  cursor's line.
+- **Replay, not live:** each step re-runs the test in the sandbox up to that point, so
+  you can also **Step back**. A program that behaves differently on each run (time,
+  randomness) cannot be replayed. Very long runs stop recording after a number of steps;
+  you can still step through those. The editor is read-only while debugging.
+- **Toolbar:** **Continue** (F5), **Step over** (F10), **Step into** (F11), **Step out**
+  (Shift+F11), **Step back** (Shift+F10), **Restart** (Ctrl+Shift+F5), **Stop
+  debugging** (Shift+F5).
+- **Panels:** **Variables** (Locals / Globals, expandable), **Watch**, **Call stack**
+  and **Debug console** (evaluate in the selected frame; it never changes the program).
+- **Visualize tab:** draws the variables you choose at each step: arrays with pointer
+  variables, grids, linked lists, trees, sets, maps and graphs, with changes since the
+  previous step marked. **Draw … as** switches between **Auto**, **Graph** and **Heap
+  (tree)**; **Open larger** shows a zoomable view. Large values are cut so each step
+  stays fast.
+
+## Complexity profiler
+On problems that support it, an Accepted Run or Submit shows a **Complexity** button
+in the Result tab.
+- It runs your solution on inputs of growing size (3 times each, about 15 seconds at
+  most) and fits common growth curves.
+- The result is always **Estimated: O(…)** (sometimes "O(a) or O(b)"), with a
+  confidence note, a log-log chart against the reference solution and a table of
+  times. Timings vary between runs and machines, so it is an estimate, not a proof.
+- For programs, start-up time is subtracted; if what remains is too small, it says
+  so instead of guessing.
+
+## Find a smaller failing input
+On a failing test you can see (public, custom, or the first failure) after Wrong
+answer, Runtime error, Time limit or Memory limit exceeded:
+- **Find a smaller failing input** shrinks the input step by step while your code
+  still fails on it (at most 60 sandbox runs or 30 s; **Stop** anytime).
+- The result offers **Debug this case** and **Add to my tests**.
+- Function problems only: a program's input has counts and structure lines that can't
+  be cut safely.
+
+## Learn
+**Learn** teaches algorithms and data structures by animation.
+- **Home:** search topics, **Continue** where you left off, **Learning paths** (Start
+  here, Interview essentials, Graph master) and the 14 **Subjects** with your progress.
+- **A topic** has a stage (the animation) and three tabs:
+  - **Theory**, with links to related topics;
+  - **Code**: a tested sample in Python or TypeScript; the highlighted line is the one
+    behind the current step, with its **Variables**;
+  - **Practice**: **Predict the next step** questions, then **Practice problems** that
+    open in the workspace.
+- **The player:** **Play** / **Pause**, **Step back**, **Step forward**, **Restart**,
+  a **Timeline** to scrub, and **Speed** (0.5×, 1×, 2×, 4×). Change the **Input** with a
+  preset or your own values (**Apply**).
+- **Compare with…** (on topics that take the same input, such as sorting and
+  searching): two algorithms side by side on one input.
+- A topic counts as **viewed** when you reach its last step by playing or stepping.
+- Links back to practice: **Learn:** links in the Library's pattern filter and the
+  Progress pattern map, **See it animated** in the workspace, and the **Review a topic**
+  card on Home.
+
+## Export and import
+**Settings → Data:**
+- **Export…** writes your progress to one file (`.kbx.json`, format
+  `katabox-export/v1`): problem statuses, submissions, History snapshots, notes,
+  drafts, unlocked hints, opened problems, reviews, daily problems, lists, mock
+  interviews, settings, and your Learn progress (viewed topics, Continue position).
+- Not exported: this computer's speed factor, its install id and sandbox folder.
+- **Import…** shows a preview (what the file holds, conflicts) before you **Import**.
+  It merges by problem and keeps the newer record; importing the same file twice
+  changes nothing. Invalid files are refused whole, and nothing in a file is executed.
+
+## Settings
+- **Appearance:** **Theme** (System, Light, Dark), **Language** (English, Español),
+  **Contrast** (Normal, High), **Motion** (Follow the system, Reduce).
+- **Editor:** **Keymap** (Default, VS Code, Vim, Emacs), **Font ligatures**, **Font
+  size** (12-20 px), **Tab width** (Language default, 2, 4 or 8 spaces), **Colour
+  theme** (KataBox, High ink, Paper, Dusk), with a live **Preview**.
+- **Practice:** **Daily problem on Home**, **Review reminders on Home**, **Review a
+  topic card**, **Show the welcome again**.
+- **Data:** **Export…** / **Import…** (above).
+- **Languages:** install or **Uninstall** runtimes. Uninstalling keeps your drafts,
+  notes and submissions.
+- **Judge speed:** the **Speed factor** for this computer, when and with what it was
+  measured, and **Recalibrate**.
+- **About:** versions, the **Data folder** and **Sandbox folder**, **Third-party
+  notices** and **Copy diagnostics…**.
+
+## Keyboard shortcuts
+A **Keyboard shortcuts** dialog lists them in the app: press F1, pick it from the
+command palette, or use the keyboard button in the top bar.
+
+| Where | Keys | Action |
+| --- | --- | --- |
+| Anywhere | Ctrl+K | Command palette |
+| Library | `/` | Search problems |
+| Library | ↑ / ↓, PageUp / PageDown, Home / End, Enter | Move through the list, open a problem |
+| Library → Lists | Alt+↑ / Alt+↓ | Move a list row |
+| Workspace | Ctrl+' | Run |
+| Workspace | Ctrl+Enter | Submit |
+| Workspace | Ctrl+Shift+F | Focus mode on/off |
+| Workspace | Esc (outside the editor) | Leave focus mode |
+| Editor | Shift+Alt+F | Format document (with a language server) |
+| Editor | F12 | Go to definition (with a language server) |
+| Editor | Ctrl+F, Ctrl+Z, Ctrl+Y | Search, undo, redo (Vim and Emacs keymaps add their own keys) |
+| Debugger | F9 | Toggle a breakpoint on the cursor's line |
+| Debugger | F5 | Start debugging / Continue |
+| Debugger | F10 / Shift+F10 | Step over / Step back |
+| Debugger | F11 / Shift+F11 | Step into / Step out |
+| Debugger | Ctrl+Shift+F5 / Shift+F5 | Restart / Stop debugging |
+| Learn player | Space | Play or pause |
+| Learn player | ← / → | Step back / forward |
+| Learn player | Home | Restart |
+| Progress heatmap | Arrow keys, Home / End | Move between days |
+| Tour | → or Enter, ←, Esc | Next, back, end |
+
+## Where your data lives
+- **Your progress** (user.db: drafts, submissions, notes, settings):
+  `%APPDATA%\dev.katabox.app`.
+- **Runtimes, sandbox and caches:** `%LOCALAPPDATA%\dev.katabox.app`.
+- **The app itself:** `%LOCALAPPDATA%\KataBox`.
+- **Settings → About** shows the exact data and sandbox folders.
+- **Uninstalling** (Windows Settings → Apps) removes the app but keeps your data,
+  unless you tick **Delete the application data** in the uninstaller. The uninstaller
+  also removes the sandbox's Windows profile and folder permissions.
+- **To remove data by hand** after uninstalling, delete the two folders above (paste
+  `%APPDATA%\dev.katabox.app` and `%LOCALAPPDATA%\dev.katabox.app` into File Explorer's
+  address bar). Export first if you want to keep your progress.
+
+## Getting help
+- **Settings → About → Copy diagnostics…** copies versions, settings flags and recent
+  error codes for a bug report. It shows exactly what will be copied: no code, file
+  paths or personal data.
+- Known problems and workarounds: [known issues](known-issues.md).

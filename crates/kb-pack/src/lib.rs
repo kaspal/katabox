@@ -4,6 +4,7 @@
 mod build;
 pub mod checks;
 pub mod learn;
+pub mod pack;
 pub mod profile;
 pub mod scaffold;
 mod validate;
@@ -29,5 +30,25 @@ pub fn build_pack(
         out: out.to_path_buf(),
         pack_id: pack_id.to_string(),
         pack_version: pack_version.to_string(),
+        pack_date: None,
+    })
+}
+
+/// [`build_pack`] with the pack's id, version and date from `content/pack.toml` next to
+/// `dir` (see [`pack`]); without that file, `core` and `fallback_version`, no date.
+pub fn build_content(
+    dir: &std::path::Path,
+    out: &std::path::Path,
+    fallback_version: &str,
+) -> Result<usize, String> {
+    let info = pack::read_pack_info(dir)?;
+    build(&BuildOptions {
+        dir: dir.to_path_buf(),
+        out: out.to_path_buf(),
+        pack_id: info.as_ref().map_or("core".into(), |i| i.id.clone()),
+        pack_version: info
+            .as_ref()
+            .map_or(fallback_version.into(), |i| i.version.clone()),
+        pack_date: info.map(|i| i.date),
     })
 }

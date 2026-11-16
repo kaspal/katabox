@@ -141,10 +141,10 @@ export const PROGRAM_SIGNATURE = {
 };
 
 export const APP_INFO: AppInfo = {
-  app_version: "0.1.0",
+  app_version: "1.0.0-beta.1",
   dev_data: true,
   data_dir: "C:\\data\\dev.katabox.app-dev",
-  content: { pack_id: "core", pack_version: "0.1.0", built_at: "2026-11-11T00:00:00Z" },
+  content: { pack_id: "core", pack_version: "1.0.0", pack_date: "2026-11-15", built_at: "2026-11-11T00:00:00Z" },
   user_schema_version: 2,
   sandbox_root: "C:\\repo\\target\\katabox",
   sandbox_root_source: "dev",
@@ -297,7 +297,11 @@ export function createFakeApi(
   } = {},
 ) {
   const installed = new Set<Language>(opts.installed ?? ["python", "typescript", "php"]);
-  const settings = new Map<string, JsonValue>(Object.entries(opts.settings ?? {}));
+  // This version was already started here, so "What's new" stays closed unless a test
+  // sets another `app.last_version` (or null).
+  const settings = new Map<string, JsonValue>(
+    Object.entries({ "app.last_version": APP_INFO.app_version, ...opts.settings }),
+  );
   const drafts = new Map<string, string>(Object.entries(opts.drafts ?? {}));
   const notes = new Map<string, string>();
   const hints = new Map<string, number[]>();
@@ -422,7 +426,7 @@ export function createFakeApi(
     appInfo: vi.fn(async () => appInfoFor(installed)),
     thirdPartyNotices: vi.fn(async () => opts.notices ?? null),
     diagnostics: vi.fn(async () => ({
-      app_version: "0.1.0",
+      app_version: "1.0.0-beta.1",
       os: "windows",
       arch: "x86_64",
       dev_data: false,

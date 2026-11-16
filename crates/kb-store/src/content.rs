@@ -55,6 +55,8 @@ impl FromStr for UiLang {
 pub struct PackMeta {
     pub pack_id: String,
     pub pack_version: String,
+    /// The content's release date, `YYYY-MM-DD` (`content/pack.toml`).
+    pub pack_date: Option<String>,
 }
 
 /// One problem package, already read and validated (kb-pack does that).
@@ -120,6 +122,8 @@ pub struct PackText {
 pub struct ContentMeta {
     pub pack_id: String,
     pub pack_version: String,
+    /// The content's release date, `YYYY-MM-DD`; absent in packs built without one.
+    pub pack_date: Option<String>,
     /// UTC, ISO 8601 (`2026-11-11T09:30:00Z`).
     pub built_at: String,
 }
@@ -296,6 +300,7 @@ impl ContentDb {
         Ok(ContentMeta {
             pack_id: get("pack_id")?,
             pack_version: get("pack_version")?,
+            pack_date: get("pack_date").ok(),
             built_at: get("built_at")?,
         })
     }
@@ -661,7 +666,10 @@ async fn write_pack(
         ("pack_version", meta.pack_version.as_str()),
         ("schema_version", &CONTENT_SCHEMA_VERSION.to_string()),
         ("built_at", &built_at),
-    ] {
+    ]
+    .into_iter()
+    .chain(meta.pack_date.as_deref().map(|d| ("pack_date", d)))
+    {
         sqlx::query("INSERT INTO content_meta (key, value) VALUES (?, ?)")
             .bind(k)
             .bind(v)
@@ -958,6 +966,7 @@ pub(crate) mod tests {
         let meta = PackMeta {
             pack_id: "test".into(),
             pack_version: "1.0.0".into(),
+            pack_date: Some("2026-11-15".into()),
         };
         let problems = [
             sample_problem("gap-b", Difficulty::Medium, 2, false),
@@ -976,6 +985,7 @@ pub(crate) mod tests {
         let meta = PackMeta {
             pack_id: "test".into(),
             pack_version: "1.0.0".into(),
+            pack_date: Some("2026-11-15".into()),
         };
         let mut sql = sample_problem("rows-a", Difficulty::Easy, 1, false);
         sql.mode = ProblemMode::Sql;
@@ -1045,6 +1055,7 @@ pub(crate) mod tests {
         let meta = db.meta().await.unwrap();
         assert_eq!(meta.pack_id, "test");
         assert_eq!(meta.pack_version, "1.0.0");
+        assert_eq!(meta.pack_date.as_deref(), Some("2026-11-15"));
         assert!(meta.built_at.ends_with('Z'), "{}", meta.built_at);
 
         let all = db.list_problems(&ProblemFilter::default()).await.unwrap();
@@ -1302,6 +1313,7 @@ pub(crate) mod tests {
         let meta = PackMeta {
             pack_id: "t".into(),
             pack_version: "1".into(),
+            pack_date: None,
         };
         let out = dir.join("bad.db");
         let dup = [

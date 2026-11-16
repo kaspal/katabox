@@ -140,3 +140,17 @@ The build plan's packaging table sets the targets:
 - ~~Branded installer artwork~~: done in content batch 3 (`pnpm installer-art`).
 - The updater UI (check from Settings, from Rust) once a public endpoint exists.
 - Linux postinst for the AppArmor profile (build plan); MSIX later.
+
+## Addendum: 1.0.0-beta.1 (2026-11-15)
+- **Version:** the app is 1.0.0-beta.1. WiX can't take a pre-release, so the MSI gets a
+  numeric version from a rule that keeps every later release higher
+  (`1.0.0-beta.N` → `0.99.N`). `pnpm versions:check` enforces it; the details are in
+  `docs/packaging.md`, "Versions".
+- **The identifier stays `dev.katabox.app`,** despite Tauri's macOS warning about
+  `.app`: changing it would move every user's data folders.
+- **Content pack:** `content/pack.toml` gives the pack its own version and date, shown on
+  Settings → About.
+- **The release workflow builds Windows only** until Linux ships. The Linux matrix entry
+  is kept as a comment.
+- **First start after an upgrade:** a "What's new" dialog. It is driven by the
+  machine-local setting `app.last_version`, which is never exported.

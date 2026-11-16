@@ -117,6 +117,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm licenses:check
+      # The app version matches in all three files, and the MSI version follows the
+      # rule in docs/packaging.md so every later release installs as an upgrade.
+      - run: pnpm versions:check
 
   ui:
     name: UI build

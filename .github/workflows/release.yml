@@ -1,7 +1,7 @@
 name: Release
 
 # Builds the installers and attaches them to a DRAFT GitHub release (ADR 0021).
-# Runs only for a version tag (`v0.1.0`) or by hand; never on normal pushes or PRs.
+# Runs only for a version tag (`v1.0.0-beta.1`) or by hand; never on normal pushes or PRs.
 # Follow docs/release-checklist.md before pushing a tag.
 on:
   push:
@@ -27,8 +27,10 @@ jobs:
         include:
           - platform: windows-latest # NSIS (per-user) and MSI
             bundles: nsis,msi
-          - platform: ubuntu-22.04 # glibc baseline for .deb, .rpm and AppImage
-            bundles: deb,rpm,appimage
+          # Linux is not released yet (Windows first, then Linux, then going public).
+          # To build it again, add back:
+          #   - platform: ubuntu-22.04 # glibc baseline for .deb, .rpm and AppImage
+          #     bundles: deb,rpm,appimage
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v5
@@ -47,6 +49,9 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      # The three version fields agree and the MSI version follows docs/packaging.md.
+      - run: pnpm versions:check
 
       # Third-party notices are bundled; a release build refuses to ship without them.
       - run: pnpm notices

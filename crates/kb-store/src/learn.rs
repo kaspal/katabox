@@ -575,6 +575,7 @@ pub(crate) mod tests {
         let meta = PackMeta {
             pack_id: "test".into(),
             pack_version: "1.0.0".into(),
+            pack_date: None,
         };
         let problems = [sample_problem("gap-a", Difficulty::Easy, 1, true)];
         build_with_learn(&path, &meta, &problems, learn).await?;

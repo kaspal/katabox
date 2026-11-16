@@ -25,7 +25,8 @@
     "theme": "Tema",
     "language": "Idioma",
     "topics": "Temas de Aprender",
-    "topic": "Aprender: {{title}}"
+    "topic": "Aprender: {{title}}",
+    "help": "Ayuda"
   },
   "theme": {
     "label": "Tema",
@@ -424,7 +425,16 @@
     "motions": {
       "system": "Seguir al sistema",
       "reduced": "Reducir"
-    }
+    },
+    "contentDate": "publicado el {{date}}",
+    "licenses": {
+      "label": "Licencias",
+      "code": "Código: MIT o Apache-2.0",
+      "content": "Problemas y contenido de Aprender: CC BY-SA 4.0"
+    },
+    "docs": "Documentación",
+    "changelog": "Registro de cambios",
+    "copyAddress": "Copiar dirección"
   },
   "languages": {
     "python": "Python",
@@ -2858,5 +2868,79 @@
     "customUnavailable": "Las pruebas personalizadas aún no están disponibles en los problemas SQL: editar tablas llegará más adelante.",
     "needsPython": "Los problemas SQL se ejecutan con el SQLite de Python. Instala Python para ejecutar tu consulta.",
     "completion": "autocompletado de tablas, columnas y palabras clave"
+  },
+  "shortcuts": {
+    "open": "Combinaciones de teclas",
+    "title": "Combinaciones de teclas",
+    "intro": "Las teclas que entiende KataBox, por zona. Las del editor siguen los atajos elegidos en Ajustes.",
+    "keymapNote": "Con los atajos de Vim o Emacs, el editor añade además sus propias teclas.",
+    "key": {
+      "Space": "Espacio",
+      "Home": "Inicio",
+      "End": "Fin",
+      "Enter": "Intro",
+      "PageUp": "Re Pág",
+      "PageDown": "Av Pág",
+      "Esc": "Esc"
+    },
+    "group": {
+      "general": "En cualquier lugar",
+      "library": "Biblioteca",
+      "workspace": "Espacio de trabajo",
+      "editor": "Editor",
+      "debugger": "Depurador",
+      "learn": "Reproductor de Aprender"
+    },
+    "general": {
+      "palette": "Paleta de comandos",
+      "shortcuts": "Esta lista de combinaciones"
+    },
+    "library": {
+      "search": "Buscar problemas",
+      "move": "Moverse por la lista",
+      "open": "Abrir el problema seleccionado",
+      "listOrder": "Subir o bajar un problema en una lista"
+    },
+    "workspace": {
+      "run": "Ejecutar (pruebas públicas y propias)",
+      "submit": "Enviar (todas las pruebas)",
+      "focus": "Activar o desactivar el modo concentración",
+      "leaveFocus": "Salir del modo concentración (fuera del editor)"
+    },
+    "editor": {
+      "find": "Buscar en el código",
+      "undoRedo": "Deshacer / rehacer",
+      "format": "Dar formato al código (con un servidor de lenguaje)",
+      "definition": "Ir a la definición (con un servidor de lenguaje)"
+    },
+    "debugger": {
+      "breakpoint": "Punto de interrupción en la línea del cursor",
+      "continue": "Empezar a depurar / continuar",
+      "stepOver": "Paso a paso por encima",
+      "stepBack": "Paso atrás",
+      "stepInto": "Paso a paso por dentro",
+      "stepOut": "Salir de la función",
+      "restart": "Reiniciar",
+      "stop": "Detener la depuración"
+    },
+    "learn": {
+      "playPause": "Reproducir o pausar",
+      "step": "Paso atrás / adelante",
+      "restart": "Volver a empezar"
+    }
+  },
+  "whatsNew": {
+    "title": "Novedades de KataBox {{version}}",
+    "intro": "KataBox se actualizó. Tu progreso, tus borradores y tus ajustes siguen aquí.",
+    "items": {
+      "practice": "209 problemas originales: de función, de programa (stdin/stdout) y de SQL, de fáciles a difíciles.",
+      "sql": "Problemas de SQL sobre SQLite, con un panel de tablas y una comparación fila a fila de tu resultado.",
+      "learn": "Aprender: 118 temas animados en 14 materias, con cuestionarios y tres rutas de aprendizaje.",
+      "debugger": "Depura y visualiza Python y TypeScript, ahora también en los problemas de programa.",
+      "shrinker": "«Buscar una entrada más pequeña que falle» convierte una prueba fallida en la más pequeña que sigue fallando.",
+      "about": "Ajustes → Acerca de muestra las versiones, las licencias y todas las combinaciones de teclas (F1)."
+    },
+    "more": "La lista completa está en CHANGELOG.md (Ajustes → Acerca de).",
+    "close": "Entendido"
   }
 }

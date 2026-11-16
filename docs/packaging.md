@@ -39,6 +39,38 @@
   [third-party-notices.md](third-party-notices.md)).
 - PHP has no language server on Windows (phpactor needs the posix extension).
 
+## Versions
+
+- **The app version** is in three files, all the same: `Cargo.toml`
+  (`[workspace.package] version`), `apps/desktop/package.json` and
+  `apps/desktop/src-tauri/tauri.conf.json` (`version`). Refresh `Cargo.lock` with
+  `cargo check -p katabox-desktop` after a change.
+- **NSIS** takes it as is, pre-releases included (`1.0.0-beta.1`). Its upgrade check
+  compares semver, so every later version installs over an earlier one.
+- **MSI (WiX) needs a numeric version,** set in `bundle.windows.wix.version`. Windows
+  Installer compares only `major.minor.build`, and a later release must always compare
+  higher, or the MSI refuses the upgrade. The rule:
+
+  | App version | MSI version | Example |
+  | --- | --- | --- |
+  | `M.m.p` (a final release) | `M.m.p` | `1.0.0` → `1.0.0`, `1.0.1` → `1.0.1` |
+  | `M.0.0-beta.N` (N = 1-99) | `(M-1).99.N` | `1.0.0-beta.1` → `0.99.1`, `1.0.0-beta.2` → `0.99.2` |
+  | `M.0.0-rc.N` (N = 1-99) | `(M-1).99.(100+N)` | `1.0.0-rc.1` → `0.99.101` |
+
+  So 0.1.0 < 1.0.0-beta.1 (0.99.1) < beta.2 (0.99.2) < rc.1 (0.99.101) < 1.0.0 <
+  1.0.1. Minor version 99 is reserved for those pre-releases. Other pre-releases (an
+  alpha, or a beta of 1.1.0) are refused until the rule is extended, with its self-test.
+- **The check:** `pnpm versions:check` (`scripts/check-versions.mjs`) runs a self-test of
+  the ordering, then checks that the three files, `Cargo.lock` and the MSI version agree
+  with the rule. CI and the release workflow run it.
+- **The bundle identifier stays `dev.katabox.app`.** Tauri warns that an identifier
+  ending in `.app` clashes with the macOS application bundle extension. That matters
+  only on macOS, which KataBox doesn't target. Changing it would move every user's data
+  folders (`%APPDATA%\<identifier>`, `%LOCALAPPDATA%\<identifier>`), so it stays.
+- **The content pack** has its own version and date in `content/pack.toml` (id, version,
+  `YYYY-MM-DD`). `kb-pack validate` checks it, the build writes it into content.db, and
+  Settings → About shows it. Bump it when the content changes in a release.
+
 ## Windows installers (ADR 0021)
 
 - **Build:** `pnpm release:build -- --bundles nsis,msi` (from the repo root). It runs
@@ -71,6 +103,12 @@
     and deletes the `KataBox.Sandbox` AppContainer profile through kb-runner's cleanup.
     It is skipped when an update replaces the app.
   - **By hand,** from the install folder: `katabox-desktop.exe --uninstall-cleanup`.
+  - **Removing the data by hand** (after an uninstall that kept it): delete
+    `%APPDATA%\dev.katabox.app` (user.db: progress, drafts, settings) and
+    `%LOCALAPPDATA%\dev.katabox.app` (the sandbox, installed languages and caches).
+    Export first to keep the progress. If the app was removed without its uninstaller,
+    run the cleanup above first, from a copy of the install folder, or reinstall and
+    uninstall once, so the AppContainer profile and the folder grants go too.
 
 ## Code signing (prepared, off)
 
