@@ -9,6 +9,7 @@
     "typecheck": "pnpm --filter @katabox/desktop exec tsc --noEmit",
     "test": "pnpm --filter @katabox/desktop test",
     "licenses:check": "node scripts/check-npm-licenses.mjs",
+    "versions:check": "node scripts/check-versions.mjs",
     "notices": "node scripts/gen-notices.mjs",
     "installer-art": "node scripts/gen-installer-art.mjs",
     "tauri": "pnpm --filter @katabox/desktop tauri",
