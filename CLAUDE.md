@@ -53,6 +53,7 @@ cargo test -p kb-bridge          # language servers: fake-server lifecycle; real
 pnpm install && pnpm build       # UI build (tsc + vite)
 pnpm test                        # UI tests (Vitest + Testing Library; includes token contrast and en/es key parity)
 pnpm licenses:check              # npm license allow-list (scripts/check-npm-licenses.mjs; mirrors deny.toml)
+pnpm versions:check              # app version equal in Cargo.toml / package.json / tauri.conf.json, Cargo.lock refreshed, MSI version per the rule in docs/packaging.md
 pnpm dev                         # run the desktop app (needs WebView2 / WebKitGTK 4.1); debug builds use <identifier>-dev data folders ("DEV DATA" badge) and target/katabox as sandbox root, or KATABOX_SANDBOX_ROOT
 cargo check -p katabox-desktop   # desktop shell (needs WebKitGTK on Linux); build.rs builds resources/content.db
 cargo run -p katabox-desktop --features bindings --bin export-bindings  # regenerate apps/desktop/src/bindings.ts after changing a command or IPC type
