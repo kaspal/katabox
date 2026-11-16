@@ -76,7 +76,7 @@ describe("First run", () => {
 
   it("Not now skips it, and Settings stays reachable", async () => {
     setFakeApi({ installed: [] });
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=languages");
     expect(await screen.findByRole("heading", { name: "Settings" })).toBeInTheDocument();
     expect(screen.queryByTestId("first-run")).toBeNull();
     await user.click(screen.getByRole("link", { name: "Home" }));
@@ -99,7 +99,7 @@ describe("Settings → Languages", () => {
 
   it("uninstalls a language after confirming", async () => {
     const fake = setFakeApi();
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=languages");
     const python = await screen.findByTestId("language-python");
     expect(python).toHaveAttribute("data-installed");
     await user.click(within(python).getByRole("button", { name: "Uninstall" }));
@@ -113,7 +113,7 @@ describe("Settings → Languages", () => {
   });
 
   it("installed languages show no checkbox, only their state and Uninstall", async () => {
-    renderApp("/settings");
+    renderApp("/settings?section=languages");
     const ts = await screen.findByTestId("language-typescript");
     expect(within(ts).queryByRole("checkbox")).toBeNull();
     expect(within(ts).getByText("Installed")).toBeInTheDocument();

@@ -15,6 +15,13 @@ import { Library } from "@/pages/Library";
 import { Interview } from "@/pages/Interview";
 import { Progress } from "@/pages/Progress";
 import { Settings } from "@/pages/Settings";
+import {
+  PROGRESS_TABS,
+  SETTINGS_SECTIONS,
+  oneOfTabs,
+  type ProgressTab,
+  type SettingsSection,
+} from "@/lib/pageTabs";
 
 export const SORT_KEYS = ["rank", "title", "difficulty", "pattern"] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
@@ -96,14 +103,26 @@ const interviewRoute = createRoute({
   path: "/interview",
   component: Interview,
 });
+/** `?tab=` picks a Progress tab; `?section=` a Settings section (ui-polish). Without
+ * one, the page opens the last tab used. */
+export type ProgressSearch = { tab?: ProgressTab };
+export const parseProgressSearch = (s: Record<string, unknown>): ProgressSearch => ({
+  tab: oneOfTabs(s.tab, PROGRESS_TABS),
+});
+export type SettingsSearch = { section?: SettingsSection };
+export const parseSettingsSearch = (s: Record<string, unknown>): SettingsSearch => ({
+  section: oneOfTabs(s.section, SETTINGS_SECTIONS),
+});
 const progressRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/progress",
+  validateSearch: parseProgressSearch,
   component: Progress,
 });
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/settings",
+  validateSearch: parseSettingsSearch,
   component: Settings,
 });
 // TEMPORARY (until the workspace lands in part 2): the smoke screen, development only.

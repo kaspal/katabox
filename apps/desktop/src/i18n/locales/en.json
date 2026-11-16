@@ -335,7 +335,9 @@
     },
     "topics": {
       "title": "Solved by topic",
-      "empty": "No topics yet."
+      "empty": "No topics yet.",
+      "all": "Show all {{count}} topics",
+      "fewer": "Show fewer"
     },
     "reviews": {
       "title": "Review queue",
@@ -346,12 +348,21 @@
       "next": "Next review: {{date}}",
       "none": "No reviews scheduled. Your first Accepted on a problem schedules its review in 3 days.",
       "reviewNow": "Review now ({{count}})"
+    },
+    "tabs": {
+      "label": "Progress sections",
+      "overview": "Overview",
+      "patterns": "By pattern",
+      "topics": "By topic",
+      "history": "History"
+    },
+    "learn": {
+      "title": "Learn topics viewed",
+      "viewed": "{{viewed}} of {{total}} viewed"
     }
   },
   "settings": {
     "title": "Settings",
-    "appearance": "Appearance",
-    "about": "About",
     "version": "App version",
     "contentPack": "Problem pack",
     "userSchema": "Database version",
@@ -364,7 +375,6 @@
       "dev": "Development root",
       "app_data": "App data"
     },
-    "editor": "Editor",
     "keymap": "Keymap",
     "keymaps": {
       "default": "Default",
@@ -389,7 +399,6 @@
     "ligatures": "Font ligatures",
     "ligaturesOff": "Off",
     "ligaturesOn": "On",
-    "languages": "Languages",
     "calibration": {
       "title": "Judge speed",
       "description": "Time limits are set on a reference computer. KataBox measures this computer once with a short benchmark and scales every limit by the result, between ×0.5 and ×3.",
@@ -434,7 +443,29 @@
     },
     "docs": "Documentation",
     "changelog": "Changelog",
-    "copyAddress": "Copy address"
+    "copyAddress": "Copy address",
+    "sections": {
+      "label": "Settings sections",
+      "appearance": "Appearance",
+      "editor": "Editor",
+      "practice": "Practice",
+      "languages": "Languages and runtimes",
+      "learn": "Learn",
+      "data": "Data",
+      "about": "About"
+    },
+    "window": {
+      "label": "Window",
+      "reset": "Reset window size and position",
+      "done": "Window reset."
+    },
+    "learnSpeed": "Animation speed",
+    "search": {
+      "label": "Search settings",
+      "placeholder": "Search settings…",
+      "none": "No setting matches.",
+      "results": "Matching settings"
+    }
   },
   "languages": {
     "python": "Python",
@@ -751,7 +782,6 @@
       "problemActions": "Problem actions"
     },
     "settings": {
-      "title": "Practice",
       "review": "Review reminders on Home",
       "daily": "Daily problem on Home",
       "on": "On",
@@ -796,7 +826,6 @@
       "details": "Details"
     },
     "data": {
-      "title": "Data",
       "intro": "Export your progress to one file, or import a file exported by KataBox on another computer. Import merges by problem and keeps the newer record.",
       "export": "Export…",
       "import": "Import…",

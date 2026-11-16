@@ -100,15 +100,17 @@ describe("Progress page", () => {
     expect(within(diff).getByTestId("difficulty-easy")).toHaveTextContent("Easy1 / 2 solved");
     expect(within(diff).getByTestId("difficulty-hard")).toHaveTextContent("0 / 1 solved");
     expect(within(diff).getAllByRole("progressbar")[0]).toHaveAccessibleName("Easy: 1 / 2 solved");
-    const topics = screen.getByTestId("by-topic");
-    expect(within(topics).getByTestId("topic-array")).toHaveTextContent("1 / 2 solved");
-    expect(within(topics).getByRole("link", { name: "Array" })).toHaveAttribute("href", expect.stringContaining("tag=array"));
-
     const reviews = screen.getByTestId("review-summary");
     expect(within(reviews).getByTestId("reviews-overdue")).toHaveTextContent("Overdue1");
     expect(within(reviews).getByTestId("reviews-week")).toHaveTextContent("Next 7 days3");
     expect(reviews).toHaveTextContent("Next review: Dec 1, 2026");
     expect(within(reviews).getByRole("link", { name: /Review now \(3\)/ })).toBeInTheDocument();
+
+    // By topic is its own tab.
+    await user.click(screen.getByRole("tab", { name: "By topic" }));
+    const topics = await screen.findByTestId("by-topic");
+    expect(within(topics).getByTestId("topic-array")).toHaveTextContent("1 / 2 solved");
+    expect(within(topics).getByRole("link", { name: "Array" })).toHaveAttribute("href", expect.stringContaining("tag=array"));
   });
 
   it("shows empty states and Spanish labels", async () => {
@@ -132,7 +134,7 @@ describe("Settings → About → Third-party notices", () => {
 
   it("shows the bundled notices", async () => {
     setFakeApi({ notices: "KataBox third-party notices\n--- serde 1.0 (MIT OR Apache-2.0)" });
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=about");
     await user.click(await screen.findByRole("button", { name: "View…" }));
     const dialog = await screen.findByTestId("notices");
     expect(within(dialog).getByRole("heading", { name: "Third-party notices" })).toBeInTheDocument();
@@ -141,7 +143,7 @@ describe("Settings → About → Third-party notices", () => {
 
   it("explains that development builds have none (Spanish)", async () => {
     setFakeApi({ notices: null, settings: { ui_lang: "es" } });
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=about");
     await user.click(await screen.findByRole("button", { name: "Ver…" }));
     expect(await screen.findByTestId("notices-dev")).toHaveTextContent(
       "Los avisos se incluyen en las versiones publicadas",

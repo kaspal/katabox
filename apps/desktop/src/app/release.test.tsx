@@ -103,7 +103,7 @@ describe("About", () => {
 
   it("shows the content pack's version and date, the licences and the addresses", async () => {
     setFakeApi();
-    renderApp("/settings");
+    renderApp("/settings?section=about");
     expect(await screen.findByTestId("content-pack")).toHaveTextContent("core 1.0.0");
     expect(screen.getByText("released 2026-11-15")).toBeInTheDocument();
     expect(screen.getByText("Code: MIT or Apache-2.0")).toBeInTheDocument();

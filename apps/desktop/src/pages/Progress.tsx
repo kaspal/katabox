@@ -1,8 +1,12 @@
-// Progress (ADR 0019, 0021): totals, the 12-month activity heatmap, solved by
-// difficulty, the review queue, solved by language and by topic, the pattern map with
-// each pattern's next problem, past mock interviews, and the daily streak.
-import { useMemo } from "react";
-import { Link } from "@tanstack/react-router";
+// Progress (ADR 0019, 0021), in tabs (ui-polish) so none needs a long scroll:
+// - Overview: totals, the 12-month activity heatmap, solved by difficulty, the review
+//   queue and solved by language (the daily streak sits in the header);
+// - By pattern: the pattern map with each pattern's next problem;
+// - By topic: solved by tag, and Learn topics viewed per subject;
+// - History: past mock interviews.
+// The tab is in the URL (`?tab=`) and the last one is remembered (`progress.tab`).
+import { useCallback, useMemo, useState } from "react";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -13,6 +17,10 @@ import { DifficultyLabel, usePatternLabel, useTagLabel } from "@/components/Sema
 import { Button } from "@/components/ui/button";
 import { Progress as Bar } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useViewed } from "@/learn/engine/progress";
+import { PROGRESS_TABS, useRememberedTab, type ProgressTab } from "@/lib/pageTabs";
+import { useLearnCatalog } from "@/lib/queries";
 import { usePatterns, useStreak } from "@/lib/practice";
 import { useInterviews, useSolvedByLanguage } from "@/lib/modes";
 import { bucketByDay, heatmapDays, useActivity, useReviewSummary, useSolvedBreakdown } from "@/lib/progress";
@@ -20,6 +28,9 @@ import { localToday, useToday } from "@/lib/today";
 import { Heatmap } from "@/practice/heatmap";
 import { StreakBadge, formatDay } from "@/practice/shared";
 import { Scorecard } from "@/practice/interview";
+
+/** By topic shows the largest topics first; "Show all" lists the rest. */
+const TOPICS_SHOWN = 24;
 
 function Section({ title, children, testId }: { title: string; children: ReactNode; testId?: string }) {
   return (
@@ -53,8 +64,51 @@ function CountBar({ label, name, solved, total }: { label: ReactNode; name: stri
   );
 }
 
+/** By topic → Learn: topics viewed to the end, per subject (`learn.viewed`). */
+function LearnViewed() {
+  const { t } = useTranslation();
+  const catalog = useLearnCatalog();
+  const { viewed } = useViewed();
+  const seen = useMemo(() => new Set(viewed), [viewed]);
+  return (
+    <Section title={t("progress.learn.title")} testId="learn-viewed">
+      {catalog.isPending ? (
+        <Skeleton className="h-24 w-full" />
+      ) : catalog.error ? (
+        <ErrorNotice error={catalog.error} onRetry={() => void catalog.refetch()} />
+      ) : (
+        <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+          {(catalog.data ?? []).map((s) => {
+            const done = s.topics.filter((tp) => seen.has(tp.id)).length;
+            const text = t("progress.learn.viewed", { viewed: done, total: s.topics.length });
+            return (
+              <li key={s.id} className="space-y-1" data-testid={`learn-subject-${s.id}`}>
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <Link to="/learn" className="min-w-0 truncate hover:underline">
+                    {s.name}
+                  </Link>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">{text}</span>
+                </div>
+                <Bar value={s.topics.length === 0 ? 0 : (100 * done) / s.topics.length} aria-label={`${s.name}: ${text}`} />
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
 export function Progress() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate({ from: "/progress" });
+  const search = useSearch({ from: "/progress" });
+  const toUrl = useCallback(
+    (tab: ProgressTab) => void navigate({ search: { tab }, replace: true }),
+    [navigate],
+  );
+  const [allTopics, setAllTopics] = useState(false);
+  const [tab, setTab] = useRememberedTab("progress.tab", PROGRESS_TABS, "overview", search.tab, toUrl);
   const patternLabel = usePatternLabel();
   const tagLabel = useTagLabel();
   const today = useToday();
@@ -92,224 +146,256 @@ export function Progress() {
       title={t("progress.title")}
       actions={streak.data !== undefined ? <StreakBadge count={streak.data} /> : undefined}
     >
-      <div className="max-w-5xl space-y-6">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Stat
-            testId="stat-solved"
-            label={t("progress.stats.solved")}
-            value={breakdown.data ? t("practice.patterns.solved", solved) : "–"}
-          />
-          <Stat testId="stat-active" label={t("progress.stats.activeDays")} value={activity.data ? totals.active : "–"} />
-          <Stat
-            testId="stat-submissions"
-            label={t("progress.stats.submissions")}
-            value={activity.data ? totals.submissions : "–"}
-          />
-        </div>
+      <Tabs value={tab} onValueChange={setTab} className="min-h-0 max-w-5xl flex-1 gap-4">
+        <TabsList aria-label={t("progress.tabs.label")} data-testid="progress-tabs">
+          {PROGRESS_TABS.map((id) => (
+            <TabsTrigger key={id} value={id} className="px-3" data-testid={`progress-tab-${id}`}>
+              {t(`progress.tabs.${id}`)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-        <Section title={t("progress.heatmap.title")} testId="activity">
-          {activity.isPending ? (
-            <Skeleton className="h-28 w-full" />
-          ) : activity.error ? (
-            <ErrorNotice error={activity.error} onRetry={() => void activity.refetch()} />
-          ) : (
-            <Heatmap days={days} data={perDay} />
-          )}
-        </Section>
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Stat
+              testId="stat-solved"
+              label={t("progress.stats.solved")}
+              value={breakdown.data ? t("practice.patterns.solved", solved) : "–"}
+            />
+            <Stat testId="stat-active" label={t("progress.stats.activeDays")} value={activity.data ? totals.active : "–"} />
+            <Stat
+              testId="stat-submissions"
+              label={t("progress.stats.submissions")}
+              value={activity.data ? totals.submissions : "–"}
+            />
+          </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Section title={t("progress.difficulty.title")} testId="by-difficulty">
-            {breakdown.error ? (
-              <ErrorNotice error={breakdown.error} onRetry={() => void breakdown.refetch()} />
+          <Section title={t("progress.heatmap.title")} testId="activity">
+            {activity.isPending ? (
+              <Skeleton className="h-28 w-full" />
+            ) : activity.error ? (
+              <ErrorNotice error={activity.error} onRetry={() => void activity.refetch()} />
             ) : (
-              <div className="space-y-3">
-                {(breakdown.data?.by_difficulty ?? []).map((d) => (
-                  <div key={d.difficulty} data-testid={`difficulty-${d.difficulty}`}>
-                    <CountBar
-                      label={<DifficultyLabel difficulty={d.difficulty} />}
-                      name={t(`difficulty.${d.difficulty}`)}
-                      solved={d.solved}
-                      total={d.total}
-                    />
-                  </div>
-                ))}
-              </div>
+              <Heatmap days={days} data={perDay} />
             )}
           </Section>
 
-          <Section title={t("progress.reviews.title")} testId="review-summary">
-            {reviews.error ? (
-              <ErrorNotice error={reviews.error} onRetry={() => void reviews.refetch()} />
-            ) : !r ? (
-              <Skeleton className="h-24 w-full" />
-            ) : r.overdue + r.due_today + r.next_7_days + r.later === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("progress.reviews.none")}</p>
-            ) : (
-              <div className="space-y-3">
-                <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
-                  {(
-                    [
-                      ["overdue", r.overdue],
-                      ["today", r.due_today],
-                      ["week", r.next_7_days],
-                      ["later", r.later],
-                    ] as const
-                  ).map(([k, n]) => (
-                    <div key={k} className="flex justify-between gap-2" data-testid={`reviews-${k}`}>
-                      <dt className="text-muted-foreground">{t(`progress.reviews.${k}`)}</dt>
-                      <dd className="tabular-nums font-medium">{n}</dd>
+          <div className="grid gap-6 md:grid-cols-3">
+            <Section title={t("progress.difficulty.title")} testId="by-difficulty">
+              {breakdown.error ? (
+                <ErrorNotice error={breakdown.error} onRetry={() => void breakdown.refetch()} />
+              ) : (
+                <div className="space-y-3">
+                  {(breakdown.data?.by_difficulty ?? []).map((d) => (
+                    <div key={d.difficulty} data-testid={`difficulty-${d.difficulty}`}>
+                      <CountBar
+                        label={<DifficultyLabel difficulty={d.difficulty} />}
+                        name={t(`difficulty.${d.difficulty}`)}
+                        solved={d.solved}
+                        total={d.total}
+                      />
                     </div>
                   ))}
-                </dl>
-                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                  {r.next_due && (
-                    <span className="text-muted-foreground">
-                      {t("progress.reviews.next", { date: formatDay(r.next_due, i18n.language) })}
-                    </span>
-                  )}
-                  {dueNow > 0 && (
-                    <Button asChild size="sm" variant="outline">
-                      <Link to="/">
-                        {t("progress.reviews.reviewNow", { count: dueNow })}
-                        <ArrowRight aria-hidden />
-                      </Link>
-                    </Button>
-                  )}
                 </div>
-              </div>
-            )}
-          </Section>
-        </div>
+              )}
+            </Section>
 
-        <Section title={t("practice.patterns.byLanguage")}>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4" data-testid="solved-by-language">
-            {(byLanguage.data ?? []).map((c) => (
-              <li key={c.language} className="rounded-md border p-3" data-testid={`lang-${c.language}`}>
-                <span className="text-sm text-muted-foreground">{t(`languages.${c.language}`)}</span>
-                <p className="text-xl font-semibold tabular-nums">{c.solved}</p>
-              </li>
-            ))}
-          </ul>
-        </Section>
-
-        <Section title={t("progress.topics.title")} testId="by-topic">
-          {(breakdown.data?.by_tag ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("progress.topics.empty")}</p>
-          ) : (
-            <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
-              {(breakdown.data?.by_tag ?? []).map((c) => (
-                <li key={c.tag} data-testid={`topic-${c.tag}`}>
-                  <CountBar
-                    label={
-                      <Link to="/library" search={{ tag: c.tag }} className="hover:underline">
-                        {tagLabel(c.tag)}
-                      </Link>
-                    }
-                    name={tagLabel(c.tag)}
-                    solved={c.solved}
-                    total={c.total}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Section>
-
-        <div>
-          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">{t("practice.patterns.title")}</h2>
-          {patterns.isPending ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }, (_, i) => (
-                <Skeleton key={i} className="h-32" />
-              ))}
-            </div>
-          ) : patterns.error ? (
-            <ErrorNotice error={patterns.error} onRetry={() => void patterns.refetch()} />
-          ) : (patterns.data ?? []).length === 0 ? (
-            <p className="text-muted-foreground">{t("practice.patterns.empty")}</p>
-          ) : (
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="pattern-map">
-              {(patterns.data ?? []).map((p) => {
-                const done = p.solved === p.total;
-                return (
-                  <li
-                    key={p.pattern}
-                    className="flex flex-col gap-3 rounded-lg border bg-card p-4"
-                    data-testid={`pattern-${p.pattern}`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold">{patternLabel(p.pattern)}</h3>
-                      <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
-                        {t("practice.patterns.solved", { solved: p.solved, total: p.total })}
+            <Section title={t("progress.reviews.title")} testId="review-summary">
+              {reviews.error ? (
+                <ErrorNotice error={reviews.error} onRetry={() => void reviews.refetch()} />
+              ) : !r ? (
+                <Skeleton className="h-24 w-full" />
+              ) : r.overdue + r.due_today + r.next_7_days + r.later === 0 ? (
+                <p className="text-sm text-muted-foreground">{t("progress.reviews.none")}</p>
+              ) : (
+                <div className="space-y-3">
+                  <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                    {(
+                      [
+                        ["overdue", r.overdue],
+                        ["today", r.due_today],
+                        ["week", r.next_7_days],
+                        ["later", r.later],
+                      ] as const
+                    ).map(([k, n]) => (
+                      <div key={k} className="flex justify-between gap-2" data-testid={`reviews-${k}`}>
+                        <dt className="text-muted-foreground">{t(`progress.reviews.${k}`)}</dt>
+                        <dd className="tabular-nums font-medium">{n}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    {r.next_due && (
+                      <span className="text-muted-foreground">
+                        {t("progress.reviews.next", { date: formatDay(r.next_due, i18n.language) })}
                       </span>
-                    </div>
-                    <Bar
-                      value={p.total === 0 ? 0 : (100 * p.solved) / p.total}
-                      aria-label={`${patternLabel(p.pattern)}: ${t("practice.patterns.solved", { solved: p.solved, total: p.total })}`}
-                    />
-                    <PatternLearnLinks pattern={p.pattern} className="text-xs" />
-                    <div className="mt-auto flex items-center justify-between gap-2 text-sm">
-                      {done || !p.next ? (
-                        <span className="inline-flex items-center gap-1.5 text-verdict-accepted">
-                          <CheckCircle2 aria-hidden className="size-4" />
-                          {t("practice.patterns.done")}
-                        </span>
-                      ) : (
-                        <Link
-                          to="/problems/$problemId"
-                          params={{ problemId: p.next.id }}
-                          className="inline-flex min-w-0 items-center gap-1.5 hover:underline"
-                        >
-                          <span className="truncate">{t("practice.patterns.next", { title: p.next.title })}</span>
-                          <DifficultyLabel difficulty={p.next.difficulty} className="shrink-0 text-xs" />
-                        </Link>
-                      )}
-                      <Button asChild variant="ghost" size="sm" className="shrink-0">
-                        <Link to="/library" search={{ pattern: p.pattern }}>
-                          {t("practice.patterns.browse")}
+                    )}
+                    {dueNow > 0 && (
+                      <Button asChild size="sm" variant="outline">
+                        <Link to="/">
+                          {t("progress.reviews.reviewNow", { count: dueNow })}
                           <ArrowRight aria-hidden />
                         </Link>
                       </Button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </Section>
 
-        <div>
-          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">{t("practice.interview.history")}</h2>
-          {(interviews.data ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("practice.interview.none")}</p>
-          ) : (
-            <ul className="space-y-2" data-testid="interview-history">
-              {(interviews.data ?? []).map((iv) => (
-                <li key={iv.id} className="rounded-lg border bg-card">
-                  <details>
-                    <summary className="flex cursor-pointer flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-sm">
-                      <span className="font-medium">
-                        {formatDay(localToday(new Date(iv.started_at)), i18n.language)}
-                      </span>
-                      <span>{t("practice.interview.minutes", { count: iv.duration_s / 60 })}</span>
-                      <span>{t(`practice.interview.mixes.${iv.mix}` as "practice.interview.title")}</span>
-                      <span>
-                        {t("practice.interview.solved", { solved: iv.solved, total: iv.problems.length })}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {t("practice.interview.firstTry", { count: iv.first_try })}
-                      </span>
-                    </summary>
-                    <div className="border-t p-3">
-                      <Scorecard result={iv} />
-                    </div>
-                  </details>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
+            <Section title={t("practice.patterns.byLanguage")}>
+              <ul className="grid grid-cols-2 gap-2" data-testid="solved-by-language">
+                {(byLanguage.data ?? []).map((c) => (
+                  <li key={c.language} className="rounded-md border px-3 py-2" data-testid={`lang-${c.language}`}>
+                    <span className="text-sm text-muted-foreground">{t(`languages.${c.language}`)}</span>
+                    <p className="text-lg font-semibold tabular-nums">{c.solved}</p>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="patterns">
+          <div>
+            <h2 className="mb-3 text-sm font-semibold text-muted-foreground">{t("practice.patterns.title")}</h2>
+            {patterns.isPending ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <Skeleton key={i} className="h-32" />
+                ))}
+              </div>
+            ) : patterns.error ? (
+              <ErrorNotice error={patterns.error} onRetry={() => void patterns.refetch()} />
+            ) : (patterns.data ?? []).length === 0 ? (
+              <p className="text-muted-foreground">{t("practice.patterns.empty")}</p>
+            ) : (
+              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="pattern-map">
+                {(patterns.data ?? []).map((p) => {
+                  const done = p.solved === p.total;
+                  return (
+                    <li
+                      key={p.pattern}
+                      className="flex flex-col gap-3 rounded-lg border bg-card p-4"
+                      data-testid={`pattern-${p.pattern}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold">{patternLabel(p.pattern)}</h3>
+                        <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+                          {t("practice.patterns.solved", { solved: p.solved, total: p.total })}
+                        </span>
+                      </div>
+                      <Bar
+                        value={p.total === 0 ? 0 : (100 * p.solved) / p.total}
+                        aria-label={`${patternLabel(p.pattern)}: ${t("practice.patterns.solved", { solved: p.solved, total: p.total })}`}
+                      />
+                      <PatternLearnLinks pattern={p.pattern} className="text-xs" />
+                      <div className="mt-auto flex items-center justify-between gap-2 text-sm">
+                        {done || !p.next ? (
+                          <span className="inline-flex items-center gap-1.5 text-verdict-accepted">
+                            <CheckCircle2 aria-hidden className="size-4" />
+                            {t("practice.patterns.done")}
+                          </span>
+                        ) : (
+                          <Link
+                            to="/problems/$problemId"
+                            params={{ problemId: p.next.id }}
+                            className="inline-flex min-w-0 items-center gap-1.5 hover:underline"
+                          >
+                            <span className="truncate">{t("practice.patterns.next", { title: p.next.title })}</span>
+                            <DifficultyLabel difficulty={p.next.difficulty} className="shrink-0 text-xs" />
+                          </Link>
+                        )}
+                        <Button asChild variant="ghost" size="sm" className="shrink-0">
+                          <Link to="/library" search={{ pattern: p.pattern }}>
+                            {t("practice.patterns.browse")}
+                            <ArrowRight aria-hidden />
+                          </Link>
+                        </Button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="topics" className="space-y-6">
+          <Section title={t("progress.topics.title")} testId="by-topic">
+            {(breakdown.data?.by_tag ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("progress.topics.empty")}</p>
+            ) : (
+              <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+                {(breakdown.data?.by_tag ?? []).slice(0, allTopics ? undefined : TOPICS_SHOWN).map((c) => (
+                  <li key={c.tag} data-testid={`topic-${c.tag}`}>
+                    <CountBar
+                      label={
+                        <Link to="/library" search={{ tag: c.tag }} className="hover:underline">
+                          {tagLabel(c.tag)}
+                        </Link>
+                      }
+                      name={tagLabel(c.tag)}
+                      solved={c.solved}
+                      total={c.total}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+            {(breakdown.data?.by_tag ?? []).length > TOPICS_SHOWN && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-3"
+                aria-expanded={allTopics}
+                onClick={() => setAllTopics(!allTopics)}
+                data-testid="topics-all"
+              >
+                {allTopics
+                  ? t("progress.topics.fewer")
+                  : t("progress.topics.all", { count: breakdown.data?.by_tag.length ?? 0 })}
+              </Button>
+            )}
+          </Section>
+
+          <LearnViewed />
+        </TabsContent>
+
+        <TabsContent value="history">
+          <div>
+            <h2 className="mb-3 text-sm font-semibold text-muted-foreground">{t("practice.interview.history")}</h2>
+            {(interviews.data ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("practice.interview.none")}</p>
+            ) : (
+              <ul className="space-y-2" data-testid="interview-history">
+                {(interviews.data ?? []).map((iv) => (
+                  <li key={iv.id} className="rounded-lg border bg-card">
+                    <details>
+                      <summary className="flex cursor-pointer flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-sm">
+                        <span className="font-medium">
+                          {formatDay(localToday(new Date(iv.started_at)), i18n.language)}
+                        </span>
+                        <span>{t("practice.interview.minutes", { count: iv.duration_s / 60 })}</span>
+                        <span>{t(`practice.interview.mixes.${iv.mix}` as "practice.interview.title")}</span>
+                        <span>
+                          {t("practice.interview.solved", { solved: iv.solved, total: iv.problems.length })}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {t("practice.interview.firstTry", { count: iv.first_try })}
+                        </span>
+                      </summary>
+                      <div className="border-t p-3">
+                        <Scorecard result={iv} />
+                      </div>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </Page>
   );
 }

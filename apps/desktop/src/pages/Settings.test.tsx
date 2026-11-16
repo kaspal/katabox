@@ -16,7 +16,7 @@ describe("Settings: judge speed (ADR 0017)", () => {
   it("says the computer is not measured yet, and Recalibrate measures it", async () => {
     const fake = setFakeApi({ calibration: null });
     fake.state.nextFactor = 1.25;
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=languages");
     const s = await section();
     expect(await within(s).findByText(/Not measured yet/)).toBeInTheDocument();
     await user.click(within(s).getByRole("button", { name: "Recalibrate" }));
@@ -37,7 +37,7 @@ describe("Settings: judge speed (ADR 0017)", () => {
         measured_at: 1_767_225_600,
       },
     });
-    renderApp("/settings");
+    renderApp("/settings?section=languages");
     const s = await section();
     const shown = await within(s).findByTestId("calibration");
     expect(shown).toHaveTextContent("×3.00");
@@ -48,7 +48,7 @@ describe("Settings: judge speed (ADR 0017)", () => {
   it("shows why Recalibrate failed, by its error code", async () => {
     const fake = setFakeApi({ installed: [] });
     fake.state.recalibrateError = { code: "calibration_unavailable", message: "needs Python or Node" };
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=languages");
     const s = await section();
     await user.click(within(s).getByRole("button", { name: "Recalibrate" }));
     const alert = await within(s).findByRole("alert");
@@ -62,7 +62,7 @@ describe("Settings: editor preferences", () => {
 
   it("sets the colour theme and tab width, saved and shown in the live preview", async () => {
     const fake = setFakeApi();
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=editor");
     const preview = await screen.findByTestId("editor-preview", undefined, { timeout: 5000 });
     const host = () => preview.querySelector("[data-testid=code-editor]") as HTMLElement;
     expect(host().className).not.toContain("cm-theme-");
@@ -79,7 +79,7 @@ describe("Settings: editor preferences", () => {
 
   it("offers the Emacs keymap", async () => {
     const fake = setFakeApi();
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=editor");
     await user.click(await screen.findByRole("radio", { name: "Emacs" }));
     expect(fake.api.setSetting).toHaveBeenCalledWith("editor.keymap", "emacs");
   });
@@ -93,7 +93,7 @@ describe("Settings: Copy diagnostics", () => {
     clearRecentErrors();
     recordError("toolchain_missing");
     recordError("C:\\Users\\someone\\secret"); // not a code: kept as "unknown"
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=about");
     await user.click(await screen.findByRole("button", { name: "Copy diagnostics…" }));
     const text = (await screen.findByTestId("diagnostics-text")).textContent ?? "";
     expect(text).toContain("app: 1.0.0-beta.1");

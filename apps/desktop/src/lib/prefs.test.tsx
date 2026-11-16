@@ -60,10 +60,11 @@ describe("Theme", () => {
   });
 
   it("shows the DEV DATA badge and app info", async () => {
-    renderApp("/settings");
+    const { user } = renderApp("/settings?section=about");
     expect(await screen.findByTestId("dev-data-badge")).toHaveTextContent("DEV DATA");
     expect(await screen.findByText("C:\\data\\dev.katabox.app-dev")).toBeInTheDocument();
-    // Settings → Languages: three installed, Rust not.
+    // Settings → Languages and runtimes: three installed, Rust not.
+    await user.click(screen.getByRole("tab", { name: "Languages and runtimes" }));
     expect(await screen.findAllByText("Installed")).toHaveLength(3);
     expect(screen.getByTestId("language-rust")).not.toHaveAttribute("data-installed");
   });
