@@ -17,13 +17,14 @@ def generate(seed, size):
             prefixes.append(w[: rng.randint(6, len(w))] if rng.random() < 0.9 else word(rng, "ab", 9, 18))
         return {"words": words, "prefixes": prefixes}
     if size == "max":
-        # 10⁴ words sharing 8-letter beginnings and 2·10⁴ prefixes cut from them:
-        # scanning every word per prefix compares about 2·10⁸ pairs, several letters deep.
-        words = [word(rng, "ab", 8, 8) + word(rng, "abcde", 2, 10) for _ in range(10_000)]
+        # 10⁴ words sharing 3-letter beginnings and 2·10⁴ short prefixes cut from them:
+        # scanning every word per prefix checks 2·10⁸ pairs, and each prefix matches
+        # thousands of words that a scan must then compare to find the smallest.
+        words = [word(rng, "ab", 3, 3) + word(rng, "abcde", 7, 17) for _ in range(10_000)]
         prefixes = []
         for _ in range(20_000):
             w = rng.choice(words)
-            prefixes.append(w[: rng.randint(6, len(w))] if rng.random() < 0.9 else word(rng, "ab", 9, 18))
+            prefixes.append(w[: rng.randint(1, 5)] if rng.random() < 0.9 else word(rng, "ab", 4, 8))
         return {"words": words, "prefixes": prefixes}
     alphabet = rng.choice(["ab", "abc", "xyz"])
     words = [word(rng, alphabet, 1, 5) for _ in range(rng.randint(1, 8))]
