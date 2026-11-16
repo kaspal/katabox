@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { GraduationCap, Keyboard, Languages, Monitor, Moon, Sun } from "lucide-react";
+import { BarChart3, GraduationCap, Keyboard, Languages, Monitor, Moon, Settings2, Sun } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -12,13 +13,17 @@ import {
 import { DifficultyLabel, useTagLabel } from "@/components/Semantic";
 import { DEV_NAV, NAV, WORKSPACE_ICON } from "@/app/nav";
 import { openShortcuts } from "@/app/shortcuts";
+import { paletteFilter } from "@/app/paletteFilter";
+import { PROGRESS_TABS, SETTINGS_SECTIONS } from "@/lib/pageTabs";
 import { UI_LANGS } from "@/i18n";
 import { THEMES, usePrefs, type ThemePref } from "@/lib/prefs";
 import { useLearnCatalog, useProblems } from "@/lib/queries";
 
 const THEME_ICON: Record<ThemePref, typeof Sun> = { system: Monitor, light: Sun, dark: Moon };
 
-/** Ctrl+K: go to a page, open a problem, switch theme or UI language, see the shortcuts. */
+/** Ctrl+K: go to a page (or a Progress tab, a Settings section), open a problem, switch
+ * theme or UI language, see the shortcuts. Every command is found by its label as shown,
+ * with or without punctuation and accents (`paletteFilter`). */
 export function CommandPalette({
   open,
   onOpenChange,
@@ -32,6 +37,11 @@ export function CommandPalette({
   const problems = useProblems();
   const learn = useLearnCatalog();
   const tagLabel = useTagLabel();
+  // Each opening starts empty, even when reopened during the closing animation.
+  const [search, setSearch] = useState("");
+  useEffect(() => {
+    if (open) setSearch("");
+  }, [open]);
 
   const run = (action: () => void) => {
     onOpenChange(false);
@@ -44,8 +54,9 @@ export function CommandPalette({
       onOpenChange={onOpenChange}
       title={t("palette.open")}
       description={t("palette.placeholder")}
+      filter={paletteFilter}
     >
-      <CommandInput placeholder={t("palette.placeholder")} />
+      <CommandInput placeholder={t("palette.placeholder")} value={search} onValueChange={setSearch} />
       <CommandList>
         <CommandEmpty>{t("palette.empty")}</CommandEmpty>
         <CommandGroup heading={t("palette.pages")}>
@@ -59,6 +70,32 @@ export function CommandPalette({
               {t(item.labelKey)}
             </CommandItem>
           ))}
+          {PROGRESS_TABS.map((tab) => {
+            const label = `${t("nav.progress")}: ${t(`progress.tabs.${tab}`)}`;
+            return (
+              <CommandItem
+                key={`progress-${tab}`}
+                value={`page ${label}`}
+                onSelect={() => run(() => void navigate({ to: "/progress", search: { tab } }))}
+              >
+                <BarChart3 aria-hidden />
+                {label}
+              </CommandItem>
+            );
+          })}
+          {SETTINGS_SECTIONS.map((section) => {
+            const label = `${t("nav.settings")}: ${t(`settings.sections.${section}`)}`;
+            return (
+              <CommandItem
+                key={`settings-${section}`}
+                value={`page ${label}`}
+                onSelect={() => run(() => void navigate({ to: "/settings", search: { section } }))}
+              >
+                <Settings2 aria-hidden />
+                {label}
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
         <CommandGroup heading={t("palette.problems")}>
           {(problems.data ?? []).map((p) => (
@@ -98,7 +135,7 @@ export function CommandPalette({
             return (
               <CommandItem
                 key={th}
-                value={`theme ${t("palette.theme")} ${t(`theme.${th}`)}`}
+                value={`theme ${t("palette.theme")}: ${t(`theme.${th}`)}`}
                 onSelect={() => run(() => setTheme(th))}
                 data-checked={theme === th}
               >
@@ -112,7 +149,7 @@ export function CommandPalette({
           {UI_LANGS.map((l) => (
             <CommandItem
               key={l}
-              value={`language ${t("palette.language")} ${t(`language.${l}`)}`}
+              value={`language ${t("palette.language")}: ${t(`language.${l}`)}`}
               onSelect={() => run(() => setLang(l))}
               data-checked={lang === l}
             >

@@ -23,6 +23,7 @@ mod root;
 pub mod shrink;
 pub mod transfer;
 pub mod uninstall;
+pub mod window;
 
 /// The first line of the placeholder THIRD_PARTY_NOTICES.txt that development builds get
 /// (`apps/desktop/src-tauri/build.rs`); release builds always carry the real file.

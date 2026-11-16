@@ -63,7 +63,7 @@ describe("Welcome flow", () => {
 
   it("Settings → Practice shows it again", async () => {
     setFakeApi();
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=practice");
     await user.click(await screen.findByRole("button", { name: "Show the welcome again" }));
     expect(await screen.findByTestId("welcome")).toBeInTheDocument();
   });

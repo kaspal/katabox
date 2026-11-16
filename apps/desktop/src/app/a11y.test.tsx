@@ -42,8 +42,11 @@ function unnamed(root: ParentNode): string[] {
 const PAGES: [string, string][] = [
   ["/", "home"],
   ["/library", "library"],
-  ["/progress", "progress"],
-  ["/settings", "settings"],
+  // Every Progress tab and Settings section (ui-polish).
+  ...["overview", "patterns", "topics", "history"].map((tab): [string, string] => [`/progress?tab=${tab}`, "progress"]),
+  ...["appearance", "editor", "practice", "languages", "learn", "data", "about"].map(
+    (section): [string, string] => [`/settings?section=${section}`, "settings"],
+  ),
   ["/learn", "learn"],
   ["/problems/two-sum", "workspace"],
 ];
@@ -62,6 +65,20 @@ describe("accessibility pass", () => {
     expect(document.querySelector("nav[aria-label]")).not.toBeNull();
     expect(screen.getByTestId("skip-link")).toHaveAttribute("href", "#main");
     expect(unnamed(document.body), `unnamed controls on ${path}`).toEqual([]);
+    // Progress tabs and Settings sections: a named tablist, and the selected tab controls a
+    // panel labelled by it. (The workspace's tablists predate this check.)
+    if (!/^\/(progress|settings)/.test(path)) return;
+    for (const list of document.querySelectorAll('[role="tablist"]')) {
+      if (list.closest("[hidden], [aria-hidden='true']")) continue;
+      const named = list.getAttribute("aria-label") || list.closest("nav[aria-label]");
+      expect(named, `unnamed tablist on ${path}`).toBeTruthy();
+    }
+    const selected = document.querySelector('main [role="tab"][aria-selected="true"]');
+    if (selected) {
+      const panel = document.getElementById(selected.getAttribute("aria-controls") ?? "");
+      expect(panel?.getAttribute("role")).toBe("tabpanel");
+      expect(panel?.getAttribute("aria-labelledby")).toBe(selected.id);
+    }
   });
 
   it("high contrast and reduced motion switch on app-wide and are saved", async () => {

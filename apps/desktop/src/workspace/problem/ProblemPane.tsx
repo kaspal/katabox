@@ -43,7 +43,7 @@ function TimeLimit({ problem, language }: { problem: ProblemView; language: Lang
       <dd className="tabular-nums" data-testid="time-limit">
         {limit ? limit.time_limit_ms : problem.time_limit_ms} ms
         {scaled && (
-          <Link to="/settings" className="ml-2 underline-offset-2 hover:underline">
+          <Link to="/settings" search={{ section: "languages" }} className="ml-2 underline-offset-2 hover:underline">
             {t("workspace.limits.scaled", { factor: problem.time_scale.toFixed(2) })}
           </Link>
         )}

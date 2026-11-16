@@ -4,6 +4,25 @@ All notable changes to KataBox are recorded in this file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- The window reopens where it was, at the same size, and maximised if it was. If its
+  screen is gone, it opens centred on the main screen. Settings → Appearance → **Reset
+  window size and position**.
+- **Progress** in tabs: Overview, By pattern, By topic (now with the Learn topics viewed
+  per subject) and History.
+- **Settings** in sections: Appearance, Editor, Practice, Languages and runtimes, Learn,
+  Data and About, with **Search settings**.
+  - The Learn section adds the animation speed.
+  - Every tab and section can be linked to, and the last one used opens next time.
+- The command palette opens each Progress tab and Settings section ("Progress: By
+  pattern", "Settings: Editor").
+
+### Fixed
+- The command palette now finds a command typed exactly as its label, punctuation
+  included ("Theme: Dark"), and ignores accents.
+
 ## [1.0.0-beta.1] - 2026-11-15
 
 The first release. Everything below is new.

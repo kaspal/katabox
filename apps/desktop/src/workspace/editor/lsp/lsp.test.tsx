@@ -195,7 +195,7 @@ describe("Problem tabs and editor settings", () => {
 
   it("ligatures are off by default and can be turned on", async () => {
     const fake = setFakeApi();
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=editor");
     const group = await screen.findByRole("radiogroup", { name: "Font ligatures" });
     expect(within(group).getByRole("radio", { name: "Off" })).toHaveAttribute("data-state", "on");
     await user.click(within(group).getByRole("radio", { name: "On" }));

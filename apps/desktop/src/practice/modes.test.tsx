@@ -164,10 +164,11 @@ describe("Progress: languages and interviews", () => {
       interview: running(30),
     });
     await fake.api.endInterview("en");
-    const { unmount } = renderApp("/progress");
+    const { unmount, user } = renderApp("/progress?tab=overview");
     expect(await screen.findByTestId("lang-rust")).toHaveTextContent("Rust2");
     expect(screen.getByTestId("lang-python")).toHaveTextContent("Python1");
     expect(screen.getByTestId("lang-php")).toHaveTextContent("PHP0");
+    await user.click(screen.getByRole("tab", { name: "History" }));
     const history = await screen.findByTestId("interview-history");
     expect(history).toHaveTextContent("45 min");
     expect(history).toHaveTextContent("Medium · Hard");
@@ -175,11 +176,12 @@ describe("Progress: languages and interviews", () => {
     unmount();
 
     setFakeApi({ settings: { ui_lang: "es" }, interviews: fake.state.interviews });
-    renderApp("/progress");
+    const spanish = renderApp("/progress?tab=history");
     const es = await screen.findByTestId("interview-history");
     expect(es).toHaveTextContent("Media · Difícil");
     expect(es).toHaveTextContent("Resueltos: 1 / 2");
-    expect(screen.getByText("Resueltos por lenguaje")).toBeInTheDocument();
+    await spanish.user.click(screen.getByRole("tab", { name: "Resumen" }));
+    expect(await screen.findByText("Resueltos por lenguaje")).toBeInTheDocument();
   });
 });
 
@@ -192,7 +194,7 @@ describe("Settings → Data", () => {
       statuses: 3, submissions: 10, snapshots: 4, notes: 1, drafts: 2, hint_unlocks: 0, opens: 5,
       reviews: 1, daily_picks: 2, lists: 1, interviews: 1, settings: 3,
     };
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=data");
     await user.click(await screen.findByRole("button", { name: "Export…" }));
     expect(await screen.findByTestId("data-notice")).toHaveTextContent("Exported 33 records.");
 
@@ -226,7 +228,7 @@ describe("Settings → Data", () => {
       exported_at: 1_767_225_600_000,
       app_version: "0.1.0",
     };
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=data");
     await user.click(await screen.findByRole("button", { name: "Importar…" }));
     const dialog = await screen.findByTestId("import-preview");
     expect(dialog).toHaveTextContent("1 registro ya existe aquí; se conservará el más reciente.");

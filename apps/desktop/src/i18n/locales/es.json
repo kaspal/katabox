@@ -335,7 +335,9 @@
     },
     "topics": {
       "title": "Resueltos por tema",
-      "empty": "Aún no hay temas."
+      "empty": "Aún no hay temas.",
+      "all": "Mostrar los {{count}} temas",
+      "fewer": "Mostrar menos"
     },
     "reviews": {
       "title": "Cola de repaso",
@@ -346,12 +348,21 @@
       "next": "Próximo repaso: {{date}}",
       "none": "No hay repasos programados. Tu primer Aceptado en un problema programa su repaso en 3 días.",
       "reviewNow": "Repasar ahora ({{count}})"
+    },
+    "tabs": {
+      "label": "Secciones del progreso",
+      "overview": "Resumen",
+      "patterns": "Por patrón",
+      "topics": "Por tema",
+      "history": "Historial"
+    },
+    "learn": {
+      "title": "Temas de Aprender vistos",
+      "viewed": "{{viewed}} de {{total}} vistos"
     }
   },
   "settings": {
     "title": "Ajustes",
-    "appearance": "Apariencia",
-    "about": "Acerca de",
     "version": "Versión de la app",
     "contentPack": "Paquete de problemas",
     "userSchema": "Versión de la base de datos",
@@ -364,7 +375,6 @@
       "dev": "Raíz de desarrollo",
       "app_data": "Datos de la app"
     },
-    "editor": "Editor",
     "keymap": "Atajos de teclado",
     "keymaps": {
       "default": "Predeterminado",
@@ -389,7 +399,6 @@
     "ligatures": "Ligaduras de la fuente",
     "ligaturesOff": "Desactivadas",
     "ligaturesOn": "Activadas",
-    "languages": "Lenguajes",
     "calibration": {
       "title": "Velocidad del juez",
       "description": "Los límites de tiempo se fijan en un equipo de referencia. KataBox mide este equipo una vez con una prueba corta y ajusta cada límite según el resultado, entre ×0,5 y ×3.",
@@ -434,7 +443,29 @@
     },
     "docs": "Documentación",
     "changelog": "Registro de cambios",
-    "copyAddress": "Copiar dirección"
+    "copyAddress": "Copiar dirección",
+    "sections": {
+      "label": "Secciones de los ajustes",
+      "appearance": "Apariencia",
+      "editor": "Editor",
+      "practice": "Práctica",
+      "languages": "Lenguajes y entornos de ejecución",
+      "learn": "Aprender",
+      "data": "Datos",
+      "about": "Acerca de"
+    },
+    "window": {
+      "label": "Ventana",
+      "reset": "Restablecer el tamaño y la posición de la ventana",
+      "done": "Ventana restablecida."
+    },
+    "learnSpeed": "Velocidad de las animaciones",
+    "search": {
+      "label": "Buscar en los ajustes",
+      "placeholder": "Buscar en los ajustes…",
+      "none": "Ningún ajuste coincide.",
+      "results": "Ajustes encontrados"
+    }
   },
   "languages": {
     "python": "Python",
@@ -751,7 +782,6 @@
       "problemActions": "Acciones del problema"
     },
     "settings": {
-      "title": "Práctica",
       "review": "Recordatorios de repaso en Inicio",
       "daily": "Problema del día en Inicio",
       "on": "Sí",
@@ -796,7 +826,6 @@
       "details": "Detalles"
     },
     "data": {
-      "title": "Datos",
       "intro": "Exporta tu progreso a un archivo, o importa un archivo exportado por KataBox en otro equipo. La importación combina por problema y conserva el registro más reciente.",
       "export": "Exportar…",
       "import": "Importar…",

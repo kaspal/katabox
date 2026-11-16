@@ -50,9 +50,15 @@ top bar) jumps to any page, problem or Learn topic, and switches theme and langu
 - **Library:** search (press `/`), filter by difficulty, status, pattern, tag and
   problem type (Function, Program, SQL), sort by any column. ↑ / ↓ move, Enter opens.
   The **Lists** tab holds your own lists.
-- **Progress:** solved counts, a 12-month **Activity** heatmap, **Solved by
-  difficulty**, the **Patterns** map, **Solved by language**, the **Review queue** and
-  **Past mock interviews**.
+- **Progress**, in four tabs:
+  - **Overview:** solved counts, a 12-month **Activity** heatmap, **Solved by
+    difficulty**, the **Review queue** and **Solved by language**;
+  - **By pattern:** the **Patterns** map;
+  - **By topic:** solved by tag (**Show all** for every tag) and the **Learn topics
+    viewed** per subject;
+  - **History:** past mock interviews.
+
+  The tab you used last opens next time.
 
 ## Problems and the workspace
 
@@ -148,7 +154,8 @@ shows the limit for the language you picked, e.g. **Time limit (Python)**.
 - **Lists:** **Add to list** from a Library row or the workspace header; manage lists
   in **Library → Lists** (**New list**, **Rename**, **Delete**, drag rows or Alt+↑ /
   Alt+↓ to reorder).
-- Turn the Home cards on or off in **Settings → Practice**.
+- Turn the Home cards on or off in **Settings → Practice** (the **Review a topic** card
+  is in **Settings → Learn**).
 
 ## Mock interviews
 **Interview → Start a mock interview:**
@@ -237,18 +244,27 @@ answer, Runtime error, Time limit or Memory limit exceeded:
   changes nothing. Invalid files are refused whole, and nothing in a file is executed.
 
 ## Settings
-- **Appearance:** **Theme** (System, Light, Dark), **Language** (English, Español),
-  **Contrast** (Normal, High), **Motion** (Follow the system, Reduce).
+Settings has one section per topic, listed on the left (or as tabs above, in a narrow
+window). **Search settings** finds a setting by its name.
+
+- **Appearance:**
+  - **Theme** (System, Light, Dark), **Language** (English, Español), **Contrast**
+    (Normal, High), **Motion** (Follow the system, Reduce);
+  - **Reset window size and position**. KataBox reopens where you left it, at the same
+    size, and maximised if it was. If that screen is gone, it opens centred on the main
+    screen.
 - **Editor:** **Keymap** (Default, VS Code, Vim, Emacs), **Font ligatures**, **Font
   size** (12-20 px), **Tab width** (Language default, 2, 4 or 8 spaces), **Colour
   theme** (KataBox, High ink, Paper, Dusk), with a live **Preview**.
-- **Practice:** **Daily problem on Home**, **Review reminders on Home**, **Review a
-  topic card**, **Show the welcome again**.
+- **Practice:** **Daily problem on Home**, **Review reminders on Home**, **Show the
+  welcome again**.
+- **Languages and runtimes:**
+  - install or **Uninstall** runtimes. Uninstalling keeps your drafts, notes and
+    submissions;
+  - **Judge speed:** the **Speed factor** for this computer, when and with what it was
+    measured, and **Recalibrate**.
+- **Learn:** **Review a topic card**, and the **Animation speed**.
 - **Data:** **Export…** / **Import…** (above).
-- **Languages:** install or **Uninstall** runtimes. Uninstalling keeps your drafts,
-  notes and submissions.
-- **Judge speed:** the **Speed factor** for this computer, when and with what it was
-  measured, and **Recalibrate**.
 - **About:** versions, the **Data folder** and **Sandbox folder**, **Third-party
   notices** and **Copy diagnostics…**.
 

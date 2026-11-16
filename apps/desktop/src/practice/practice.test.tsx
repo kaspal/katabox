@@ -84,7 +84,7 @@ describe("Home: daily problem and reviews", () => {
 
   it("switches the Practice settings", async () => {
     const fake = setFakeApi();
-    const { user } = renderApp("/settings");
+    const { user } = renderApp("/settings?section=practice");
     const daily = await screen.findByLabelText("Daily problem on Home");
     await user.click(within(daily).getByRole("radio", { name: "Off" }));
     expect(fake.api.setSetting).toHaveBeenCalledWith("practice.daily", false);
@@ -99,7 +99,7 @@ describe("Progress: the pattern map", () => {
 
   it("shows every pattern with solved/total and its next problem", async () => {
     setFakeApi({ streak: 2 });
-    renderApp("/progress");
+    renderApp("/progress?tab=patterns");
     const card = await screen.findByTestId("pattern-arrays-hashing");
     expect(card).toHaveTextContent("Arrays & hashing");
     expect(card).toHaveTextContent("1 / 1 solved");
@@ -115,7 +115,7 @@ describe("Progress: the pattern map", () => {
 
   it("speaks Spanish", async () => {
     setFakeApi({ settings: { ui_lang: "es" } });
-    renderApp("/progress");
+    renderApp("/progress?tab=patterns");
     const stack = await screen.findByTestId("pattern-stack");
     expect(stack).toHaveTextContent("Pila");
     expect(stack).toHaveTextContent("0 / 1 resueltos");

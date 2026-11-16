@@ -1,8 +1,11 @@
-import { Suspense, lazy, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+// Settings (ui-polish): sections behind a labelled side-nav (stacked tabs on narrow
+// windows), each linkable as `/settings?section=<id>` and the last one remembered
+// (`settings.section`). A search box finds a setting by its label and opens its section.
+import { Suspense, lazy, useCallback, useMemo, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Gauge, Loader2, Monitor, Moon, Sun, Upload } from "lucide-react";
+import { AppWindow, Download, Gauge, Loader2, Monitor, Moon, Search, Sun, Upload } from "lucide-react";
 import type { ImportPreview, TransferCounts } from "@/bindings";
 import {
   Dialog,
@@ -16,6 +19,13 @@ import { Page } from "@/components/Page";
 import { InstallPanel } from "@/languages/InstallPanel";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { normalizeForSearch } from "@/app/paletteFilter";
+import { useLearnSpeed } from "@/learn/engine/progress";
+import { SPEEDS, type Speed } from "@/learn/engine/usePlayer";
+import { useMedia } from "@/learn/engine/media";
+import { SETTINGS_SECTIONS, useRememberedTab, type SettingsSection } from "@/lib/pageTabs";
 import { Button } from "@/components/ui/button";
 import { MiddleEllipsis } from "@/components/MiddleEllipsis";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -220,7 +230,7 @@ function DataSection() {
   };
   const total = (c: TransferCounts) => Object.values(c).reduce((a, b) => a + b, 0);
   return (
-    <Section title={t("practice.data.title")}>
+    <Section title={t("settings.sections.data")}>
       <p className="text-sm text-muted-foreground">{t("practice.data.intro")}</p>
       <div className="flex gap-2">
         <Button
@@ -335,31 +345,11 @@ function PracticeSection() {
   const prefs = usePracticePrefs();
   const onboarding = useOnboardingDone();
   const navigate = useNavigate();
-  const toggle = (label: string, value: boolean, set: (v: boolean) => void) => (
-    <Row label={label}>
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        size="sm"
-        aria-label={label}
-        value={value ? "on" : "off"}
-        onValueChange={(v) => v && set(v === "on")}
-      >
-        <ToggleGroupItem value="on" className="px-3">
-          {t("practice.settings.on")}
-        </ToggleGroupItem>
-        <ToggleGroupItem value="off" className="px-3">
-          {t("practice.settings.off")}
-        </ToggleGroupItem>
-      </ToggleGroup>
-    </Row>
-  );
   return (
-    <Section title={t("practice.settings.title")}>
+    <Section title={t("settings.sections.practice")}>
       <dl className="space-y-3">
-        {toggle(t("practice.settings.daily"), prefs.daily, prefs.setDaily)}
-        {toggle(t("practice.settings.review"), prefs.review, prefs.setReview)}
-        {toggle(t("practice.settings.learnReview"), prefs.learnReview, prefs.setLearnReview)}
+        <OnOffRow label={t("practice.settings.daily")} value={prefs.daily} set={prefs.setDaily} />
+        <OnOffRow label={t("practice.settings.review")} value={prefs.review} set={prefs.setReview} />
         <Row label={t("welcome.again.label")}>
           <Button
             variant="outline"
@@ -433,246 +423,470 @@ function CalibrationSection() {
   );
 }
 
+/** An On/Off switch row (the Home cards). */
+function OnOffRow({ label, value, set }: { label: string; value: boolean; set: (v: boolean) => void }) {
+  const { t } = useTranslation();
+  return (
+    <Row label={label}>
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        size="sm"
+        aria-label={label}
+        value={value ? "on" : "off"}
+        onValueChange={(v) => v && set(v === "on")}
+      >
+        <ToggleGroupItem value="on" className="px-3">
+          {t("practice.settings.on")}
+        </ToggleGroupItem>
+        <ToggleGroupItem value="off" className="px-3">
+          {t("practice.settings.off")}
+        </ToggleGroupItem>
+      </ToggleGroup>
+    </Row>
+  );
+}
+
+/** Settings → Learn: the Home card for Learn, and the animations' playback speed. */
+function LearnSection() {
+  const { t } = useTranslation();
+  const prefs = usePracticePrefs();
+  const [speed, setSpeed] = useLearnSpeed();
+  return (
+    <Section title={t("settings.sections.learn")}>
+      <dl className="space-y-3">
+        <OnOffRow label={t("practice.settings.learnReview")} value={prefs.learnReview} set={prefs.setLearnReview} />
+        <Row label={t("settings.learnSpeed")}>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            aria-label={t("settings.learnSpeed")}
+            value={String(speed)}
+            onValueChange={(v) => v && setSpeed(Number(v) as Speed)}
+          >
+            {SPEEDS.map((n) => (
+              <ToggleGroupItem key={n} value={String(n)} className="px-3 tabular-nums">
+                {`${n}×`}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </Row>
+      </dl>
+    </Section>
+  );
+}
+
+/** Settings → Appearance → Window: back to the default size, centred (window memory). */
+function ResetWindowRow() {
+  const { t } = useTranslation();
+  const reset = useMutation({ mutationFn: api.resetWindow });
+  return (
+    <Row label={t("settings.window.label")}>
+      <span className="flex flex-wrap items-center gap-3">
+        <Button variant="outline" size="sm" disabled={reset.isPending} onClick={() => reset.mutate()}>
+          <AppWindow aria-hidden />
+          {t("settings.window.reset")}
+        </Button>
+        <span role="status" className="text-sm text-muted-foreground">
+          {reset.isSuccess ? t("settings.window.done") : ""}
+        </span>
+      </span>
+      {reset.error && <ErrorNotice error={reset.error} />}
+    </Row>
+  );
+}
+
+/** What "Search settings" finds: each section's row labels (i18n keys). */
+const SEARCH_INDEX: [SettingsSection, string[]][] = [
+  [
+    "appearance",
+    ["theme.label", "language.label", "settings.contrast", "settings.motion", "settings.window.label", "settings.window.reset"],
+  ],
+  [
+    "editor",
+    ["settings.keymap", "settings.ligatures", "settings.fontSize", "settings.tabWidth", "settings.editorTheme", "settings.preview"],
+  ],
+  ["practice", ["practice.settings.daily", "practice.settings.review", "welcome.again.label"]],
+  ["languages", ["settings.sections.languages", "settings.calibration.title", "settings.calibration.recalibrate"]],
+  ["learn", ["practice.settings.learnReview", "settings.learnSpeed"]],
+  ["data", ["practice.data.export", "practice.data.import"]],
+  [
+    "about",
+    [
+      "settings.version",
+      "settings.contentPack",
+      "settings.licenses.label",
+      "settings.userSchema",
+      "settings.dataFolder",
+      "settings.sandboxRoot",
+      "settings.notices",
+      "settings.docs",
+      "settings.changelog",
+      "shortcuts.title",
+      "settings.diagnostics.label",
+    ],
+  ],
+];
+
+/** Finds a setting by its label (accents and punctuation ignored) and opens its section. */
+function SettingsSearch({ onPick }: { onPick: (section: SettingsSection) => void }) {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState("");
+  const results = useMemo(() => {
+    const q = normalizeForSearch(query);
+    if (q === "") return [];
+    const label = t as unknown as (key: string) => string;
+    return SEARCH_INDEX.flatMap(([section, keys]) =>
+      keys
+        .map((k) => label(k))
+        .filter((text) => normalizeForSearch(text).includes(q))
+        .map((text) => ({ section, text })),
+    );
+  }, [query, t]);
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+        />
+        <Input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          aria-label={t("settings.search.label")}
+          placeholder={t("settings.search.placeholder")}
+          className="h-8 pl-8"
+          data-testid="settings-search"
+        />
+      </div>
+      {query.trim() !== "" &&
+        (results.length === 0 ? (
+          <p className="px-1 text-sm text-muted-foreground" role="status">
+            {t("settings.search.none")}
+          </p>
+        ) : (
+          <ul className="space-y-0.5" aria-label={t("settings.search.results")} data-testid="settings-search-results">
+            {results.map((r) => (
+              <li key={`${r.section}:${r.text}`}>
+                <button
+                  type="button"
+                  className="w-full rounded-md px-2 py-1 text-left text-sm hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                  onClick={() => {
+                    setQuery("");
+                    onPick(r.section);
+                  }}
+                >
+                  <span className="block">{r.text}</span>
+                  <span className="block text-xs text-muted-foreground">{t(`settings.sections.${r.section}`)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ))}
+    </div>
+  );
+}
+
 export function Settings() {
   const { t } = useTranslation();
   const { theme, lang, contrast, motion, setTheme, setLang, setContrast, setMotion } = usePrefs();
   const info = useAppInfo();
   const editor = useEditorPrefs();
+  const navigate = useNavigate({ from: "/settings" });
+  const search = useSearch({ from: "/settings" });
+  const toUrl = useCallback(
+    (section: SettingsSection) => void navigate({ search: { section }, replace: true }),
+    [navigate],
+  );
+  const [section, setSection] = useRememberedTab(
+    "settings.section",
+    SETTINGS_SECTIONS,
+    "appearance",
+    search.section,
+    toUrl,
+  );
+  // A side-nav when there is room; stacked tabs above the section otherwise.
+  const wide = useMedia("(min-width: 1100px)");
 
   return (
     <Page title={t("settings.title")}>
-      <div className="max-w-3xl space-y-4">
-        <Section title={t("settings.appearance")}>
-          <dl className="space-y-3">
-            <Row label={t("theme.label")}>
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                size="sm"
-                aria-label={t("theme.label")}
-                value={theme}
-                onValueChange={(v) => v && setTheme(v as ThemePref)}
+      <Tabs
+        value={section}
+        onValueChange={setSection}
+        orientation={wide ? "vertical" : "horizontal"}
+        className="min-h-0 max-w-5xl flex-1 items-start gap-6"
+      >
+        <nav aria-label={t("settings.sections.label")} className={wide ? "w-56 shrink-0 space-y-3" : "w-full space-y-2"}>
+          <SettingsSearch onPick={setSection} />
+          <TabsList
+            variant="line"
+            data-testid="settings-sections"
+            className={wide ? "w-full items-stretch" : "h-auto w-full flex-wrap justify-start"}
+          >
+            {SETTINGS_SECTIONS.map((id) => (
+              <TabsTrigger
+                key={id}
+                value={id}
+                className={wide ? "justify-start px-3 py-1.5" : "flex-none px-3"}
+                data-testid={`settings-section-${id}`}
               >
-                {THEMES.map((th) => {
-                  const Icon = THEME_ICON[th];
-                  return (
-                    <ToggleGroupItem key={th} value={th} className="gap-1.5 px-3">
-                      <Icon aria-hidden />
-                      {t(`theme.${th}`)}
+                {t(`settings.sections.${id}`)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </nav>
+
+        <div className="w-full min-w-0 max-w-3xl">
+          <TabsContent value="appearance">
+            <Section title={t("settings.sections.appearance")}>
+              <dl className="space-y-3">
+                <Row label={t("theme.label")}>
+                  <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    size="sm"
+                    aria-label={t("theme.label")}
+                    value={theme}
+                    onValueChange={(v) => v && setTheme(v as ThemePref)}
+                  >
+                    {THEMES.map((th) => {
+                      const Icon = THEME_ICON[th];
+                      return (
+                        <ToggleGroupItem key={th} value={th} className="gap-1.5 px-3">
+                          <Icon aria-hidden />
+                          {t(`theme.${th}`)}
+                        </ToggleGroupItem>
+                      );
+                    })}
+                  </ToggleGroup>
+                </Row>
+                <Row label={t("language.label")}>
+                  <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    size="sm"
+                    aria-label={t("language.label")}
+                    value={lang}
+                    onValueChange={(v) => v && setLang(v as UiLangCode)}
+                  >
+                    {UI_LANGS.map((l) => (
+                      <ToggleGroupItem key={l} value={l} lang={l} className="px-3">
+                        {t(`language.${l}`)}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </Row>
+                <Row label={t("settings.contrast")}>
+                  <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    size="sm"
+                    aria-label={t("settings.contrast")}
+                    value={contrast}
+                    onValueChange={(v) => v && setContrast(v as ContrastPref)}
+                  >
+                    {CONTRASTS.map((c) => (
+                      <ToggleGroupItem key={c} value={c} className="px-3">
+                        {t(`settings.contrasts.${c}`)}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </Row>
+                <Row label={t("settings.motion")}>
+                  <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    size="sm"
+                    aria-label={t("settings.motion")}
+                    value={motion}
+                    onValueChange={(v) => v && setMotion(v as MotionPref)}
+                  >
+                    {MOTIONS.map((m) => (
+                      <ToggleGroupItem key={m} value={m} className="px-3">
+                        {t(`settings.motions.${m}`)}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </Row>
+                <ResetWindowRow />
+              </dl>
+            </Section>
+          </TabsContent>
+
+          <TabsContent value="editor">
+            <Section title={t("settings.sections.editor")}>
+              <dl className="space-y-3">
+                <Row label={t("settings.keymap")}>
+                  <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    size="sm"
+                    aria-label={t("settings.keymap")}
+                    value={editor.keymap}
+                    onValueChange={(v) => v && editor.setKeymap(v as KeymapPref)}
+                  >
+                    {KEYMAPS.map((k) => (
+                      <ToggleGroupItem key={k} value={k} className="px-3">
+                        {t(`settings.keymaps.${k}`)}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </Row>
+                <Row label={t("settings.ligatures")}>
+                  <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    size="sm"
+                    aria-label={t("settings.ligatures")}
+                    value={editor.ligatures ? "on" : "off"}
+                    onValueChange={(v) => v && editor.setLigatures(v === "on")}
+                  >
+                    <ToggleGroupItem value="off" className="px-3">
+                      {t("settings.ligaturesOff")}
                     </ToggleGroupItem>
-                  );
-                })}
-              </ToggleGroup>
-            </Row>
-            <Row label={t("language.label")}>
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                size="sm"
-                aria-label={t("language.label")}
-                value={lang}
-                onValueChange={(v) => v && setLang(v as UiLangCode)}
-              >
-                {UI_LANGS.map((l) => (
-                  <ToggleGroupItem key={l} value={l} lang={l} className="px-3">
-                    {t(`language.${l}`)}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </Row>
-            <Row label={t("settings.contrast")}>
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                size="sm"
-                aria-label={t("settings.contrast")}
-                value={contrast}
-                onValueChange={(v) => v && setContrast(v as ContrastPref)}
-              >
-                {CONTRASTS.map((c) => (
-                  <ToggleGroupItem key={c} value={c} className="px-3">
-                    {t(`settings.contrasts.${c}`)}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </Row>
-            <Row label={t("settings.motion")}>
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                size="sm"
-                aria-label={t("settings.motion")}
-                value={motion}
-                onValueChange={(v) => v && setMotion(v as MotionPref)}
-              >
-                {MOTIONS.map((m) => (
-                  <ToggleGroupItem key={m} value={m} className="px-3">
-                    {t(`settings.motions.${m}`)}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </Row>
-          </dl>
-        </Section>
+                    <ToggleGroupItem value="on" className="px-3">
+                      {t("settings.ligaturesOn")}
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </Row>
+                <Row label={t("settings.fontSize")}>
+                  <Select value={String(editor.fontSize)} onValueChange={(v) => editor.setFontSize(Number(v))}>
+                    <SelectTrigger size="sm" className="w-28" aria-label={t("settings.fontSize")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FONT_SIZES.map((n) => (
+                        <SelectItem key={n} value={String(n)}>
+                          {n} px
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Row>
+                <Row label={t("settings.tabWidth")}>
+                  <Select value={String(editor.tabWidth)} onValueChange={(v) => editor.setTabWidth(Number(v))}>
+                    <SelectTrigger size="sm" className="w-44" aria-label={t("settings.tabWidth")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TAB_WIDTHS.map((n) => (
+                        <SelectItem key={n} value={String(n)}>
+                          {n === 0 ? t("settings.tabWidthLanguage") : t("settings.tabWidthSpaces", { count: n })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Row>
+                <Row label={t("settings.editorTheme")}>
+                  <Select value={editor.theme} onValueChange={(v) => editor.setTheme(v as EditorTheme)}>
+                    <SelectTrigger size="sm" className="w-44" aria-label={t("settings.editorTheme")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EDITOR_THEMES.map((id) => (
+                        <SelectItem key={id} value={id}>
+                          {t(`settings.editorThemes.${id}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Row>
+              </dl>
+              <div className="mt-4 space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">{t("settings.preview")}</p>
+                <Suspense fallback={<Skeleton className="h-56 w-full" />}>
+                  <EditorPreview />
+                </Suspense>
+              </div>
+            </Section>
+          </TabsContent>
 
-        <Section title={t("settings.editor")}>
-          <dl className="space-y-3">
-            <Row label={t("settings.keymap")}>
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                size="sm"
-                aria-label={t("settings.keymap")}
-                value={editor.keymap}
-                onValueChange={(v) => v && editor.setKeymap(v as KeymapPref)}
-              >
-                {KEYMAPS.map((k) => (
-                  <ToggleGroupItem key={k} value={k} className="px-3">
-                    {t(`settings.keymaps.${k}`)}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </Row>
-            <Row label={t("settings.ligatures")}>
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                size="sm"
-                aria-label={t("settings.ligatures")}
-                value={editor.ligatures ? "on" : "off"}
-                onValueChange={(v) => v && editor.setLigatures(v === "on")}
-              >
-                <ToggleGroupItem value="off" className="px-3">
-                  {t("settings.ligaturesOff")}
-                </ToggleGroupItem>
-                <ToggleGroupItem value="on" className="px-3">
-                  {t("settings.ligaturesOn")}
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </Row>
-            <Row label={t("settings.fontSize")}>
-              <Select value={String(editor.fontSize)} onValueChange={(v) => editor.setFontSize(Number(v))}>
-                <SelectTrigger size="sm" className="w-28" aria-label={t("settings.fontSize")}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FONT_SIZES.map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n} px
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Row>
-            <Row label={t("settings.tabWidth")}>
-              <Select value={String(editor.tabWidth)} onValueChange={(v) => editor.setTabWidth(Number(v))}>
-                <SelectTrigger size="sm" className="w-44" aria-label={t("settings.tabWidth")}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TAB_WIDTHS.map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n === 0 ? t("settings.tabWidthLanguage") : t("settings.tabWidthSpaces", { count: n })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Row>
-            <Row label={t("settings.editorTheme")}>
-              <Select value={editor.theme} onValueChange={(v) => editor.setTheme(v as EditorTheme)}>
-                <SelectTrigger size="sm" className="w-44" aria-label={t("settings.editorTheme")}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {EDITOR_THEMES.map((id) => (
-                    <SelectItem key={id} value={id}>
-                      {t(`settings.editorThemes.${id}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Row>
-          </dl>
-          <div className="mt-4 space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">{t("settings.preview")}</p>
-            <Suspense fallback={<Skeleton className="h-56 w-full" />}>
-              <EditorPreview />
-            </Suspense>
-          </div>
-        </Section>
+          <TabsContent value="practice">
+            <PracticeSection />
+          </TabsContent>
 
-        <PracticeSection />
+          <TabsContent value="languages" className="space-y-4">
+            <Section title={t("settings.sections.languages")}>
+              <InstallPanel allowUninstall />
+            </Section>
+            <CalibrationSection />
+          </TabsContent>
 
-        <DataSection />
+          <TabsContent value="learn">
+            <LearnSection />
+          </TabsContent>
 
-        <Section title={t("settings.languages")}>
-          <InstallPanel allowUninstall />
-        </Section>
+          <TabsContent value="data">
+            <DataSection />
+          </TabsContent>
 
-        <CalibrationSection />
-
-        <Section title={t("settings.about")}>
-          {info.isPending ? (
-            <Skeleton className="h-32 w-full" />
-          ) : info.error ? (
-            <ErrorNotice error={info.error} onRetry={() => void info.refetch()} />
-          ) : (
-            <dl className="space-y-2">
-              <Row label={t("settings.version")}>
-                <span className="font-mono">{info.data.app_version}</span>
-                {info.data.dev_data && (
-                  <Badge className="ml-2 bg-dev-badge font-mono text-dev-badge-foreground">
-                    {t("app.devData")}
-                  </Badge>
-                )}
-              </Row>
-              <Row label={t("settings.contentPack")}>
-                <span className="font-mono" data-testid="content-pack">
-                  {info.data.content.pack_id} {info.data.content.pack_version}
-                </span>
-                {info.data.content.pack_date && (
-                  <span className="ml-2 text-muted-foreground">
-                    {t("settings.contentDate", { date: info.data.content.pack_date })}
-                  </span>
-                )}
-              </Row>
-              <Row label={t("settings.licenses.label")}>
-                <span className="block">{t("settings.licenses.code")}</span>
-                <span className="block">{t("settings.licenses.content")}</span>
-              </Row>
-              <Row label={t("settings.userSchema")}>
-                <span className="font-mono">{info.data.user_schema_version}</span>
-              </Row>
-              <Row label={t("settings.dataFolder")}>
-                <MiddleEllipsis className="font-mono text-xs" text={info.data.data_dir} />
-              </Row>
-              <Row label={t("settings.sandboxRoot")}>
-                <MiddleEllipsis className="font-mono text-xs" text={info.data.sandbox_root} />
-              </Row>
-              <Row label={t("settings.sandboxSource")}>
-                {t(`settings.rootSource.${info.data.sandbox_root_source}`)}
-              </Row>
-              <Row label={t("settings.notices")}>
-                <NoticesButton />
-              </Row>
-              <Row label={t("settings.docs")}>
-                <CopyableUrl url={DOCS_URL} testId="docs-url" />
-              </Row>
-              <Row label={t("settings.changelog")}>
-                <CopyableUrl url={CHANGELOG_URL} testId="changelog-url" />
-              </Row>
-              <Row label={t("shortcuts.title")}>
-                <Button variant="outline" size="sm" onClick={openShortcuts}>
-                  {t("shortcuts.open")}
-                </Button>
-              </Row>
-              <Row label={t("settings.diagnostics.label")}>
-                <DiagnosticsButton />
-              </Row>
-            </dl>
-          )}
-        </Section>
-      </div>
+          <TabsContent value="about">
+            <Section title={t("settings.sections.about")}>
+              {info.isPending ? (
+                <Skeleton className="h-32 w-full" />
+              ) : info.error ? (
+                <ErrorNotice error={info.error} onRetry={() => void info.refetch()} />
+              ) : (
+                <dl className="space-y-2">
+                  <Row label={t("settings.version")}>
+                    <span className="font-mono">{info.data.app_version}</span>
+                    {info.data.dev_data && (
+                      <Badge className="ml-2 bg-dev-badge font-mono text-dev-badge-foreground">
+                        {t("app.devData")}
+                      </Badge>
+                    )}
+                  </Row>
+                  <Row label={t("settings.contentPack")}>
+                    <span className="font-mono" data-testid="content-pack">
+                      {info.data.content.pack_id} {info.data.content.pack_version}
+                    </span>
+                    {info.data.content.pack_date && (
+                      <span className="ml-2 text-muted-foreground">
+                        {t("settings.contentDate", { date: info.data.content.pack_date })}
+                      </span>
+                    )}
+                  </Row>
+                  <Row label={t("settings.licenses.label")}>
+                    <span className="block">{t("settings.licenses.code")}</span>
+                    <span className="block">{t("settings.licenses.content")}</span>
+                  </Row>
+                  <Row label={t("settings.userSchema")}>
+                    <span className="font-mono">{info.data.user_schema_version}</span>
+                  </Row>
+                  <Row label={t("settings.dataFolder")}>
+                    <MiddleEllipsis className="font-mono text-xs" text={info.data.data_dir} />
+                  </Row>
+                  <Row label={t("settings.sandboxRoot")}>
+                    <MiddleEllipsis className="font-mono text-xs" text={info.data.sandbox_root} />
+                  </Row>
+                  <Row label={t("settings.sandboxSource")}>
+                    {t(`settings.rootSource.${info.data.sandbox_root_source}`)}
+                  </Row>
+                  <Row label={t("settings.notices")}>
+                    <NoticesButton />
+                  </Row>
+                  <Row label={t("settings.docs")}>
+                    <CopyableUrl url={DOCS_URL} testId="docs-url" />
+                  </Row>
+                  <Row label={t("settings.changelog")}>
+                    <CopyableUrl url={CHANGELOG_URL} testId="changelog-url" />
+                  </Row>
+                  <Row label={t("shortcuts.title")}>
+                    <Button variant="outline" size="sm" onClick={openShortcuts}>
+                      {t("shortcuts.open")}
+                    </Button>
+                  </Row>
+                  <Row label={t("settings.diagnostics.label")}>
+                    <DiagnosticsButton />
+                  </Row>
+                </dl>
+              )}
+            </Section>
+          </TabsContent>
+        </div>
+      </Tabs>
     </Page>
   );
 }
