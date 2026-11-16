@@ -61,6 +61,18 @@ async thirdPartyNotices() : Promise<Result<string | null, AppError>> {
 }
 },
 /**
+ * Settings → Appearance → "Reset window size and position": the default size, centred,
+ * saved as the window's new bounds.
+ */
+async resetWindow() : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reset_window") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Progress → heatmap: Submits since `since_ms` (UTC ms); the UI buckets local days.
  */
 async activity(sinceMs: number) : Promise<Result<ActivityRow[], AppError>> {

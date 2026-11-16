@@ -3,6 +3,8 @@
 //! it belongs in `crates/` (mostly kb-app). Every command is a short forward to kb-app
 //! and returns `Result<T, AppError>`.
 
+mod window_state;
+
 use std::path::{Path, PathBuf};
 
 use kb_app::debug::{DebugAction, DebugInspect, DebugStart, DebugView};
@@ -402,6 +404,16 @@ async fn solved_breakdown(state: State<'_, AppState>, lang: UiLang) -> Res<Solve
 #[specta::specta]
 async fn review_summary(state: State<'_, AppState>, today: String) -> Res<ReviewSummary> {
     state.app()?.review_summary(&today).await
+}
+
+/// Settings → Appearance → "Reset window size and position": the default size, centred,
+/// saved as the window's new bounds.
+#[tauri::command]
+#[specta::specta]
+async fn reset_window(window: tauri::WebviewWindow) -> Res<()> {
+    tauri::async_runtime::spawn_blocking(move || window_state::reset(&window))
+        .await
+        .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))
 }
 
 /// Settings → About → Third-party notices (the bundled text; `None` in dev builds).
@@ -816,6 +828,7 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         cancel_shrink,
         diagnostics,
         third_party_notices,
+        reset_window,
         activity,
         solved_breakdown,
         review_summary,
@@ -1007,6 +1020,12 @@ pub fn run_app() {
                 eprintln!("KataBox could not start: {e}");
             }
             app.manage(AppState(state));
+            // The main window starts hidden: place it where it was, then show it.
+            app.manage(window_state::Saved::default());
+            if let Some(window) = app.get_webview_window("main") {
+                window_state::restore(&window);
+                window_state::watch(&window);
+            }
             Ok(())
         })
         .build(tauri::generate_context!())

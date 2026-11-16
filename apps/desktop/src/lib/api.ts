@@ -86,6 +86,8 @@ export const api = {
   appInfo: (): Promise<AppInfo> => call(commands.appInfo()),
   diagnostics: (): Promise<Diagnostics> => call(commands.diagnostics()),
   thirdPartyNotices: (): Promise<string | null> => call(commands.thirdPartyNotices()),
+  /** Settings → Appearance: the default window size, centred (window memory, ui-polish). */
+  resetWindow: (): Promise<null> => call(commands.resetWindow()),
   activity: (sinceMs: number): Promise<ActivityRow[]> => call(commands.activity(sinceMs)),
   solvedBreakdown: (lang: UiLang): Promise<SolvedBreakdown> => call(commands.solvedBreakdown(lang)),
   reviewSummary: (today: string): Promise<ReviewSummary> => call(commands.reviewSummary(today)),

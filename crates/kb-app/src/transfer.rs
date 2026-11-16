@@ -452,6 +452,9 @@ mod tests {
             "learn.speed",
             "learn.other",
             "ui.other",
+            crate::window::WINDOW_BOUNDS_KEY,
+            "progress.tab",
+            "settings.section",
         ] {
             assert!(!importable_setting(k), "{k}");
             assert!(
