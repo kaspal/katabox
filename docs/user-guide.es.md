@@ -54,9 +54,15 @@ idioma.
 - **Biblioteca:** busca (pulsa `/`), filtra por dificultad, estado, patrón, etiqueta y
   tipo de problema (Función, Programa, SQL) y ordena por cualquier columna. ↑ / ↓ para
   moverte, Intro para abrir. La pestaña **Listas** guarda tus propias listas.
-- **Progreso:** problemas resueltos, el mapa de **Actividad** de 12 meses, **Resueltos
-  por dificultad**, el mapa de **Patrones**, **Resueltos por lenguaje**, la **Cola de
-  repaso** y las **Entrevistas simuladas anteriores**.
+- **Progreso**, en cuatro pestañas:
+  - **Resumen:** problemas resueltos, el mapa de **Actividad** de 12 meses, **Resueltos
+    por dificultad**, la **Cola de repaso** y **Resueltos por lenguaje**;
+  - **Por patrón:** el mapa de **Patrones**;
+  - **Por tema:** resueltos por etiqueta (**Mostrar** todas) y los **Temas de Aprender
+    vistos** de cada materia;
+  - **Historial:** las entrevistas simuladas anteriores.
+
+  La próxima vez se abre la última pestaña que usaste.
 
 ## Problemas y espacio de trabajo
 
@@ -160,7 +166,8 @@ más tiempo. El espacio de trabajo muestra el del lenguaje elegido, p. ej. **Tie
 - **Listas:** **Añadir a una lista** desde una fila de la Biblioteca o la cabecera del
   espacio de trabajo; gestiónalas en **Biblioteca → Listas** (**Nueva lista**,
   **Renombrar**, **Eliminar**; arrastra las filas o usa Alt+↑ / Alt+↓ para ordenarlas).
-- Activa o desactiva las tarjetas de Inicio en **Ajustes → Práctica**.
+- Activa o desactiva las tarjetas de Inicio en **Ajustes → Práctica** (la tarjeta
+  **Repasar un tema** está en **Ajustes → Aprender**).
 
 ## Entrevistas simuladas
 **Entrevista → Empezar una entrevista simulada:**
@@ -260,19 +267,28 @@ excedidos:
   entero, y nada de un archivo se ejecuta.
 
 ## Ajustes
-- **Apariencia:** **Tema** (Sistema, Claro, Oscuro), **Idioma** (English, Español),
-  **Contraste** (Normal, Alto), **Movimiento** (Seguir al sistema, Reducir).
+Los ajustes tienen una sección por tema, a la izquierda (o en pestañas arriba, si la
+ventana es estrecha). **Buscar en los ajustes** encuentra un ajuste por su nombre.
+
+- **Apariencia:**
+  - **Tema** (Sistema, Claro, Oscuro), **Idioma** (English, Español), **Contraste**
+    (Normal, Alto), **Movimiento** (Seguir al sistema, Reducir);
+  - **Restablecer el tamaño y la posición de la ventana**. KataBox se vuelve a abrir
+    donde lo dejaste, con el mismo tamaño y maximizado si lo estaba. Si esa pantalla ya
+    no está, se abre centrado en la pantalla principal.
 - **Editor:** **Atajos de teclado** (Predeterminado, VS Code, Vim, Emacs), **Ligaduras
   de la fuente**, **Tamaño de letra** (12-20 px), **Ancho de tabulación** (El del
   lenguaje, 2, 4 u 8 espacios), **Tema de colores** (KataBox, Tinta intensa, Papel,
   Anochecer), con **Vista previa** en directo.
 - **Práctica:** **Problema del día en Inicio**, **Recordatorios de repaso en Inicio**,
-  **Tarjeta «Repasar un tema»**, **Mostrar de nuevo la bienvenida**.
+  **Mostrar de nuevo la bienvenida**.
+- **Lenguajes y entornos de ejecución:**
+  - instala o **Desinstalar** entornos. Desinstalar conserva tus borradores, notas y
+    envíos;
+  - **Velocidad del juez:** el **Factor de velocidad** de este equipo, cuándo y con qué
+    se midió, y **Volver a medir**.
+- **Aprender:** **Tarjeta «Repasar un tema»** y la **Velocidad de las animaciones**.
 - **Datos:** **Exportar…** / **Importar…** (ver arriba).
-- **Lenguajes:** instala o **Desinstalar** entornos. Desinstalar conserva tus
-  borradores, notas y envíos.
-- **Velocidad del juez:** el **Factor de velocidad** de este equipo, cuándo y con qué se
-  midió, y **Volver a medir**.
 - **Acerca de:** versiones, la **Carpeta de datos** y la **Carpeta del sandbox**,
   **Avisos de terceros** y **Copiar diagnóstico…**.
 
