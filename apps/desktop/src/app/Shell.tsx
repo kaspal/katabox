@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Command as CommandIcon } from "lucide-react";
+import { Command as CommandIcon, Keyboard } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CommandPalette } from "@/app/CommandPalette";
+import { ShortcutsDialog } from "@/app/ShortcutsDialog";
+import { WhatsNewDialog, useWhatsNew } from "@/app/WhatsNew";
+import { onOpenShortcuts, openShortcuts } from "@/app/shortcuts";
 import { DEV_NAV, NAV } from "@/app/nav";
 import { useFocusMode } from "@/lib/focus";
 import { useAppInfo, useLanguages } from "@/lib/queries";
@@ -36,16 +39,18 @@ function useFirstRun() {
     if (onboarding.done === null && !none) onboarding.setDone(true);
     setShow(onboarding.done === null && langs.data.platform_supported && none);
   }, [langs.data, onboarding.loaded, onboarding.done, show]);
-  return { show: show === true, hide: () => setShow(false) };
+  return { show: show === true, hide: () => setShow(false), onboarding };
 }
 
-/** Left navigation rail, top bar (DEV DATA badge, palette) and the page. */
+/** Left navigation rail, top bar (DEV DATA badge, shortcuts, palette) and the page. */
 export function Shell() {
   const { t } = useTranslation();
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const info = useAppInfo();
   const { focus } = useFocusMode();
   const firstRun = useFirstRun();
+  const whatsNew = useWhatsNew(info.data?.app_version, firstRun.onboarding, firstRun.show);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Settings and the dev screens stay reachable from the rail.
   const gated = firstRun.show && !pathname.startsWith("/settings") && !pathname.startsWith("/dev");
@@ -55,10 +60,17 @@ export function Shell() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setPaletteOpen((open) => !open);
+      } else if (e.key === "F1" && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
+        e.preventDefault();
+        setShortcutsOpen(true);
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const off = onOpenShortcuts(() => setShortcutsOpen(true));
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      off();
+    };
   }, []);
 
   return (
@@ -124,6 +136,22 @@ export function Shell() {
               <TooltipContent>{t("app.devDataHint")}</TooltipContent>
             </Tooltip>
           )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-muted-foreground"
+                aria-label={t("shortcuts.open")}
+                aria-keyshortcuts="F1"
+                onClick={openShortcuts}
+                data-testid="shortcuts-button"
+              >
+                <Keyboard aria-hidden className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t("shortcuts.open")} (F1)</TooltipContent>
+          </Tooltip>
           <Button
             variant="outline"
             size="sm"
@@ -146,6 +174,10 @@ export function Shell() {
       </main>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      {info.data && (
+        <WhatsNewDialog open={whatsNew.show} version={info.data.app_version} onClose={whatsNew.hide} />
+      )}
     </div>
   );
 }

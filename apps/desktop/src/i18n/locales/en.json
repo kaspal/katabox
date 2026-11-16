@@ -25,7 +25,8 @@
     "theme": "Theme",
     "language": "Language",
     "topics": "Learn topics",
-    "topic": "Learn: {{title}}"
+    "topic": "Learn: {{title}}",
+    "help": "Help"
   },
   "theme": {
     "label": "Theme",
@@ -424,7 +425,16 @@
     "motions": {
       "system": "Follow the system",
       "reduced": "Reduce"
-    }
+    },
+    "contentDate": "released {{date}}",
+    "licenses": {
+      "label": "Licences",
+      "code": "Code: MIT or Apache-2.0",
+      "content": "Problems and Learn content: CC BY-SA 4.0"
+    },
+    "docs": "Documentation",
+    "changelog": "Changelog",
+    "copyAddress": "Copy address"
   },
   "languages": {
     "python": "Python",
@@ -2858,5 +2868,79 @@
     "customUnavailable": "Custom tests are not available for SQL problems yet: editing tables is coming later.",
     "needsPython": "SQL problems run on Python's SQLite. Install Python to run your query.",
     "completion": "completion of the tables, columns and keywords"
+  },
+  "shortcuts": {
+    "open": "Keyboard shortcuts",
+    "title": "Keyboard shortcuts",
+    "intro": "The keys KataBox understands, by area. Editor keys follow the keymap chosen in Settings.",
+    "keymapNote": "With the Vim or Emacs keymap, the editor adds that keymap's own keys.",
+    "key": {
+      "Space": "Space",
+      "Home": "Home",
+      "End": "End",
+      "Enter": "Enter",
+      "PageUp": "Page Up",
+      "PageDown": "Page Down",
+      "Esc": "Esc"
+    },
+    "group": {
+      "general": "Anywhere",
+      "library": "Library",
+      "workspace": "Workspace",
+      "editor": "Editor",
+      "debugger": "Debugger",
+      "learn": "Learn player"
+    },
+    "general": {
+      "palette": "Command palette",
+      "shortcuts": "This list of shortcuts"
+    },
+    "library": {
+      "search": "Search problems",
+      "move": "Move through the list",
+      "open": "Open the selected problem",
+      "listOrder": "Move a problem up or down in a list"
+    },
+    "workspace": {
+      "run": "Run (public and custom tests)",
+      "submit": "Submit (every test)",
+      "focus": "Focus mode on or off",
+      "leaveFocus": "Leave focus mode (outside the editor)"
+    },
+    "editor": {
+      "find": "Find in the code",
+      "undoRedo": "Undo / redo",
+      "format": "Format the code (with a language server)",
+      "definition": "Go to the definition (with a language server)"
+    },
+    "debugger": {
+      "breakpoint": "Breakpoint on the cursor's line",
+      "continue": "Start debugging / continue",
+      "stepOver": "Step over",
+      "stepBack": "Step back",
+      "stepInto": "Step into",
+      "stepOut": "Step out",
+      "restart": "Restart",
+      "stop": "Stop debugging"
+    },
+    "learn": {
+      "playPause": "Play or pause",
+      "step": "Step back / forward",
+      "restart": "Restart"
+    }
+  },
+  "whatsNew": {
+    "title": "What's new in KataBox {{version}}",
+    "intro": "KataBox was updated. Your progress, drafts and settings are all still here.",
+    "items": {
+      "practice": "209 original problems: function, program (stdin/stdout) and SQL, from easy to hard.",
+      "sql": "SQL problems on SQLite, with a Tables panel and a row-by-row comparison of your result.",
+      "learn": "Learn: 118 animated topics in 14 subjects, with quizzes and three learning paths.",
+      "debugger": "Debug and visualize Python and TypeScript, now also in program problems.",
+      "shrinker": "\"Find a smaller failing input\" turns a failing test into the smallest one that still fails.",
+      "about": "Settings → About shows the versions, the licences and every keyboard shortcut (F1)."
+    },
+    "more": "The full list is in CHANGELOG.md (Settings → About).",
+    "close": "Got it"
   }
 }

@@ -96,7 +96,7 @@ describe("Settings: Copy diagnostics", () => {
     const { user } = renderApp("/settings");
     await user.click(await screen.findByRole("button", { name: "Copy diagnostics…" }));
     const text = (await screen.findByTestId("diagnostics-text")).textContent ?? "";
-    expect(text).toContain("app: 0.1.0");
+    expect(text).toContain("app: 1.0.0-beta.1");
     expect(text).toContain("python: installed (python-3.14), language server available");
     expect(text).toContain("toolchain_missing");
     expect(text).toContain("unknown");

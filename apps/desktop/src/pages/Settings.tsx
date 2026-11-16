@@ -26,6 +26,8 @@ import { CONTRASTS, MOTIONS, THEMES, usePrefs, type ContrastPref, type MotionPre
 import { api } from "@/lib/api";
 import { useOnboardingDone } from "@/onboarding/state";
 import { copyText, diagnosticsText, recentErrors } from "@/lib/diagnostics";
+import { CHANGELOG_URL, DOCS_URL } from "@/lib/links";
+import { openShortcuts } from "@/app/shortcuts";
 import { queryKeys, useAppInfo, useCalibration } from "@/lib/queries";
 import { usePracticePrefs } from "@/lib/practice";
 import {
@@ -52,8 +54,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-/** Settings → About → Third-party notices: the bundled THIRD_PARTY_NOTICES.txt, read by
- * Rust (ADR 0021). Development builds have none. */
 /** Copy diagnostics: shows exactly what will be copied (versions, flags and recent
  * error codes; no code, paths or personal data), then copies it. */
 function DiagnosticsButton() {
@@ -119,6 +119,27 @@ function DiagnosticsButton() {
   );
 }
 
+/** An address shown as selectable text with a Copy button (About opens no browser). */
+function CopyableUrl({ url, testId }: { url: string; testId: string }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
+  return (
+    <span className="flex flex-wrap items-center gap-2">
+      <span className="select-all break-all font-mono text-xs" data-testid={testId}>
+        {url}
+      </span>
+      <Button variant="outline" size="sm" onClick={async () => setCopied((await copyText(url)) ? "done" : "failed")}>
+        {t("settings.copyAddress")}
+      </Button>
+      <span role="status" className="text-xs text-muted-foreground">
+        {copied === "done" ? t("settings.diagnostics.copied") : copied === "failed" ? t("settings.diagnostics.copyFailed") : ""}
+      </span>
+    </span>
+  );
+}
+
+/** Settings → About → Third-party notices: the bundled THIRD_PARTY_NOTICES.txt, read by
+ * Rust (ADR 0021). Development builds have none. */
 function NoticesButton() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -606,9 +627,18 @@ export function Settings() {
                 )}
               </Row>
               <Row label={t("settings.contentPack")}>
-                <span className="font-mono">
+                <span className="font-mono" data-testid="content-pack">
                   {info.data.content.pack_id} {info.data.content.pack_version}
                 </span>
+                {info.data.content.pack_date && (
+                  <span className="ml-2 text-muted-foreground">
+                    {t("settings.contentDate", { date: info.data.content.pack_date })}
+                  </span>
+                )}
+              </Row>
+              <Row label={t("settings.licenses.label")}>
+                <span className="block">{t("settings.licenses.code")}</span>
+                <span className="block">{t("settings.licenses.content")}</span>
               </Row>
               <Row label={t("settings.userSchema")}>
                 <span className="font-mono">{info.data.user_schema_version}</span>
@@ -624,6 +654,17 @@ export function Settings() {
               </Row>
               <Row label={t("settings.notices")}>
                 <NoticesButton />
+              </Row>
+              <Row label={t("settings.docs")}>
+                <CopyableUrl url={DOCS_URL} testId="docs-url" />
+              </Row>
+              <Row label={t("settings.changelog")}>
+                <CopyableUrl url={CHANGELOG_URL} testId="changelog-url" />
+              </Row>
+              <Row label={t("shortcuts.title")}>
+                <Button variant="outline" size="sm" onClick={openShortcuts}>
+                  {t("shortcuts.open")}
+                </Button>
               </Row>
               <Row label={t("settings.diagnostics.label")}>
                 <DiagnosticsButton />

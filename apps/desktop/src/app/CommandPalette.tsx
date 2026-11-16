@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { GraduationCap, Languages, Monitor, Moon, Sun } from "lucide-react";
+import { GraduationCap, Keyboard, Languages, Monitor, Moon, Sun } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -11,13 +11,14 @@ import {
 } from "@/components/ui/command";
 import { DifficultyLabel, useTagLabel } from "@/components/Semantic";
 import { DEV_NAV, NAV, WORKSPACE_ICON } from "@/app/nav";
+import { openShortcuts } from "@/app/shortcuts";
 import { UI_LANGS } from "@/i18n";
 import { THEMES, usePrefs, type ThemePref } from "@/lib/prefs";
 import { useLearnCatalog, useProblems } from "@/lib/queries";
 
 const THEME_ICON: Record<ThemePref, typeof Sun> = { system: Monitor, light: Sun, dark: Moon };
 
-/** Ctrl+K: go to a page, open a problem, switch theme or UI language. */
+/** Ctrl+K: go to a page, open a problem, switch theme or UI language, see the shortcuts. */
 export function CommandPalette({
   open,
   onOpenChange,
@@ -119,6 +120,12 @@ export function CommandPalette({
               {t("palette.language")}: {t(`language.${l}`)}
             </CommandItem>
           ))}
+        </CommandGroup>
+        <CommandGroup heading={t("palette.help")}>
+          <CommandItem value={`help ${t("shortcuts.open")} F1`} onSelect={() => run(openShortcuts)}>
+            <Keyboard aria-hidden />
+            {t("shortcuts.open")}
+          </CommandItem>
         </CommandGroup>
       </CommandList>
     </CommandDialog>
