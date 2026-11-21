@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{Row, SqliteConnection};
 
+use crate::kata::{KATA_MAX_MS, KataAttemptRow, KataSessionRow};
 use crate::user::{code_hash, parse_language, parse_status, parse_verdict, verdict_code};
 use crate::{ProblemStatus, Result, SnapshotSource, UserDb};
 
@@ -148,12 +149,18 @@ pub struct ExportData {
     pub settings: Vec<SettingRow>,
     // Sections added by `katabox-export/v2` (expansion) go below, each
     // `#[serde(default)]` so v1 files still parse.
+    /// Kata sessions (expansion M1).
+    #[serde(default)]
+    pub kata_sessions: Vec<KataSessionRow>,
+    /// Kata attempts (expansion M1).
+    #[serde(default)]
+    pub kata_attempts: Vec<KataAttemptRow>,
 }
 
 impl ExportData {
     /// True when the data holds none of the sections that only v2 files may have.
     pub fn v2_sections_empty(&self) -> bool {
-        true
+        self.kata_sessions.is_empty() && self.kata_attempts.is_empty()
     }
 }
 
@@ -306,6 +313,8 @@ impl UserDb {
                 results: s.results,
             });
         }
+        d.kata_sessions = self.katas().await?.into_iter().rev().collect();
+        d.kata_attempts = self.kata_attempts().await?;
         for r in sqlx::query("SELECT * FROM settings ORDER BY key")
             .fetch_all(p)
             .await?
@@ -375,6 +384,17 @@ impl UserDb {
         }
         for r in &d.settings {
             n += u64::from(has(p, "SELECT 1 FROM settings WHERE key = ?", &[&r.key]).await?);
+        }
+        for r in &d.kata_attempts {
+            let session = r.session_started_at.to_string();
+            n += u64::from(
+                has(
+                    p,
+                    "SELECT 1 FROM kata_attempts WHERE session_started_at = ? AND problem_id = ?",
+                    &[&session, &r.problem_id],
+                )
+                .await?,
+            );
         }
         Ok(n)
     }
@@ -662,6 +682,64 @@ impl UserDb {
             .await?
             .rows_affected();
             stats.entry("interviews").or_default().count(n, n == 0);
+        }
+
+        for s in &d.kata_sessions {
+            // A session that never ended is imported as ended when it would have expired.
+            let ended = s.ended_at.or(Some(s.started_at + KATA_MAX_MS));
+            let n = sqlx::query(
+                "INSERT OR IGNORE INTO kata_sessions
+                   (started_at, day, kind, source, problem_ids, duration_s, ended_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)",
+            )
+            .bind(s.started_at)
+            .bind(&s.day)
+            .bind(s.kind.id())
+            .bind(&s.source)
+            .bind(serde_json::to_string(&s.problem_ids)?)
+            .bind(s.duration_s)
+            .bind(ended)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("kata_sessions").or_default().count(n, n == 0);
+        }
+
+        for a in &d.kata_attempts {
+            let session = a.session_started_at.to_string();
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM kata_attempts WHERE session_started_at = ? AND problem_id = ?",
+                &[&session, &a.problem_id],
+            )
+            .await?;
+            // The imported attempt wins when it solved what the local one did not, or
+            // counts more submits with the same outcome.
+            let n = sqlx::query(
+                "INSERT INTO kata_attempts (session_started_at, problem_id, started_at, submits,
+                   verdict, solved_at, time_ms, language, code)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 ON CONFLICT (session_started_at, problem_id) DO UPDATE SET
+                   started_at = excluded.started_at, submits = excluded.submits,
+                   verdict = excluded.verdict, solved_at = excluded.solved_at,
+                   time_ms = excluded.time_ms, language = excluded.language, code = excluded.code
+                 WHERE (kata_attempts.solved_at IS NULL AND excluded.solved_at IS NOT NULL)
+                    OR (excluded.submits > kata_attempts.submits
+                        AND (kata_attempts.solved_at IS NULL) = (excluded.solved_at IS NULL))",
+            )
+            .bind(a.session_started_at)
+            .bind(&a.problem_id)
+            .bind(a.started_at)
+            .bind(i64::from(a.submits))
+            .bind(a.verdict.map(verdict_code).transpose()?)
+            .bind(a.solved_at)
+            .bind(a.time_ms)
+            .bind(a.language.map(|l| l.id()))
+            .bind(&a.code)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("kata_attempts").or_default().count(n, existed);
         }
 
         for r in &d.settings {

@@ -207,10 +207,11 @@ impl App {
         Ok(result)
     }
 
-    /// Refuse when `problem` is part of the running interview.
+    /// Refuse when `problem` is part of the running interview or kata.
     pub(crate) async fn ensure_unlocked(&self, problem: &str) -> Result<()> {
         match self.running_session().await? {
             Some(s) if s.problem_ids.iter().any(|p| p == problem) => Err(locked()),
+            _ if self.in_kata(problem).await? => Err(crate::kata::locked()),
             _ => Ok(()),
         }
     }
@@ -251,6 +252,12 @@ impl App {
             return Err(AppError::new(
                 AppErrorCode::InterviewActive,
                 "a mock interview is already running",
+            ));
+        }
+        if self.running_kata().await?.is_some() {
+            return Err(AppError::new(
+                AppErrorCode::KataActive,
+                "a kata is running: end it first",
             ));
         }
         let all = self.all_problems(lang).await?;

@@ -62,6 +62,11 @@ pub enum AppErrorCode {
     LockedInInterview,
     /// A mock interview is already running.
     InterviewActive,
+    /// Locked while a kata runs: hints, editorial, submissions, History, notes
+    /// (expansion M1).
+    LockedInKata,
+    /// A kata is already running (expansion M1).
+    KataActive,
     /// Fewer than two unsolved problems the user has never opened.
     NotEnoughProblems,
     /// The import file is not a valid KataBox export.

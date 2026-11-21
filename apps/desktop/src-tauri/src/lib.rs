@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 use kb_app::debug::{DebugAction, DebugInspect, DebugStart, DebugView};
 use kb_app::interview::{InterviewResult, InterviewSetup, InterviewView};
+use kb_app::kata::{KataOptions, KataOverview, KataStart, KataView};
 use kb_app::practice::{
     DailyProblem, ListView, PatternProgress, ReviewItem, ReviewState, ReviewSummary,
     SolvedBreakdown,
@@ -22,6 +23,7 @@ use kb_app::{
 use kb_app::{LanguageCount, LearnTopicView};
 use kb_core::debug::EvalResult;
 use kb_core::{JudgeEvent, Language, Report};
+use kb_store::kata::KataAttemptRow;
 use kb_store::{AcceptedSolution, ActivityRow, LearnPath, LearnSubject, LearnTopicSummary};
 use kb_store::{
     Draft, ProblemFilter, ProblemSummary, ProblemView, Snapshot, SubmissionSummary, UiLang,
@@ -564,6 +566,52 @@ async fn interviews(state: State<'_, AppState>, lang: UiLang) -> Res<Vec<Intervi
     state.app()?.interviews(lang).await
 }
 
+// --- Kata drills (expansion M1, ADR 0033) ---------------------------------------------
+
+/// Today's daily kata, the patterns and lists a kata can start from, and the running one.
+#[tauri::command]
+#[specta::specta]
+async fn kata_options(state: State<'_, AppState>, today: String, lang: UiLang) -> Res<KataOptions> {
+    state.app()?.kata_options(&today, lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn start_kata(state: State<'_, AppState>, start: KataStart, lang: UiLang) -> Res<KataView> {
+    state.app()?.start_kata(&start, lang).await
+}
+
+/// The running kata, if any (ended first once it expired).
+#[tauri::command]
+#[specta::specta]
+async fn kata_state(state: State<'_, AppState>, lang: UiLang) -> Res<Option<KataView>> {
+    state.app()?.kata_state(lang).await
+}
+
+/// The workspace opened `problem` in the running kata: its clock starts (once).
+#[tauri::command]
+#[specta::specta]
+async fn kata_open(state: State<'_, AppState>, problem: String) -> Res<KataAttemptRow> {
+    state.app()?.kata_open(&problem).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn end_kata(state: State<'_, AppState>, lang: UiLang) -> Res<Option<KataView>> {
+    state.app()?.end_kata(lang).await
+}
+
+/// Personal bests, the rusty list, the kata streak and the latest sessions.
+#[tauri::command]
+#[specta::specta]
+async fn kata_overview(
+    state: State<'_, AppState>,
+    today: String,
+    lang: UiLang,
+) -> Res<KataOverview> {
+    state.app()?.kata_overview(&today, lang).await
+}
+
 #[tauri::command]
 #[specta::specta]
 async fn accepted_solution(
@@ -885,6 +933,12 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         interview_active,
         end_interview,
         interviews,
+        kata_options,
+        start_kata,
+        kata_state,
+        kata_open,
+        end_kata,
+        kata_overview,
         accepted_solution,
         solved_languages,
         solved_by_language,

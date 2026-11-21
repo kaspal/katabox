@@ -183,6 +183,23 @@ más tiempo. El espacio de trabajo muestra el del lenguaje elegido, p. ej. **Tie
   **Resultado** (resueltos, aciertos a la primera, tiempo usado, y tiempo y envíos por
   problema). Las entrevistas anteriores están en Progreso.
 
+## Katas
+**Kata** (en la barra de navegación) vuelve a resolver problemas que ya resolviste, de
+memoria y contra el reloj:
+- **Kata del día:** tres problemas resueltos elegidos para hoy, con preferencia por los
+  que llevas tiempo sin tocar. Unos 15 minutos; el reloj muestra el tiempo de más pero
+  nunca te detiene.
+- **Elige un conjunto:** hasta cinco problemas resueltos de un patrón o de una de tus
+  listas, los más oxidados primero, diez minutos cada uno.
+- El editor empieza con el código inicial. Las pistas, la solución explicada, tus envíos,
+  el historial y las notas quedan **bloqueados durante la kata** hasta que termina.
+- Una kata nunca cambia tus envíos, el estado de los problemas, los repasos ni el problema
+  del día. Sus resultados están en **Progreso → Katas**: tus récords (mejor tiempo, menos
+  envíos), la racha de katas y las katas recientes.
+- **Oxidados** (tarjeta de Inicio, y en Progreso → Katas) muestra problemas resueltos que
+  quizá hayas olvidado: la puntuación crece con el tiempo desde la última vez que lo
+  resolviste y con las katas fallidas en él. Desactiva la tarjeta en Ajustes → Práctica.
+
 ## Depurador y visualizador
 - **Lenguajes:** Python y JavaScript/TypeScript, en problemas de función y de programa.
   Aún no PHP, Rust ni SQL.

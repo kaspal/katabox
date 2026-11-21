@@ -135,7 +135,7 @@ describe("Workspace: Next card and review mode", () => {
     expect(within(next).getByText("Longest Window")).toBeInTheDocument();
     expect(within(next).getByRole("link", { name: /Open/ })).toHaveAttribute("href", "/problems/longest-window");
     expect(screen.getByTestId("daily-solved")).toHaveTextContent("Solved today");
-    expect(fake.state.submitOptions[0]).toEqual({ today: localToday(), review: false, lang: "en" });
+    expect(fake.state.submitOptions[0]).toEqual({ today: localToday(), review: false, lang: "en", kata: null });
 
     // Opening the next problem starts with a clean results pane.
     await user.click(within(next).getByRole("link", { name: /Open/ }));

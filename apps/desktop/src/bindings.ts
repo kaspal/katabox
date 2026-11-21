@@ -609,6 +609,66 @@ async interviews(lang: UiLang) : Promise<Result<InterviewResult[], AppError>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Today's daily kata, the patterns and lists a kata can start from, and the running one.
+ */
+async kataOptions(today: string, lang: UiLang) : Promise<Result<KataOptions, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kata_options", { today, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async startKata(start: KataStart, lang: UiLang) : Promise<Result<KataView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("start_kata", { start, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The running kata, if any (ended first once it expired).
+ */
+async kataState(lang: UiLang) : Promise<Result<KataView | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kata_state", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The workspace opened `problem` in the running kata: its clock starts (once).
+ */
+async kataOpen(problem: string) : Promise<Result<KataAttemptRow, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kata_open", { problem }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async endKata(lang: UiLang) : Promise<Result<KataView | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("end_kata", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Personal bests, the rusty list, the kata streak and the latest sessions.
+ */
+async kataOverview(today: string, lang: UiLang) : Promise<Result<KataOverview, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kata_overview", { today, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async acceptedSolution(problem: string, language: Language) : Promise<Result<AcceptedSolution | null, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("accepted_solution", { problem, language }) };
@@ -947,6 +1007,15 @@ export type AppErrorCode =
  * A mock interview is already running.
  */
 "interview_active" | 
+/**
+ * Locked while a kata runs: hints, editorial, submissions, History, notes
+ * (expansion M1).
+ */
+"locked_in_kata" | 
+/**
+ * A kata is already running (expansion M1).
+ */
+"kata_active" | 
 /**
  * Fewer than two unsolved problems the user has never opened.
  */
@@ -1370,6 +1439,99 @@ export type JudgeEvent =
  * The run is over.
  */
 { event: "finished"; verdict: Verdict }
+/**
+ * One problem tried in a kata session (also an export row).
+ */
+export type KataAttemptRow = { session_started_at: number; problem_id: string; started_at: number; submits: number; verdict: Verdict | null; solved_at: number | null; time_ms: number | null; language: Language | null; code: string | null }
+/**
+ * A problem's personal bests over all kata attempts.
+ */
+export type KataBest = { problem_id: string; title: string; difficulty: Difficulty; 
+/**
+ * The fastest time from opening to Accepted.
+ */
+best_time_ms: number | null; 
+/**
+ * The fewest submits needed to reach Accepted.
+ */
+fewest_submits: number | null; 
+/**
+ * Kata attempts on this problem (solved or not).
+ */
+attempts: number; solved: number }
+export type KataKind = "daily" | "pattern" | "list" | "custom"
+export type KataOptions = { 
+/**
+ * Today's daily kata (empty before the first solve).
+ */
+daily: ProblemSummary[]; 
+/**
+ * Today's daily kata session, once started.
+ */
+daily_session: KataView | null; patterns: KataSource[]; lists: KataSource[]; 
+/**
+ * The running session, if any.
+ */
+running: KataView | null }
+/**
+ * What a kata Submit did.
+ */
+export type KataOutcome = { attempt: KataAttemptRow; 
+/**
+ * This Submit solved the problem faster than every earlier kata.
+ */
+new_best: boolean; 
+/**
+ * The best time before this Submit, if any.
+ */
+previous_best_ms: number | null }
+export type KataOverview = { bests: KataBest[]; 
+/**
+ * The rustiest solved problems (score ≥ 50), rustiest first, at most 10.
+ */
+rusty: RustyProblem[]; streak: number; 
+/**
+ * The latest sessions, newest first (at most 30).
+ */
+sessions: KataSessionSummary[] }
+export type KataProblem = { id: string; title: string; difficulty: Difficulty; pattern: string; attempt: KataAttemptRow | null; best_time_ms: number | null }
+export type KataSessionSummary = { started_at: number; day: string; kind: KataKind; source: string | null; total: number; solved: number; ended: boolean }
+/**
+ * A pattern or list a kata can be started from, with its solved problems.
+ */
+export type KataSource = { 
+/**
+ * The pattern id, or the list id as text.
+ */
+id: string; 
+/**
+ * The list name (patterns are named by the UI).
+ */
+name: string | null; solved: number }
+/**
+ * What to start a kata from.
+ */
+export type KataStart = { kind: KataKind; 
+/**
+ * The pattern id or the list id (as text), for those kinds.
+ */
+source: string | null; 
+/**
+ * The problems of a custom kata.
+ */
+problems: string[]; 
+/**
+ * The user's local date, `YYYY-MM-DD`.
+ */
+today: string }
+/**
+ * A session as the UI shows it.
+ */
+export type KataView = { started_at: number; day: string; kind: KataKind; source: string | null; duration_s: number; ended_at: number | null; 
+/**
+ * When the session stops counting as running (UTC ms).
+ */
+expires_at: number; problems: KataProblem[]; solved: number }
 /**
  * Languages supported by the judge. Adding one means a `languages/<id>/` folder
  * (language.toml + harness template) and a variant here.
@@ -1970,6 +2132,15 @@ export type RuntimeDiag = { language: Language; installed: boolean;
  * The pinned runtime, e.g. `python-3.14` (the toolchain folder's name, no path).
  */
 version: string | null; language_server: boolean }
+export type RustyProblem = { problem_id: string; title: string; difficulty: Difficulty; pattern: string; 
+/**
+ * 0-100 (the rusty score as a percentage).
+ */
+rusty: number; 
+/**
+ * Days since the last success (`None`: never practised since solving).
+ */
+days: number | null }
 /**
  * Progress, after each round.
  */
@@ -2073,7 +2244,12 @@ review: boolean;
 /**
  * Language of the suggested next problem's title.
  */
-lang: UiLang }
+lang: UiLang; 
+/**
+ * Submitted in the running kata that started at this time (UTC ms): recorded as a
+ * kata attempt only (expansion M1).
+ */
+kata: number | null }
 /**
  * The result of Submit: the stored submission's id and its (redacted) report.
  */
@@ -2081,7 +2257,12 @@ export type SubmitResult = { submission_id: number; report: Report;
 /**
  * Reviews, the daily problem, the streak and what to solve next (ADR 0019).
  */
-practice: PracticeOutcome }
+practice: PracticeOutcome; 
+/**
+ * A kata Submit (expansion M1): the attempt, and whether it beat the best time.
+ * Such a Submit stores no submission (`submission_id` is 0).
+ */
+kata: KataOutcome | null }
 export type TAURI_CHANNEL<TSend> = null
 export type TagCount = { tag: string; solved: number; total: number }
 /**
@@ -2131,7 +2312,7 @@ export type TopicReview = { topic: LearnTopicSummary; problem: ProblemSummary }
 /**
  * How many records of each kind a file holds.
  */
-export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number }
+export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number }
 /**
  * Why a trace stopped before the program ended.
  */

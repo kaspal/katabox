@@ -14,7 +14,8 @@
     "progress": "Progreso",
     "settings": "Ajustes",
     "smoke": "Pantalla de prueba (desarrollo)",
-    "interview": "Entrevista"
+    "interview": "Entrevista",
+    "kata": "Kata"
   },
   "palette": {
     "open": "Paleta de comandos",
@@ -354,7 +355,8 @@
       "overview": "Resumen",
       "patterns": "Por patrón",
       "topics": "Por tema",
-      "history": "Historial"
+      "history": "Historial",
+      "katas": "Katas"
     },
     "learn": {
       "title": "Temas de Aprender vistos",
@@ -511,7 +513,9 @@
     "debug_unsupported": "Este lenguaje todavía no se puede depurar. La depuración está disponible para Python.",
     "debug_diverged": "Este programa se comporta distinto en cada ejecución (hora, azar o identidad de objetos), así que no se puede reproducir paso a paso.",
     "profile_unavailable": "Este problema no tiene perfil de complejidad.",
-    "shrink_unavailable": "Aquí no se puede buscar una entrada más pequeña que falle (es un problema de programa o no hay solución de referencia en este lenguaje)."
+    "shrink_unavailable": "Aquí no se puede buscar una entrada más pequeña que falle (es un problema de programa o no hay solución de referencia en este lenguaje).",
+    "locked_in_kata": "Esto está bloqueado durante la kata. Se abre de nuevo cuando la kata termina.",
+    "kata_active": "Hay una kata en curso. Termínala primero."
   },
   "judge": {
     "verdict": {
@@ -850,7 +854,9 @@
         "daily_picks": "Problemas del día",
         "lists": "Listas",
         "interviews": "Entrevistas simuladas",
-        "settings": "Ajustes"
+        "settings": "Ajustes",
+        "kata_sessions": "Sesiones de kata",
+        "kata_attempts": "Intentos de kata"
       }
     },
     "crossLang": {
@@ -2984,5 +2990,81 @@
     "correct": "Correcto",
     "incorrect": "No del todo",
     "check": "Comprobar"
+  },
+  "kata": {
+    "title": "Kata",
+    "intro": "Vuelve a resolver problemas que ya resolviste, de memoria y contra el reloj. El editor empieza vacío, y las pistas, las notas y tus soluciones anteriores quedan bloqueadas hasta que la kata termina. Las katas nunca cambian tus envíos ni tus repasos.",
+    "running": "Kata en curso",
+    "end": "Terminar la kata",
+    "summary": "Kata terminada: {{solved}} de {{total}} resueltos",
+    "daily": {
+      "title": "Kata del día",
+      "intro": "Tres problemas resueltos, elegidos para hoy con preferencia por los que llevas tiempo sin tocar. Unos 15 minutos.",
+      "none": "Resuelve antes un problema: una kata vuelve a resolver problemas que ya resolviste.",
+      "done": "La kata de hoy está hecha: {{solved}} de {{total}} resueltos.",
+      "start": "Empezar la kata del día"
+    },
+    "sets": {
+      "title": "Elige un conjunto",
+      "intro": "Hasta cinco problemas resueltos de un patrón o de una de tus listas, los más oxidados primero. Diez minutos cada uno.",
+      "pattern": "Patrón",
+      "list": "Lista",
+      "pick": "Elige…",
+      "noLists": "Ninguna lista con problemas resueltos",
+      "option": "{{name}} ({{count}} resueltos)",
+      "start": "Empezar"
+    },
+    "bests": "Récords personales y katas anteriores",
+    "solvedIn_one": "Resuelto en {{time}}, {{count}} envío",
+    "solvedIn_other": "Resuelto en {{time}}, {{count}} envíos",
+    "tried_one": "Sin resolver aún, {{count}} envío",
+    "tried_other": "Sin resolver aún, {{count}} envíos",
+    "notYet": "Sin empezar",
+    "best": "Récord: {{time}}",
+    "again": "Abrir de nuevo",
+    "open": "Abrir",
+    "locked": "Bloqueado durante la kata: resuélvelo de memoria.",
+    "clock": {
+      "label": "Tiempo de kata: {{time}} de {{of}}",
+      "overLabel": "Tiempo de kata: {{time}}, por encima de {{of}}",
+      "over": "fuera de tiempo"
+    },
+    "next": "Siguiente problema",
+    "skip": "Saltar al siguiente",
+    "back": "Resumen de la kata",
+    "newBest": "Resuelto en {{time}}: ¡nuevo récord personal!",
+    "fromMemory": "De memoria: el editor empieza con el código inicial.",
+    "rusty": {
+      "title": "Oxidados",
+      "none": "Nada oxidado: todo lo que resolviste lo practicaste hace poco.",
+      "score": "{{score}} % oxidado",
+      "scoreHelp": "Crece con el tiempo desde que lo resolviste por última vez y con las katas fallidas en él.",
+      "practise": "Practicar en una kata",
+      "never": "sin practicar desde entonces",
+      "days_one": "hace {{count}} día",
+      "days_other": "hace {{count}} días",
+      "setting": "Tarjeta Oxidados en Inicio"
+    },
+    "streak_one": "Racha de katas: {{count}} día",
+    "streak_other": "Racha de katas: {{count}} días",
+    "start": "Empezar una kata",
+    "bestsTitle": "Récords personales",
+    "noBests": "Aún no has resuelto ninguna kata.",
+    "col": {
+      "problem": "Problema",
+      "best": "Mejor tiempo",
+      "submits": "Menos envíos",
+      "katas": "Katas resueltas"
+    },
+    "solvedOf": "{{solved}} de {{total}}",
+    "sessionsTitle": "Katas recientes",
+    "noSessions": "Aún no hay katas.",
+    "kind": {
+      "daily": "Del día",
+      "pattern": "Patrón",
+      "list": "Lista",
+      "custom": "A medida"
+    },
+    "inProgress": "en curso"
   }
 }

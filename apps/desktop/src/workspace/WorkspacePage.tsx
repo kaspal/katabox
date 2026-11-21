@@ -40,6 +40,8 @@ import { useFocusMode } from "@/lib/focus";
 import { useReviewActions, useReviewState } from "@/lib/practice";
 import { useInterviewActive, useSolvedLanguages } from "@/lib/modes";
 import { InterviewTimer } from "@/practice/interview";
+import { KataBar } from "@/practice/kata";
+import { useKataState } from "@/lib/kata";
 import { CompareView, SolveInMenu } from "@/practice/crossLanguage";
 import { useAppInfo, useProblem } from "@/lib/queries";
 import { AddToListMenu, formatDay } from "@/practice/shared";
@@ -84,6 +86,11 @@ export function WorkspacePage() {
   const navigate = useNavigate({ from: "/problems/$problemId" });
   const search = route.useSearch();
   const reviewMode = search.review === true;
+  // A kata (expansion M1) re-solves from memory: starter code, no drafts, help locked.
+  const kataState = useKataState();
+  const kataView =
+    search.kata !== undefined && kataState.data?.started_at === search.kata ? kataState.data : null;
+  const inKata = kataState.data?.problems.some((x) => x.id === problemId) === true;
   const compare = search.compare ?? null;
   const interview = useInterviewActive();
   const inInterview = interview.data?.problems.some((x) => x.id === problemId) === true;
@@ -105,7 +112,7 @@ export function WorkspacePage() {
   // SQL problems take SQL and nothing else takes SQL: until the language fits the problem
   // (just after opening one), no document is loaded.
   const fits = problem.data !== undefined && language !== null && (language === "sql") === sqlProblem;
-  const session = useEditorSession(problemId, fits ? language : null, { review: reviewMode });
+  const session = useEditorSession(problemId, fits ? language : null, { review: reviewMode || inKata });
   const docLang = session.doc?.lang ?? null;
   // TypeScript can be edited as plain JavaScript (per problem): only the grammar and the
   // language server change; the draft and the judge stay TypeScript (ADR 0024).
@@ -172,6 +179,12 @@ export function WorkspacePage() {
   useEffect(() => {
     void api.markOpened(problemId).catch(() => {});
   }, [problemId]);
+
+  // A kata problem's clock starts when it first opens.
+  const kataStarted = kataView?.started_at ?? null;
+  useEffect(() => {
+    if (kataStarted !== null) void api.kataOpen(problemId).catch(() => {});
+  }, [problemId, kataStarted]);
 
   // Starting language: this problem's latest draft, else the last language used.
   useEffect(() => {
@@ -283,8 +296,8 @@ export function WorkspacePage() {
     if (!ready || !language || session.code === null) return;
     setTab("result");
     await session.flush();
-    await judge.submit(language, session.code, { review: locked });
-  }, [ready, language, session, judge, locked]);
+    await judge.submit(language, session.code, { review: locked, kata: kataView?.started_at ?? null });
+  }, [ready, language, session, judge, locked, kataView]);
 
   // A brief celebration when a submission is Accepted.
   useEffect(() => {
@@ -418,7 +431,7 @@ export function WorkspacePage() {
         <ModeLabel mode={p.mode} />
         <div className="ml-auto flex items-center gap-2">
           {inInterview && <InterviewTimer compact />}
-          {!inInterview && !sqlProblem && (solvedIn.data?.length ?? 0) > 0 && (
+          {!inInterview && !inKata && !sqlProblem && (solvedIn.data?.length ?? 0) > 0 && (
             <SolveInMenu
               solved={solvedIn.data ?? []}
               current={language}
@@ -528,6 +541,11 @@ export function WorkspacePage() {
         </div>
       </div>
 
+      {kataView && (
+        <div className="border-b px-3 py-2">
+          <KataBar view={kataView} problemId={problemId} outcome={judge.kata} />
+        </div>
+      )}
       {reviewMode && (
         <div
           role="status"
@@ -563,6 +581,8 @@ export function WorkspacePage() {
               locks={
                 inInterview
                   ? { tabs: ["hints", "editorial", "submissions", "history"], reason: "interview" }
+                  : inKata
+                    ? { tabs: ["hints", "editorial", "submissions", "notes", "history"], reason: "kata" }
                   : locked
                     ? { tabs: ["submissions", "history"], reason: "review" }
                     : null

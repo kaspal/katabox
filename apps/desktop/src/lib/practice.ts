@@ -27,7 +27,8 @@ export function usePracticePrefs() {
   const [learnReview, setLearnReview] = useSetting<boolean>("practice.learn_review", true, parseBool, {
     mirror: true,
   });
-  return { review, setReview, daily, setDaily, learnReview, setLearnReview };
+  const [rusty, setRusty] = useSetting<boolean>("practice.rusty", true, parseBool, { mirror: true });
+  return { review, setReview, daily, setDaily, learnReview, setLearnReview, rusty, setRusty };
 }
 
 export function useDailyProblem(enabled = true) {

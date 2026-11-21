@@ -72,6 +72,16 @@ fn seeds(version: i64) -> Vec<String> {
                  (1700000020000, 2700, '[\"budget-pair\"]', '[\"rust\"]', 'easy', NULL, NULL)"
                 .into(),
         ],
+        5 => vec![
+            "INSERT INTO kata_sessions (started_at, day, kind, source, problem_ids, duration_s, ended_at) VALUES
+                 (1700000030000, '2026-11-16', 'daily', NULL, '[\"two-sum\",\"budget-pair\"]', 900, 1700000031000),
+                 (1700000040000, '2026-11-17', 'pattern', 'arrays-hashing', '[\"two-sum\"]', 600, NULL)"
+                .into(),
+            "INSERT INTO kata_attempts VALUES
+                 (1700000030000, 'two-sum', 1700000030100, 2, 'accepted', 1700000030900, 800, 'python', 'def f(): pass'),
+                 (1700000030000, 'budget-pair', 1700000030950, 1, 'wrong_answer', NULL, NULL, NULL, NULL)"
+                .into(),
+        ],
         _ => vec![],
     }
 }

@@ -28,6 +28,7 @@ import { localToday, useToday } from "@/lib/today";
 import { Heatmap } from "@/practice/heatmap";
 import { StreakBadge, formatDay } from "@/practice/shared";
 import { Scorecard } from "@/practice/interview";
+import { KatasTab } from "@/practice/kata";
 
 /** By topic shows the largest topics first; "Show all" lists the rest. */
 const TOPICS_SHOWN = 24;
@@ -360,6 +361,10 @@ export function Progress() {
           </Section>
 
           <LearnViewed />
+        </TabsContent>
+
+        <TabsContent value="katas">
+          <KatasTab />
         </TabsContent>
 
         <TabsContent value="history">

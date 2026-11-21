@@ -14,11 +14,12 @@ const PAGES: [string, string][] = [
   ["/", "home"],
   ["/library", "library"],
   // Every Progress tab and Settings section (ui-polish).
-  ...["overview", "patterns", "topics", "history"].map((tab): [string, string] => [`/progress?tab=${tab}`, "progress"]),
+  ...["overview", "patterns", "topics", "katas", "history"].map((tab): [string, string] => [`/progress?tab=${tab}`, "progress"]),
   ...["appearance", "editor", "practice", "languages", "learn", "data", "about"].map(
     (section): [string, string] => [`/settings?section=${section}`, "settings"],
   ),
   ["/learn", "learn"],
+  ["/kata", "kata"],
   ["/problems/two-sum", "workspace"],
 ];
 

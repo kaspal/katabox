@@ -23,6 +23,7 @@ fn submit_opts() -> kb_app::SubmitOptions {
         today: "2026-11-14".into(),
         review: false,
         lang: kb_store::UiLang::En,
+        kata: None,
     }
 }
 
@@ -496,6 +497,7 @@ async fn a_first_accepted_submit_schedules_a_review() {
         today: "2026-11-17".into(),
         review: true,
         lang: kb_store::UiLang::En,
+        kata: None,
     };
     let r = app
         .submit(
@@ -515,6 +517,89 @@ async fn a_first_accepted_submit_schedules_a_review() {
         })
     );
     assert!(!r.practice.first_solve);
+}
+
+/// A kata Submit (expansion M1) is judged like any Submit but recorded only as a kata
+/// attempt: no submission, no snapshot, no status or review change; a kata Run leaves
+/// no History snapshot either.
+#[tokio::test]
+async fn a_kata_submit_is_kept_apart_from_submissions() {
+    let app = app("kata").await;
+    let code = reference(Language::Python);
+    app.submit("two-sum", Language::Python, &code, &submit_opts(), |_| {})
+        .await
+        .unwrap();
+    let before_subs = app.list_submissions("two-sum").await.unwrap().len();
+    let before_snaps = app.list_snapshots("two-sum").await.unwrap().len();
+    let view = app
+        .start_kata(
+            &kb_app::kata::KataStart {
+                kind: kb_store::kata::KataKind::Custom,
+                source: None,
+                problems: vec!["two-sum".into()],
+                today: "2026-11-21".into(),
+            },
+            kb_store::UiLang::En,
+        )
+        .await
+        .unwrap();
+    app.kata_open("two-sum").await.unwrap();
+    let wrong = "def twoSum(nums, target):
+    return [0, 1]
+";
+    app.run("two-sum", Language::Python, wrong, vec![], |_| {})
+        .await
+        .unwrap();
+    let opts = kb_app::SubmitOptions {
+        kata: Some(view.started_at),
+        ..submit_opts()
+    };
+    let r = app
+        .submit("two-sum", Language::Python, wrong, &opts, |_| {})
+        .await
+        .unwrap();
+    assert!(!r.report.verdict.is_accepted());
+    assert_eq!(r.submission_id, 0);
+    let k = r.kata.expect("a kata outcome");
+    assert_eq!((k.attempt.submits, k.attempt.solved_at), (1, None));
+    let r = app
+        .submit(
+            "two-sum",
+            Language::Rust,
+            &reference(Language::Rust),
+            &opts,
+            |_| {},
+        )
+        .await
+        .unwrap();
+    assert!(r.report.verdict.is_accepted(), "{:?}", r.report);
+    let k = r.kata.unwrap();
+    assert!(k.new_best);
+    assert_eq!(k.attempt.submits, 2);
+    assert_eq!(k.attempt.language, Some(Language::Rust));
+    // Hidden tests stay redacted in a kata too.
+    assert!(
+        r.report
+            .tests
+            .iter()
+            .filter(|t| t.result.kind == kb_core::TestKind::Hidden)
+            .all(|t| t.actual.is_none())
+    );
+    app.end_kata(kb_store::UiLang::En).await.unwrap();
+    assert_eq!(
+        app.list_submissions("two-sum").await.unwrap().len(),
+        before_subs
+    );
+    assert_eq!(
+        app.list_snapshots("two-sum").await.unwrap().len(),
+        before_snaps
+    );
+    // A kata Submit with a session that is not running is refused.
+    assert!(
+        app.submit("two-sum", Language::Python, &code, &opts, |_| {})
+            .await
+            .is_err()
+    );
 }
 
 /// A debug session through the App (ADR 0022): breakpoint, step, watch, console, result.

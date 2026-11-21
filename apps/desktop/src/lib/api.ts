@@ -26,6 +26,11 @@ import {
   type InterviewResult,
   type InterviewSetup,
   type InterviewView,
+  type KataAttemptRow,
+  type KataOptions,
+  type KataOverview,
+  type KataStart,
+  type KataView,
   type LanguageCount,
   type TransferCounts,
   type DailyProblem,
@@ -195,6 +200,14 @@ export const api = {
   startInterview: (setup: InterviewSetup, lang: UiLang): Promise<InterviewView> =>
     call(commands.startInterview(setup, lang)),
   interviewActive: (lang: UiLang): Promise<InterviewView | null> => call(commands.interviewActive(lang)),
+
+  // Kata drills (expansion M1, ADR 0033)
+  kataOptions: (today: string, lang: UiLang): Promise<KataOptions> => call(commands.kataOptions(today, lang)),
+  startKata: (start: KataStart, lang: UiLang): Promise<KataView> => call(commands.startKata(start, lang)),
+  kataState: (lang: UiLang): Promise<KataView | null> => call(commands.kataState(lang)),
+  kataOpen: (problem: string): Promise<KataAttemptRow> => call(commands.kataOpen(problem)),
+  endKata: (lang: UiLang): Promise<KataView | null> => call(commands.endKata(lang)),
+  kataOverview: (today: string, lang: UiLang): Promise<KataOverview> => call(commands.kataOverview(today, lang)),
   endInterview: (lang: UiLang): Promise<InterviewResult> => call(commands.endInterview(lang)),
   interviews: (lang: UiLang): Promise<InterviewResult[]> => call(commands.interviews(lang)),
   acceptedSolution: (problem: string, language: Language): Promise<AcceptedSolution | null> =>

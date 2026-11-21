@@ -13,6 +13,7 @@ import { Shell } from "@/app/Shell";
 import { Home } from "@/pages/Home";
 import { Library } from "@/pages/Library";
 import { Interview } from "@/pages/Interview";
+import { Kata } from "@/pages/Kata";
 import { Progress } from "@/pages/Progress";
 import { Settings } from "@/pages/Settings";
 import {
@@ -72,11 +73,17 @@ const libraryRoute = createRoute({
   component: Library,
 });
 /** `?review=true` opens a problem in review mode (ADR 0019); `?compare=<language>` shows
- * the accepted solution in that language beside the editor (ADR 0020). */
-export type ProblemSearch = { review?: boolean; compare?: Language };
+ * the accepted solution in that language beside the editor (ADR 0020); `?kata=<started
+ * at>` opens it in that kata session (expansion M1). */
+export type ProblemSearch = { review?: boolean; compare?: Language; kata?: number };
+const parseKata = (v: unknown): number | undefined => {
+  const n = typeof v === "string" ? Number(v) : v;
+  return typeof n === "number" && Number.isSafeInteger(n) && n > 0 ? n : undefined;
+};
 export const parseProblemSearch = (s: Record<string, unknown>): ProblemSearch => ({
   review: s.review === true || s.review === "true" ? true : undefined,
   compare: oneOf(s.compare, ["python", "typescript", "php", "rust"] as const),
+  kata: parseKata(s.kata),
 });
 
 // The workspace is lazy: CodeMirror, KaTeX and Markdown load only when a problem opens.
@@ -102,6 +109,11 @@ const interviewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/interview",
   component: Interview,
+});
+const kataRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/kata",
+  component: Kata,
 });
 /** `?tab=` picks a Progress tab; `?section=` a Settings section (ui-polish). Without
  * one, the page opens the last tab used. */
@@ -144,6 +156,7 @@ const routeTree = rootRoute.addChildren([
   problemRoute,
   learnRoute,
   learnTopicRoute,
+  kataRoute,
   interviewRoute,
   progressRoute,
   settingsRoute,

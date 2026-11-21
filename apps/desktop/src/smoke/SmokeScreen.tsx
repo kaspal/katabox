@@ -151,7 +151,7 @@ export default function SmokeScreen() {
           await call(commands.run(problem.id, language, code, inputs, onEvent)),
         );
       } else {
-        const opts = { today: localToday(), review: false, lang: "en" as const };
+        const opts = { today: localToday(), review: false, lang: "en" as const, kata: null };
         const r = await call(commands.submit(problem.id, language, code, opts, onEvent));
         setReport(r.report);
         refreshList();

@@ -53,17 +53,21 @@ function TimeLimit({ problem, language }: { problem: ProblemView; language: Lang
 }
 
 /** Tabs hidden in review mode (ADR 0019) or during a mock interview (ADR 0020). */
-export type PaneLocks = { tabs: ProblemTab[]; reason: "review" | "interview" };
+export type PaneLocks = { tabs: ProblemTab[]; reason: "review" | "interview" | "kata" };
 
 function LockedNote({ reason }: { reason: PaneLocks["reason"] }) {
   const { t } = useTranslation();
   return (
     <p
       className="flex items-center gap-2 text-sm text-muted-foreground"
-      data-testid={reason === "review" ? "review-locked" : "interview-locked"}
+      data-testid={`${reason}-locked`}
     >
       <Lock aria-hidden className="size-4" />
-      {reason === "review" ? t("practice.review.locked") : t("practice.interview.locked")}
+      {reason === "review"
+        ? t("practice.review.locked")
+        : reason === "kata"
+          ? t("kata.locked")
+          : t("practice.interview.locked")}
     </p>
   );
 }
@@ -148,7 +152,7 @@ export function ProblemPane({
           {locked("submissions") ? note : <SubmissionsTab problemId={problem.id} />}
         </TabsContent>
         <TabsContent value="notes" className="h-full">
-          <NotesTab problemId={problem.id} />
+          {locked("notes") ? note : <NotesTab problemId={problem.id} />}
         </TabsContent>
         <TabsContent value="history">
           {locked("history") ? (

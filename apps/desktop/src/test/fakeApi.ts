@@ -24,6 +24,9 @@ import type {
   ImportPreview,
   InterviewResult,
   InterviewView,
+  KataAttemptRow,
+  KataStart,
+  KataView,
   PracticeOutcome,
   Snapshot,
   SubmissionSummary,
@@ -282,6 +285,8 @@ export function createFakeApi(
     lists?: { name: string; items: string[] }[];
     /** Practice modes (ADR 0020). */
     interview?: InterviewView | null;
+    /** A running kata (expansion M1). */
+    kata?: KataView | null;
     interviews?: InterviewResult[];
     /** Accepted solutions: `problem:language` → code. */
     accepted?: Record<string, string>;
@@ -349,7 +354,8 @@ export function createFakeApi(
     /** Overrides what the next Submit reports for practice. */
     nextPractice: null as PracticeOutcome | null,
     /** The options of each Submit. */
-    submitOptions: [] as { today: string; review: boolean; lang: UiLang }[],
+    submitOptions: [] as { today: string; review: boolean; lang: UiLang; kata: number | null }[],
+    kata: (opts.kata ?? null) as KataView | null,
     interview: (opts.interview ?? null) as InterviewView | null,
     interviews: [...(opts.interviews ?? [])] as InterviewResult[],
     accepted: { ...(opts.accepted ?? {}) } as Record<string, string>,
@@ -734,6 +740,67 @@ export function createFakeApi(
       return r;
     }),
     interviews: vi.fn(async () => state.interviews),
+    kataOptions: vi.fn(async (_today: string, lang: UiLang) => {
+      const solved = PROBLEMS.filter((p) => p.status === "solved").map((p) => summary(p.id, lang)!);
+      return {
+        daily: solved.slice(0, 3),
+        daily_session: null,
+        patterns: [...new Set(solved.map((p) => p.pattern))].map((id) => ({
+          id,
+          name: null,
+          solved: solved.filter((p) => p.pattern === id).length,
+        })),
+        lists: [],
+        running: state.kata,
+      };
+    }),
+    startKata: vi.fn(async (start: KataStart, lang: UiLang) => {
+      const solved = PROBLEMS.filter((p) => p.status === "solved").map((p) => summary(p.id, lang)!);
+      const now = Date.now();
+      state.kata = {
+        started_at: now,
+        day: start.today,
+        kind: start.kind,
+        source: start.source,
+        duration_s: 900,
+        ended_at: null,
+        expires_at: now + 7_200_000,
+        problems: solved.slice(0, 3).map((p) => ({
+          id: p.id,
+          title: p.title,
+          difficulty: p.difficulty,
+          pattern: p.pattern,
+          attempt: null,
+          best_time_ms: null,
+        })),
+        solved: 0,
+      };
+      return state.kata;
+    }),
+    kataState: vi.fn(async () => state.kata),
+    kataOpen: vi.fn(async (p: string) => ({
+      session_started_at: state.kata?.started_at ?? 0,
+      problem_id: p,
+      started_at: Date.now(),
+      submits: 0,
+      verdict: null,
+      solved_at: null,
+      time_ms: null,
+      language: null,
+      code: null,
+    })),
+    endKata: vi.fn(async () => {
+      const k = state.kata;
+      if (!k) return null;
+      const ended = {
+        ...k,
+        ended_at: Date.now(),
+        solved: k.problems.filter((p) => p.attempt?.solved_at != null).length,
+      };
+      state.kata = null;
+      return ended;
+    }),
+    kataOverview: vi.fn(async () => ({ bests: [], rusty: [], streak: 0, sessions: [] })),
     acceptedSolution: vi.fn(async (p: string, language: Language) => {
       const code = state.accepted[`${p}:${language}`];
       if (state.interview?.problems.some((x) => x.id === p)) {
@@ -842,7 +909,27 @@ export function createFakeApi(
       };
       state.nextPractice = null;
       if (practice.review?.outcome === "scheduled") state.reviews.delete(p);
-      return { submission_id: id, report, practice };
+      if (submitOpts.kata !== null) {
+        // A kata Submit stores no submission (expansion M1).
+        submissions.shift();
+        const kp = state.kata?.problems.find((x) => x.id === p);
+        const prev = kp?.attempt ?? null;
+        const attempt: KataAttemptRow = {
+          session_started_at: submitOpts.kata,
+          problem_id: p,
+          started_at: prev?.started_at ?? Date.now() - 95_000,
+          submits: (prev?.submits ?? 0) + 1,
+          verdict: report.verdict,
+          solved_at: prev?.solved_at ?? (accepted ? Date.now() : null),
+          time_ms: prev?.time_ms ?? (accepted ? 95_000 : null),
+          language: prev?.language ?? (accepted ? lang : null),
+          code: prev?.code ?? (accepted ? code : null),
+        };
+        if (kp) kp.attempt = attempt;
+        const kata = { attempt, new_best: accepted && !prev?.solved_at, previous_best_ms: null };
+        return { submission_id: 0, report, practice: { first_solve: false, review: null, daily_solved: false, streak: 0, next: null }, kata };
+      }
+      return { submission_id: id, report, practice, kata: null };
     }),
     listSubmissions: vi.fn(async (p: string) =>
       submissions.filter((s) => s.problem_id === p).map(({ code: _c, report: _r, ...s }) => s),

@@ -16,6 +16,7 @@ pub mod debug;
 pub mod diagnostics;
 mod error;
 pub mod interview;
+pub mod kata;
 pub mod learn_links;
 pub mod practice;
 pub mod profile;
@@ -208,6 +209,9 @@ pub struct SubmitResult {
     pub report: Report,
     /// Reviews, the daily problem, the streak and what to solve next (ADR 0019).
     pub practice: practice::PracticeOutcome,
+    /// A kata Submit (expansion M1): the attempt, and whether it beat the best time.
+    /// Such a Submit stores no submission (`submission_id` is 0).
+    pub kata: Option<kata::KataOutcome>,
 }
 
 /// The practice context of a Submit (ADR 0019).
@@ -220,6 +224,9 @@ pub struct SubmitOptions {
     pub review: bool,
     /// Language of the suggested next problem's title.
     pub lang: UiLang,
+    /// Submitted in the running kata that started at this time (UTC ms): recorded as a
+    /// kata attempt only (expansion M1).
+    pub kata: Option<i64>,
 }
 
 /// A user-written test input for Run: argument values keyed by parameter name.
@@ -502,8 +509,8 @@ impl App {
     pub async fn get_problem(&self, id: &str, lang: UiLang) -> Result<ProblemView> {
         let mut view = self.store.content.get_problem(id, lang).await?;
         view.editorial = None;
-        // Mock interview (ADR 0020): hint texts never reach the UI.
-        if self.in_interview(id).await? {
+        // Mock interview (ADR 0020) and kata (expansion M1): hint texts never reach the UI.
+        if self.in_interview(id).await? || self.in_kata(id).await? {
             view.hints.clear();
         }
         view.time_scale = calibration::scale_of(self.calibration().as_ref());
@@ -595,6 +602,10 @@ impl App {
     }
 
     pub async fn save_draft(&self, problem: &str, language: Language, code: &str) -> Result<()> {
+        // A kata re-solves from memory: its code never becomes a draft (expansion M1).
+        if self.in_kata(problem).await? {
+            return Ok(());
+        }
         Ok(self.store.user.save_draft(problem, language, code).await?)
     }
 
@@ -649,10 +660,13 @@ impl App {
             tests.extend(self.custom_tests(&p, language, custom).await?);
         }
         let report = self.judge(p, tests, language, code, on_event).await?;
-        self.store
-            .user
-            .record_run(problem, language, code, report.verdict)
-            .await?;
+        // Kata runs leave no History snapshot (expansion M1).
+        if !self.in_kata(problem).await? {
+            self.store
+                .user
+                .record_run(problem, language, code, report.verdict)
+                .await?;
+        }
         Ok(report)
     }
 
@@ -675,8 +689,25 @@ impl App {
         self.ensure_calibrated().await;
         let p = self.problem(problem).await?;
         ensure_language_fits(&p, language)?;
+        let kata = match opts.kata {
+            Some(session) => Some(self.kata_for(session, problem).await?),
+            None => None,
+        };
         let tests = p.tests.clone();
         let mut report = self.judge(p, tests, language, code, on_event).await?;
+        if let Some(s) = kata {
+            // A kata Submit is kept apart: no submission, status, review or daily change.
+            let outcome = self
+                .record_kata(s.started_at, problem, language, code, report.verdict)
+                .await?;
+            report.redact_hidden();
+            return Ok(SubmitResult {
+                submission_id: 0,
+                report,
+                practice: practice::PracticeOutcome::default(),
+                kata: Some(outcome),
+            });
+        }
         let was_solved = self
             .store
             .user
@@ -703,6 +734,7 @@ impl App {
             submission_id,
             report,
             practice,
+            kata: None,
         })
     }
 
@@ -997,6 +1029,10 @@ impl App {
     }
 
     pub async fn get_note(&self, problem: &str) -> Result<Option<String>> {
+        // A kata re-solves from memory: the notes wait until it ends (expansion M1).
+        if self.in_kata(problem).await? {
+            return Err(kata::locked());
+        }
         Ok(self.store.user.get_note(problem).await?)
     }
 

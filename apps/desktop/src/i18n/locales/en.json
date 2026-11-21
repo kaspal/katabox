@@ -14,7 +14,8 @@
     "progress": "Progress",
     "settings": "Settings",
     "smoke": "Smoke screen (dev)",
-    "interview": "Interview"
+    "interview": "Interview",
+    "kata": "Kata"
   },
   "palette": {
     "open": "Command palette",
@@ -354,7 +355,8 @@
       "overview": "Overview",
       "patterns": "By pattern",
       "topics": "By topic",
-      "history": "History"
+      "history": "History",
+      "katas": "Katas"
     },
     "learn": {
       "title": "Learn topics viewed",
@@ -511,7 +513,9 @@
     "debug_unsupported": "This language cannot be debugged yet. Debugging is available for Python.",
     "debug_diverged": "This program behaves differently on each run (time, randomness or object identity), so it cannot be replayed step by step.",
     "profile_unavailable": "This problem has no complexity profile.",
-    "shrink_unavailable": "Finding a smaller failing input is not available here (a program problem, or no reference solution in this language)."
+    "shrink_unavailable": "Finding a smaller failing input is not available here (a program problem, or no reference solution in this language).",
+    "locked_in_kata": "This is locked during the kata. It opens again when the kata ends.",
+    "kata_active": "A kata is running. End it first."
   },
   "judge": {
     "verdict": {
@@ -850,7 +854,9 @@
         "daily_picks": "Daily problems",
         "lists": "Lists",
         "interviews": "Mock interviews",
-        "settings": "Settings"
+        "settings": "Settings",
+        "kata_sessions": "Kata sessions",
+        "kata_attempts": "Kata attempts"
       }
     },
     "crossLang": {
@@ -2984,5 +2990,81 @@
     "correct": "Correct",
     "incorrect": "Not quite",
     "check": "Check"
+  },
+  "kata": {
+    "title": "Kata",
+    "intro": "Re-solve problems you already solved, from memory and against the clock. The editor starts empty, and hints, notes and your old solutions stay locked until the kata ends. Katas never change your submissions or reviews.",
+    "running": "Kata in progress",
+    "end": "End kata",
+    "summary": "Kata finished: {{solved}} of {{total}} solved",
+    "daily": {
+      "title": "Daily kata",
+      "intro": "Three solved problems, picked for today with a lean towards the ones you haven't touched for a while. About 15 minutes.",
+      "none": "Solve a problem first: a kata re-solves problems you have solved.",
+      "done": "Today's kata is done: {{solved}} of {{total}} solved.",
+      "start": "Start the daily kata"
+    },
+    "sets": {
+      "title": "Pick a set",
+      "intro": "Up to five solved problems from one pattern or one of your lists, the rustiest first. Ten minutes each.",
+      "pattern": "Pattern",
+      "list": "List",
+      "pick": "Choose…",
+      "noLists": "No list with solved problems",
+      "option": "{{name}} ({{count}} solved)",
+      "start": "Start"
+    },
+    "bests": "Personal bests and past katas",
+    "solvedIn_one": "Solved in {{time}}, {{count}} submit",
+    "solvedIn_other": "Solved in {{time}}, {{count}} submits",
+    "tried_one": "Not solved yet, {{count}} submit",
+    "tried_other": "Not solved yet, {{count}} submits",
+    "notYet": "Not started",
+    "best": "Best: {{time}}",
+    "again": "Open again",
+    "open": "Open",
+    "locked": "Locked during the kata: solve it from memory.",
+    "clock": {
+      "label": "Kata time: {{time}} of {{of}}",
+      "overLabel": "Kata time: {{time}}, over the {{of}} budget",
+      "over": "over time"
+    },
+    "next": "Next problem",
+    "skip": "Skip to the next",
+    "back": "Kata overview",
+    "newBest": "Solved in {{time}}: a new personal best!",
+    "fromMemory": "From memory: the editor starts from the starter code.",
+    "rusty": {
+      "title": "Rusty",
+      "none": "Nothing rusty: everything you solved was practised recently.",
+      "score": "{{score}}% rusty",
+      "scoreHelp": "Grows with the time since you last solved it, and with katas on it that failed.",
+      "practise": "Practise in a kata",
+      "never": "not practised since",
+      "days_one": "{{count}} day ago",
+      "days_other": "{{count}} days ago",
+      "setting": "Rusty card on Home"
+    },
+    "streak_one": "Kata streak: {{count}} day",
+    "streak_other": "Kata streak: {{count}} days",
+    "start": "Start a kata",
+    "bestsTitle": "Personal bests",
+    "noBests": "No kata solved yet.",
+    "col": {
+      "problem": "Problem",
+      "best": "Best time",
+      "submits": "Fewest submits",
+      "katas": "Katas solved"
+    },
+    "solvedOf": "{{solved}} of {{total}}",
+    "sessionsTitle": "Recent katas",
+    "noSessions": "No katas yet.",
+    "kind": {
+      "daily": "Daily",
+      "pattern": "Pattern",
+      "list": "List",
+      "custom": "Custom"
+    },
+    "inProgress": "in progress"
   }
 }

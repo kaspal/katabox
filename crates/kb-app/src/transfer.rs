@@ -78,6 +78,8 @@ pub struct TransferCounts {
     pub lists: u32,
     pub interviews: u32,
     pub settings: u32,
+    pub kata_sessions: u32,
+    pub kata_attempts: u32,
 }
 
 fn counts(d: &ExportData) -> TransferCounts {
@@ -95,6 +97,8 @@ fn counts(d: &ExportData) -> TransferCounts {
         lists: n(d.lists.len()),
         interviews: n(d.interviews.len()),
         settings: n(d.settings.len()),
+        kata_sessions: n(d.kata_sessions.len()),
+        kata_attempts: n(d.kata_attempts.len()),
     }
 }
 
@@ -186,6 +190,8 @@ fn validate(f: &ExportFile) -> Result<()> {
         d.lists.len(),
         d.interviews.len(),
         d.settings.len(),
+        d.kata_sessions.len(),
+        d.kata_attempts.len(),
     ];
     if sizes.iter().any(|n| *n > MAX_ROWS) {
         return Err(invalid(format!("more than {MAX_ROWS} records of one kind")));
@@ -311,6 +317,41 @@ fn validate(f: &ExportFile) -> Result<()> {
         check_time(&p, s.updated_at)?;
         if s.value.to_string().len() > 64 * 1024 {
             return Err(invalid(format!("{p}: value too large")));
+        }
+    }
+    for (i, s) in d.kata_sessions.iter().enumerate() {
+        let p = format!("kata_sessions[{i}]");
+        check_time(&p, s.started_at)?;
+        if let Some(t) = s.ended_at {
+            check_time(&p, t)?;
+        }
+        check_day(&p, &s.day)?;
+        if s.problem_ids.is_empty()
+            || s.problem_ids.len() > crate::kata::SET_KATA_MAX
+            || !(0..=86_400).contains(&s.duration_s)
+        {
+            return Err(invalid(format!("{p}: bad session")));
+        }
+        for id in &s.problem_ids {
+            check_id(&p, id)?;
+        }
+        if let Some(src) = &s.source {
+            check_len(&p, src, 128)?;
+        }
+    }
+    for (i, a) in d.kata_attempts.iter().enumerate() {
+        let p = format!("kata_attempts[{i}]");
+        check_id(&p, &a.problem_id)?;
+        check_time(&p, a.session_started_at)?;
+        check_time(&p, a.started_at)?;
+        if let Some(t) = a.solved_at {
+            check_time(&p, t)?;
+        }
+        if a.time_ms.is_some_and(|t| t < 0) || a.submits > 100_000 {
+            return Err(invalid(format!("{p}: bad attempt")));
+        }
+        if let Some(code) = &a.code {
+            check_len(&p, code, MAX_CODE)?;
         }
     }
     Ok(())

@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 4); // migrations 0001-0004
+    assert_eq!(info.user_schema_version, 5); // migrations 0001-0005
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -365,6 +365,7 @@ fn submit_opts() -> SubmitOptions {
         today: "2026-11-14".into(),
         review: false,
         lang: kb_store::UiLang::En,
+        kata: None,
     }
 }
 
@@ -1500,4 +1501,162 @@ async fn finishing_the_welcome_sets_the_start_floor_and_picks_a_problem() {
             .unwrap(),
         Some(serde_json::Value::Bool(true))
     );
+}
+
+/// Kata drills (expansion M1): start from solved problems only, lock the problem's
+/// history and help while running, keep drafts out, and travel with an export.
+#[tokio::test]
+async fn kata_sessions_lock_and_export() {
+    use crate::kata::KataStart;
+    use kb_store::kata::KataKind;
+    let today = "2026-11-21";
+    let a = app("kata-a").await;
+    let start = |kind: KataKind, source: Option<&str>| KataStart {
+        kind,
+        source: source.map(str::to_string),
+        problems: vec![],
+        today: today.into(),
+    };
+    // Nothing solved yet: no kata.
+    let err = a
+        .start_kata(&start(KataKind::Daily, None), UiLang::En)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::InvalidInput);
+    for pid in ["two-sum", "budget-pair"] {
+        a.store
+            .user
+            .record_submission(
+                pid,
+                Language::Python,
+                "solved",
+                &report_with(Verdict::Accepted),
+            )
+            .await
+            .unwrap();
+    }
+    a.set_note("two-sum", "use a map").await.unwrap();
+    let o = a.kata_options(today, UiLang::En).await.unwrap();
+    assert_eq!(o.daily.len(), 2, "only two problems are solved");
+    assert!(o.running.is_none());
+    // Unsolved problems never join a custom kata.
+    let mut custom = start(KataKind::Custom, None);
+    custom.problems = vec!["nested-brackets".into()];
+    assert_eq!(
+        a.start_kata(&custom, UiLang::En).await.unwrap_err().code,
+        AppErrorCode::InvalidInput
+    );
+
+    let view = a
+        .start_kata(&start(KataKind::Daily, None), UiLang::En)
+        .await
+        .unwrap();
+    assert_eq!(view.problems.len(), 2);
+    assert_eq!(view.duration_s, crate::kata::DAILY_KATA_S);
+    // One kata at a time, and no mock interview meanwhile.
+    assert_eq!(
+        a.start_kata(
+            &start(KataKind::Pattern, Some("arrays-hashing")),
+            UiLang::En
+        )
+        .await
+        .unwrap_err()
+        .code,
+        AppErrorCode::KataActive
+    );
+    // Locked while running: submissions, notes, hints; drafts are not saved.
+    assert_eq!(
+        a.list_submissions("two-sum").await.unwrap_err().code,
+        AppErrorCode::LockedInKata
+    );
+    assert_eq!(
+        a.get_note("two-sum").await.unwrap_err().code,
+        AppErrorCode::LockedInKata
+    );
+    assert_eq!(
+        a.unlocked_hints("two-sum").await.unwrap_err().code,
+        AppErrorCode::LockedInKata
+    );
+    assert!(
+        a.get_problem("two-sum", UiLang::En)
+            .await
+            .unwrap()
+            .hints
+            .is_empty()
+    );
+    a.save_draft("two-sum", Language::Python, "from memory")
+        .await
+        .unwrap();
+    assert_eq!(
+        a.store
+            .user
+            .load_draft("two-sum", Language::Python)
+            .await
+            .unwrap(),
+        None
+    );
+    // Problems outside the kata stay open.
+    a.list_submissions("nested-brackets").await.unwrap();
+
+    let attempt = a.kata_open("two-sum").await.unwrap();
+    assert_eq!(attempt.submits, 0);
+    let outcome = a
+        .record_kata(
+            view.started_at,
+            "two-sum",
+            Language::Python,
+            "def twoSum(): ...",
+            Verdict::Accepted,
+        )
+        .await
+        .unwrap();
+    assert!(outcome.new_best && outcome.previous_best_ms.is_none());
+    assert_eq!(outcome.attempt.submits, 1);
+    // A kata solve is not a submission.
+    assert_eq!(
+        a.store
+            .user
+            .list_submissions("two-sum")
+            .await
+            .unwrap()
+            .len(),
+        1
+    );
+
+    let ended = a.end_kata(UiLang::En).await.unwrap().unwrap();
+    assert_eq!(ended.solved, 1);
+    assert_eq!(
+        a.get_note("two-sum").await.unwrap().as_deref(),
+        Some("use a map")
+    );
+    // Today's daily kata runs once.
+    assert_eq!(
+        a.start_kata(&start(KataKind::Daily, None), UiLang::En)
+            .await
+            .unwrap_err()
+            .code,
+        AppErrorCode::InvalidInput
+    );
+    let overview = a.kata_overview(today, UiLang::En).await.unwrap();
+    assert_eq!(overview.streak, 1);
+    assert_eq!(overview.bests.len(), 1);
+    assert_eq!(overview.sessions.len(), 1);
+
+    // Export → import carries the sessions and attempts.
+    let dir = crate::testutil::temp_dir("kata-export");
+    let file = dir.join("kata.kbx.json");
+    let counts = a.export_to(&file).await.unwrap();
+    assert_eq!((counts.kata_sessions, counts.kata_attempts), (1, 1));
+    let b = app("kata-b").await;
+    let p = b.import_preview_from(&file).await.unwrap();
+    b.import_apply(p.id).await.unwrap();
+    let ob = b.kata_overview(today, UiLang::En).await.unwrap();
+    assert_eq!(ob.streak, 1);
+    assert_eq!(ob.bests, overview.bests);
+    // A second import changes nothing.
+    let p = b.import_preview_from(&file).await.unwrap();
+    let r = b.import_apply(p.id).await.unwrap();
+    assert_eq!(r.added, 0);
+    a.close().await;
+    b.close().await;
 }

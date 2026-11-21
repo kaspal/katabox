@@ -19,6 +19,12 @@ All notable changes to KataBox are recorded in this file. The format follows
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
 
+- **Kata drills:** re-solve solved problems from memory against the clock. A daily kata
+  of three problems (leaning towards the rusty ones) or a set from a pattern or a list;
+  the editor starts empty and help stays locked until the kata ends. Personal bests,
+  a kata streak and recent katas on Progress → Katas, and a **Rusty** card on Home.
+  Katas never change submissions, reviews or the daily problem.
+
 ### Changed
 - Exports are now format `katabox-export/v2`, which carries the new kinds of records
   added below. Files exported by 1.0.0-beta.1 (`v1`) still import.

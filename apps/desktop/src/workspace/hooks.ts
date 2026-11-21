@@ -2,7 +2,7 @@
 // language) and judge runs (Run/Submit with progress).
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { JudgeEvent, Language, PracticeOutcome, Report } from "@/bindings";
+import type { JudgeEvent, KataOutcome, Language, PracticeOutcome, Report } from "@/bindings";
 import type { ComplexityState } from "@/workspace/results/ComplexityPanel";
 import { api, type CustomInput } from "@/lib/api";
 import { practiceKeys } from "@/lib/practice";
@@ -143,6 +143,8 @@ export function useJudge(problem: string) {
   const { lang } = usePrefs();
   /** What the last Submit did for practice (review, daily problem, next problem). */
   const [practice, setPractice] = useState<PracticeOutcome | null>(null);
+  /** What the last kata Submit did (expansion M1). */
+  const [kata, setKata] = useState<KataOutcome | null>(null);
   // Unmeasured (null) until the first Run or Submit measures this machine.
   const measured = useCalibration().data != null;
   const [busy, setBusy] = useState<"run" | "submit" | null>(null);
@@ -159,6 +161,7 @@ export function useJudge(problem: string) {
     setReport(null);
     setError(null);
     setPractice(null);
+    setKata(null);
     setLastKind(null);
     setJudged(null);
     setPhase({ kind: "idle" });
@@ -216,22 +219,24 @@ export function useJudge(problem: string) {
     [problem, start],
   );
   const submit = useCallback(
-    (language: Language, code: string, opts: { review?: boolean } = {}) =>
+    (language: Language, code: string, opts: { review?: boolean; kata?: number | null } = {}) =>
       start("submit", { language, code }, async (onEvent) => {
         const result = await api.submit(
           problem,
           language,
           code,
-          { today: localToday(), review: opts.review === true, lang },
+          { today: localToday(), review: opts.review === true, lang, kata: opts.kata ?? null },
           onEvent,
         );
         setPractice(result.practice);
+        setKata(result.kata);
+        if (result.kata) void queryClient.invalidateQueries({ queryKey: ["kata"] });
         return result.report;
       }),
-    [problem, start, lang],
+    [problem, start, lang, queryClient],
   );
 
-  return { busy, phase, report, error, lastKind, judged, run, submit, practice };
+  return { busy, phase, report, error, lastKind, judged, run, submit, practice, kata };
 }
 
 /**

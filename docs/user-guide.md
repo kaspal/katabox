@@ -171,6 +171,23 @@ shows the limit for the language you picked, e.g. **Time limit (Python)**.
   first-try passes, time used, time and submits per problem). Past interviews are on
   Progress.
 
+## Kata drills
+**Kata** (in the navigation rail) re-solves problems you have already solved, from memory
+and against the clock:
+- **Daily kata:** three solved problems picked for today, leaning towards the ones you
+  haven't touched for a while. About 15 minutes; the clock shows overtime but never
+  stops you.
+- **Pick a set:** up to five solved problems from one pattern or one of your lists, the
+  rustiest first, ten minutes each.
+- The editor starts from the starter code. Hints, the editorial, your submissions,
+  History and notes are **Locked during the kata** until it ends.
+- A kata never changes your submissions, problem status, reviews or daily problem. Its
+  results are on **Progress → Katas**: your personal bests (fastest time, fewest
+  submits), the kata streak and recent katas.
+- **Rusty** (Home card, and on Progress → Katas) lists solved problems you may have
+  forgotten: the score grows with the time since you last solved one and with failed
+  katas on it. Turn the card off in Settings → Practice.
+
 ## Debugger and visualizer
 - **Languages:** Python and JavaScript/TypeScript, for function and program problems.
   Not PHP, Rust or SQL yet.
