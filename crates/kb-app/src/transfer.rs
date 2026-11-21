@@ -1,5 +1,5 @@
 //! Progress export and import (ADR 0020): one `.kbx.json` file, format
-//! `katabox-export/v1`. Import is strict — size cap, exact format, no unknown fields,
+//! `katabox-export/v2` (v1 files still import; expansion M0). Import is strict — size cap, exact format, no unknown fields,
 //! every value checked — and merges by key, keeping the newer record. Nothing in a file
 //! is ever executed: code is stored as text.
 
@@ -11,7 +11,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{App, AppError, AppErrorCode, CALIBRATION_SETTING, Result, SANDBOX_ROOT_SETTING};
 
-pub const EXPORT_FORMAT: &str = "katabox-export/v1";
+/// The format every export writes. v2 adds the expansion's record kinds, each an
+/// optional (`serde(default)`) section of [`ExportData`].
+pub const EXPORT_FORMAT: &str = "katabox-export/v2";
+/// The previous format: still imported, as long as it holds none of v2's sections.
+pub const EXPORT_FORMAT_V1: &str = "katabox-export/v1";
 /// Largest file Import reads.
 pub const IMPORT_MAX_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_ROWS: usize = 200_000;
@@ -158,11 +162,14 @@ fn check_day(path: &str, s: &str) -> Result<()> {
 
 /// Every value of a parsed file, checked (types were already checked by serde).
 fn validate(f: &ExportFile) -> Result<()> {
-    if f.format != EXPORT_FORMAT {
+    if f.format != EXPORT_FORMAT && f.format != EXPORT_FORMAT_V1 {
         return Err(invalid(format!(
-            "format must be {EXPORT_FORMAT:?}, got {:?}",
+            "format must be {EXPORT_FORMAT:?} or {EXPORT_FORMAT_V1:?}, got {:?}",
             f.format
         )));
+    }
+    if f.format == EXPORT_FORMAT_V1 && !f.data.v2_sections_empty() {
+        return Err(invalid(format!("a {EXPORT_FORMAT_V1} file has v2 records")));
     }
     check_len("app_version", &f.app_version, 64)?;
     let d = &f.data;

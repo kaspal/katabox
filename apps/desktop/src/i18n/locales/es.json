@@ -2971,5 +2971,18 @@
     },
     "more": "La lista completa está en CHANGELOG.md (Ajustes → Acerca de).",
     "close": "Entendido"
+  },
+  "exercise": {
+    "kind": {
+      "kata": "Kata",
+      "followup": "Continuación",
+      "fix": "Arregla el error",
+      "print": "¿Qué imprime?",
+      "complexity": "Complejidad"
+    },
+    "position": "{{index}} de {{total}}",
+    "correct": "Correcto",
+    "incorrect": "No del todo",
+    "check": "Comprobar"
   }
 }

@@ -1,6 +1,6 @@
 //! Progress export and import (ADR 0020): every user.db record a user would want on
 //! another machine, as plain data, and a merge that keeps the newer record on conflicts.
-//! The file envelope (`katabox-export/v1`), size cap and value checks live in kb-app;
+//! The file envelope (`katabox-export/v2`, v1 still read), size cap and value checks live in kb-app;
 //! this module reads all rows and merges rows inside one transaction.
 
 use std::collections::HashMap;
@@ -146,6 +146,15 @@ pub struct ExportData {
     pub lists: Vec<ListExport>,
     pub interviews: Vec<InterviewExport>,
     pub settings: Vec<SettingRow>,
+    // Sections added by `katabox-export/v2` (expansion) go below, each
+    // `#[serde(default)]` so v1 files still parse.
+}
+
+impl ExportData {
+    /// True when the data holds none of the sections that only v2 files may have.
+    pub fn v2_sections_empty(&self) -> bool {
+        true
+    }
 }
 
 /// How many records an import adds, updates (newer wins) or keeps as they were.

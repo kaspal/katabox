@@ -19,6 +19,10 @@ All notable changes to KataBox are recorded in this file. The format follows
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
 
+### Changed
+- Exports are now format `katabox-export/v2`, which carries the new kinds of records
+  added below. Files exported by 1.0.0-beta.1 (`v1`) still import.
+
 ### Fixed
 - The command palette now finds a command typed exactly as its label, punctuation
   included ("Theme: Dark"), and ignores accents.

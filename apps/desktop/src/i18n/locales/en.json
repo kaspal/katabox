@@ -2971,5 +2971,18 @@
     },
     "more": "The full list is in CHANGELOG.md (Settings → About).",
     "close": "Got it"
+  },
+  "exercise": {
+    "kind": {
+      "kata": "Kata",
+      "followup": "Follow-up",
+      "fix": "Fix the bug",
+      "print": "What does this print?",
+      "complexity": "Complexity"
+    },
+    "position": "{{index}} of {{total}}",
+    "correct": "Correct",
+    "incorrect": "Not quite",
+    "check": "Check"
   }
 }

@@ -17,6 +17,8 @@
 pub mod blob;
 pub mod content;
 pub mod learn;
+#[cfg(test)]
+mod migration_tests;
 pub mod modes;
 pub mod practice;
 pub mod transfer;

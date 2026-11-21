@@ -255,7 +255,7 @@ excedidos:
 ## Exportar e importar
 **Ajustes → Datos:**
 - **Exportar…** guarda tu progreso en un archivo (`.kbx.json`, formato
-  `katabox-export/v1`): estados de problemas, envíos, instantáneas del historial, notas,
+  `katabox-export/v2`; los archivos v1 se siguen importando): estados de problemas, envíos, instantáneas del historial, notas,
   borradores, pistas desbloqueadas, problemas abiertos, repasos, problemas del día,
   listas, entrevistas simuladas, ajustes y tu progreso en Aprender (temas vistos y
   posición de Continuar).

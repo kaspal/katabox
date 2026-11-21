@@ -1072,7 +1072,7 @@ async fn export_import_round_trip_reproduces_progress_and_home() {
     assert_eq!(counts.submissions, 5);
     assert_eq!(counts.interviews, 1);
     let text = std::fs::read_to_string(&file).unwrap();
-    assert!(text.contains("\"format\": \"katabox-export/v1\""));
+    assert!(text.contains("\"format\": \"katabox-export/v2\""));
     assert!(
         !text.contains("machine-a"),
         "machine-specific settings stay home"
@@ -1240,6 +1240,41 @@ async fn import_keeps_the_newer_record_and_never_downgrades() {
     b.close().await;
 }
 
+/// A file written by 1.0.0-beta.1 (`katabox-export/v1`) still imports after v2.
+#[tokio::test]
+async fn a_v1_export_still_imports() {
+    let dir = crate::testutil::temp_dir("export-v1");
+    let file = dir.join("old.kbx.json");
+    std::fs::write(&file, include_str!("../tests/fixtures/export-v1.kbx.json")).unwrap();
+    let b = app("export-v1").await;
+    let preview = b.import_preview_from(&file).await.unwrap();
+    assert_eq!(preview.counts.submissions, 2);
+    assert_eq!(preview.counts.lists, 1);
+    let r = b.import_apply(preview.id).await.unwrap();
+    assert!(r.added > 0);
+    assert_eq!(
+        b.store.user.get_note("two-sum").await.unwrap().as_deref(),
+        Some("use a map")
+    );
+    assert_eq!(
+        b.get_setting("editor.keymap").await.unwrap(),
+        Some(json!("vim"))
+    );
+    // Re-exported, it is a v2 file that imports again.
+    let again = dir.join("again.kbx.json");
+    b.export_to(&again).await.unwrap();
+    assert!(
+        std::fs::read_to_string(&again)
+            .unwrap()
+            .contains("katabox-export/v2")
+    );
+    let c = app("export-v1-again").await;
+    let p = c.import_preview_from(&again).await.unwrap();
+    assert_eq!(p.counts.submissions, 2);
+    b.close().await;
+    c.close().await;
+}
+
 #[tokio::test]
 async fn import_rejects_bad_files_and_imports_nothing() {
     let a = app("reject-a").await;
@@ -1265,7 +1300,7 @@ async fn import_rejects_bad_files_and_imports_nothing() {
     let cases: Vec<(&str, Mutation)> = vec![
         (
             "format",
-            Box::new(|v| v["format"] = json!("katabox-export/v2")),
+            Box::new(|v| v["format"] = json!("katabox-export/v3")),
         ),
         (
             "unknown field",

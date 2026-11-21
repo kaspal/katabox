@@ -235,7 +235,7 @@ answer, Runtime error, Time limit or Memory limit exceeded:
 ## Export and import
 **Settings → Data:**
 - **Export…** writes your progress to one file (`.kbx.json`, format
-  `katabox-export/v1`): problem statuses, submissions, History snapshots, notes,
+  `katabox-export/v2`; files from v1 still import): problem statuses, submissions, History snapshots, notes,
   drafts, unlocked hints, opened problems, reviews, daily problems, lists, mock
   interviews, settings, and your Learn progress (viewed topics, Continue position).
 - Not exported: this computer's speed factor, its install id and sandbox folder.
