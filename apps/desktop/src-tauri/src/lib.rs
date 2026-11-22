@@ -19,6 +19,7 @@ use kb_app::practice::{
 };
 use kb_app::profile::ProfileView;
 use kb_app::rating::RatingsView;
+use kb_app::reading::{ReadingAnswer, ReadingResult};
 use kb_app::transfer::{ImportPreview, ImportResult, TransferCounts};
 use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
@@ -29,11 +30,13 @@ use kb_core::debug::EvalResult;
 use kb_core::{JudgeEvent, Language, Report};
 use kb_store::journal::ReflectionRow;
 use kb_store::kata::KataAttemptRow;
+use kb_store::reading_answers::ReadingAnswerRow;
 use kb_store::snippets::SnippetRow;
 use kb_store::{AcceptedSolution, ActivityRow, LearnPath, LearnSubject, LearnTopicSummary};
 use kb_store::{
     Draft, ProblemFilter, ProblemSummary, ProblemView, Snapshot, SubmissionSummary, UiLang,
 };
+use kb_store::{ReadingLink, ReadingSetSummary, ReadingSetView};
 use serde_json::Value;
 use tauri::ipc::Channel;
 use tauri::path::BaseDirectory;
@@ -572,6 +575,51 @@ async fn interviews(state: State<'_, AppState>, lang: UiLang) -> Res<Vec<Intervi
     state.app()?.interviews(lang).await
 }
 
+// --- Reading exercises (expansion M7, ADR 0035) --------------------------------------
+
+#[tauri::command]
+#[specta::specta]
+async fn reading_sets(state: State<'_, AppState>, ui_lang: UiLang) -> Res<Vec<ReadingSetSummary>> {
+    state.app()?.reading_sets(ui_lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn reading_set(
+    state: State<'_, AppState>,
+    id: String,
+    ui_lang: UiLang,
+) -> Res<ReadingSetView> {
+    state.app()?.reading_set(&id, ui_lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn reading_answers(state: State<'_, AppState>) -> Res<Vec<ReadingAnswerRow>> {
+    state.app()?.reading_answers().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn reading_links(
+    state: State<'_, AppState>,
+    topic: String,
+    ui_lang: UiLang,
+) -> Res<Vec<ReadingLink>> {
+    state.app()?.reading_links(&topic, ui_lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn answer_reading(
+    state: State<'_, AppState>,
+    item: String,
+    answer: ReadingAnswer,
+    ui_lang: UiLang,
+) -> Res<ReadingResult> {
+    state.app()?.answer_reading(&item, answer, ui_lang).await
+}
+
 // --- Snippets and search (expansion M4, ADR 0034) ------------------------------------
 
 #[tauri::command]
@@ -1104,6 +1152,11 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         interview_active,
         end_interview,
         interviews,
+        reading_sets,
+        reading_set,
+        reading_answers,
+        reading_links,
+        answer_reading,
         snippets,
         save_snippet,
         delete_snippet,
