@@ -8,7 +8,7 @@ default-members = ["crates/*"]
 version = "1.0.0-beta.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/OWNER/katabox"
+repository = "https://github.com/kaspal/katabox"
 rust-version = "1.99"
 
 [workspace.dependencies]

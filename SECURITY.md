@@ -6,7 +6,8 @@ KataBox runs code on the user's machine: the user's own solutions, and the probl
 
 | Version | Supported |
 | --- | --- |
-| 1.0.0-beta.1 | Yes |
+| 1.0.0-beta.2 | Yes |
+| 1.0.0-beta.1 | No (upgrade to 1.0.0-beta.2) |
 | Earlier development builds | No |
 
 Fixes ship in a new release; there is no automatic update, so users install it themselves.
@@ -62,10 +63,9 @@ Language servers (autocomplete and diagnostics) run outside the sandbox, so they
 
 ## Reporting a vulnerability
 
-**Do not open a public issue.**
+**Do not open a public issue, discussion or pull request for a vulnerability.** Public reports put every user at risk before a fix exists.
 
-- Contact: `[MAINTAINER: contact]`
-- Once the repository is public, you can also use GitHub's private vulnerability reporting ("Report a vulnerability" under the repository's Security tab).
+Report it privately through GitHub's private vulnerability reporting: open the repository's **Security** tab and choose **Report a vulnerability**, or go straight to <https://github.com/kaspal/katabox/security/advisories/new>. Only the maintainer sees the report, and the fix and the advisory are prepared there before anything is published.
 
 Please include the KataBox version, your Windows version, what you did (a minimal solution file or import file helps) and what happened. Copy diagnostics (Settings) gives the versions without any personal data.
 

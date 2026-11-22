@@ -12,3 +12,9 @@ __pycache__/
 # Complexity profiler input cache (ADR 0024): regenerated from gen.py and verified
 # against the hashes in profile/reference.json by `kb-pack profile --inputs`.
 content/problems/*/profile/inputs/
+
+# Local only, never committed: the maintainer's hand-off notes, Claude Code's local
+# settings and outputs. (Dev data lives outside the repo, in the OS data folders.)
+.handoff/
+.claude/settings.local.json
+Claude outputs/
