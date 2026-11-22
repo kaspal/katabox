@@ -191,6 +191,24 @@ Cuando resuelves el problema base, se abren desde la franja bajo el título
 dice qué cambia; sus pruebas, límites y soluciones son propios, y cuenta como un problema
 más en tu historial.
 
+## Sesiones de concentración
+Inicia una sesión de concentración desde Progreso → Resumen o la paleta de comandos
+("Iniciar sesión de concentración"). Un indicador en la barra superior muestra si estás
+trabajando o descansando y cuánto queda; al cambiar de fase aparece un aviso breve. La
+duración del trabajo y del descanso está en la misma tarjeta (25 y 5 minutos por
+defecto). La sesión sigue en marcha aunque cierres y vuelvas a abrir KataBox. Al
+detenerla, la tarjeta muestra lo que hiciste: problemas tocados y resueltos, katas y
+elementos del plan.
+
+## Copias de seguridad automáticas
+Ajustes → Datos → **Copias de seguridad automáticas**: elige una carpeta y KataBox
+escribe allí una exportación de tu progreso cada pocos días (7 por defecto) y, si
+quieres, cada vez que se cierra. **Copiar ahora** escribe una en el momento. Para
+restaurar una, usa **Importar**. KataBox conserva las copias más recientes (5 por
+defecto) y borra solo sus propios archivos `katabox-backup-….kbx.json` de esa carpeta,
+nunca nada más; un README en la carpeta lo explica. Usar una carpeta sincronizada
+(OneDrive, Dropbox…) es decisión tuya.
+
 ## Construir pruebas personalizadas
 Bajo el valor de cada prueba personalizada, **Construir visualmente** abre un constructor
 adecuado al tipo: un árbol que haces crecer pulsando nodos, filas que puedes añadir,

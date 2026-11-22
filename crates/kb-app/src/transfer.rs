@@ -37,9 +37,11 @@ const UI_SETTINGS: [&str; 2] = ["ui.contrast", "ui.motion"];
 
 /// Settings an import may write.
 fn importable_setting(key: &str) -> bool {
-    ["editor.", "workspace.", "practice."]
+    ["editor.", "workspace.", "practice.", "focus."]
         .iter()
         .any(|p| key.starts_with(p) && key.len() <= 64)
+        // The running focus session stays on this machine (expansion M10).
+        && key != crate::focus::CURRENT
         || key == "ui_lang"
         || key == "theme"
         || LEARN_SETTINGS.contains(&key)
@@ -87,6 +89,7 @@ pub struct TransferCounts {
     pub snippets: u32,
     pub reading_answers: u32,
     pub stress_brutes: u32,
+    pub focus_sessions: u32,
 }
 
 fn counts(d: &ExportData) -> TransferCounts {
@@ -113,6 +116,7 @@ fn counts(d: &ExportData) -> TransferCounts {
         snippets: n(d.snippets.len()),
         reading_answers: n(d.reading_answers.len()),
         stress_brutes: n(d.stress_brutes.len()),
+        focus_sessions: n(d.focus_sessions.len()),
     }
 }
 
@@ -213,6 +217,7 @@ fn validate(f: &ExportFile) -> Result<()> {
         d.snippets.len(),
         d.reading_answers.len(),
         d.stress_brutes.len(),
+        d.focus_sessions.len(),
     ];
     if sizes.iter().any(|n| *n > MAX_ROWS) {
         return Err(invalid(format!("more than {MAX_ROWS} records of one kind")));
@@ -464,6 +469,18 @@ fn validate(f: &ExportFile) -> Result<()> {
             .is_ok_and(|l| kb_judge::languages::SUPPORTED.contains(&l));
         if !lang_ok || b.code.len() > crate::stress::MAX_BRUTE_BYTES {
             return Err(invalid(format!("{p}: bad brute-force solution")));
+        }
+    }
+    for (i, f) in d.focus_sessions.iter().enumerate() {
+        let p = format!("focus_sessions[{i}]");
+        check_time(&p, f.started_at)?;
+        check_time(&p, f.ended_at)?;
+        if f.ended_at < f.started_at
+            || !crate::focus::WORK_MIN.contains(&f.work_min)
+            || !crate::focus::BREAK_MIN.contains(&f.break_min)
+            || f.cycles > 10_000
+        {
+            return Err(invalid(format!("{p}: bad focus session")));
         }
     }
     Ok(())

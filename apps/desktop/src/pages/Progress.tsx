@@ -33,6 +33,7 @@ import { PlanTab } from "@/practice/plan";
 import { MistakesTab } from "@/practice/journal";
 import { RatingBadge } from "@/practice/rating";
 import { useRatings } from "@/lib/plan";
+import { FocusCard } from "@/practice/focus";
 
 /** By topic shows the largest topics first; "Show all" lists the rest. */
 const TOPICS_SHOWN = 24;
@@ -182,6 +183,10 @@ export function Progress() {
             ) : (
               <p className="text-sm text-muted-foreground">{t("rating.none")}</p>
             )}
+          </Section>
+
+          <Section title={t("focus.title")} testId="focus">
+            <FocusCard />
           </Section>
 
           <Section title={t("progress.heatmap.title")} testId="activity">

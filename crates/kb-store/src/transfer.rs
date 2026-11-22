@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{Row, SqliteConnection};
 
+use crate::focus::FocusSessionRow;
 use crate::journal::{MistakeRow, ReflectionRow};
 use crate::kata::{KATA_MAX_MS, KataAttemptRow, KataSessionRow};
 use crate::plans::{PlanItemRow, PlanRow};
@@ -181,6 +182,9 @@ pub struct ExportData {
     /// The stress lab's brute-force solutions (expansion M8).
     #[serde(default)]
     pub stress_brutes: Vec<StressBruteRow>,
+    /// Finished focus sessions (expansion M10).
+    #[serde(default)]
+    pub focus_sessions: Vec<FocusSessionRow>,
 }
 
 impl ExportData {
@@ -195,6 +199,7 @@ impl ExportData {
             && self.snippets.is_empty()
             && self.reading_answers.is_empty()
             && self.stress_brutes.is_empty()
+            && self.focus_sessions.is_empty()
     }
 }
 
@@ -356,6 +361,7 @@ impl UserDb {
         d.snippets = self.snippets().await?;
         d.reading_answers = self.reading_answers().await?;
         d.stress_brutes = self.stress_brutes().await?;
+        d.focus_sessions = self.focus_sessions().await?.into_iter().rev().collect();
         for r in sqlx::query("SELECT * FROM settings ORDER BY key")
             .fetch_all(p)
             .await?
@@ -962,6 +968,31 @@ impl UserDb {
             .await?
             .rows_affected();
             stats.entry("stress_brutes").or_default().count(n, existed);
+        }
+
+        for f in &d.focus_sessions {
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM focus_sessions WHERE started_at = ?",
+                &[&f.started_at.to_string()],
+            )
+            .await?;
+            // A session is finished once written: the same start never changes.
+            let n = sqlx::query(
+                "INSERT OR IGNORE INTO focus_sessions
+                   (started_at, ended_at, work_min, break_min, cycles, summary)
+                 VALUES (?, ?, ?, ?, ?, ?)",
+            )
+            .bind(f.started_at)
+            .bind(f.ended_at)
+            .bind(f.work_min)
+            .bind(f.break_min)
+            .bind(f.cycles)
+            .bind(serde_json::to_string(&f.summary)?)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("focus_sessions").or_default().count(n, existed);
         }
 
         for r in &d.settings {

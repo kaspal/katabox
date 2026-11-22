@@ -877,7 +877,8 @@
         "reflections": "Reflections",
         "snippets": "Snippets",
         "reading_answers": "Reading exercise answers",
-        "stress_brutes": "Stress test brute forces"
+        "stress_brutes": "Stress test brute forces",
+        "focus_sessions": "Focus sessions"
       }
     },
     "crossLang": {
@@ -3324,5 +3325,44 @@
     "checkOk": "Custom {{index}}: valid",
     "checkBad": "Custom {{index}}: {{why}}",
     "checkTypesOnly": "Only the types were checked: the problem's constraints need the Python runtime."
+  },
+  "focus": {
+    "title": "Focus sessions",
+    "start": "Start focus session",
+    "stop": "Stop focus session",
+    "work": "Work (minutes)",
+    "break": "Break (minutes)",
+    "phase": {
+      "work": "Focus",
+      "break": "Break"
+    },
+    "chip": {
+      "work": "Focus: {{time}} left",
+      "break": "Break: {{time}} left"
+    },
+    "toBreak": "Time for a break.",
+    "toWork": "Break over: back to focus.",
+    "none": "No focus sessions yet.",
+    "length": "{{minutes}} min, {{cycles}} work periods",
+    "summary": "{{touched}} problems touched, {{solved}} solved, {{katas}} katas, {{plan_items}} plan items done",
+    "paletteStart": "Start focus session ({{work}} + {{brk}} min)",
+    "paletteStop": "Stop focus session"
+  },
+  "backup": {
+    "title": "Automatic backups",
+    "intro": "KataBox can write an export of your progress to a folder you choose, every few days and when you close the app. A synced folder (OneDrive, Dropbox…) is your choice.",
+    "noFolder": "No folder chosen: backups are off",
+    "choose": "Choose folder…",
+    "change": "Change folder…",
+    "off": "Turn off",
+    "every": "Every (days)",
+    "keep": "Keep (backups)",
+    "onExit": "Also back up when KataBox closes",
+    "now": "Back up now",
+    "last": "Last backup: {{when}}",
+    "never": "No backup yet",
+    "next": "next due {{when}}",
+    "failed": "The last backup failed: {{why}}",
+    "prune": "KataBox deletes only its own katabox-backup-….kbx.json files in that folder, oldest first, beyond the number to keep. It never touches other files."
   }
 }

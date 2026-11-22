@@ -942,6 +942,91 @@ async fn pick_file(
         .transpose()
 }
 
+// --- Focus sessions and backups (expansion M10, ADR 0037) ----------------------------
+
+#[tauri::command]
+#[specta::specta]
+async fn focus_current(state: State<'_, AppState>) -> Res<Option<kb_app::focus::FocusCurrent>> {
+    state.app()?.focus_current().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn focus_start(
+    state: State<'_, AppState>,
+    work_min: u32,
+    break_min: u32,
+) -> Res<kb_app::focus::FocusCurrent> {
+    state.app()?.focus_start(work_min, break_min).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn focus_stop(state: State<'_, AppState>) -> Res<Option<kb_store::focus::FocusSessionRow>> {
+    state.app()?.focus_stop().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn focus_sessions(state: State<'_, AppState>) -> Res<Vec<kb_store::focus::FocusSessionRow>> {
+    state.app()?.focus_sessions().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn backup_status(state: State<'_, AppState>) -> Res<kb_app::backup::BackupStatus> {
+    state.app()?.backup_status().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn set_backup_options(
+    state: State<'_, AppState>,
+    every_days: u32,
+    keep: u32,
+    on_exit: bool,
+) -> Res<kb_app::backup::BackupStatus> {
+    state
+        .app()?
+        .set_backup_options(every_days, keep, on_exit)
+        .await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn backup_now(state: State<'_, AppState>) -> Res<kb_app::backup::BackupStatus> {
+    state.app()?.backup_now().await
+}
+
+/// Settings → Data: choose the backup folder in a native dialog (opened here; the webview
+/// has no dialog permission). `None` (cancelled) leaves it unchanged.
+#[tauri::command]
+#[specta::specta]
+async fn choose_backup_folder(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Res<Option<kb_app::backup::BackupStatus>> {
+    use tauri_plugin_dialog::DialogExt;
+    let picked =
+        tauri::async_runtime::spawn_blocking(move || app.dialog().file().blocking_pick_folder())
+            .await
+            .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))?;
+    let Some(folder) = picked else {
+        return Ok(None);
+    };
+    let folder = folder
+        .into_path()
+        .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))?;
+    Ok(Some(state.app()?.set_backup_folder(Some(&folder)).await?))
+}
+
+/// Turn backups off (the files already written stay).
+#[tauri::command]
+#[specta::specta]
+async fn clear_backup_folder(state: State<'_, AppState>) -> Res<kb_app::backup::BackupStatus> {
+    state.app()?.set_backup_folder(None).await
+}
+
 /// Today's UTC date for the default file name (the name is only a suggestion).
 fn chrono_free_today() -> String {
     let days = std::time::SystemTime::now()
@@ -1219,6 +1304,15 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         cancel_stress,
         stress_brute,
         save_stress_brute,
+        focus_current,
+        focus_start,
+        focus_stop,
+        focus_sessions,
+        backup_status,
+        set_backup_options,
+        backup_now,
+        choose_backup_folder,
+        clear_backup_folder,
         reading_sets,
         reading_set,
         reading_answers,
@@ -1381,7 +1475,16 @@ pub fn run_app() {
             if let Err(e) = &state {
                 eprintln!("KataBox could not start: {e}");
             }
+            // A backup when one is due (expansion M10), in the background.
             app.manage(AppState(state));
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                if let Some(s) = handle.try_state::<AppState>()
+                    && let Ok(a) = s.app()
+                {
+                    a.backup_if_due(false).await;
+                }
+            });
             // The main window starts hidden: place it where it was, then show it.
             app.manage(window_state::Saved::default());
             if let Some(window) = app.get_webview_window("main") {
@@ -1399,6 +1502,9 @@ pub fn run_app() {
                 && let Ok(app) = state.app()
             {
                 tauri::async_runtime::block_on(app.lsp_shutdown());
+                // The exit backup, when that option is on (expansion M10); at most 5 s so
+                // closing never hangs.
+                tauri::async_runtime::block_on(app.backup_on_exit());
             }
         });
 }

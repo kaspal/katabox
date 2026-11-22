@@ -6,6 +6,9 @@ import { recordError } from "@/lib/diagnostics";
 import {
   commands,
   type CustomCheck,
+  type BackupStatus,
+  type FocusCurrent,
+  type FocusSessionRow,
   type StressEvent,
   type StressResult,
   type ReadingAnswer,
@@ -173,6 +176,17 @@ export const api = {
   cancelShrink: (): Promise<null> => call(commands.cancelShrink()),
   checkCustom: (problem: string, inputs: CustomInput[]): Promise<CustomCheck> =>
     call(commands.checkCustom(problem, inputs)),
+  // Focus sessions and backups (expansion M10, ADR 0037)
+  focusCurrent: (): Promise<FocusCurrent | null> => call(commands.focusCurrent()),
+  focusStart: (work: number, brk: number): Promise<FocusCurrent> => call(commands.focusStart(work, brk)),
+  focusStop: (): Promise<FocusSessionRow | null> => call(commands.focusStop()),
+  focusSessions: (): Promise<FocusSessionRow[]> => call(commands.focusSessions()),
+  backupStatus: (): Promise<BackupStatus> => call(commands.backupStatus()),
+  setBackupOptions: (every: number, keep: number, onExit: boolean): Promise<BackupStatus> =>
+    call(commands.setBackupOptions(every, keep, onExit)),
+  backupNow: (): Promise<BackupStatus> => call(commands.backupNow()),
+  chooseBackupFolder: (): Promise<BackupStatus | null> => call(commands.chooseBackupFolder()),
+  clearBackupFolder: (): Promise<BackupStatus> => call(commands.clearBackupFolder()),
   // The stress lab (expansion M8, ADR 0036)
   stressTest: (
     problem: string,

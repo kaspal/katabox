@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 10); // migrations 0001-0010
+    assert_eq!(info.user_schema_version, 11); // migrations 0001-0011
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -2101,4 +2101,77 @@ async fn reading_answers_are_checked_counted_and_exported() {
         rows.iter()
             .any(|r| r.item_id == "print-basics/1" && r.attempts == 2 && r.correct_at.is_some())
     );
+}
+
+/// Backups (expansion M10, review A4): the README on the first backup, the newest `keep`
+/// backups kept, and files that are not ours never touched.
+#[tokio::test]
+async fn backups_prune_only_their_own_files() {
+    let a = app("backup").await;
+    let folder = crate::testutil::temp_dir("backup-folder");
+    std::fs::write(folder.join("holiday.jpg"), b"not ours").unwrap();
+    std::fs::write(folder.join("katabox-backup-notes.txt"), b"not ours either").unwrap();
+    assert!(a.backup_now().await.is_err(), "no folder chosen yet");
+    a.set_backup_folder(Some(&folder)).await.unwrap();
+    a.set_backup_options(7, 2, true).await.unwrap();
+    let day = 86_400_000;
+    let t0 = 1_795_334_709_000;
+    for k in 0..3 {
+        a.set_clock(Some(t0 + k * day));
+        a.backup_now().await.unwrap();
+    }
+    let mut names: Vec<String> = std::fs::read_dir(&folder)
+        .unwrap()
+        .flatten()
+        .map(|e| e.file_name().into_string().unwrap())
+        .collect();
+    names.sort();
+    assert_eq!(
+        names,
+        [
+            "README-katabox-backups.txt",
+            "holiday.jpg",
+            "katabox-backup-20261123-080509.kbx.json",
+            "katabox-backup-20261124-080509.kbx.json",
+            "katabox-backup-notes.txt",
+        ]
+    );
+    // A backup imports like an export.
+    let b = app("backup-restore").await;
+    b.import_preview_from(&folder.join("katabox-backup-20261124-080509.kbx.json"))
+        .await
+        .unwrap();
+    // Due rules: not on start within the week; on exit when that option is on.
+    let s = a.backup_status().await.unwrap();
+    assert_eq!(s.last, Some(t0 + 2 * day));
+    assert_eq!(s.next_due, Some(t0 + 9 * day));
+    a.set_clock(Some(t0 + 3 * day));
+    assert!(!a.backup_if_due(false).await);
+    assert!(a.backup_if_due(true).await);
+    // A missing folder is reported, not fatal.
+    std::fs::remove_dir_all(&folder).unwrap();
+    a.set_clock(Some(t0 + 30 * day));
+    assert!(!a.backup_if_due(false).await);
+    assert!(a.backup_status().await.unwrap().error.is_some());
+}
+
+/// Focus sessions (expansion M10): the running one is a setting; Stop keeps a summary.
+#[tokio::test]
+async fn focus_sessions_survive_and_summarise() {
+    let a = app("focus").await;
+    let t0 = 1_795_334_709_000;
+    a.set_clock(Some(t0));
+    assert!(a.focus_start(4, 5).await.is_err());
+    a.focus_start(25, 5).await.unwrap();
+    assert_eq!(a.focus_current().await.unwrap().unwrap().started_at, t0);
+    a.set_clock(Some(t0 + 40 * 60_000));
+    let row = a.focus_stop().await.unwrap().unwrap();
+    // One work period done, the second under way.
+    assert_eq!(
+        (row.cycles, row.ended_at - row.started_at),
+        (1, 40 * 60_000)
+    );
+    assert_eq!(a.focus_current().await.unwrap(), None);
+    assert_eq!(a.focus_stop().await.unwrap(), None);
+    assert_eq!(a.focus_sessions().await.unwrap(), vec![row]);
 }

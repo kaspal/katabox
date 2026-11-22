@@ -51,6 +51,9 @@ import type {
   ReadingSetView,
   StressEvent,
   StressResult,
+  BackupStatus,
+  FocusCurrent,
+  FocusSessionRow,
 } from "@/bindings";
 import type {
   DebugAction,
@@ -386,6 +389,17 @@ export function createFakeApi(
     snippets: [] as SnippetRow[],
     readingAnswers: [] as ReadingAnswerRow[],
     stressBrutes: new Map<string, string>(),
+    focus: null as FocusCurrent | null,
+    focusSessions: [] as FocusSessionRow[],
+    backup: {
+      folder: null,
+      every_days: 7,
+      keep: 5,
+      on_exit: false,
+      last: null,
+      next_due: null,
+      error: null,
+    } as BackupStatus,
     stressResult: null as StressResult | null,
     /** Fields merged into getProblem's view (follow-ups, expansion M5). */
     problemExtras: {} as Record<string, Partial<ProblemView>>,
@@ -943,6 +957,43 @@ export function createFakeApi(
       },
     ),
     cancelStress: vi.fn(async () => null),
+    focusCurrent: vi.fn(async () => state.focus),
+    focusStart: vi.fn(async (work: number, brk: number) => {
+      state.focus = { started_at: Date.now(), work_min: work, break_min: brk };
+      return state.focus;
+    }),
+    focusStop: vi.fn(async () => {
+      if (!state.focus) return null;
+      const row: FocusSessionRow = {
+        started_at: state.focus.started_at,
+        ended_at: state.focus.started_at + 30 * 60_000,
+        work_min: state.focus.work_min,
+        break_min: state.focus.break_min,
+        cycles: 1,
+        summary: { touched: 2, solved: 1, katas: 0, plan_items: 1 },
+      };
+      state.focusSessions = [row, ...state.focusSessions];
+      state.focus = null;
+      return row;
+    }),
+    focusSessions: vi.fn(async () => [...state.focusSessions]),
+    backupStatus: vi.fn(async () => ({ ...state.backup })),
+    setBackupOptions: vi.fn(async (every: number, keep: number, onExit: boolean) => {
+      state.backup = { ...state.backup, every_days: every, keep, on_exit: onExit };
+      return { ...state.backup };
+    }),
+    backupNow: vi.fn(async () => {
+      state.backup = { ...state.backup, last: 1795334709000, next_due: 1795334709000 + 7 * 86_400_000, error: null };
+      return { ...state.backup };
+    }),
+    chooseBackupFolder: vi.fn(async () => {
+      state.backup = { ...state.backup, folder: "D:/Backups/KataBox" };
+      return { ...state.backup };
+    }),
+    clearBackupFolder: vi.fn(async () => {
+      state.backup = { ...state.backup, folder: null };
+      return { ...state.backup };
+    }),
     checkCustom: vi.fn(async (_p: string, inputs: CustomInput[]) => ({
       problems: inputs.map((x) => (Array.isArray(x.nums) && x.nums.length < 2 ? "2 ≤ nums.length ≤ 10⁵" : null)),
       constraints_checked: true,

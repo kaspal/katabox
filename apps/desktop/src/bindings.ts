@@ -655,6 +655,85 @@ async saveStressBrute(problem: string, language: Language, code: string) : Promi
     else return { status: "error", error: e  as any };
 }
 },
+async focusCurrent() : Promise<Result<FocusCurrent | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("focus_current") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async focusStart(workMin: number, breakMin: number) : Promise<Result<FocusCurrent, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("focus_start", { workMin, breakMin }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async focusStop() : Promise<Result<FocusSessionRow | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("focus_stop") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async focusSessions() : Promise<Result<FocusSessionRow[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("focus_sessions") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async backupStatus() : Promise<Result<BackupStatus, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("backup_status") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setBackupOptions(everyDays: number, keep: number, onExit: boolean) : Promise<Result<BackupStatus, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_backup_options", { everyDays, keep, onExit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async backupNow() : Promise<Result<BackupStatus, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("backup_now") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Settings → Data: choose the backup folder in a native dialog (opened here; the webview
+ * has no dialog permission). `None` (cancelled) leaves it unchanged.
+ */
+async chooseBackupFolder() : Promise<Result<BackupStatus | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("choose_backup_folder") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Turn backups off (the files already written stay).
+ */
+async clearBackupFolder() : Promise<Result<BackupStatus, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("clear_backup_folder") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async readingSets(uiLang: UiLang) : Promise<Result<ReadingSetSummary[], AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("reading_sets", { uiLang }) };
@@ -1320,6 +1399,19 @@ language_servers: LanguageServerInfo[];
  * `windows`, `linux`, ...
  */
 platform: string }
+export type BackupStatus = { folder: string | null; every_days: number; keep: number; on_exit: boolean; 
+/**
+ * UTC ms of the last backup.
+ */
+last: number | null; 
+/**
+ * UTC ms when the next one is due (with a folder).
+ */
+next_due: number | null; 
+/**
+ * Why the last attempt failed, if it did.
+ */
+error: string | null }
 /**
  * What Settings shows about the calibration.
  */
@@ -1635,6 +1727,32 @@ export type Failure = { kind: TestKind; index: number; verdict: Verdict; input: 
  * A program problem's stderr (ADR 0028).
  */
 stderr?: string | null }
+export type FocusCurrent = { 
+/**
+ * UTC ms.
+ */
+started_at: number; work_min: number; break_min: number }
+export type FocusSessionRow = { started_at: number; ended_at: number; work_min: number; break_min: number; cycles: number; summary: FocusSummary }
+/**
+ * What happened during a session.
+ */
+export type FocusSummary = { 
+/**
+ * Problems opened or submitted.
+ */
+touched: number; 
+/**
+ * Problems with an Accepted submission.
+ */
+solved: number; 
+/**
+ * Kata attempts solved.
+ */
+katas: number; 
+/**
+ * Study plan items marked done.
+ */
+plan_items: number }
 /**
  * A follow-up as listed on its base problem's page (expansion M5).
  */
@@ -2807,7 +2925,7 @@ export type TopicReview = { topic: LearnTopicSummary; problem: ProblemSummary }
 /**
  * How many records of each kind a file holds.
  */
-export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number; mistakes: number; reflections: number; snippets: number; reading_answers: number; stress_brutes: number }
+export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number; mistakes: number; reflections: number; snippets: number; reading_answers: number; stress_brutes: number; focus_sessions: number }
 /**
  * Why a trace stopped before the program ended.
  */

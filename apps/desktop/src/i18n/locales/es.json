@@ -877,7 +877,8 @@
         "reflections": "Reflexiones",
         "snippets": "Fragmentos",
         "reading_answers": "Respuestas de ejercicios de lectura",
-        "stress_brutes": "Fuerzas brutas de pruebas de estrés"
+        "stress_brutes": "Fuerzas brutas de pruebas de estrés",
+        "focus_sessions": "Sesiones de concentración"
       }
     },
     "crossLang": {
@@ -3324,5 +3325,44 @@
     "checkOk": "Personalizada {{index}}: válida",
     "checkBad": "Personalizada {{index}}: {{why}}",
     "checkTypesOnly": "Solo se comprobaron los tipos: las restricciones del problema necesitan el entorno de Python."
+  },
+  "focus": {
+    "title": "Sesiones de concentración",
+    "start": "Iniciar sesión de concentración",
+    "stop": "Detener la sesión de concentración",
+    "work": "Trabajo (minutos)",
+    "break": "Descanso (minutos)",
+    "phase": {
+      "work": "Concentración",
+      "break": "Descanso"
+    },
+    "chip": {
+      "work": "Concentración: quedan {{time}}",
+      "break": "Descanso: quedan {{time}}"
+    },
+    "toBreak": "Hora de descansar.",
+    "toWork": "Fin del descanso: de vuelta a la concentración.",
+    "none": "Aún no hay sesiones de concentración.",
+    "length": "{{minutes}} min, {{cycles}} periodos de trabajo",
+    "summary": "{{touched}} problemas tocados, {{solved}} resueltos, {{katas}} katas, {{plan_items}} elementos del plan hechos",
+    "paletteStart": "Iniciar sesión de concentración ({{work}} + {{brk}} min)",
+    "paletteStop": "Detener la sesión de concentración"
+  },
+  "backup": {
+    "title": "Copias de seguridad automáticas",
+    "intro": "KataBox puede escribir una exportación de tu progreso en una carpeta que elijas, cada pocos días y al cerrar la aplicación. Usar una carpeta sincronizada (OneDrive, Dropbox…) es decisión tuya.",
+    "noFolder": "Ninguna carpeta elegida: las copias están desactivadas",
+    "choose": "Elegir carpeta…",
+    "change": "Cambiar carpeta…",
+    "off": "Desactivar",
+    "every": "Cada (días)",
+    "keep": "Conservar (copias)",
+    "onExit": "Hacer también una copia al cerrar KataBox",
+    "now": "Copiar ahora",
+    "last": "Última copia: {{when}}",
+    "never": "Aún no hay copias",
+    "next": "la próxima toca el {{when}}",
+    "failed": "La última copia falló: {{why}}",
+    "prune": "KataBox borra solo sus propios archivos katabox-backup-….kbx.json de esa carpeta, los más antiguos primero, por encima del número a conservar. Nunca toca otros archivos."
   }
 }

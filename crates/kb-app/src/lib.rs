@@ -11,11 +11,13 @@
 //! - Responses redact what hidden tests returned and printed; user.db keeps the full
 //!   Report.
 
+pub mod backup;
 mod calibration;
 pub mod comforts;
 pub mod debug;
 pub mod diagnostics;
 mod error;
+pub mod focus;
 pub mod interview;
 pub mod journal;
 pub mod kata;

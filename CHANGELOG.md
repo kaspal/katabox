@@ -19,6 +19,10 @@ All notable changes to KataBox are recorded in this file. The format follows
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
 
+- **Focus sessions:** work and break periods on the wall clock, a top-bar chip with Stop,
+  a notice when the phase changes, and what each session achieved on Progress.
+- **Automatic backups:** an export to a folder you choose, every few days and optionally
+  on exit; the newest ones are kept and KataBox deletes only its own backup files.
 - **Visual test builders:** build custom-test values as a tree, rows, a grid or a graph
   (JSON stays in sync), and **Check inputs** against the problem's constraints without
   running code.

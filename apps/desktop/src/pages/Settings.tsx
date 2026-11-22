@@ -38,6 +38,7 @@ import { useOnboardingDone } from "@/onboarding/state";
 import { copyText, diagnosticsText, recentErrors } from "@/lib/diagnostics";
 import { CHANGELOG_URL, DOCS_URL } from "@/lib/links";
 import { openShortcuts } from "@/app/shortcuts";
+import { BackupSection } from "@/practice/backups";
 import { SETTINGS_SEARCH_INDEX } from "@/lib/settingsIndex";
 import { SnippetsPanel } from "@/practice/snippets";
 import { queryKeys, useAppInfo, useCalibration } from "@/lib/queries";
@@ -793,8 +794,11 @@ export function Settings() {
             <LearnSection />
           </TabsContent>
 
-          <TabsContent value="data">
+          <TabsContent value="data" className="space-y-4">
             <DataSection />
+            <Section title={t("backup.title")}>
+              <BackupSection />
+            </Section>
           </TabsContent>
 
           <TabsContent value="about">

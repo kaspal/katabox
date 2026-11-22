@@ -178,6 +178,22 @@ problem, they open from the strip under the problem's title (**Base problem · F
 1 · Follow-up 2**). A follow-up's statement says what changes; its tests, limits and
 solutions are its own, and it counts as a problem of its own in your history.
 
+## Focus sessions
+Start a focus session from Progress → Overview or the command palette ("Start focus
+session"). A chip in the top bar shows whether you are working or on a break and how long
+is left; a short notice appears when the phase changes. Work and break lengths are on the
+same card (25 and 5 minutes by default). The session keeps running if you close and reopen
+KataBox. When you stop it, the card lists what you did: problems touched and solved, katas
+and plan items.
+
+## Automatic backups
+Settings → Data → **Automatic backups**: choose a folder and KataBox writes an export of
+your progress there every few days (7 by default) and, if you like, whenever it closes.
+**Back up now** writes one right away. Restore one with **Import**. KataBox keeps the
+newest backups (5 by default) and deletes only its own `katabox-backup-….kbx.json` files
+in that folder, never anything else; a README in the folder says so. Using a synced
+folder (OneDrive, Dropbox…) is your choice.
+
 ## Building custom tests
 Under each custom test's value, **Build visually** opens a builder that fits the type: a
 tree you grow by clicking nodes, rows you can add, remove and reorder, a grid whose cells

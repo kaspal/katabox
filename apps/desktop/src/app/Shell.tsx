@@ -17,6 +17,7 @@ import { useAppInfo, useLanguages } from "@/lib/queries";
 import { Welcome } from "@/onboarding/Welcome";
 import { useOnboardingDone } from "@/onboarding/state";
 import { InterviewTimer } from "@/practice/interview";
+import { FocusTimer } from "@/practice/focus";
 
 /**
  * The welcome flow (features-content M2; it starts with ADR 0015's language install):
@@ -129,6 +130,7 @@ export function Shell() {
         <span className="font-semibold">{t("app.name")}</span>
         <div className="flex items-center gap-3">
           <InterviewTimer />
+          <FocusTimer />
           {info.data?.dev_data && (
             <Tooltip>
               <TooltipTrigger asChild>

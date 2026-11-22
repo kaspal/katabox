@@ -72,6 +72,10 @@ pub(crate) const MIGRATIONS: &[Migration] = &[
         version: 10,
         sql: include_str!("../migrations/0010_stress.sql"),
     },
+    Migration {
+        version: 11,
+        sql: include_str!("../migrations/0011_focus.sql"),
+    },
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -846,7 +850,7 @@ pub(crate) mod tests {
     use kb_core::{Message, MessageCode, TestKind, TestResult};
     use serde_json::json;
 
-    const TABLES: [&str; 22] = [
+    const TABLES: [&str; 23] = [
         "settings",
         "drafts",
         "submissions",
@@ -869,6 +873,7 @@ pub(crate) mod tests {
         "snippets",
         "reading_answers",
         "stress_brutes",
+        "focus_sessions",
     ];
 
     async fn fresh(name: &str) -> (PathBuf, UserDb) {
