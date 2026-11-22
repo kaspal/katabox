@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderApp } from "@/test/renderApp";
 import { setFakeApi, useFakeApi } from "@/test/mockApi";
+import { shuffledChoices } from "@/learn/reading/ReadingSetPage";
 
 vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
 
@@ -65,5 +66,34 @@ describe("Reading exercises (expansion M7)", () => {
     expect(feedback).toHaveAttribute("data-correct", "true");
     expect(feedback).toHaveTextContent("Line 2 dominates the cost.");
     expect(item.querySelector('[data-dominant="true"]')).toHaveAttribute("data-line", "2");
+  });
+});
+
+describe("multiple-choice order (expansion M16 review)", () => {
+  it("is stable per item, keeps every choice, and doesn't put the answer first", async () => {
+    const { readdirSync, readFileSync } = await import("node:fs");
+    const path = await import("node:path");
+    const root = path.resolve(process.cwd(), "../../content/reading");
+    const positions: number[] = [];
+    for (const set of readdirSync(root)) {
+      const items = JSON.parse(readFileSync(path.join(root, set, "items.json"), "utf8")) as {
+        n: number;
+        answer: string;
+        choices?: string[];
+      }[];
+      for (const it of items) {
+        if (!it.choices?.length) continue;
+        const id = `${set}/${it.n}`;
+        const order = shuffledChoices(id, it.choices);
+        expect(order).toEqual(shuffledChoices(id, it.choices));
+        expect([...order].sort()).toEqual([...it.choices].sort());
+        positions.push(order.indexOf(it.answer));
+      }
+    }
+    expect(positions.length).toBe(30);
+    // Spread over the positions, so "always pick the first" no longer passes.
+    const first = positions.filter((p) => p === 0).length;
+    expect(first).toBeLessThan(positions.length / 2);
+    expect(new Set(positions).size).toBeGreaterThan(2);
   });
 });

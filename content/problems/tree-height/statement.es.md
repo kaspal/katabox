@@ -1,4 +1,4 @@
-Lucía dibuja árboles genealógicos para un club de genealogía y quiere saber cuántas generaciones abarca cada uno, para saber qué tan alto imprimirlo. Su función da un número para cada árbol, pero los dibujos impresos siempre salen con una fila vacía de más.
+Lucía dibuja árboles genealógicos para un club de genealogía y quiere saber cuántas generaciones abarca cada uno, para saber qué altura darle al imprimirlo. Su función da un número para cada árbol, pero los dibujos impresos siempre salen con una fila vacía de más.
 
 Dada la raíz `root` de un árbol binario, devuelve su altura: el número de nodos del camino más largo desde la raíz hasta una hoja. El árbol vacío tiene altura 0.
 

@@ -37,6 +37,6 @@ for a, b in friendships:
     out.append(clubs)
 ```
 
-In TypeScript, make the same two changes: store `find(a)` and `find(b)` in `ra` and `rb`, set `parent[ra] = rb` when they differ, and add `parent[x] = parent[parent[x]]` inside the `find` loop.
+In TypeScript, make the same change: store `find(a)` and `find(b)` in `ra` and `rb`, and set `parent[ra] = rb` when they differ. The reference also halves the path inside `find` (`parent[x] = parent[parent[x]]`); that is optional here (the tests pass without it) but keeps the trees shallow on long chains.
 
 **Complexity:** O(n + m log n) time for m friendships (amortized, with path halving), O(n) extra space besides the output.

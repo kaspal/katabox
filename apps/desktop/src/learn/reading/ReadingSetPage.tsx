@@ -1,7 +1,7 @@
 // Reading exercises (expansion M7, ADR 0035): one set, item by item. Read the snippet in
 // Python or TypeScript, answer (an output, or time and space), then see the answer and
 // why. kb-app checks the answer; the UI never has it before answering.
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, BookOpenText, Gauge } from "lucide-react";
@@ -81,11 +81,13 @@ function Item({
   const answer = useAnswerReading();
   const done = result !== null;
 
+  // Shown in a stable shuffled order: the files list the answer first (expansion M16 review).
+  const choices = useMemo(() => shuffledChoices(item.id, item.choices), [item.id, item.choices]);
   const ready =
-    kind === "complexity" ? time !== null && space !== null : item.choices.length > 0 ? picked !== null : typed.trim() !== "";
+    kind === "complexity" ? time !== null && space !== null : choices.length > 0 ? picked !== null : typed.trim() !== "";
   const check = () => {
     if (!ready || done) return;
-    const output = kind === "print" ? (item.choices.length > 0 ? item.choices[picked!] : typed) : null;
+    const output = kind === "print" ? (choices.length > 0 ? choices[picked!] : typed) : null;
     answer.mutate(
       {
         item: item.id,
@@ -101,7 +103,7 @@ function Item({
   };
   const code = lang === "python" ? item.code_python : item.code_typescript;
   const correctChoice =
-    done && result.output !== null ? item.choices.findIndex((c) => c.trim() === result.output!.trim()) : null;
+    done && result.output !== null ? choices.findIndex((c) => c.trim() === result.output!.trim()) : null;
 
   return (
     <ExerciseShell
@@ -131,10 +133,10 @@ function Item({
                 disabled={done}
               />
             </>
-          ) : item.choices.length > 0 ? (
+          ) : choices.length > 0 ? (
             <ChoiceAnswer
               label={t("reading.output")}
-              options={item.choices.map((c, k) => (
+              options={choices.map((c, k) => (
                 <pre key={k} className="whitespace-pre-wrap font-mono text-[13px]">
                   {c}
                 </pre>
@@ -289,4 +291,19 @@ export function ReadingSetPage() {
       )}
     </div>
   );
+}
+
+/** FNV-1a, for a stable order that doesn't depend on how the file lists the choices. */
+function hash(text: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
+
+/** The choices in an order fixed per item (the same on every visit), not the file's. */
+export function shuffledChoices(itemId: string, choices: readonly string[]): string[] {
+  return [...choices].sort((a, b) => hash(`${itemId}|${a}`) - hash(`${itemId}|${b}`) || (a < b ? -1 : 1));
 }

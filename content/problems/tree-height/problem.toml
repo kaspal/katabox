@@ -4,7 +4,7 @@ title_es = "Altura del árbol"
 difficulty = "medium"
 tags = ["tree", "recursion", "debugging"]
 pattern = "trees"
-rank = 10
+rank = 5
 kind = "fix"
 
 [signature]

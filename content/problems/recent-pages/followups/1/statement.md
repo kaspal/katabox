@@ -16,11 +16,12 @@ Return the reports of the `"get"` operations, in order.
 ### Example 1
 
 ```
-capacity = 2, ops = ["put", "put", "get", "put", "get", "get"], args = [[1, 10], [2, 20], [1], [3, 30], [2], [1]]
-Output: [10, -1, 10]
+capacity = 2, ops = ["put", "put", "get", "get", "put", "get", "get"], args = [[7, 70], [4, 40], [4], [7], [9, 90], [4], [9]]
+Output: [40, 70, -1, 90]
 ```
 
-Page 1 has two uses and page 2 only one, so adding page 3 removes page 2.
+Pages 7 and 4 both have two uses when page 9 arrives, and page 4 was used less recently, so
+it is the one removed.
 
 ### Example 2
 

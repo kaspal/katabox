@@ -14,8 +14,10 @@ def generate(seed, size):
     rng.shuffle(labels)
     parent = [-1] * n
     deep = size == "max" and seed % 2 == 0
+    if deep:
+        q = 25_000  # a long chain: fewer pairs keep the test small and still rule out walking up
     for k in range(1, n):
-        p = k - 1 if deep and rng.random() < 0.95 else rng.randrange(k)
+        p = k - 1 if deep else rng.randrange(k)  # deep: one long chain
         parent[labels[k]] = labels[p]
     pairs = [[rng.randrange(n), rng.randrange(n)] for _ in range(q)]
     return {"parent": parent, "pairs": pairs}

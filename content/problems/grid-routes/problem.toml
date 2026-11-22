@@ -4,7 +4,7 @@ title_es = "Rutas del almacén"
 difficulty = "medium"
 tags = ["dynamic-programming", "memoization", "debugging"]
 pattern = "dynamic-programming"
-rank = 10
+rank = 6
 kind = "fix"
 
 [signature]

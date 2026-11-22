@@ -2,10 +2,10 @@ id = "nested-brackets--f1"
 parent = "nested-brackets"
 title = "Nested Brackets: Fix It Up"
 title_es = "Corchetes anidados: arréglalo"
-difficulty = "medium"
+difficulty = "easy"
 tags = ["stack", "string", "greedy"]
 pattern = "stack"
-rank = 7
+rank = 3
 
 [signature]
 name = "fewestInsertions"

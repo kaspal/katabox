@@ -4,7 +4,7 @@ title_es = "Sumas por tramos"
 difficulty = "medium"
 tags = ["array", "prefix-sum", "debugging"]
 pattern = "range-queries"
-rank = 10
+rank = 6
 kind = "fix"
 
 [signature]

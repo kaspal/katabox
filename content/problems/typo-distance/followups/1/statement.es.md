@@ -8,12 +8,11 @@ Las palabras son mucho más largas que antes (hasta 2·10⁴ letras), pero `k` e
 ### Ejemplo 1
 
 ```
-typed = "kitten", meant = "sitting", k = 3
+typed = "lantern", meant = "planter", k = 2
 Salida: true
 ```
 
-Sustituir la `k` por `s`, sustituir la `e` por `i` e insertar una `g` al final:
-exactamente 3 arreglos.
+Insertar una `p` al principio y borrar la `n` final: exactamente 2 arreglos.
 
 ### Ejemplo 2
 

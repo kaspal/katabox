@@ -1,4 +1,4 @@
-Lucía organiza la semana de bienvenida de su universidad y sigue cómo los estudiantes nuevos se agrupan en pandillas. Su función informa del número de grupos después de cada nueva amistad, pero para el jueves ya decía que había habido más uniones de las que eran posibles.
+Lucía organiza la semana de bienvenida de su universidad y sigue cómo los estudiantes nuevos se agrupan en grupos de amigos. Su función informa del número de grupos después de cada nueva amistad, pero para el jueves ya decía que había habido más uniones de las que eran posibles.
 
 Hay `n` personas numeradas de 0 a `n - 1`, y cada una empieza en un club propio. Los elementos de `friendships` llegan en orden; cada `[a, b]` significa que `a` y `b` se hacen amigos, y sus dos clubes pasan a ser uno (el amigo de un amigo está en el mismo club). Devuelve una lista con un número por amistad: el número de clubes justo después de añadir esa amistad. Una amistad entre dos personas que ya están en el mismo club no cambia nada.
 

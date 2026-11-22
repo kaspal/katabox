@@ -4,7 +4,7 @@ title_es = "Turnos cubiertos"
 difficulty = "medium"
 tags = ["array", "sorting", "debugging"]
 pattern = "intervals"
-rank = 10
+rank = 6
 kind = "fix"
 
 [signature]

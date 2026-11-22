@@ -4,7 +4,7 @@ title_es = "Los k más baratos"
 difficulty = "medium"
 tags = ["heap", "debugging"]
 pattern = "heap"
-rank = 10
+rank = 6
 kind = "fix"
 
 [signature]

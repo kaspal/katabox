@@ -9,11 +9,11 @@ tokens). The number grows fast: return it modulo 1 000 000 007.
 ### Example 1
 
 ```
-coins = [1, 2, 5], amount = 5
+coins = [3, 4, 10], amount = 20
 Output: 4
 ```
 
-5, 2 + 2 + 1, 2 + 1 + 1 + 1, and 1 + 1 + 1 + 1 + 1.
+10 + 10, 10 + 4 + 3 + 3, 4 + 4 + 3 + 3 + 3 + 3, and 4 + 4 + 4 + 4 + 4.
 
 ### Example 2
 

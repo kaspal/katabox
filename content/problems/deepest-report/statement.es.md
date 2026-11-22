@@ -1,4 +1,4 @@
-Rosa trabaja en recursos humanos en una empresa que crece muy deprisa y quería saber cuántos niveles separan a la directora general del empleado más reciente. Su función responde al instante para todos los departamentos que probó, pero cuando le pasó el organigrama completo de la empresa falló con un error en lugar de responder.
+Rosa trabaja en recursos humanos en una empresa que crece muy deprisa y quería saber cuántos niveles separan a la directora general del empleado de nivel más bajo. Su función responde al instante para todos los departamentos que probó, pero cuando le pasó el organigrama completo de la empresa falló con un error en lugar de responder.
 
 Hay `manager.length` personas numeradas desde 0. `manager[i]` es la persona a la que reporta `i`, y exactamente una persona, la jefa, tiene `manager[i] = -1`. La cadena de responsables de cualquier persona acaba llegando a la jefa. La jefa está en el nivel 1, y quien reporta a una persona del nivel `d` está en el nivel `d + 1`. Devuelve el nivel más profundo de la empresa.
 

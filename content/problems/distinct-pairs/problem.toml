@@ -4,7 +4,7 @@ title_es = "Parejas distintas"
 difficulty = "medium"
 tags = ["array", "two-pointers", "debugging"]
 pattern = "two-pointers"
-rank = 10
+rank = 6
 kind = "fix"
 
 [signature]

@@ -4,7 +4,7 @@ title_es = "El primero que llega"
 difficulty = "easy"
 tags = ["binary-search", "debugging"]
 pattern = "binary-search"
-rank = 10
+rank = 4
 kind = "fix"
 
 [signature]

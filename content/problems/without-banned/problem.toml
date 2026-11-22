@@ -4,7 +4,7 @@ title_es = "Sin los vetados"
 difficulty = "easy"
 tags = ["array", "hash-map", "debugging"]
 pattern = "arrays-hashing"
-rank = 10
+rank = 4
 kind = "fix"
 
 [signature]

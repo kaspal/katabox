@@ -4,7 +4,7 @@ title_es = "Total de la caja"
 difficulty = "medium"
 tags = ["math", "string", "debugging"]
 pattern = "math"
-rank = 10
+rank = 6
 kind = "fix"
 
 [signature]

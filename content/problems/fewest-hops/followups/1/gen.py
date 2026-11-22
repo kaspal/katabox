@@ -11,10 +11,10 @@ def generate(seed, size):
     else:
         n, m = rng.randint(1, 9), rng.randint(0, 12)
     links = []
-    if size == "max" and m == 99_999:
-        order = list(range(1, n))
-        rng.shuffle(order)
-        order = [0] + order
+    if size == "max" and m == 49_999:
+        # 0, n - 1, n - 2, ..., 1: the longest path, in an order that compresses well
+        # (the test budget, ADR 0018) but is not the label order.
+        order = [0] + list(range(n - 1, 0, -1))
         links = [[order[i], order[i + 1]] for i in range(n - 1)]  # one long path
     elif n >= 2:
         for _ in range(m):

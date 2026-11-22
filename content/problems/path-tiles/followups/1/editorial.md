@@ -13,7 +13,8 @@ so `n` steps are that matrix raised to the `n`-th power, applied to `(1, 0, 0)`.
 exponentiation computes the power with about 2·log₂ n matrix products, each reduced
 modulo 1 000 003. The small modulus keeps every entry below about 10⁶, so a product of
 two entries stays below 10¹², and a sum of three of them is exact even in a JavaScript
-number.
+number. One trap in JavaScript and TypeScript: the bit operators (`n & 1`, `n >> 1`) work
+on 32 bits and would cut `n` short, so halve it with `n % 2` and `Math.floor(n / 2)`.
 
 ## Complexity
 

@@ -4,7 +4,7 @@ title_es = "Salas alcanzables"
 difficulty = "medium"
 tags = ["graph", "bfs", "debugging"]
 pattern = "graphs"
-rank = 10
+rank = 5
 kind = "fix"
 
 [signature]

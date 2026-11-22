@@ -53,8 +53,8 @@
     "n": 6,
     "prompt": "This version calls power twice instead of reusing half. How do the time and the extra space grow with n?",
     "prompt_es": "Esta versión llama a power dos veces en lugar de reutilizar half. ¿Cómo crecen el tiempo y el espacio extra con n?",
-    "explain": "Two calls on e // 2 double the calls on each of the log₂ n levels, and 2 to the power log₂ n is n: about 2n calls in all, O(n). It is not O(2ⁿ) because the exponent halves instead of dropping by one. The stack is still log n deep: O(log n) space.",
-    "explain_es": "Dos llamadas con e // 2 duplican las llamadas en cada uno de los log₂ n niveles, y 2 elevado a log₂ n es n: unas 2n llamadas en total, O(n). No es O(2ⁿ) porque el exponente se divide entre dos en lugar de bajar de uno en uno. La pila sigue teniendo log n de profundidad: espacio O(log n).",
+    "explain": "Two calls on e // 2 double the calls on each level, and there are about log₂ n + 2 levels down to e = 0: about 4n calls in all, O(n). It is not O(2ⁿ) because the exponent halves instead of dropping by one. The stack is still log n deep: O(log n) space.",
+    "explain_es": "Dos llamadas con e // 2 duplican las llamadas en cada nivel, y hay unos log₂ n + 2 niveles hasta e = 0: unas 4n llamadas en total, O(n). No es O(2ⁿ) porque el exponente se divide entre dos en lugar de bajar de uno en uno. La pila sigue teniendo log n de profundidad: espacio O(log n).",
     "time": "O(n)",
     "space": "O(log n)",
     "dominant": {"python": 7, "typescript": 9}
@@ -94,7 +94,7 @@
     "prompt": "f counts the subsets of {0, …, n − 1} whose sum is a multiple of 3. How do the time and the extra space grow with n?",
     "prompt_es": "f cuenta los subconjuntos de {0, …, n − 1} cuya suma es múltiplo de 3. ¿Cómo crecen el tiempo y el espacio extra con n?",
     "explain": "For each of the n numbers the code tries both taking it and skipping it, so the call tree has 2ⁿ leaves and about 2ⁿ⁺¹ calls: O(2ⁿ). Only one path from the root to a leaf is on the stack at a time, n + 1 frames: O(n) space.",
-    "explain_es": "Para cada uno de los n números el código prueba a cogerlo y a saltarlo, así que el árbol de llamadas tiene 2ⁿ hojas y unas 2ⁿ⁺¹ llamadas: O(2ⁿ). En la pila solo hay un camino de la raíz a una hoja a la vez, n + 1 marcos: espacio O(n).",
+    "explain_es": "Para cada uno de los n números el código prueba a tomarlo y a saltarlo, así que el árbol de llamadas tiene 2ⁿ hojas y unas 2ⁿ⁺¹ llamadas: O(2ⁿ). En la pila solo hay un camino de la raíz a una hoja a la vez, n + 1 marcos: espacio O(n).",
     "time": "O(2ⁿ)",
     "space": "O(n)",
     "dominant": {"python": 7, "typescript": 9}

@@ -9,11 +9,11 @@ El orden no importa: una combinación es solo cuántas fichas de cada valor toma
 ### Ejemplo 1
 
 ```
-coins = [1, 2, 5], amount = 5
+coins = [3, 4, 10], amount = 20
 Salida: 4
 ```
 
-5, 2 + 2 + 1, 2 + 1 + 1 + 1 y 1 + 1 + 1 + 1 + 1.
+10 + 10, 10 + 4 + 3 + 3, 4 + 4 + 3 + 3 + 3 + 3 y 4 + 4 + 4 + 4 + 4.
 
 ### Ejemplo 2
 

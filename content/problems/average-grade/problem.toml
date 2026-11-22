@@ -4,7 +4,7 @@ title_es = "Nota media"
 difficulty = "easy"
 tags = ["math", "debugging"]
 pattern = "fundamentals"
-rank = 10
+rank = 3
 kind = "fix"
 
 [signature]

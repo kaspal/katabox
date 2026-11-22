@@ -17,12 +17,12 @@ Devuelve los informes de las operaciones `"get"`, en orden.
 ### Ejemplo 1
 
 ```
-capacity = 2, ops = ["put", "put", "get", "put", "get", "get"], args = [[1, 10], [2, 20], [1], [3, 30], [2], [1]]
-Salida: [10, -1, 10]
+capacity = 2, ops = ["put", "put", "get", "get", "put", "get", "get"], args = [[7, 70], [4, 40], [4], [7], [9, 90], [4], [9]]
+Salida: [40, 70, -1, 90]
 ```
 
-La página 1 tiene dos usos y la página 2 solo uno, así que añadir la página 3 quita la
-página 2.
+Las páginas 7 y 4 tienen dos usos cada una cuando llega la página 9, y la 4 se usó hace más
+tiempo, así que es la que se quita.
 
 ### Ejemplo 2
 

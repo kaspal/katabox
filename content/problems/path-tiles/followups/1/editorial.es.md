@@ -14,7 +14,9 @@ así que `n` pasos son esa matriz elevada a la `n`, aplicada a `(1, 0, 0)`. La
 exponenciación rápida calcula la potencia con unos 2·log₂ n productos de matrices, cada
 uno reducido módulo 1 000 003. El módulo pequeño mantiene cada entrada por debajo de unos
 10⁶, así que el producto de dos entradas queda por debajo de 10¹², y la suma de tres es
-exacta incluso en un número de JavaScript.
+exacta incluso en un número de JavaScript. Una trampa en JavaScript y TypeScript: los
+operadores de bits (`n & 1`, `n >> 1`) trabajan con 32 bits y recortarían `n`, así que
+divídelo con `n % 2` y `Math.floor(n / 2)`.
 
 ## Complejidad
 

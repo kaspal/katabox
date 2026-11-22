@@ -3,8 +3,8 @@
     "n": 1,
     "prompt": "What does this print?",
     "prompt_es": "¿Qué imprime?",
-    "explain": "Every call to make_counter creates a fresh count, and the returned function keeps its own one. a counts 1, 2 on its count, while b starts again from 0 and prints 1.",
-    "explain_es": "Cada llamada a make_counter crea un count nuevo, y la función devuelta conserva el suyo. a cuenta 1, 2 sobre su count, mientras que b empieza otra vez desde 0 e imprime 1.",
+    "explain": "Every call to make_counter creates a fresh count, and the returned function keeps its own one; nonlocal lets step change that count instead of making a new local variable. a counts 1, 2 on its count, while b starts again from 0 and prints 1.",
+    "explain_es": "Cada llamada a make_counter crea un count nuevo, y la función devuelta conserva el suyo; nonlocal permite que step cambie ese count en lugar de crear una variable local nueva. a cuenta 1, 2 sobre su count, mientras que b empieza otra vez desde 0 e imprime 1.",
     "answer": "1\n2\n1",
     "choices": ["1\n2\n1", "1\n2\n3", "1\n1\n1", "0\n1\n0"]
   },

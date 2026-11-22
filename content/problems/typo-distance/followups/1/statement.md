@@ -7,11 +7,11 @@ The words are much longer than before (up to 2·10⁴ letters), but `k` is small
 ### Example 1
 
 ```
-typed = "kitten", meant = "sitting", k = 3
+typed = "lantern", meant = "planter", k = 2
 Output: true
 ```
 
-Replace `k` with `s`, replace `e` with `i`, and insert `g` at the end: exactly 3 fixes.
+Insert `p` at the start and delete the final `n`: exactly 2 fixes.
 
 ### Example 2
 

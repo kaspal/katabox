@@ -4,7 +4,7 @@ title_es = "Tramo de k letras"
 difficulty = "medium"
 tags = ["sliding-window", "string", "debugging"]
 pattern = "sliding-window"
-rank = 10
+rank = 6
 kind = "fix"
 
 [signature]

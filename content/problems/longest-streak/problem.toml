@@ -4,7 +4,7 @@ title_es = "La racha más larga"
 difficulty = "easy"
 tags = ["array", "debugging"]
 pattern = "arrays-hashing"
-rank = 10
+rank = 3
 kind = "fix"
 
 [signature]

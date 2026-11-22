@@ -37,6 +37,6 @@ for a, b in friendships:
     out.append(clubs)
 ```
 
-En TypeScript haz los mismos dos cambios: guarda `find(a)` y `find(b)` en `ra` y `rb`, asigna `parent[ra] = rb` cuando sean distintas y añade `parent[x] = parent[parent[x]]` dentro del bucle de `find`.
+En TypeScript haz el mismo cambio: guarda `find(a)` y `find(b)` en `ra` y `rb`, y asigna `parent[ra] = rb` cuando sean distintas. La referencia además acorta el camino dentro de `find` (`parent[x] = parent[parent[x]]`); aquí es opcional (las pruebas pasan sin ello), pero mantiene los árboles poco profundos en cadenas largas.
 
 **Complejidad:** O(n + m log n) en tiempo para m amistades (amortizado, con acortamiento de caminos), y O(n) de espacio extra aparte de la salida.
