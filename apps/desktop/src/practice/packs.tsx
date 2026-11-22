@@ -129,6 +129,12 @@ export function PacksSection() {
                 <dd>{preview.licence}</dd>
                 <dt className="text-muted-foreground">{t("packs.problems")}</dt>
                 <dd>{preview.problems}</dd>
+                {preview.assignment && (
+                  <>
+                    <dt className="text-muted-foreground">{t("packs.assignment")}</dt>
+                    <dd data-testid="pack-assignment">{preview.assignment}</dd>
+                  </>
+                )}
                 <dt className="text-muted-foreground">SHA-256</dt>
                 <dd className="font-mono text-xs break-all" data-testid="pack-sha">
                   {preview.sha256}

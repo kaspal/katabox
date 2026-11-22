@@ -80,6 +80,10 @@ pub(crate) const MIGRATIONS: &[Migration] = &[
         version: 12,
         sql: include_str!("../migrations/0012_packs.sql"),
     },
+    Migration {
+        version: 13,
+        sql: include_str!("../migrations/0013_classroom.sql"),
+    },
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -854,7 +858,7 @@ pub(crate) mod tests {
     use kb_core::{Message, MessageCode, TestKind, TestResult};
     use serde_json::json;
 
-    const TABLES: [&str; 24] = [
+    const TABLES: [&str; 26] = [
         "settings",
         "drafts",
         "submissions",
@@ -879,6 +883,8 @@ pub(crate) mod tests {
         "stress_brutes",
         "focus_sessions",
         "packs",
+        "assignments",
+        "class_results",
     ];
 
     async fn fresh(name: &str) -> (PathBuf, UserDb) {

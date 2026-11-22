@@ -49,6 +49,7 @@ describe("problem packs (expansion M11)", () => {
       problems: 12,
       installed: null,
       action: "install",
+      assignment: "Week 3",
     };
     renderApp("/settings?section=packs");
     const box = await screen.findByTestId("packs");
@@ -58,6 +59,7 @@ describe("problem packs (expansion M11)", () => {
     expect(dialog).toHaveTextContent("Unsigned pack. Author as stated: Ana.");
     expect(within(dialog).getByTestId("pack-sha")).toHaveTextContent("ab".repeat(32));
     expect(dialog).toHaveTextContent("CC-BY-SA-4.0");
+    expect(within(dialog).getByTestId("pack-assignment")).toHaveTextContent("Week 3");
     await user.click(within(dialog).getByTestId("pack-apply"));
     expect(await within(box).findByTestId("pack-restart")).toHaveTextContent("restarts");
     expect(await within(box).findByTestId("pack-list")).toHaveTextContent("Graph drills");
@@ -81,6 +83,7 @@ describe("problem packs (expansion M11)", () => {
       problems: 3,
       installed: "1.0.0",
       action: "not_newer",
+      assignment: null,
     };
     renderApp("/settings?section=packs");
     await user.click(await screen.findByTestId("pack-import"));

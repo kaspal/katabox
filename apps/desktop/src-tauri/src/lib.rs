@@ -993,6 +993,138 @@ fn restart_app(app: tauri::AppHandle) {
     app.restart();
 }
 
+// --- Classroom mode (expansion M12, ADR 0039) ----------------------------------------
+
+#[tauri::command]
+#[specta::specta]
+async fn assignments(
+    state: State<'_, AppState>,
+    lang: UiLang,
+) -> Res<Vec<kb_app::classroom::AssignmentView>> {
+    state.app()?.assignments(lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn assignment(
+    state: State<'_, AppState>,
+    id: String,
+    lang: UiLang,
+) -> Res<kb_app::classroom::AssignmentView> {
+    state.app()?.assignment(&id, lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn start_assignment(
+    state: State<'_, AppState>,
+    id: String,
+    lang: UiLang,
+) -> Res<kb_app::classroom::AssignmentView> {
+    state.app()?.start_assignment(&id, lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn finish_assignment(
+    state: State<'_, AppState>,
+    id: String,
+    lang: UiLang,
+) -> Res<kb_app::classroom::AssignmentView> {
+    state.app()?.finish_assignment(&id, lang).await
+}
+
+/// The results file exactly as it would be saved (shown before saving).
+#[tauri::command]
+#[specta::specta]
+async fn assignment_results(
+    state: State<'_, AppState>,
+    id: String,
+    student: String,
+    include_code: bool,
+) -> Res<kb_app::classroom::ResultsFile> {
+    state
+        .app()?
+        .assignment_results(&id, &student, include_code)
+        .await
+}
+
+/// A Save dialog, then the results file. `None` when cancelled.
+#[tauri::command]
+#[specta::specta]
+async fn save_assignment_results(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    id: String,
+    student: String,
+    include_code: bool,
+) -> Res<Option<kb_app::classroom::ResultsFile>> {
+    let kb = state.app()?;
+    // Check first, so a bad name fails before the dialog opens.
+    kb.assignment_results(&id, &student, include_code).await?;
+    let name = format!("katabox-results-{id}-{}.json", chrono_free_today());
+    let Some(path) = pick_file(app, "KataBox results", &["json"], Some(name)).await? else {
+        return Ok(None);
+    };
+    kb.save_assignment_results(&id, &student, include_code, &path)
+        .await
+        .map(Some)
+}
+
+/// Teacher: results files from a native Open dialog (several at once). `None` when
+/// cancelled.
+#[tauri::command]
+#[specta::specta]
+async fn import_class_results(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Res<Option<kb_app::classroom::ClassImport>> {
+    use tauri_plugin_dialog::DialogExt;
+    let kb = state.app()?;
+    let picked = tauri::async_runtime::spawn_blocking(move || {
+        app.dialog()
+            .file()
+            .add_filter("KataBox results", &["json"])
+            .blocking_pick_files()
+    })
+    .await
+    .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))?;
+    let Some(files) = picked else {
+        return Ok(None);
+    };
+    let paths = files
+        .into_iter()
+        .map(|p| {
+            p.into_path()
+                .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))
+        })
+        .collect::<Res<Vec<PathBuf>>>()?;
+    kb.import_class_results(&paths).await.map(Some)
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn class_results(state: State<'_, AppState>) -> Res<Vec<kb_app::classroom::ClassAssignment>> {
+    state.app()?.class_results().await
+}
+
+/// A Save dialog, then one assignment's CSV. `false` when cancelled.
+#[tauri::command]
+#[specta::specta]
+async fn save_class_csv(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    assignment: String,
+) -> Res<bool> {
+    let kb = state.app()?;
+    let name = format!("katabox-class-{assignment}.csv");
+    let Some(path) = pick_file(app, "CSV", &["csv"], Some(name)).await? else {
+        return Ok(false);
+    };
+    kb.save_class_csv(&assignment, &path).await?;
+    Ok(true)
+}
+
 // --- Focus sessions and backups (expansion M10, ADR 0037) ----------------------------
 
 #[tauri::command]
@@ -1361,6 +1493,15 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         packs,
         uninstall_pack,
         restart_app,
+        assignments,
+        assignment,
+        start_assignment,
+        finish_assignment,
+        assignment_results,
+        save_assignment_results,
+        import_class_results,
+        class_results,
+        save_class_csv,
         focus_current,
         focus_start,
         focus_stop,

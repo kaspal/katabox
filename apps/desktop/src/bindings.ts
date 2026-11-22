@@ -705,6 +705,91 @@ async uninstallPack(id: string) : Promise<Result<null, AppError>> {
 async restartApp() : Promise<void> {
     await TAURI_INVOKE("restart_app");
 },
+async assignments(lang: UiLang) : Promise<Result<AssignmentView[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("assignments", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async assignment(id: string, lang: UiLang) : Promise<Result<AssignmentView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("assignment", { id, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async startAssignment(id: string, lang: UiLang) : Promise<Result<AssignmentView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("start_assignment", { id, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async finishAssignment(id: string, lang: UiLang) : Promise<Result<AssignmentView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("finish_assignment", { id, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The results file exactly as it would be saved (shown before saving).
+ */
+async assignmentResults(id: string, student: string, includeCode: boolean) : Promise<Result<ResultsFile, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("assignment_results", { id, student, includeCode }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * A Save dialog, then the results file. `None` when cancelled.
+ */
+async saveAssignmentResults(id: string, student: string, includeCode: boolean) : Promise<Result<ResultsFile | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_assignment_results", { id, student, includeCode }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Teacher: results files from a native Open dialog (several at once). `None` when
+ * cancelled.
+ */
+async importClassResults() : Promise<Result<ClassImport | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_class_results") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async classResults() : Promise<Result<ClassAssignment[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("class_results") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * A Save dialog, then one assignment's CSV. `false` when cancelled.
+ */
+async saveClassCsv(assignment: string) : Promise<Result<boolean, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_class_csv", { assignment }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async focusCurrent() : Promise<Result<FocusCurrent | null, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("focus_current") };
@@ -1430,6 +1515,15 @@ export type AppErrorCode =
  */
 "pack_refused" | 
 /**
+ * Locked while an assignment without hints runs (expansion M12): hints, editorial,
+ * history and solutions of its problems.
+ */
+"locked_in_assignment" | 
+/**
+ * Another assignment is already running (expansion M12).
+ */
+"assignment_active" | 
+/**
  * Anything else, including the app failing to start.
  */
 "internal"
@@ -1454,6 +1548,46 @@ language_servers: LanguageServerInfo[];
  * `windows`, `linux`, ...
  */
 platform: string }
+/**
+ * `assignment.toml`, checked by kb-pack (problem ids already resolved to full ids).
+ */
+export type AssignmentMeta = { title: string; 
+/**
+ * `YYYY-MM-DD`.
+ */
+due: string; 
+/**
+ * Full problem ids: `<pack>--<id>` for the pack's own problems, or built-in ids.
+ */
+problems: string[]; 
+/**
+ * The languages allowed on those problems while the assignment runs (SQL problems
+ * always take SQL).
+ */
+languages: Language[]; 
+/**
+ * A wall-clock limit from the start, in minutes.
+ */
+time_limit_min: number | null; 
+/**
+ * Whether hints and the editorial stay available.
+ */
+hints: boolean }
+/**
+ * One problem of an assignment, with what happened while it ran.
+ */
+export type AssignmentProblem = { id: string; 
+/**
+ * `None` when the problem is not in this app's content (yet: a pack applies after a
+ * restart).
+ */
+summary: ProblemSummary | null; best_verdict: Verdict | null; submits: number }
+export type AssignmentState = "not_started" | "running" | "finished"
+export type AssignmentView = { id: string; meta: AssignmentMeta; pack_sha256: string; state: AssignmentState; imported_at: number; started_at: number | null; submitted_at: number | null; 
+/**
+ * When the time limit ends it (running with a limit only).
+ */
+ends_at: number | null; problems: AssignmentProblem[] }
 export type BackupStatus = { folder: string | null; every_days: number; keep: number; on_exit: boolean; 
 /**
  * UTC ms of the last backup.
@@ -1491,6 +1625,35 @@ measured_us: number; reference_us: number;
  * When it was measured (Unix seconds).
  */
 measured_at: number }
+export type ClassAssignment = { id: string; title: string; problems: string[]; students: ClassStudent[] }
+/**
+ * What an import of results files did.
+ */
+export type ClassImport = { added: number; 
+/**
+ * Files imported before (same bytes).
+ */
+duplicates: number; 
+/**
+ * Files kept but whose chain does not match.
+ */
+edited: number; 
+/**
+ * `(file name, why)` for files refused.
+ */
+refused: ([string, string])[] }
+/**
+ * One student's row in the class summary.
+ */
+export type ClassStudent = { student: string; 
+/**
+ * `false` when the file's hash chain does not match: edited after export.
+ */
+chain_ok: boolean; imported_at: number; 
+/**
+ * Per problem of [`ClassAssignment::problems`], in order.
+ */
+cells: (ResultsEntry | null)[] }
 /**
  * What the compile step did.
  */
@@ -2289,7 +2452,11 @@ sha256: string; problems: number;
 /**
  * The installed version of the same pack, if any.
  */
-installed: string | null; action: PackAction }
+installed: string | null; action: PackAction; 
+/**
+ * The title of the assignment it carries (classroom mode, expansion M12).
+ */
+assignment: string | null }
 export type PackRow = { id: string; name: string; author: string; version: string; licence: string; sha256: string; problems: number; installed_at: number; removed_at: number | null }
 /**
  * One card of the pattern map.
@@ -2695,6 +2862,40 @@ memory_kb: number;
  * The compile step, for compiled languages.
  */
 compile: CompileInfo | null }
+export type ResultsAssignment = { id: string; title: string; pack_sha256: string }
+/**
+ * One problem in a results file. Its canonical JSON (this field order) is what the hash
+ * chain covers.
+ */
+export type ResultsEntry = { problem_id: string; 
+/**
+ * The language of the best submission.
+ */
+language: Language | null; 
+/**
+ * Accepted if any submission was, else the last one's verdict.
+ */
+best_verdict: Verdict | null; submits: number; 
+/**
+ * Seconds from the start to the first Accepted.
+ */
+first_accepted_s: number | null; 
+/**
+ * The best submission's code, only when the student chose to include it.
+ */
+code: string | null }
+/**
+ * `katabox-results/v1`.
+ */
+export type ResultsFile = { format: string; app_version: string; student: string; assignment: ResultsAssignment; started_at: number; ended_at: number; include_code: boolean; entries: ResultsEntry[]; 
+/**
+ * `hashes[i]` covers the header and entries `0..=i`.
+ */
+hashes: string[]; 
+/**
+ * The last hash (the header's own hash when there are no entries).
+ */
+final_hash: string }
 /**
  * A due review on Home.
  */

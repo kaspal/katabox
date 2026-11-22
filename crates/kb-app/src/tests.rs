@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 12); // migrations 0001-0012
+    assert_eq!(info.user_schema_version, 13); // migrations 0001-0013
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -2308,4 +2308,188 @@ async fn packs_install_update_and_uninstall() {
         .filter(|e| e.file_name().to_string_lossy().starts_with(".staging"))
         .collect();
     assert!(leftovers.is_empty(), "{leftovers:?}");
+}
+
+/// Classroom mode (expansion M12, ADR 0039): an assignment pack, its locks while it runs
+/// (kb-app, not only the UI), the results file and its chain, the teacher's import and CSV.
+#[tokio::test]
+async fn classroom_assignment_locks_results_and_teacher_import() {
+    use crate::classroom::AssignmentState;
+    let p = crate::testutil::paths("classroom");
+    let work = crate::testutil::temp_dir("classroom-src");
+    let m = work.join("pack.toml");
+    std::fs::write(
+        &m,
+        "id = \"week\"\nname = \"Week 3\"\nauthor = \"Ms. Ana\"\nversion = \"1.0.0\"\nlicence = \"CC-BY-SA-4.0\"\nmin_app = \"1.0.0-beta.1\"\n",
+    )
+    .unwrap();
+    let at = work.join("assignment.toml");
+    std::fs::write(
+        &at,
+        "title = \"Week 3\"\ndue = \"2026-12-01\"\nproblems = [\"budget-pair\", \"two-sum\"]\nlanguages = [\"python\"]\ntime_limit_min = 60\nhints = false\n",
+    )
+    .unwrap();
+    let file = work.join("week.kbpack");
+    kb_pack::kbpack::write_pack_with(
+        &[crate::testutil::repo().join("content/problems/budget-pair")],
+        &m,
+        Some(&at),
+        &file,
+    )
+    .unwrap();
+    let a = App::open(&p).await.unwrap();
+    let preview = a.import_pack_preview(&file).await.unwrap();
+    assert_eq!(preview.assignment.as_deref(), Some("Week 3"));
+    a.import_pack_apply(preview.token).await.unwrap();
+    a.close().await;
+    let a = App::open(&p).await.unwrap();
+
+    let list = a.assignments(UiLang::En).await.unwrap();
+    assert_eq!(list.len(), 1);
+    let v = &list[0];
+    assert_eq!(v.state, AssignmentState::NotStarted);
+    assert_eq!(
+        v.problems.iter().map(|x| x.id.as_str()).collect::<Vec<_>>(),
+        ["week--budget-pair", "two-sum"]
+    );
+    assert!(v.problems.iter().all(|x| x.summary.is_some()));
+    // Not started: nothing is locked yet, and there are no results.
+    a.unlocked_hints("two-sum").await.unwrap();
+    assert!(a.assignment_results("week", "Ana", false).await.is_err());
+
+    // Running: help is locked (hints = false) and only Python is judged, in kb-app.
+    a.store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Python,
+            "before",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+    // Distinct milliseconds for "before", the start and the submissions after it.
+    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    let v = a.start_assignment("week", UiLang::En).await.unwrap();
+    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    assert_eq!(v.state, AssignmentState::Running);
+    assert!(v.ends_at.is_some());
+    let locked = |e: AppError| assert_eq!(e.code, AppErrorCode::LockedInAssignment, "{e}");
+    locked(a.unlocked_hints("two-sum").await.unwrap_err());
+    locked(a.unlock_hint("two-sum", 1).await.unwrap_err());
+    locked(a.editorial("two-sum", UiLang::En).await.unwrap_err());
+    locked(a.list_submissions("week--budget-pair").await.unwrap_err());
+    locked(
+        a.accepted_solution("two-sum", Language::Python)
+            .await
+            .unwrap_err(),
+    );
+    assert!(
+        a.get_problem("two-sum", UiLang::En)
+            .await
+            .unwrap()
+            .hints
+            .is_empty()
+    );
+    // Other problems stay open.
+    a.unlocked_hints("budget-pair").await.unwrap();
+    let wrong_lang = a
+        .run("two-sum", Language::Rust, "fn main() {}", vec![], |_| {})
+        .await
+        .unwrap_err();
+    assert_eq!(wrong_lang.code, AppErrorCode::InvalidInput, "{wrong_lang}");
+    assert!(wrong_lang.message.contains("assignment"), "{wrong_lang}");
+    // Only one assignment at a time; starting again is a no-op.
+    assert_eq!(
+        a.start_assignment("week", UiLang::En)
+            .await
+            .unwrap()
+            .started_at,
+        v.started_at
+    );
+
+    // Submissions while it runs count; the one before does not.
+    for (code, verdict) in [("wa", Verdict::WrongAnswer), ("ok", Verdict::Accepted)] {
+        a.store
+            .user
+            .record_submission("two-sum", Language::Python, code, &report_with(verdict))
+            .await
+            .unwrap();
+    }
+    let results = a.assignment_results("week", " Ana ", true).await.unwrap();
+    assert_eq!(results.student, "Ana");
+    assert_eq!(results.entries.len(), 2);
+    let two = &results.entries[1];
+    assert_eq!(
+        (two.submits, two.best_verdict, two.code.as_deref()),
+        (2, Some(Verdict::Accepted), Some("ok"))
+    );
+    assert_eq!(results.entries[0].submits, 0);
+    assert!(crate::classroom::chain_ok(&results));
+    assert!(
+        a.assignment_results("week", "", false)
+            .await
+            .unwrap_err()
+            .message
+            .contains("name")
+    );
+    let no_code = a.assignment_results("week", "Ana", false).await.unwrap();
+    assert!(no_code.entries.iter().all(|e| e.code.is_none()));
+
+    // The time limit ends it: the locks lift.
+    let started = v.started_at.unwrap();
+    a.set_clock(Some(started + 61 * 60_000));
+    let v = a.assignment("week", UiLang::En).await.unwrap();
+    assert_eq!(v.state, AssignmentState::Finished);
+    assert_eq!(v.submitted_at, Some(started + 60 * 60_000));
+    a.unlocked_hints("two-sum").await.unwrap();
+    a.set_clock(None);
+
+    // Teacher side: save, import (twice: a duplicate), an edited copy, a hostile file.
+    let out = work.join("ana.results.json");
+    a.save_assignment_results("week", "Ana", true, &out)
+        .await
+        .unwrap();
+    let mut edited: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&out).unwrap()).unwrap();
+    edited["student"] = json!("Bo");
+    edited["entries"][0]["submits"] = json!(1);
+    edited["entries"][0]["best_verdict"] = json!("accepted");
+    edited["entries"][0]["language"] = json!("python");
+    let bo = work.join("bo.results.json");
+    std::fs::write(&bo, serde_json::to_vec(&edited).unwrap()).unwrap();
+    let evil = work.join("evil.results.json");
+    std::fs::write(&evil, b"{\"format\":\"katabox-export/v2\"}").unwrap();
+    let imported = a
+        .import_class_results(&[out.clone(), out.clone(), bo, evil])
+        .await
+        .unwrap();
+    assert_eq!(
+        (imported.added, imported.duplicates, imported.edited),
+        (2, 1, 1)
+    );
+    assert_eq!(imported.refused.len(), 1);
+    let class = a.class_results().await.unwrap();
+    assert_eq!(class.len(), 1);
+    assert_eq!(class[0].title, "Week 3");
+    let flags: Vec<(String, bool)> = class[0]
+        .students
+        .iter()
+        .map(|s| (s.student.clone(), s.chain_ok))
+        .collect();
+    assert_eq!(
+        flags,
+        [("Ana".to_string(), true), ("Bo".to_string(), false)]
+    );
+    let csv = work.join("week.csv");
+    a.save_class_csv("week", &csv).await.unwrap();
+    let text = std::fs::read_to_string(&csv).unwrap();
+    assert!(
+        text.contains("Ana,yes,two-sum,python,accepted,2,"),
+        "{text}"
+    );
+    assert!(
+        text.contains("Bo,no,week--budget-pair,python,accepted,1,"),
+        "{text}"
+    );
 }

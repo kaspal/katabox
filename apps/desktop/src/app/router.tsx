@@ -121,6 +121,11 @@ const readingSetRoute = createRoute({
   }),
   component: lazyRouteComponent(() => import("@/learn/reading/ReadingSetPage"), "ReadingSetPage"),
 });
+const classroomRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/classroom",
+  component: lazyRouteComponent(() => import("@/practice/classroom"), "Classroom"),
+});
 const interviewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/interview",
@@ -186,6 +191,7 @@ const routeTree = rootRoute.addChildren([
   kataRoute,
   helpRoute,
   interviewRoute,
+  classroomRoute,
   progressRoute,
   settingsRoute,
   ...devRoutes,

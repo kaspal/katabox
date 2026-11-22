@@ -146,7 +146,10 @@ min_app = "1.0.0-beta.1"
 then `cargo run -p kb-pack -- pack content/problems/a content/problems/b --manifest
 pack.toml --out graphs101.kbpack`. Each folder is validated like built-in content
 (run `validate --run --problems a,b` first for the sandbox checks); the pack lists every
-file's SHA-256. Packs hold problems only (no Learn topics yet).
+file's SHA-256. Packs hold problems only (no Learn topics yet). Add
+`--assignment assignment.toml` to make an assignment for classroom mode (ADR 0039,
+docs/classroom.md); a pack that is only an assignment of built-in problems needs no
+problem folders.
 
 ## Before the pull request
 

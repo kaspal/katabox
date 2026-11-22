@@ -85,6 +85,11 @@ pub enum AppErrorCode {
     /// A pack failed a check, is already installed, or is not newer (expansion M11); the
     /// message lists why.
     PackRefused,
+    /// Locked while an assignment without hints runs (expansion M12): hints, editorial,
+    /// history and solutions of its problems.
+    LockedInAssignment,
+    /// Another assignment is already running (expansion M12).
+    AssignmentActive,
     /// Anything else, including the app failing to start.
     Internal,
 }

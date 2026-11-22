@@ -355,3 +355,84 @@ fn t9_signature_names_must_be_identifiers() {
         .join("\n");
     assert!(err.contains("ASCII identifier"), "{err}");
 }
+
+/// Pack `problems` with `assignment` (classroom mode, expansion M12), then open it.
+fn pack_with_assignment(
+    name: &str,
+    problems: &[PathBuf],
+    assignment: &str,
+    builtin: &[&str],
+) -> Result<kbpack::OpenedPack, Vec<String>> {
+    let dir = temp(&format!("{name}-pack"));
+    let out = dir.join("x.kbpack");
+    let a = dir.join("assignment.toml");
+    std::fs::write(&a, assignment).unwrap();
+    kbpack::write_pack_with(
+        problems,
+        &manifest_file(&dir, "week", "1.0.0-beta.1"),
+        Some(&a),
+        &out,
+    )
+    .unwrap();
+    let src = dir.join("src");
+    let files = archive::extract(&out, &src).map_err(|r| vec![r.to_string()])?;
+    let builtin: BTreeSet<String> = builtin.iter().map(|s| s.to_string()).collect();
+    kbpack::check_extracted(&src, &files, &builtin, "1.0.0-beta.1")
+}
+
+#[test]
+fn assignments_resolve_pack_and_built_in_problems() {
+    let p = problem_copy("assign", "budget-pair");
+    let pack = pack_with_assignment(
+        "assign",
+        std::slice::from_ref(&p),
+        "title = \"Week 3\"\ndue = \"2026-12-01\"\nproblems = [\"budget-pair\", \"two-sum\"]\nlanguages = [\"python\", \"rust\", \"python\"]\ntime_limit_min = 90\nhints = false\n",
+        &["two-sum"],
+    )
+    .unwrap_or_else(|e| panic!("{e:#?}"));
+    let a = pack.assignment.unwrap();
+    assert_eq!(a.problems, ["week--budget-pair", "two-sum"]);
+    assert_eq!(
+        a.languages,
+        [kb_core::Language::Python, kb_core::Language::Rust]
+    );
+    assert_eq!((a.time_limit_min, a.hints), (Some(90), false));
+    // An assignment of built-in problems only needs no problems/ folder.
+    let pack = pack_with_assignment(
+        "assign-only",
+        &[],
+        "title = \"Warm-up\"\ndue = \"2026-12-01\"\nproblems = [\"two-sum\"]\nlanguages = [\"typescript\"]\n",
+        &["two-sum"],
+    )
+    .unwrap_or_else(|e| panic!("{e:#?}"));
+    assert!(pack.problems.is_empty());
+    assert!(
+        pack.assignment.as_ref().unwrap().hints,
+        "hints default to on"
+    );
+    let db = temp("assign-only-db").join("content.db");
+    assert_eq!(kbpack::build_pack_db(&pack, &db).unwrap(), 0);
+}
+
+#[test]
+fn bad_assignments_are_refused() {
+    for (i, (text, want)) in [
+        ("title = \"x\"\ndue = \"2026-13-01\"\nproblems = [\"two-sum\"]\nlanguages = [\"python\"]\n", "due"),
+        ("title = \"x\"\ndue = \"2026-12-01\"\nproblems = [\"nope\"]\nlanguages = [\"python\"]\n", "neither a problem"),
+        ("title = \"x\"\ndue = \"2026-12-01\"\nproblems = [\"two-sum\", \"two-sum\"]\nlanguages = [\"python\"]\n", "listed twice"),
+        ("title = \"x\"\ndue = \"2026-12-01\"\nproblems = [\"two-sum\"]\nlanguages = [\"cobol\"]\n", "not a judge language"),
+        ("title = \"x\"\ndue = \"2026-12-01\"\nproblems = [\"two-sum\"]\nlanguages = []\n", "at least one"),
+        ("title = \"x\"\ndue = \"2026-12-01\"\nproblems = [\"two-sum\"]\nlanguages = [\"python\"]\ntime_limit_min = 1\n", "5-600"),
+        ("title = \"x\\u0007\"\ndue = \"2026-12-01\"\nproblems = [\"two-sum\"]\nlanguages = [\"python\"]\n", "control"),
+        ("title = \"x\"\ndue = \"2026-12-01\"\nproblems = [\"two-sum\"]\nlanguages = [\"python\"]\nrun = \"cmd\"\n", "unknown field"),
+        ("title = \"x\"\ndue = \"2026-12-01\"\nproblems = []\nlanguages = [\"python\"]\n", "problems: 1-50"),
+    ]
+    .iter()
+    .enumerate()
+    {
+        let err = pack_with_assignment(&format!("bad-assign-{i}"), &[], text, &["two-sum"])
+            .unwrap_err()
+            .join("\n");
+        assert!(err.contains("assignment.toml") && err.contains(want), "{i}: {err}");
+    }
+}

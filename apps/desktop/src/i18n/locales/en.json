@@ -15,7 +15,8 @@
     "settings": "Settings",
     "smoke": "Smoke screen (dev)",
     "interview": "Interview",
-    "kata": "Kata"
+    "kata": "Kata",
+    "classroom": "Classroom"
   },
   "palette": {
     "open": "Command palette",
@@ -531,7 +532,9 @@
     "locked_in_kata": "This is locked during the kata. It opens again when the kata ends.",
     "kata_active": "A kata is running. End it first.",
     "stress_unavailable": "The stress test is not available here (an SQL problem, or a program problem without its generator or the Python runtime).",
-    "pack_refused": "This pack can't be imported."
+    "pack_refused": "This pack can't be imported.",
+    "locked_in_assignment": "This is locked while the assignment runs. It opens again when the assignment ends.",
+    "assignment_active": "Another assignment is running. Finish it first."
   },
   "judge": {
     "verdict": {
@@ -3400,6 +3403,68 @@
     "source": {
       "builtin": "Built-in",
       "packs": "Packs"
+    },
+    "assignment": "Assignment"
+  },
+  "classroom": {
+    "title": "Classroom",
+    "intro": "Assignments from a teacher come as packs (Settings → Packs). Start one when you are ready: its rules apply while it runs. Teachers import their students' results files here. KataBox works offline and without accounts, so this is not cheat-proof.",
+    "mine": "Your assignments",
+    "none": "No assignments. Install a teacher's assignment pack and restart KataBox to see it here.",
+    "state": {
+      "not_started": "Not started",
+      "running": "Running",
+      "finished": "Finished"
+    },
+    "remaining": "{{time}} left",
+    "due": "Due",
+    "languages": "Languages",
+    "timeLimit": "Time limit",
+    "noTimeLimit": "None",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "hints": "Hints",
+    "hintsOn": "Available",
+    "hintsOff": "Locked while it runs",
+    "afterRestart": "available after a restart",
+    "notTried": "Not tried",
+    "submits_one": "{{count}} submit",
+    "submits_other": "{{count}} submits",
+    "startNote": "The rules apply from the moment you start, and only submissions made while it runs count.",
+    "rules": "While it runs, these problems take only {{languages}}.",
+    "rulesNoHints": "While it runs, these problems take only {{languages}}, and their hints, editorial, earlier submissions and History are locked.",
+    "start": "Start",
+    "finish": "Finish now",
+    "export": "Export results",
+    "close": "Close",
+    "results": {
+      "title": "Results: {{title}}",
+      "intro": "This is the file you send to your teacher. It holds exactly what is listed below.",
+      "name": "Your name",
+      "includeCode": "Include my code (the best submission for each problem)",
+      "included": "The file includes:",
+      "who": "Your name: {{name}}",
+      "which": "The assignment: {{title}} (pack {{hash}}…)",
+      "when": "When it ran: {{start}} to {{end}}",
+      "firstAccepted": "first Accepted after {{time}}",
+      "withCode": "with the code",
+      "chain": "A hash chain over everything above, so casual edits show (it is not a signature).",
+      "saved": "Saved.",
+      "save": "Save results…"
+    },
+    "teacher": {
+      "title": "Class results (teacher)",
+      "intro": "Import the results files your students sent you. Each file is checked; a file edited after export is kept and flagged.",
+      "import": "Import results files…",
+      "imported": "Added {{added}}, already imported {{duplicates}}, flagged as edited {{edited}}.",
+      "refused": "{{file}} refused: {{why}}",
+      "none": "No results imported yet.",
+      "csv": "Export CSV…",
+      "caption": "Results for {{title}}",
+      "student": "Student",
+      "file": "File",
+      "unchanged": "Unchanged",
+      "edited": "Edited after export"
     }
   }
 }

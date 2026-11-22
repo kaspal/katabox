@@ -8,6 +8,10 @@ import {
   type CustomCheck,
   type BackupStatus,
   type PackPreview,
+  type AssignmentView,
+  type ClassAssignment,
+  type ClassImport,
+  type ResultsFile,
   type PackRow,
   type FocusCurrent,
   type FocusSessionRow,
@@ -185,6 +189,18 @@ export const api = {
   packs: (): Promise<PackRow[]> => call(commands.packs()),
   uninstallPack: (id: string): Promise<null> => call(commands.uninstallPack(id)),
   restartApp: (): Promise<void> => commands.restartApp(),
+  // Classroom mode (expansion M12, ADR 0039)
+  assignments: (lang: UiLang): Promise<AssignmentView[]> => call(commands.assignments(lang)),
+  assignment: (id: string, lang: UiLang): Promise<AssignmentView> => call(commands.assignment(id, lang)),
+  startAssignment: (id: string, lang: UiLang): Promise<AssignmentView> => call(commands.startAssignment(id, lang)),
+  finishAssignment: (id: string, lang: UiLang): Promise<AssignmentView> => call(commands.finishAssignment(id, lang)),
+  assignmentResults: (id: string, student: string, includeCode: boolean): Promise<ResultsFile> =>
+    call(commands.assignmentResults(id, student, includeCode)),
+  saveAssignmentResults: (id: string, student: string, includeCode: boolean): Promise<ResultsFile | null> =>
+    call(commands.saveAssignmentResults(id, student, includeCode)),
+  importClassResults: (): Promise<ClassImport | null> => call(commands.importClassResults()),
+  classResults: (): Promise<ClassAssignment[]> => call(commands.classResults()),
+  saveClassCsv: (assignment: string): Promise<boolean> => call(commands.saveClassCsv(assignment)),
   // Focus sessions and backups (expansion M10, ADR 0037)
   focusCurrent: (): Promise<FocusCurrent | null> => call(commands.focusCurrent()),
   focusStart: (work: number, brk: number): Promise<FocusCurrent> => call(commands.focusStart(work, brk)),

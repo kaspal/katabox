@@ -53,6 +53,10 @@ import type {
   StressResult,
   BackupStatus,
   PackPreview,
+  AssignmentView,
+  ClassAssignment,
+  ClassImport,
+  ResultsFile,
   PackRow,
   FocusCurrent,
   FocusSessionRow,
@@ -401,6 +405,9 @@ export function createFakeApi(
     focusSessions: [] as FocusSessionRow[],
     packs: [] as PackRow[],
     packPreview: null as PackPreview | null,
+    assignments: [] as AssignmentView[],
+    classResults: [] as ClassAssignment[],
+    classImport: null as ClassImport | null,
     backup: {
       folder: null,
       every_days: 7,
@@ -992,6 +999,63 @@ export function createFakeApi(
       return null;
     }),
     restartApp: vi.fn(async () => undefined),
+    assignments: vi.fn(async () => state.assignments.map((a) => ({ ...a }))),
+    assignment: vi.fn(async (id: string) => {
+      const a = state.assignments.find((x) => x.id === id);
+      if (!a) throw { code: "not_found", message: id };
+      return { ...a };
+    }),
+    startAssignment: vi.fn(async (id: string) => {
+      state.assignments = state.assignments.map((a) =>
+        a.id === id && a.state === "not_started"
+          ? {
+              ...a,
+              state: "running" as const,
+              started_at: Date.now(),
+              ends_at: a.meta.time_limit_min === null ? null : Date.now() + a.meta.time_limit_min * 60_000,
+            }
+          : a,
+      );
+      return state.assignments.find((a) => a.id === id)!;
+    }),
+    finishAssignment: vi.fn(async (id: string) => {
+      state.assignments = state.assignments.map((a) =>
+        a.id === id && a.state === "running"
+          ? { ...a, state: "finished" as const, submitted_at: Date.now(), ends_at: null }
+          : a,
+      );
+      return state.assignments.find((a) => a.id === id)!;
+    }),
+    assignmentResults: vi.fn(async (id: string, student: string, includeCode: boolean): Promise<ResultsFile> => {
+      const a = state.assignments.find((x) => x.id === id)!;
+      if (!student.trim()) throw { code: "invalid_input", message: "your name" };
+      const entries = a.problems.map((p) => ({
+        problem_id: p.id,
+        language: p.best_verdict ? ("python" as const) : null,
+        best_verdict: p.best_verdict,
+        submits: p.submits,
+        first_accepted_s: p.best_verdict === "accepted" ? 125 : null,
+        code: includeCode && p.best_verdict ? "def f(): pass" : null,
+      }));
+      return {
+        format: "katabox-results/v1",
+        app_version: "1.0.0-beta.1",
+        student: student.trim(),
+        assignment: { id: a.id, title: a.meta.title, pack_sha256: a.pack_sha256 },
+        started_at: a.started_at ?? 0,
+        ended_at: a.submitted_at ?? Date.now(),
+        include_code: includeCode,
+        entries,
+        hashes: entries.map(() => "0".repeat(64)),
+        final_hash: "0".repeat(64),
+      };
+    }),
+    saveAssignmentResults: vi.fn(async (id: string, student: string, includeCode: boolean) =>
+      api.assignmentResults(id, student, includeCode),
+    ),
+    importClassResults: vi.fn(async () => state.classImport),
+    classResults: vi.fn(async () => state.classResults),
+    saveClassCsv: vi.fn(async () => true),
     focusCurrent: vi.fn(async () => state.focus),
     focusStart: vi.fn(async (work: number, brk: number) => {
       state.focus = { started_at: Date.now(), work_min: work, break_min: brk };

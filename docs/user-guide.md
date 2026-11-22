@@ -192,6 +192,20 @@ the pack's files; your history on its problems stays. Changes take effect after 
 restart. To make a pack: `kb-pack pack PROBLEM_DIR... --manifest pack.toml --out
 my.kbpack` (see docs/contributing-content.md).
 
+## Classroom
+A pack can carry an assignment from a teacher: a title, a due date, problems, the
+languages to use, an optional time limit, and whether hints stay on. Install it like any
+pack, then open **Classroom**. Press **Start** when you are ready: while it runs, its
+problems take only its languages and, with hints off, their hints, editorial, earlier
+submissions and History are locked. It ends when you press **Finish now** or when the
+time limit passes. **Export results** shows exactly what the file will hold (your name,
+the assignment, the times, and per problem the best verdict, the submits, the time to
+the first Accepted and the language; your code only if you tick it) before you save it.
+Teachers import the files they receive under **Class results**, see one row per student,
+and export a CSV. A file edited after export is marked. KataBox is offline and has no
+accounts, so this is not cheat-proof. See docs/classroom.md (also in Spanish and
+Portuguese).
+
 ## Focus sessions
 Start a focus session from Progress → Overview or the command palette ("Start focus
 session"). A chip in the top bar shows whether you are working or on a break and how long

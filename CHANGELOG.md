@@ -24,6 +24,12 @@ All notable changes to KataBox are recorded in this file. The format follows
   text) and pack code only runs in the sandbox. Packs are marked everywhere, stay out of
   daily and next problem unless you opt in, update only to newer versions, and uninstall
   cleanly. `kb-pack pack` makes them.
+- **Classroom mode:** a pack can carry an assignment (due date, problems, languages, an
+  optional time limit, hints on or off). Students start it on the new Classroom page;
+  while it runs its rules are enforced, and the results file they export lists exactly
+  what it holds and carries a hash chain that shows casual edits. Teachers import results
+  files, see a student × problem table and export a CSV safe to open in a spreadsheet.
+  Offline and account-free, so not cheat-proof (docs/classroom.md, also ES and pt-BR).
 - **Focus sessions:** work and break periods on the wall clock, a top-bar chip with Stop,
   a notice when the phase changes, and what each session achieved on Progress.
 - **Automatic backups:** an export to a folder you choose, every few days and optionally

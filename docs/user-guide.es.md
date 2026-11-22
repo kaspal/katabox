@@ -206,6 +206,21 @@ no. Desinstalar quita los archivos del paquete; tu historial en sus problemas se
 conserva. Los cambios se aplican al reiniciar. Para crear un paquete: `kb-pack pack
 CARPETA... --manifest pack.toml --out mio.kbpack` (ver docs/contributing-content.md).
 
+## Aula
+Un paquete puede traer una tarea de un profesor: un título, una fecha de entrega,
+problemas, los lenguajes a usar, un límite de tiempo opcional y si las pistas siguen
+disponibles. Instálalo como cualquier paquete y abre **Aula**. Pulsa **Empezar** cuando
+estés listo: mientras está en curso, sus problemas solo aceptan sus lenguajes y, con las
+pistas desactivadas, sus pistas, solución explicada, envíos anteriores e Historial están
+bloqueados. Termina cuando pulsas **Terminar ahora** o cuando se agota el tiempo.
+**Exportar resultados** muestra exactamente lo que contendrá el archivo (tu nombre, la
+tarea, las horas y, por problema, el mejor veredicto, los envíos, el tiempo hasta el
+primer Aceptado y el lenguaje; tu código solo si lo marcas) antes de guardarlo. Los
+profesores importan los archivos que reciben en **Resultados de la clase**, ven una fila
+por estudiante y exportan un CSV. Un archivo editado tras exportarse queda marcado.
+KataBox funciona sin conexión y sin cuentas, así que esto no es a prueba de trampas. Ver
+docs/classroom.es.md (también en inglés y portugués).
+
 ## Sesiones de concentración
 Inicia una sesión de concentración desde Progreso → Resumen o la paleta de comandos
 ("Iniciar sesión de concentración"). Un indicador en la barra superior muestra si estás

@@ -207,11 +207,13 @@ impl App {
         Ok(result)
     }
 
-    /// Refuse when `problem` is part of the running interview or kata.
+    /// Refuse when `problem` is part of the running interview, kata, or assignment without
+    /// hints (expansion M12).
     pub(crate) async fn ensure_unlocked(&self, problem: &str) -> Result<()> {
         match self.running_session().await? {
             Some(s) if s.problem_ids.iter().any(|p| p == problem) => Err(locked()),
             _ if self.in_kata(problem).await? => Err(crate::kata::locked()),
+            _ if self.assignment_locks_help(problem).await? => Err(crate::classroom::locked()),
             _ => Ok(()),
         }
     }

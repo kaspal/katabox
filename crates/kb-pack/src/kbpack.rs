@@ -8,6 +8,11 @@
 //! links or images anyway), T9 (signatures are ASCII identifiers: the parser refuses
 //! anything else) and T10 (the pack id is namespaced and may not be a built-in id).
 //! Pack problems are stored as `<pack>--<id>`.
+//!
+//! A pack may also hold an `assignment.toml` at its root (classroom mode, expansion M12,
+//! ADR 0039): a title, a due date, the problems (the pack's own or built-in ones), the
+//! allowed languages, an optional time limit and whether hints stay on. Such a pack may
+//! have no problems of its own.
 
 pub mod archive;
 
@@ -21,6 +26,9 @@ use sha2::{Digest, Sha256};
 
 pub const FORMAT: &str = "katabox-pack/v1";
 pub const MANIFEST: &str = "manifest.toml";
+pub const ASSIGNMENT: &str = "assignment.toml";
+/// At most this many problems in an assignment.
+pub const MAX_ASSIGNMENT_PROBLEMS: usize = 50;
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -148,6 +156,96 @@ pub fn markdown_problem(text: &str) -> Option<&'static str> {
     None
 }
 
+/// `assignment.toml` as written by a teacher.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct AssignmentToml {
+    title: String,
+    due: String,
+    problems: Vec<String>,
+    languages: Vec<String>,
+    time_limit_min: Option<u32>,
+    #[serde(default = "yes")]
+    hints: bool,
+}
+
+fn yes() -> bool {
+    true
+}
+
+/// Read and check `assignment.toml`. A problem names one of the pack's own problem folders
+/// (stored as `<pack>--<id>`) or else a built-in problem.
+pub fn parse_assignment(
+    text: &str,
+    pack_id: &str,
+    own: &BTreeSet<String>,
+    builtin: &BTreeSet<String>,
+) -> Result<kb_store::classroom::AssignmentMeta, Vec<String>> {
+    let a: AssignmentToml = toml::from_str(text).map_err(|e| vec![format!("{ASSIGNMENT}: {e}")])?;
+    let mut errs: Vec<String> = Vec::new();
+    if !plain_text(&a.title, 80) {
+        errs.push("title: 1-80 characters, no control characters".into());
+    }
+    if a.due.len() != 10 || a.due.parse::<kb_core::Day>().is_err() {
+        errs.push("due: a date YYYY-MM-DD".into());
+    }
+    if a.problems.is_empty() || a.problems.len() > MAX_ASSIGNMENT_PROBLEMS {
+        errs.push(format!("problems: 1-{MAX_ASSIGNMENT_PROBLEMS} problem ids"));
+    }
+    let mut problems: Vec<String> = Vec::new();
+    for p in &a.problems {
+        let full = if own.contains(p) {
+            format!("{pack_id}--{p}")
+        } else if builtin.contains(p) {
+            p.clone()
+        } else {
+            errs.push(format!(
+                "problems: {p:?} is neither a problem of this pack nor a built-in problem"
+            ));
+            continue;
+        };
+        if problems.contains(&full) {
+            errs.push(format!("problems: {p:?} is listed twice"));
+        } else {
+            problems.push(full);
+        }
+    }
+    let mut languages = Vec::new();
+    for l in &a.languages {
+        match l.parse::<kb_core::Language>() {
+            Ok(lang) if kb_judge::languages::SUPPORTED.contains(&lang) => {
+                if !languages.contains(&lang) {
+                    languages.push(lang);
+                }
+            }
+            _ => errs.push(format!("languages: {l:?} is not a judge language")),
+        }
+    }
+    if a.languages.is_empty() {
+        errs.push("languages: at least one".into());
+    }
+    if let Some(m) = a.time_limit_min
+        && !(5..=600).contains(&m)
+    {
+        errs.push("time_limit_min: 5-600 minutes".into());
+    }
+    if errs.is_empty() {
+        Ok(kb_store::classroom::AssignmentMeta {
+            title: a.title,
+            due: a.due,
+            problems,
+            languages,
+            time_limit_min: a.time_limit_min,
+            hints: a.hints,
+        })
+    } else {
+        Err(errs
+            .into_iter()
+            .map(|e| format!("{ASSIGNMENT}: {e}"))
+            .collect())
+    }
+}
+
 /// What a pack holds, read and checked: ready to show before importing.
 #[derive(Debug, Clone)]
 pub struct OpenedPack {
@@ -156,6 +254,8 @@ pub struct OpenedPack {
     pub dir: PathBuf,
     /// Problem folders (`problems/<id>`), follow-ups included, in order.
     pub problems: Vec<PathBuf>,
+    /// The assignment it carries (classroom mode), if any.
+    pub assignment: Option<kb_store::classroom::AssignmentMeta>,
 }
 
 /// Every check after extraction (T5, T6, T7, T9, T10). `builtin` are the built-in problem
@@ -230,10 +330,13 @@ pub fn check_extracted(
             errs.push(format!("{path}: listed in the manifest but missing"));
         }
     }
-    // Layout: only problems/ (Learn topics in packs are not supported yet).
+    // Layout: problems/ and an optional assignment.toml (Learn topics in packs are not
+    // supported yet).
     for path in files.keys() {
-        if path != MANIFEST && !path.starts_with("problems/") {
-            errs.push(format!("{path}: packs hold problems/ only"));
+        if path != MANIFEST && path != ASSIGNMENT && !path.starts_with("problems/") {
+            errs.push(format!(
+                "{path}: packs hold problems/ and assignment.toml only"
+            ));
         }
         // T7.
         if path.ends_with(".md")
@@ -247,6 +350,7 @@ pub fn check_extracted(
     }
     // T6 + T9: the same structural validation as built-in content.
     let root = dir.join("problems");
+    let has_assignment = files.contains_key(ASSIGNMENT);
     let problems = if root.is_dir() {
         match crate::validate::problem_dirs(&root) {
             Ok(d) => d,
@@ -256,7 +360,9 @@ pub fn check_extracted(
             }
         }
     } else {
-        errs.push("the pack has no problems/ folder".into());
+        if !has_assignment {
+            errs.push("the pack has no problems/ folder".into());
+        }
         Vec::new()
     };
     if problems.is_empty() && root.is_dir() {
@@ -281,11 +387,30 @@ pub fn check_extracted(
             ));
         }
     }
+    let assignment = if has_assignment {
+        let own: BTreeSet<String> = problems
+            .iter()
+            .map(|p| crate::validate::problem_id_of(p).to_string())
+            .collect();
+        match fs::read_to_string(dir.join(ASSIGNMENT))
+            .map_err(|e| vec![format!("{ASSIGNMENT}: {e}")])
+            .and_then(|t| parse_assignment(&t, &manifest.id, &own, builtin))
+        {
+            Ok(a) => Some(a),
+            Err(e) => {
+                errs.extend(e);
+                None
+            }
+        }
+    } else {
+        None
+    };
     if errs.is_empty() {
         Ok(OpenedPack {
             manifest,
             dir: dir.to_path_buf(),
             problems,
+            assignment,
         })
     } else {
         Err(errs)
@@ -298,12 +423,18 @@ pub fn reopen_kept(src: &Path) -> Result<OpenedPack, String> {
     let manifest: Manifest =
         toml::from_str(&fs::read_to_string(src.join(MANIFEST)).map_err(|e| e.to_string())?)
             .map_err(|e| e.to_string())?;
-    let problems =
-        crate::validate::problem_dirs(&src.join("problems")).map_err(|e| e.to_string())?;
+    let root = src.join("problems");
+    let problems = if root.is_dir() {
+        crate::validate::problem_dirs(&root).map_err(|e| e.to_string())?
+    } else {
+        Vec::new()
+    };
     Ok(OpenedPack {
         manifest,
         dir: src.to_path_buf(),
         problems,
+        // Kept copies only rebuild problems; the assignment was recorded at import.
+        assignment: None,
     })
 }
 
@@ -331,6 +462,16 @@ pub fn build_pack_db(pack: &OpenedPack, out: &Path) -> Result<usize, String> {
 pub fn write_pack(
     problem_dirs: &[PathBuf],
     manifest_toml: &Path,
+    out: &Path,
+) -> Result<String, String> {
+    write_pack_with(problem_dirs, manifest_toml, None, out)
+}
+
+/// [`write_pack`] with an optional `assignment.toml` (classroom mode) at the pack's root.
+pub fn write_pack_with(
+    problem_dirs: &[PathBuf],
+    manifest_toml: &Path,
+    assignment: Option<&Path>,
     out: &Path,
 ) -> Result<String, String> {
     #[derive(Deserialize)]
@@ -378,6 +519,12 @@ pub fn write_pack(
                 );
             }
         }
+    }
+    if let Some(a) = assignment {
+        files.insert(
+            ASSIGNMENT.to_string(),
+            fs::read(a).map_err(|e| format!("{}: {e}", a.display()))?,
+        );
     }
     let mut manifest = format!(
         "format = {FORMAT:?}\nid = {:?}\nname = {:?}\nauthor = {:?}\nversion = {:?}\nlicence = {:?}\nmin_app = {:?}\n\n[files]\n",

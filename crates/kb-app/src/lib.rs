@@ -13,6 +13,7 @@
 
 pub mod backup;
 mod calibration;
+pub mod classroom;
 pub mod comforts;
 pub mod debug;
 pub mod diagnostics;
@@ -543,7 +544,11 @@ impl App {
         let mut view = self.store.content.get_problem(id, lang).await?;
         view.editorial = None;
         // Mock interview (ADR 0020) and kata (expansion M1): hint texts never reach the UI.
-        if self.in_interview(id).await? || self.in_kata(id).await? {
+        // So is an assignment without hints (expansion M12).
+        if self.in_interview(id).await?
+            || self.in_kata(id).await?
+            || self.assignment_locks_help(id).await?
+        {
             view.hints.clear();
         }
         // Follow-ups (expansion M5) open once their base is solved.
@@ -1121,8 +1126,10 @@ impl App {
             .collect())
     }
 
-    /// In a mock interview, only the session's languages may be judged on its problems.
+    /// In a mock interview, only the session's languages may be judged on its problems;
+    /// in a running assignment, only its languages (expansion M12).
     async fn ensure_interview_language(&self, problem: &str, language: Language) -> Result<()> {
+        self.ensure_assignment_language(problem, language).await?;
         match self.running_session().await? {
             Some(s)
                 if s.problem_ids.iter().any(|p| p == problem)

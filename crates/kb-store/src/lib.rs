@@ -15,6 +15,7 @@
 //! needs no `DATABASE_URL`.
 
 pub mod blob;
+pub mod classroom;
 pub mod content;
 pub mod focus;
 pub mod journal;

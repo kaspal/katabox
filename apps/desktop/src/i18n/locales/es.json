@@ -15,7 +15,8 @@
     "settings": "Ajustes",
     "smoke": "Pantalla de prueba (desarrollo)",
     "interview": "Entrevista",
-    "kata": "Kata"
+    "kata": "Kata",
+    "classroom": "Aula"
   },
   "palette": {
     "open": "Paleta de comandos",
@@ -531,7 +532,9 @@
     "locked_in_kata": "Esto está bloqueado durante la kata. Se abre de nuevo cuando la kata termina.",
     "kata_active": "Hay una kata en curso. Termínala primero.",
     "stress_unavailable": "La prueba de estrés no está disponible aquí (un problema SQL, o un problema de programa sin su generador o sin el entorno de Python).",
-    "pack_refused": "Este paquete no se puede importar."
+    "pack_refused": "Este paquete no se puede importar.",
+    "locked_in_assignment": "Esto está bloqueado mientras la tarea está en curso. Se abre de nuevo cuando la tarea termina.",
+    "assignment_active": "Hay otra tarea en curso. Termínala primero."
   },
   "judge": {
     "verdict": {
@@ -3400,6 +3403,68 @@
     "source": {
       "builtin": "Incluidos",
       "packs": "Paquetes"
+    },
+    "assignment": "Tarea"
+  },
+  "classroom": {
+    "title": "Aula",
+    "intro": "Las tareas de un profesor llegan como paquetes (Ajustes → Paquetes). Empieza una cuando estés listo: sus reglas se aplican mientras está en curso. Los profesores importan aquí los archivos de resultados de sus estudiantes. KataBox funciona sin conexión y sin cuentas, así que esto no es a prueba de trampas.",
+    "mine": "Tus tareas",
+    "none": "No hay tareas. Instala el paquete de tarea de un profesor y reinicia KataBox para verla aquí.",
+    "state": {
+      "not_started": "Sin empezar",
+      "running": "En curso",
+      "finished": "Terminada"
+    },
+    "remaining": "Quedan {{time}}",
+    "due": "Fecha de entrega",
+    "languages": "Lenguajes",
+    "timeLimit": "Límite de tiempo",
+    "noTimeLimit": "Ninguno",
+    "minutes_one": "{{count}} minuto",
+    "minutes_other": "{{count}} minutos",
+    "hints": "Pistas",
+    "hintsOn": "Disponibles",
+    "hintsOff": "Bloqueadas mientras está en curso",
+    "afterRestart": "disponible tras reiniciar",
+    "notTried": "Sin intentar",
+    "submits_one": "{{count}} envío",
+    "submits_other": "{{count}} envíos",
+    "startNote": "Las reglas se aplican desde que empiezas, y solo cuentan los envíos hechos mientras está en curso.",
+    "rules": "Mientras está en curso, estos problemas solo aceptan {{languages}}.",
+    "rulesNoHints": "Mientras está en curso, estos problemas solo aceptan {{languages}}, y sus pistas, solución explicada, envíos anteriores e Historial están bloqueados.",
+    "start": "Empezar",
+    "finish": "Terminar ahora",
+    "export": "Exportar resultados",
+    "close": "Cerrar",
+    "results": {
+      "title": "Resultados: {{title}}",
+      "intro": "Este es el archivo que envías a tu profesor. Contiene exactamente lo que aparece abajo.",
+      "name": "Tu nombre",
+      "includeCode": "Incluir mi código (el mejor envío de cada problema)",
+      "included": "El archivo incluye:",
+      "who": "Tu nombre: {{name}}",
+      "which": "La tarea: {{title}} (paquete {{hash}}…)",
+      "when": "Cuándo estuvo en curso: de {{start}} a {{end}}",
+      "firstAccepted": "primer Aceptado a los {{time}}",
+      "withCode": "con el código",
+      "chain": "Una cadena de hashes sobre todo lo anterior, para que se noten las ediciones casuales (no es una firma).",
+      "saved": "Guardado.",
+      "save": "Guardar resultados…"
+    },
+    "teacher": {
+      "title": "Resultados de la clase (profesor)",
+      "intro": "Importa los archivos de resultados que te enviaron tus estudiantes. Cada archivo se comprueba; uno editado tras exportarse se guarda y se marca.",
+      "import": "Importar archivos de resultados…",
+      "imported": "Añadidos {{added}}, ya importados {{duplicates}}, marcados como editados {{edited}}.",
+      "refused": "{{file}} rechazado: {{why}}",
+      "none": "Aún no hay resultados importados.",
+      "csv": "Exportar CSV…",
+      "caption": "Resultados de {{title}}",
+      "student": "Estudiante",
+      "file": "Archivo",
+      "unchanged": "Sin cambios",
+      "edited": "Editado tras exportarse"
     }
   }
 }

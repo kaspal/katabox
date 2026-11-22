@@ -41,6 +41,8 @@ pub struct PackPreview {
     /// The installed version of the same pack, if any.
     pub installed: Option<String>,
     pub action: PackAction,
+    /// The title of the assignment it carries (classroom mode, expansion M12).
+    pub assignment: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -62,6 +64,7 @@ pub(crate) struct PendingPack {
     staging: PathBuf,
     row: PackRow,
     action: PackAction,
+    assignment: Option<kb_store::classroom::AssignmentMeta>,
 }
 
 fn refused(reasons: impl IntoIterator<Item = String>) -> AppError {
@@ -198,6 +201,7 @@ impl App {
                 return Err(refused(reasons));
             }
         };
+        let assignment = pack.assignment;
         let m = pack.manifest;
         let installed = self.packs().await?.into_iter().find(|p| p.id == m.id);
         let action = match &installed {
@@ -229,6 +233,7 @@ impl App {
                 staging,
                 row,
                 action,
+                assignment: assignment.clone(),
             });
         if let Some(old) = old {
             let _ = std::fs::remove_dir_all(old.staging);
@@ -244,6 +249,7 @@ impl App {
             problems,
             installed: installed.map(|i| i.version),
             action,
+            assignment: assignment.map(|a| a.title),
         })
     }
 
@@ -290,6 +296,12 @@ impl App {
         }
         let _ = std::fs::remove_dir_all(&aside);
         self.store.user.put_pack(&pending.row).await?;
+        if let Some(a) = &pending.assignment {
+            self.store
+                .user
+                .put_assignment(&pending.row.id, &pending.row.sha256, a, self.now_ms())
+                .await?;
+        }
         Ok(pending.row)
     }
 
