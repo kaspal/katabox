@@ -1,0 +1,1 @@
+{"input": {"a": "tale", "b": "late", "positions": [0, 0, 3], "letters": "plp"}, "output": [false, true, false]}

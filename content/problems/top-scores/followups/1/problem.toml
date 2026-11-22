@@ -1,0 +1,18 @@
+id = "top-scores--f1"
+parent = "top-scores"
+title = "Top Scores: Live Leaderboard"
+title_es = "Mejores puntuaciones: clasificación en directo"
+difficulty = "medium"
+tags = ["heap", "stream"]
+pattern = "heap"
+rank = 7
+
+[signature]
+name = "kthAfterEach"
+params = [{ name = "scores", type = "int[]" }, { name = "k", type = "int" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

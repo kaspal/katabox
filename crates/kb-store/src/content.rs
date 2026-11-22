@@ -17,7 +17,7 @@ use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 8;
+pub const CONTENT_SCHEMA_VERSION: i64 = 9;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -85,6 +85,8 @@ pub struct PackProblem {
     pub validator: Option<String>,
     /// SQL problems (ADR 0031): `schema.sql` as written, and its tables as JSON.
     pub sql: Option<PackSql>,
+    /// A follow-up's base problem (expansion M5).
+    pub parent: Option<String>,
 }
 
 /// An SQL problem's schema (ADR 0031).
@@ -228,6 +230,21 @@ pub struct ProblemView {
     /// An SQL problem's tables (ADR 0031): `[{"name", "columns": [{"name", "type",
     /// "primary_key", "not_null", "references"}]}]`, for the schema panel and completion.
     pub sql_tables: Option<Value>,
+    /// A follow-up's base problem (expansion M5).
+    pub parent: Option<String>,
+    /// This problem's follow-ups, in order (empty for most problems).
+    pub followups: Vec<FollowupRef>,
+}
+
+/// A follow-up as listed on its base problem's page (expansion M5).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct FollowupRef {
+    pub id: String,
+    pub title: String,
+    pub difficulty: Difficulty,
+    /// Unlocked once the base is solved (filled by the app; false as read).
+    pub unlocked: bool,
 }
 
 /// What the judge needs: settings and every test (public first, then hidden).
@@ -327,6 +344,7 @@ impl ContentDb {
                AND (?5 IS NULL OR p.id IN
                     (SELECT problem_id FROM problem_fts WHERE problem_fts MATCH ?5))
                AND (?6 IS NULL OR p.mode = ?6)
+               AND p.parent_id IS NULL
              ORDER BY p.rank, p.id",
         )
         .bind(lang.code())
@@ -403,6 +421,27 @@ impl ContentDb {
         })
         .collect::<Result<Vec<_>>>()?;
 
+        let followups = sqlx::query(
+            "SELECT p.id, p.difficulty, COALESCE(tl.title, te.title) AS title FROM problems p
+             JOIN problem_texts te ON te.problem_id = p.id AND te.lang = 'en'
+             LEFT JOIN problem_texts tl ON tl.problem_id = p.id AND tl.lang = ?2
+             WHERE p.parent_id = ?1 ORDER BY p.id",
+        )
+        .bind(id)
+        .bind(lang.code())
+        .fetch_all(&self.pool)
+        .await?
+        .iter()
+        .map(|r| {
+            Ok(FollowupRef {
+                id: r.try_get("id")?,
+                title: r.try_get("title")?,
+                difficulty: parse_difficulty(&r.try_get::<String, _>("difficulty")?)?,
+                unlocked: false,
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+
         Ok(ProblemView {
             id: id.to_string(),
             lang,
@@ -428,6 +467,8 @@ impl ContentDb {
                 .try_get::<Option<String>, _>("sql_schema")?
                 .map(|s| serde_json::from_str(&s))
                 .transpose()?,
+            parent: p.try_get("parent_id")?,
+            followups,
         })
     }
 
@@ -602,6 +643,16 @@ fn check_pack(problems: &[PackProblem]) -> Result<()> {
                 p.id
             )));
         }
+        if let Some(parent) = &p.parent
+            && !problems
+                .iter()
+                .any(|b| &b.id == parent && b.parent.is_none())
+        {
+            return Err(StoreError::InvalidPack(format!(
+                "{}: its base {parent} is not in the pack",
+                p.id
+            )));
+        }
         if !p.texts.iter().any(|t| t.lang == UiLang::En) {
             return Err(StoreError::InvalidPack(format!(
                 "{}: no English text",
@@ -697,8 +748,8 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
     sqlx::query(
         "INSERT INTO problems (id, difficulty, pattern, rank, mode, signature, checker,
                                time_limit_ms, memory_mb, profile, validator, schema_sql,
-                               sql_schema)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               sql_schema, parent_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&p.id)
     .bind(difficulty_code(p.difficulty))
@@ -718,6 +769,7 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
             .map(|s| serde_json::to_string(&s.tables))
             .transpose()?,
     )
+    .bind(&p.parent)
     .execute(&mut *conn)
     .await?;
 
@@ -957,6 +1009,7 @@ pub(crate) mod tests {
             ],
             solutions: vec![(Language::Python, "def widest_gap(nums): ...\n".into())],
             sql: None,
+            parent: None,
         }
     }
 
@@ -1049,6 +1102,48 @@ pub(crate) mod tests {
         assert_eq!(fts_query(" -- ()"), None);
     }
 
+    /// Follow-ups (expansion M5): stored with their base, left out of the problem list,
+    /// listed on the base's page, and refused without their base.
+    #[tokio::test]
+    async fn follow_ups_hang_off_their_base() {
+        let dir = temp_dir("followups");
+        let path = dir.join("content.db");
+        let meta = PackMeta {
+            pack_id: "test".into(),
+            pack_version: "1.0.0".into(),
+            pack_date: None,
+        };
+        let mut f1 = sample_problem("gap-a--f1", Difficulty::Hard, 1, true);
+        f1.parent = Some("gap-a".into());
+        let problems = [
+            sample_problem("gap-a", Difficulty::Easy, 1, true),
+            f1.clone(),
+        ];
+        build(&path, &meta, &problems).await.unwrap();
+        let db = ContentDb::open(&path).await.unwrap();
+        let ids: Vec<String> = db
+            .list_problems(&ProblemFilter::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .map(|p| p.id)
+            .collect();
+        assert_eq!(ids, ["gap-a"]);
+        let base = db.get_problem("gap-a", UiLang::Es).await.unwrap();
+        assert_eq!(base.parent, None);
+        assert_eq!(base.followups.len(), 1);
+        assert_eq!(base.followups[0].id, "gap-a--f1");
+        assert_eq!(base.followups[0].title, "Título de gap-a--f1");
+        assert!(!base.followups[0].unlocked);
+        let f = db.get_problem("gap-a--f1", UiLang::En).await.unwrap();
+        assert_eq!(f.parent.as_deref(), Some("gap-a"));
+        assert!(db.judge_data("gap-a--f1").await.is_ok());
+        db.close().await;
+        // A follow-up without its base is refused.
+        let lone = temp_dir("followups-lone").join("content.db");
+        assert!(build(&lone, &meta, &[f1]).await.is_err());
+    }
+
     #[tokio::test]
     async fn builds_and_reads_back() {
         let (_dir, db) = sample_db("build").await;
@@ -1091,7 +1186,7 @@ pub(crate) mod tests {
                 .await
                 .unwrap();
         assert_eq!(kinds, ["blob/blob"]);
-        assert_eq!(CONTENT_SCHEMA_VERSION, 8);
+        assert_eq!(CONTENT_SCHEMA_VERSION, 9);
         // Profile data round-trips (ADR 0024); gap-b has none.
         let mut want = packed.profile.clone().unwrap();
         want.reference.sort_by_key(|(l, _)| l.id());

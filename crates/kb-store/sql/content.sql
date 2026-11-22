@@ -29,8 +29,12 @@ CREATE TABLE problems (
     -- ([{"name", "columns": [{"name", "type", "primary_key", "not_null", "references"}]}])
     schema_sql    TEXT,
     sql_schema    TEXT,
+    -- A follow-up's base problem (expansion M5, ADR 0035); NULL for every other problem.
+    -- Follow-ups are left out of the problem list, daily and next problem.
+    parent_id     TEXT REFERENCES problems (id),
     CHECK ((mode = 'sql') = (schema_sql IS NOT NULL AND sql_schema IS NOT NULL))
 ) WITHOUT ROWID;
+CREATE INDEX problems_by_parent ON problems (parent_id);
 
 CREATE TABLE problem_tags (
     problem_id TEXT NOT NULL REFERENCES problems (id),

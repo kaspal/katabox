@@ -1,0 +1,18 @@
+id = "recent-pages--f1"
+parent = "recent-pages"
+title = "Recent Pages: Keep the Favourites"
+title_es = "Páginas recientes: guarda las favoritas"
+difficulty = "hard"
+tags = ["design", "hash-map", "linked-list"]
+pattern = "design"
+rank = 9
+
+[signature]
+name = "favouritePages"
+params = [{ name = "capacity", type = "int" }, { name = "ops", type = "string[]" }, { name = "args", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 500 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -19,6 +19,9 @@ All notable changes to KataBox are recorded in this file. The format follows
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
 
+- **Follow-ups:** 40 harder variants of 30 problems (many queries, negative values, huge
+  inputs, an extra rule), opened once the base problem is solved, each with its own
+  tests and solutions.
 - **Kata drills:** re-solve solved problems from memory against the clock. A daily kata
   of three problems (leaning towards the rusty ones) or a set from a pattern or a list;
   the editor starts empty and help stays locked until the kata ends. Personal bests,

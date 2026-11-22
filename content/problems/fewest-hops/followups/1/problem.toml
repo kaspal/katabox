@@ -1,0 +1,18 @@
+id = "fewest-hops--f1"
+parent = "fewest-hops"
+title = "Fewest Hops: To Every Station"
+title_es = "Menos saltos: a cada estación"
+difficulty = "medium"
+tags = ["graph", "bfs"]
+pattern = "graphs"
+rank = 7
+
+[signature]
+name = "hopsToAll"
+params = [{ name = "n", type = "int" }, { name = "links", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,1 @@
+{"input": {"ops": ["add", "add", "count", "add", "remove", "count", "count"], "words": ["moby", "moon", "mo", "mob", "moby", "mob", "z"]}, "output": [2, 1, 0]}

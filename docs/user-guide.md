@@ -171,6 +171,13 @@ shows the limit for the language you picked, e.g. **Time limit (Python)**.
   first-try passes, time used, time and submits per problem). Past interviews are on
   Progress.
 
+## Follow-ups
+Some problems have **follow-ups**: harder siblings that change one thing (many queries
+instead of one, negative values, a huge input, an extra rule). Once you solve the base
+problem, they open from the strip under the problem's title (**Base problem · Follow-up
+1 · Follow-up 2**). A follow-up's statement says what changes; its tests, limits and
+solutions are its own, and it counts as a problem of its own in your history.
+
 ## Kata drills
 **Kata** (in the navigation rail) re-solves problems you have already solved, from memory
 and against the clock:

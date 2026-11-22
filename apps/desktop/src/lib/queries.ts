@@ -50,11 +50,12 @@ export function useProblems(filter: Partial<ProblemFilter> = {}) {
   });
 }
 
-export function useProblem(id: string) {
+export function useProblem(id: string, enabled = true) {
   const { lang } = usePrefs();
   return useQuery({
     queryKey: queryKeys.problem(id, lang),
     queryFn: () => api.getProblem(id, lang),
+    enabled,
   });
 }
 

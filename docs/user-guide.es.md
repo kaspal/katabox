@@ -183,6 +183,14 @@ más tiempo. El espacio de trabajo muestra el del lenguaje elegido, p. ej. **Tie
   **Resultado** (resueltos, aciertos a la primera, tiempo usado, y tiempo y envíos por
   problema). Las entrevistas anteriores están en Progreso.
 
+## Continuaciones
+Algunos problemas tienen **continuaciones**: hermanos más difíciles que cambian una cosa
+(muchas consultas en vez de una, valores negativos, una entrada enorme, una regla más).
+Cuando resuelves el problema base, se abren desde la franja bajo el título
+(**Problema base · Continuación 1 · Continuación 2**). El enunciado de una continuación
+dice qué cambia; sus pruebas, límites y soluciones son propios, y cuenta como un problema
+más en tu historial.
+
 ## Katas
 **Kata** (en la barra de navegación) vuelve a resolver problemas que ya resolviste, de
 memoria y contra el reloj:

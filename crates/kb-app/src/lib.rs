@@ -522,6 +522,18 @@ impl App {
         if self.in_interview(id).await? || self.in_kata(id).await? {
             view.hints.clear();
         }
+        // Follow-ups (expansion M5) open once their base is solved.
+        if !view.followups.is_empty() {
+            let solved = self
+                .store
+                .user
+                .problem_status(id)
+                .await?
+                .is_some_and(|s| s.status == kb_store::ProblemStatus::Solved);
+            for f in &mut view.followups {
+                f.unlocked = solved;
+            }
+        }
         view.time_scale = calibration::scale_of(self.calibration().as_ref());
         view.time_limits = calibration::time_limits(view.time_limit_ms, view.time_scale);
         Ok(view)

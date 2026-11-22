@@ -1,0 +1,18 @@
+id = "ribbon-cutter--f1"
+parent = "ribbon-cutter"
+title = "Ribbon Cutter: Many Orders"
+title_es = "Cortadora de cintas: muchos pedidos"
+difficulty = "hard"
+tags = ["array", "binary-search", "prefix-sum"]
+pattern = "binary-search"
+rank = 9
+
+[signature]
+name = "longestPieces"
+params = [{ name = "ribbons", type = "int[]" }, { name = "orders", type = "int[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 400 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

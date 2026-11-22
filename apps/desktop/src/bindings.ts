@@ -1533,6 +1533,14 @@ export type Failure = { kind: TestKind; index: number; verdict: Verdict; input: 
  */
 stderr?: string | null }
 /**
+ * A follow-up as listed on its base problem's page (expansion M5).
+ */
+export type FollowupRef = { id: string; title: string; difficulty: Difficulty; 
+/**
+ * Unlocked once the base is solved (filled by the app; false as read).
+ */
+unlocked: boolean }
+/**
  * What Import found in a file, before merging.
  */
 export type ImportPreview = { 
@@ -2160,7 +2168,15 @@ time_scale: number;
  * An SQL problem's tables (ADR 0031): `[{"name", "columns": [{"name", "type",
  * "primary_key", "not_null", "references"}]}]`, for the schema panel and completion.
  */
-sql_tables: JsonValue | null }
+sql_tables: JsonValue | null; 
+/**
+ * A follow-up's base problem (expansion M5).
+ */
+parent: string | null; 
+/**
+ * This problem's follow-ups, in order (empty for most problems).
+ */
+followups: FollowupRef[] }
 /**
  * One measured size: the median of the repetitions, with every sample.
  */

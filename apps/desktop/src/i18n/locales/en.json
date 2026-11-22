@@ -192,7 +192,10 @@
       "two-pointers": "Two pointers",
       "undo-redo": "Undo and redo",
       "union-find": "Union-find",
-      "window-functions": "Window functions"
+      "window-functions": "Window functions",
+      "deque": "Deque",
+      "range-queries": "Range queries",
+      "stream": "Stream"
     }
   },
   "common": {
@@ -3211,5 +3214,13 @@
     "body": "Code",
     "save": "Save snippet",
     "cancel": "Cancel"
+  },
+  "followup": {
+    "nav": "Problem and its follow-ups",
+    "base": "Base problem",
+    "n": "Follow-up {{n}}",
+    "locked": "Solve the base problem first.",
+    "of": "A harder follow-up of",
+    "intro": "The statement below says what changes; everything else is as in the base problem."
   }
 }

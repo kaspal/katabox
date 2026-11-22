@@ -1,0 +1,18 @@
+id = "balanced-streaks--f1"
+parent = "balanced-streaks"
+title = "Balanced Streaks: The Longest Run"
+title_es = "Rachas equilibradas: la más larga"
+difficulty = "medium"
+tags = ["string", "prefix-sum", "hash-map"]
+pattern = "arrays-hashing"
+rank = 8
+
+[signature]
+name = "longestBalanced"
+params = [{ name = "results", type = "string" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

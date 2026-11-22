@@ -44,6 +44,7 @@ import { KataBar } from "@/practice/kata";
 import { ReflectionCard, SavedReflection } from "@/practice/journal";
 import { useSnippets } from "@/practice/snippets";
 import { setActiveEditor } from "@/lib/editorBridge";
+import { FollowupBanner, FollowupTabs } from "@/workspace/Followups";
 import { snippetCompletion } from "@/workspace/editor/snippets";
 import { useKataState } from "@/lib/kata";
 import { CompareView, SolveInMenu } from "@/practice/crossLanguage";
@@ -563,6 +564,8 @@ export function WorkspacePage() {
         </div>
       </div>
 
+      <FollowupTabs problem={p} />
+      <FollowupBanner problem={p} />
       {kataView && (
         <div className="border-b px-3 py-2">
           <KataBar view={kataView} problemId={problemId} outcome={judge.kata} />

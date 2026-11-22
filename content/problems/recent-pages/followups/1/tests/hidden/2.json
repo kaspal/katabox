@@ -1,0 +1,1 @@
+{"input":{"args":[[2,753],[3,257],[3]],"capacity":1,"ops":["put","put","get"]},"output":[257]}

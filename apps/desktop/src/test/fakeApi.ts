@@ -368,6 +368,8 @@ export function createFakeApi(
     planSetups: [] as PlanSetup[],
     journal: { failures: 0, tags: [] } as JournalOverview,
     snippets: [] as SnippetRow[],
+    /** Fields merged into getProblem's view (follow-ups, expansion M5). */
+    problemExtras: {} as Record<string, Partial<ProblemView>>,
     mistakes: new Map<number, MistakeView>(),
     reflections: new Map<string, ReflectionRow>(),
     ratings: {
@@ -615,6 +617,9 @@ export function createFakeApi(
         has_validator: id === "two-sum",
         profile: id === "two-sum",
         sql_tables: sql ? SQL_TABLES : null,
+        parent: null,
+        followups: [],
+        ...(state.problemExtras[id] ?? {}),
       };
     }),
     continueItem: vi.fn(async () => opts.continueItem ?? null),

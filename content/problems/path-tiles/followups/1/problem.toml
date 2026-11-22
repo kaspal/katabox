@@ -1,0 +1,18 @@
+id = "path-tiles--f1"
+parent = "path-tiles"
+title = "Path Tiles: A Very Long Path"
+title_es = "Baldosas: un camino larguísimo"
+difficulty = "hard"
+tags = ["math", "matrix", "dynamic-programming"]
+pattern = "dynamic-programming"
+rank = 9
+
+[signature]
+name = "tilingsLong"
+params = [{ name = "n", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

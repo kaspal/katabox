@@ -1,0 +1,1 @@
+{"input":{"a":"abab","b":"baab","letters":"aba","positions":[1,3,2]},"output":[true,true,true]}

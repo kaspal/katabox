@@ -65,6 +65,9 @@ pub(crate) struct ProblemToml {
     /// Required for a function problem; a program problem has none.
     pub signature: Option<Signature>,
     pub judge: Judge,
+    /// A follow-up's base problem (expansion M5, ADR 0035): set exactly when the package
+    /// lives in `<base>/followups/<n>/`, and then the id is `<base>--f<n>`.
+    pub parent: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -98,7 +101,8 @@ pub(crate) fn read_problem_toml(dir: &Path) -> Result<ProblemToml, String> {
         .and_then(|s| toml::from_str(&s).map_err(|e| e.to_string()))
 }
 
-/// Problem folders under `dir`, sorted.
+/// Problem folders under `dir`, sorted; each base problem is followed by its follow-ups
+/// (`<base>/followups/<n>/`, by number; expansion M5).
 pub(crate) fn problem_dirs(dir: &Path) -> std::io::Result<Vec<PathBuf>> {
     let mut dirs: Vec<PathBuf> = fs::read_dir(dir)?
         .flatten()
@@ -106,7 +110,55 @@ pub(crate) fn problem_dirs(dir: &Path) -> std::io::Result<Vec<PathBuf>> {
         .filter(|p| p.is_dir())
         .collect();
     dirs.sort();
-    Ok(dirs)
+    let mut out = Vec::with_capacity(dirs.len());
+    for d in dirs {
+        let followups = d.join("followups");
+        out.push(d);
+        if followups.is_dir() {
+            let mut f: Vec<(u32, PathBuf)> = fs::read_dir(&followups)?
+                .flatten()
+                .map(|e| e.path())
+                .filter(|p| p.is_dir())
+                .map(|p| {
+                    let n = p
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .and_then(|n| n.parse().ok())
+                        .unwrap_or(u32::MAX);
+                    (n, p)
+                })
+                .collect();
+            f.sort();
+            out.extend(f.into_iter().map(|(_, p)| p));
+        }
+    }
+    Ok(out)
+}
+
+/// The problem id a folder must hold: its name, or `<base>--f<n>` for a follow-up in
+/// `<base>/followups/<n>/` (expansion M5).
+pub fn problem_id_of(dir: &Path) -> String {
+    let name = |p: &Path| {
+        p.file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or_default()
+            .to_string()
+    };
+    match dir.parent() {
+        Some(up) if up.file_name().and_then(|s| s.to_str()) == Some("followups") => {
+            let base = up.parent().map(name).unwrap_or_default();
+            format!("{base}--f{}", name(dir))
+        }
+        _ => name(dir),
+    }
+}
+
+/// The base of a follow-up folder, if `dir` is one.
+pub(crate) fn followup_base(dir: &Path) -> Option<String> {
+    let up = dir.parent()?;
+    (up.file_name()?.to_str()? == "followups")
+        .then(|| up.parent()?.file_name()?.to_str().map(str::to_string))
+        .flatten()
 }
 
 /// The problem folders named in `only` (every folder when it is empty). An id that names
@@ -115,10 +167,13 @@ pub fn select_problems(dirs: Vec<PathBuf>, only: &[String]) -> Result<Vec<PathBu
     if only.is_empty() {
         return Ok(dirs);
     }
-    let name = |p: &PathBuf| p.file_name().map(|n| n.to_string_lossy().into_owned());
+    // A base id also selects its follow-ups (expansion M5).
+    let picks = |id: &str, want: &str| {
+        id == want || id.strip_prefix(want).is_some_and(|r| r.starts_with("--f"))
+    };
     let unknown: Vec<&str> = only
         .iter()
-        .filter(|id| !dirs.iter().any(|p| name(p).as_deref() == Some(id.as_str())))
+        .filter(|w| !dirs.iter().any(|p| problem_id_of(p) == **w))
         .map(String::as_str)
         .collect();
     if !unknown.is_empty() {
@@ -126,7 +181,10 @@ pub fn select_problems(dirs: Vec<PathBuf>, only: &[String]) -> Result<Vec<PathBu
     }
     Ok(dirs
         .into_iter()
-        .filter(|p| name(p).is_some_and(|n| only.contains(&n)))
+        .filter(|p| {
+            let id = problem_id_of(p);
+            only.iter().any(|w| picks(&id, w))
+        })
         .collect())
 }
 
@@ -338,7 +396,7 @@ fn size_text(b: TestBytes) -> String {
 /// Returns the parsed difficulty (when readable) and the list of errors.
 pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
     let mut errs = Vec::new();
-    let folder = dir.file_name().and_then(|s| s.to_str()).unwrap_or_default();
+    let folder = problem_id_of(dir);
 
     let meta = match read_problem_toml(dir) {
         Ok(m) => m,
@@ -350,6 +408,44 @@ pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<Stri
             "id {:?} must match folder name {:?}",
             meta.id, folder
         ));
+    }
+    // Follow-ups (expansion M5, ADR 0035): `parent` names the base, the folder is a
+    // number 1-9, and the pattern is the base's; base ids never contain `--`.
+    match (followup_base(dir), &meta.parent) {
+        (Some(base), Some(parent)) => {
+            if &base != parent {
+                errs.push(format!(
+                    "parent {parent:?} must be the base folder {base:?}"
+                ));
+            }
+            let n = dir.file_name().and_then(|s| s.to_str()).unwrap_or_default();
+            if !matches!(n.parse::<u32>(), Ok(1..=9)) {
+                errs.push(format!("a follow-up folder is a number 1-9, got {n:?}"));
+            }
+            match read_problem_toml(&dir.join("../..")) {
+                Ok(b) if b.pattern != meta.pattern => errs.push(format!(
+                    "a follow-up keeps its base's pattern {:?}",
+                    b.pattern
+                )),
+                Ok(b) if b.mode != meta.mode => {
+                    errs.push("a follow-up keeps its base's mode".into())
+                }
+                Ok(_) => {}
+                Err(e) => errs.push(format!("base problem.toml: {e}")),
+            }
+        }
+        (Some(_), None) => errs.push("a follow-up needs parent = \"<base id>\"".into()),
+        (None, Some(_)) => {
+            errs.push("parent is only for follow-ups (in <base>/followups/<n>/)".into())
+        }
+        (None, None) => {
+            if meta.id.contains("--") {
+                errs.push(
+                    "a problem id never contains \"--\" (it is kept for follow-ups and packs)"
+                        .into(),
+                );
+            }
+        }
     }
     for file in crate::scaffold::files_with_todo(dir) {
         errs.push(format!(
@@ -1334,6 +1430,77 @@ mod tag_names {
         assert!(
             missing.is_empty(),
             "add these tags to tag.names in en.json and es.json: {missing:?}"
+        );
+    }
+}
+
+/// Follow-ups (expansion M5, ADR 0035): found after their base, named `<base>--f<n>`,
+/// selected with their base, and refused when misplaced or misnamed.
+#[cfg(test)]
+mod followups {
+    use std::fs;
+    use std::path::Path;
+
+    use super::{problem_dirs, problem_id_of, select_problems, validate_problem_meta};
+
+    fn fixture(name: &str) -> std::path::PathBuf {
+        let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let root =
+            std::env::temp_dir().join(format!("kb-pack-followups-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        super::tests::copy_dir(
+            &repo.join("content/problems/two-sum"),
+            &root.join("two-sum"),
+        );
+        root
+    }
+
+    #[test]
+    fn found_named_and_selected_with_their_base() {
+        let root = fixture("found");
+        let dirs = problem_dirs(&root).unwrap();
+        let ids: Vec<String> = dirs.iter().map(|d| problem_id_of(d)).collect();
+        assert_eq!(ids, ["two-sum", "two-sum--f1", "two-sum--f2"]);
+        let base = select_problems(dirs.clone(), &["two-sum".into()]).unwrap();
+        assert_eq!(base.len(), 3, "a base selects its follow-ups");
+        let one = select_problems(dirs.clone(), &["two-sum--f1".into()]).unwrap();
+        assert_eq!(one.len(), 1);
+        assert!(select_problems(dirs, &["two-sum--f9".into()]).is_err());
+        let (_, errs) = validate_problem_meta(&root.join("two-sum/followups/1"));
+        assert!(errs.is_empty(), "{errs:?}");
+    }
+
+    #[test]
+    fn misplaced_or_misnamed_follow_ups_are_refused() {
+        let root = fixture("bad");
+        let f = root.join("two-sum/followups/1");
+        let toml = fs::read_to_string(f.join("problem.toml")).unwrap();
+        let check = |text: String| {
+            fs::write(f.join("problem.toml"), text).unwrap();
+            validate_problem_meta(&f).1.join("\n")
+        };
+        assert!(check(toml.replace("parent = \"two-sum\"\n", "")).contains("needs parent"));
+        assert!(
+            check(toml.replace("parent = \"two-sum\"", "parent = \"budget-pair\""))
+                .contains("base folder")
+        );
+        assert!(check(toml.replace("arrays-hashing", "graphs")).contains("base's pattern"));
+        assert!(
+            check(toml.replace("two-sum--f1", "two-sum-f1")).contains("must match folder name")
+        );
+        // A base problem never has a parent, and its id never contains `--`.
+        let base = root.join("two-sum");
+        let btoml = fs::read_to_string(base.join("problem.toml")).unwrap();
+        fs::write(
+            base.join("problem.toml"),
+            format!("parent = \"x\"\n{btoml}"),
+        )
+        .unwrap();
+        assert!(
+            validate_problem_meta(&base)
+                .1
+                .join("\n")
+                .contains("only for follow-ups")
         );
     }
 }

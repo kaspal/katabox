@@ -1,0 +1,18 @@
+id = "trapped-rain--f1"
+parent = "trapped-rain"
+title = "Trapped Rain: A Whole Garden"
+title_es = "Lluvia atrapada: todo un jardín"
+difficulty = "hard"
+tags = ["heap", "matrix", "bfs"]
+pattern = "two-pointers"
+rank = 9
+
+[signature]
+name = "trappedRainGrid"
+params = [{ name = "heights", type = "int[][]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 400 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

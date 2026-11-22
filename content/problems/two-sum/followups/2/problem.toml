@@ -1,0 +1,18 @@
+id = "two-sum--f2"
+parent = "two-sum"
+title = "Two Sum: Closest Pair"
+title_es = "Suma de dos: el par más cercano"
+difficulty = "medium"
+tags = ["array", "two-pointers", "sorting"]
+pattern = "arrays-hashing"
+rank = 7
+
+[signature]
+name = "closestSum"
+params = [{ name = "nums", type = "int[]" }, { name = "target", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

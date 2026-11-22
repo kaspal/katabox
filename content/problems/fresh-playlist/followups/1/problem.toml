@@ -1,0 +1,18 @@
+id = "fresh-playlist--f1"
+parent = "fresh-playlist"
+title = "Fresh Playlist: An Encore Allowed"
+title_es = "Lista fresca: se permite un bis"
+difficulty = "medium"
+tags = ["sliding-window", "hash-map"]
+pattern = "sliding-window"
+rank = 7
+
+[signature]
+name = "freshWithEncores"
+params = [{ name = "plays", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

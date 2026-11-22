@@ -137,6 +137,7 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         // The app runs it on custom test inputs (ADR 0016).
         validator: fs::read_to_string(dir.join("validate.py")).ok(),
         sql,
+        parent: meta.parent,
     })
 }
 

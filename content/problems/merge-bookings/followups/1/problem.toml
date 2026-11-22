@@ -1,0 +1,18 @@
+id = "merge-bookings--f1"
+parent = "merge-bookings"
+title = "Merge Bookings: Both Rooms Busy"
+title_es = "Fusionar reservas: las dos salas ocupadas"
+difficulty = "medium"
+tags = ["intervals", "sorting", "two-pointers"]
+pattern = "intervals"
+rank = 7
+
+[signature]
+name = "bothBusy"
+params = [{ name = "roomA", type = "int[][]" }, { name = "roomB", type = "int[][]" }]
+returns = "int[][]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

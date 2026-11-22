@@ -1,0 +1,18 @@
+id = "checkout-merge--f1"
+parent = "checkout-merge"
+title = "Checkout Merge: No Repeated Tickets"
+title_es = "Fusionar cajas: sin tiques repetidos"
+difficulty = "medium"
+tags = ["linked-list", "heap", "sorting"]
+pattern = "linked-list"
+rank = 8
+
+[signature]
+name = "mergeDistinct"
+params = [{ name = "lines", type = "ListNode[]" }]
+returns = "ListNode"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

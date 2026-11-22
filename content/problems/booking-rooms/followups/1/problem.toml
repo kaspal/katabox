@@ -1,0 +1,18 @@
+id = "booking-rooms--f1"
+parent = "booking-rooms"
+title = "Booking Rooms: Assign the Rooms"
+title_es = "Reservar salas: asigna las salas"
+difficulty = "medium"
+tags = ["intervals", "heap", "sorting"]
+pattern = "intervals"
+rank = 8
+
+[signature]
+name = "assignRooms"
+params = [{ name = "meetings", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

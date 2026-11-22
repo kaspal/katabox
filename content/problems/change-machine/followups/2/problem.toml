@@ -1,0 +1,18 @@
+id = "change-machine--f2"
+parent = "change-machine"
+title = "Change Machine: One of Each"
+title_es = "Máquina de cambio: uno de cada"
+difficulty = "medium"
+tags = ["dynamic-programming", "knapsack"]
+pattern = "dynamic-programming"
+rank = 8
+
+[signature]
+name = "fewestTokens"
+params = [{ name = "tokens", type = "int[]" }, { name = "amount", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

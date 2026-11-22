@@ -175,11 +175,7 @@ fn judge_timed(
 
 /// Run every sandbox check on one problem folder.
 pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
-    let id = dir
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or_default()
-        .to_string();
+    let id = crate::validate::problem_id_of(dir);
     let mut out = Vec::new();
     let mut add = |check: Check, ok: bool, detail: String| {
         out.push(Finding {

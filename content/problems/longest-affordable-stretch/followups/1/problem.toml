@@ -1,0 +1,18 @@
+id = "longest-affordable-stretch--f1"
+parent = "longest-affordable-stretch"
+title = "Longest Affordable Stretch: With Refunds"
+title_es = "El tramo asequible más largo: con reembolsos"
+difficulty = "hard"
+tags = ["prefix-sum", "binary-search", "array"]
+pattern = "sliding-window"
+rank = 9
+
+[signature]
+name = "longestWithRefunds"
+params = [{ name = "costs", type = "int[]" }, { name = "budget", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,18 @@
+id = "backpack-weight--f1"
+parent = "backpack-weight"
+title = "Backpack: Several of Each"
+title_es = "Mochila: varias de cada"
+difficulty = "hard"
+tags = ["dynamic-programming", "knapsack"]
+pattern = "dynamic-programming"
+rank = 9
+
+[signature]
+name = "bestPackCopies"
+params = [{ name = "weights", type = "int[]" }, { name = "values", type = "int[]" }, { name = "counts", type = "int[]" }, { name = "capacity", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 500 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,18 @@
+id = "cheapest-route--f1"
+parent = "cheapest-route"
+title = "Cheapest Route: At Most k Roads"
+title_es = "Ruta más barata: como mucho k carreteras"
+difficulty = "hard"
+tags = ["graph", "shortest-path", "dynamic-programming"]
+pattern = "graphs"
+rank = 9
+
+[signature]
+name = "cheapestWithin"
+params = [{ name = "n", type = "int" }, { name = "roads", type = "int[][]" }, { name = "start", type = "int" }, { name = "goal", type = "int" }, { name = "k", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 400 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256
