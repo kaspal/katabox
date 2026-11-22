@@ -64,9 +64,9 @@ top bar) jumps to any page, problem or Learn topic, and switches theme and langu
 The Home answers "what now?" in a few minutes of practice.
 
 - **Today's session** lists one to three short items: **Continue** your latest draft,
-  the **Daily problem**, the **Daily kata**, and the next problem on your path, each with
-  an estimate (about 5 minutes to continue, 10 for a kata, 10 / 20 / 30 for an Easy /
-  Medium / Hard problem). A problem that is both the daily pick and the next step on
+  the **Daily problem**, the **Daily kata**, and the next step on your path (a topic to
+  **Watch**, or its next problem), each with an estimate (about 5 minutes to continue or
+  watch, 10 for a kata, 10 / 20 / 30 for an Easy / Medium / Hard problem). A problem that is both the daily pick and the next step on
   your path appears once, marked **On your path**. Finished items get a check mark;
   **Start session** opens the first one left. **Customise** opens Settings → Practice,
   where the daily problem, katas and the other cards are turned on or off.

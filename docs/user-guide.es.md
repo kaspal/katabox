@@ -68,9 +68,10 @@ idioma.
 Inicio responde a «¿y ahora qué?» en unos minutos de práctica.
 
 - **Sesión de hoy** muestra de uno a tres pasos cortos: **Continuar** tu último
-  borrador, el **Problema del día**, la **Kata del día** y el siguiente problema de tu
-  ruta, cada uno con una estimación (unos 5 minutos para continuar, 10 para una kata,
-  10 / 20 / 30 para un problema Fácil / Medio / Difícil). Un problema que es a la vez el
+  borrador, el **Problema del día**, la **Kata del día** y el siguiente paso de tu ruta
+  (un tema para **Ver**, o su siguiente problema), cada uno con una estimación (unos 5
+  minutos para continuar o ver, 10 para una kata, 10 / 20 / 30 para un problema Fácil /
+  Medio / Difícil). Un problema que es a la vez el
   del día y el siguiente de tu ruta aparece una sola vez, marcado **En tu ruta**. Lo
   terminado lleva una marca; **Empezar sesión** abre el primero que queda.
   **Personalizar** abre Ajustes → Práctica, donde se activan o desactivan el problema

@@ -19,11 +19,15 @@ hooks only gather data the app already has. No new storage, no new command.
      `practice.daily` is on.
   3. *Kata*: the daily kata, when katas are on (`practice.rusty`, the only kata switch)
      and one is available (`kata_options.daily` not empty, or today's session exists).
-  4. *Path*: the path's next problem, when there is room.
+  4. *Path*, when there is room: "Watch: <topic>" (about 5 minutes, linking to the
+     topic) when the current step is unwatched and has no unsolved linked problem;
+     otherwise the step's first unsolved problem, else the first one further along.
   - No duplicates: a daily pick that is also the path's next problem is one item with
     the "On your path" badge; a draft that is the daily or the path problem is not
     listed separately.
-  - A brand-new user (nothing solved) gets "Start here": the path's first problem.
+  - A brand-new user (nothing solved) gets "Start here" first: "Start here: watch
+    <topic>" when the first step is such a topic, else the path's first problem. So the
+    session and the path never disagree about where the user is.
   - Minutes: continue 5, kata 10, problems Easy 10 / Medium 20 / Hard 30. The header
     shows the sum rounded to the nearest 5.
   - Done today: daily when solved today, kata when today's kata ended with a solve,
@@ -40,11 +44,13 @@ hooks only gather data the app already has. No new storage, no new command.
   `ui.motion`).
 - **This week** is Monday to Sunday from the heatmap's activity rows; **Solved** is three
   nested rings from the problem list's counts.
-- **Watch next** (three Learn topics): the path's next topic; a watched topic with an
-  unsolved linked problem (`topic_to_review`); and an unwatched topic for the daily
-  problem's pattern, which leans toward the weakest pattern (ADR 0019); else the next
-  unwatched path topic, else any. The thumbnails are static SVGs per subject family
-  drawn with the `--viz-*` tokens; the Learn engine never runs on the Home. No step
+- **Watch next** (three Learn topics, never one the session already offers): the
+  path's next topic; a watched topic with an unsolved linked problem
+  (`topic_to_review`); then, until there are three, unwatched topics for the daily
+  problem's pattern (which leans toward the weakest pattern, ADR 0019), unwatched path
+  topics, and any unwatched topic. The thumbnails are static SVGs per subject family
+  drawn with the `--viz-*` tokens (curves for complexity, recursion and math; bars,
+  graph, tree, grid and strip for the others); the Learn engine never runs on the Home. No step
   counts are shown: the catalogue summaries do not have them.
 - **Keep it fresh:** Reviews, Study plan and Rusty in compact form (one line and one
   action); a card whose switch is off is not rendered and the row reflows. Review's
@@ -57,6 +63,9 @@ hooks only gather data the app already has. No new storage, no new command.
 - `src-tauri/icons/katabox.svg` is the approved design, with the `{ }` braces drawn as
   stroked paths (no font). `pnpm tauri icon src-tauri/icons/katabox.svg` (from
   `apps/desktop`) makes every size.
+- The chevron is drawn screen-aligned (no shear) and centred on the right face: sheared
+  like the braces, its top stroke flattened and it read as a "7" (a flaw in the
+  mockup). The braces stay sheared; the right one mirrors the left exactly.
 - At 16-32 px the braces turn to noise, so `katabox-small.svg` (cube and a bolder
   chevron) is rasterised into `icon.ico`'s 16, 24 and 32 px layers and `32x32.png` by
   `pnpm icon-small`, which keeps the ICO's larger layers and reads the result back.
