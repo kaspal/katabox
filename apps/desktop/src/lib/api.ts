@@ -125,6 +125,8 @@ export const api = {
   thirdPartyNotices: (): Promise<string | null> => call(commands.thirdPartyNotices()),
   /** Settings → Appearance: the default window size, centred (window memory, ui-polish). */
   resetWindow: (): Promise<null> => call(commands.resetWindow()),
+  /** The main window rendered: show it and close the splash (ADR 0041). */
+  appReady: (): Promise<null> => call(commands.appReady()),
   activity: (sinceMs: number): Promise<ActivityRow[]> => call(commands.activity(sinceMs)),
   solvedBreakdown: (lang: UiLang): Promise<SolvedBreakdown> => call(commands.solvedBreakdown(lang)),
   reviewSummary: (today: string): Promise<ReviewSummary> => call(commands.reviewSummary(today)),

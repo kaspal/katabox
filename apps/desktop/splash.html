@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- The startup splash (ADR 0041): a separate, static page in its own frameless window.
+     No React, no i18next, no IPC: the window is in no capability and this page loads no
+     Tauri API. The shell fades it out (adds .out) and closes it. -->
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KataBox</title>
+    <script type="module" src="/src/splash/splash.ts"></script>
+  </head>
+  <body>
+    <div class="sp" role="img" aria-label="KataBox">
+      <svg class="art" width="640" height="400" viewBox="0 0 640 400" aria-hidden="true">
+        <defs>
+          <pattern id="spGrid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path class="grid-line" d="M32 0H0V32" fill="none" />
+          </pattern>
+          <radialGradient id="spGlow">
+            <stop class="glow-stop-in" offset="0" />
+            <stop class="glow-stop-out" offset="1" />
+          </radialGradient>
+        </defs>
+        <rect width="640" height="400" fill="url(#spGrid)" />
+        <circle class="glow f" cx="320" cy="150" r="130" fill="url(#spGlow)" />
+        <circle class="ring" cx="320" cy="150" r="40" fill="none" stroke-width="1.5" />
+        <g class="sparks" transform="translate(320 150)"></g>
+        <g transform="translate(260 92)">
+          <path class="f fTop face-top" d="M60 0 118 32 60 64 2 32Z" />
+          <path class="f fL face-left" d="M2 32 60 64 60 130 2 98Z" />
+          <path class="f fR face-right" d="M118 32 60 64 60 130 118 98Z" />
+          <g class="brace">
+            <g transform="matrix(0.744 0 0 0.744 -35.2 -29.76)">
+              <g class="mark" transform="matrix(1 0.564 0 1 0 0)" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M70 80 C63 80 61 83 61 89 L61 95 C61 98.5 59 100 52 101 C59 102 61 103.5 61 107 L61 113 C61 119 63 122 70 122" />
+                <path d="M108 80 C115 80 117 83 117 89 L117 95 C117 98.5 119 100 126 101 C119 102 117 103.5 117 107 L117 113 C117 119 115 122 108 122" />
+              </g>
+            </g>
+          </g>
+          <path
+            class="chev mark"
+            d="M78 82 l16 11 -16 11"
+            fill="none"
+            stroke-width="7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            transform="matrix(1 -0.55 0 1 0 47)"
+          />
+        </g>
+      </svg>
+
+      <div class="title">
+        <div class="word"><span class="ch">K</span><span class="ch">a</span><span class="ch">t</span><span class="ch">a</span><span class="ch box">B</span><span class="ch box">o</span><span class="ch box">x</span></div>
+        <div class="tag" data-text="tag">Practice, offline. One kata at a time.</div>
+      </div>
+
+      <div class="foot">
+        <div class="status">
+          <span class="s1" data-text="s1">Opening your library…</span>
+          <span class="s2" data-text="s2">Waking the sandbox…</span>
+          <span class="s3" data-text="s3">Ready</span>
+        </div>
+        <span class="version"></span>
+      </div>
+      <div class="track"><div class="bar"></div></div>
+    </div>
+  </body>
+</html>

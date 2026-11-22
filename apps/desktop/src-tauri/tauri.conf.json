@@ -18,6 +18,22 @@
         "height": 800,
         "minWidth": 960,
         "minHeight": 600
+      },
+      {
+        "label": "splash",
+        "title": "KataBox",
+        "url": "splash.html",
+        "create": false,
+        "width": 640,
+        "height": 400,
+        "decorations": false,
+        "resizable": false,
+        "center": true,
+        "skipTaskbar": true,
+        "visible": true,
+        "focus": false,
+        "shadow": true,
+        "backgroundColor": "#0b0d14"
       }
     ],
     "security": {

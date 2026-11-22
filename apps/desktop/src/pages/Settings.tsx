@@ -43,7 +43,7 @@ import { PacksSection } from "@/practice/packs";
 import { SETTINGS_SEARCH_INDEX } from "@/lib/settingsIndex";
 import { SnippetsPanel } from "@/practice/snippets";
 import { queryKeys, useAppInfo, useCalibration } from "@/lib/queries";
-import { usePracticePrefs } from "@/lib/practice";
+import { SPLASH_MODES, type SplashMode, usePracticePrefs, useSplashPref } from "@/lib/practice";
 import {
   EDITOR_THEMES,
   FONT_SIZES,
@@ -484,6 +484,32 @@ function LearnSection() {
 }
 
 /** Settings → Appearance → Window: back to the default size, centred (window memory). */
+/** Settings → Appearance → Startup animation (ADR 0041): read by the shell at start. */
+function SplashRow() {
+  const { t } = useTranslation();
+  const [mode, setMode] = useSplashPref();
+  return (
+    <Row label={t("settings.splash.label")}>
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        size="sm"
+        aria-label={t("settings.splash.label")}
+        value={mode}
+        onValueChange={(v) => v && setMode(v as SplashMode)}
+        data-testid="splash-setting"
+      >
+        {SPLASH_MODES.map((m) => (
+          <ToggleGroupItem key={m} value={m} className="px-3">
+            {t(`settings.splash.${m}`)}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+      <p className="mt-1.5 break-normal text-xs text-muted-foreground">{t("settings.splash.help")}</p>
+    </Row>
+  );
+}
+
 function ResetWindowRow() {
   const { t } = useTranslation();
   const reset = useMutation({ mutationFn: api.resetWindow });
@@ -704,6 +730,7 @@ export function Settings() {
                     ))}
                   </ToggleGroup>
                 </Row>
+                <SplashRow />
                 <ResetWindowRow />
               </dl>
             </Section>

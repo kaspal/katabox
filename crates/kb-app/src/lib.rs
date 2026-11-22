@@ -33,6 +33,7 @@ pub mod rating;
 pub mod reading;
 mod root;
 pub mod shrink;
+pub mod splash;
 pub mod stress;
 pub mod transfer;
 pub mod uninstall;

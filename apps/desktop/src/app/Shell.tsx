@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CommandPalette } from "@/app/CommandPalette";
 import { ShortcutsDialog } from "@/app/ShortcutsDialog";
 import { WhatsNewDialog, useWhatsNew } from "@/app/WhatsNew";
+import { useAppReady } from "@/app/appReady";
 import { onOpenPalette, onOpenShortcuts, openShortcuts } from "@/app/shortcuts";
 import { SearchEverything, onOpenSearchEverything } from "@/app/SearchEverything";
 import { DEV_NAV, NAV } from "@/app/nav";
@@ -51,6 +52,8 @@ export function Shell() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const info = useAppInfo();
+  // Show the main window (and close the splash) after this first render (ADR 0041).
+  useAppReady(!info.isPending);
   const { focus } = useFocusMode();
   const firstRun = useFirstRun();
   const whatsNew = useWhatsNew(info.data?.app_version, firstRun.onboarding, firstRun.show);
