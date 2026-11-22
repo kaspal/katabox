@@ -256,14 +256,18 @@
         "daily": "Daily problem: {{title}}",
         "kata": "Daily kata",
         "path": "Next on your path: {{title}}",
-        "start": "Start here: {{title}}"
+        "start": "Start here: {{title}}",
+        "watch": "Watch: {{title}}",
+        "startWatch": "Start here: watch {{title}}"
       },
       "sub": {
         "continue": "Your latest draft",
         "daily": "keeps your streak alive",
         "kata": "Timed · problems you have already solved",
         "path": "the next problem on your path",
-        "start": "the first problem on your path"
+        "start": "the first problem on your path",
+        "watch": "the next topic on your path · a short animation",
+        "startWatch": "the first step on your path · a short animation"
       }
     },
     "week": {

@@ -256,14 +256,18 @@
         "daily": "Problema del día: {{title}}",
         "kata": "Kata del día",
         "path": "Siguiente en tu ruta: {{title}}",
-        "start": "Empieza aquí: {{title}}"
+        "start": "Empieza aquí: {{title}}",
+        "watch": "Ver: {{title}}",
+        "startWatch": "Empieza aquí: ver {{title}}"
       },
       "sub": {
         "continue": "Tu último borrador",
         "daily": "mantiene tu racha",
         "kata": "Con tiempo · problemas que ya resolviste",
         "path": "el siguiente problema de tu ruta",
-        "start": "el primer problema de tu ruta"
+        "start": "el primer problema de tu ruta",
+        "watch": "el siguiente tema de tu ruta · una animación corta",
+        "startWatch": "el primer paso de tu ruta · una animación corta"
       }
     },
     "week": {

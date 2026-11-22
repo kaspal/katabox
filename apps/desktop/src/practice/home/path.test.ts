@@ -52,6 +52,19 @@ describe("path progress", () => {
     const g = buildPathProgress(w.path, w.topics, w.problems, new Set());
     expect(g.nextProblem).toBeNull();
     expect(g.upcomingProblem?.id).toBe("p-t2");
+    // Unwatched, nothing to solve: watch it.
+    expect(g.watchTopic?.id).toBe("t0");
+  });
+
+  it("watches a step only when it is unwatched and has no problem left", () => {
+    const w = world(3, { t1: ["a", "b"] }, ["p-t0", "a", "b"]);
+    // t0 done; t1 unwatched with every problem solved → watch t1.
+    expect(buildPathProgress(w.path, w.topics, w.problems, new Set(["t0"])).watchTopic?.id).toBe("t1");
+    // t1 watched (and solved) → done; t2 has an unsolved problem → no watch item.
+    const g = buildPathProgress(w.path, w.topics, w.problems, new Set(["t0", "t1"]));
+    expect(g.current).toBe(2);
+    expect(g.watchTopic).toBeNull();
+    expect(g.nextProblem?.id).toBe("p-t2");
   });
 
   it("gives the first unsolved linked problem of the current step", () => {

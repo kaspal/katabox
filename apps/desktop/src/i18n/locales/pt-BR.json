@@ -256,14 +256,18 @@
         "daily": "Problema do dia: {{title}}",
         "kata": "Kata do dia",
         "path": "Próximo na sua trilha: {{title}}",
-        "start": "Comece aqui: {{title}}"
+        "start": "Comece aqui: {{title}}",
+        "watch": "Assistir: {{title}}",
+        "startWatch": "Comece aqui: assista {{title}}"
       },
       "sub": {
         "continue": "Seu último rascunho",
         "daily": "mantém sua sequência",
         "kata": "Cronometrado · problemas que você já resolveu",
         "path": "o próximo problema da sua trilha",
-        "start": "o primeiro problema da sua trilha"
+        "start": "o primeiro problema da sua trilha",
+        "watch": "o próximo tópico da sua trilha · uma animação curta",
+        "startWatch": "o primeiro passo da sua trilha · uma animação curta"
       }
     },
     "week": {

@@ -32,6 +32,9 @@ export type PathProgress = {
   /** The first unsolved linked problem from the current step on (a step may have none):
    * the session's path item and a new user's "Start here". */
   upcomingProblem: ProblemSummary | null;
+  /** The current step's topic when it is unwatched and has no unsolved linked problem:
+   * the session suggests watching it. */
+  watchTopic: LearnTopicSummary | null;
 };
 
 export const WINDOW_BEFORE = 2;
@@ -86,6 +89,7 @@ export function buildPathProgress(
         .slice(current)
         .flatMap((s) => s.linked)
         .find((p) => p.status !== "solved") ?? null,
+    watchTopic: cur && !cur.viewed && !cur.linked.some((p) => p.status !== "solved") ? cur.topic : null,
   };
 }
 

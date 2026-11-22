@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ProblemSummary } from "@/bindings";
+import type { LearnTopicSummary, ProblemSummary } from "@/bindings";
 import { acceptedOn, buildSession, roundToFive, type SessionInput } from "@/practice/home/session";
 import { weekDays } from "@/practice/home/week";
 
@@ -25,6 +25,7 @@ const base: SessionInput = {
   dailyOn: true,
   kata: null,
   pathNext: null,
+  pathWatch: null,
   solvedToday: new Set(),
   brandNew: false,
 };
@@ -102,6 +103,45 @@ describe("buildSession", () => {
     expect(s.items).toHaveLength(1);
     expect(s.items[0]).toMatchObject({ kind: "start", problemId: "c", onPath: true });
     expect(s.firstOpen?.route).toEqual({ to: "/problems/$problemId", params: { problemId: "c" } });
+  });
+
+  const bigO: LearnTopicSummary = { id: "big-o", subject: "foundations", title: "Big-O", tags: [], problems: [] };
+
+  it("starts a new user on an unwatched first topic: Start here: watch it", () => {
+    const s = buildSession({
+      ...base,
+      brandNew: true,
+      daily: { problem: p("b"), solved: false },
+      pathWatch: bigO,
+      pathNext: p("later"),
+    });
+    expect(s.items.map((i) => i.kind)).toEqual(["startWatch", "daily"]);
+    expect(s.items[0]).toMatchObject({ title: "Big-O", topicId: "big-o", minutes: 5, onPath: true, problemId: null });
+    expect(s.items[0].route).toEqual({ to: "/learn/$subject/$topic", params: { subject: "foundations", topic: "big-o" } });
+    // The later problem is not offered before the topic.
+    expect(s.items.some((i) => i.problemId === "later")).toBe(false);
+  });
+
+  it("suggests watching an unwatched step without problems, in the path slot", () => {
+    const s = buildSession({
+      ...base,
+      continueItem: draft("a"),
+      continueProblem: p("a"),
+      daily: { problem: p("b"), solved: false },
+      pathWatch: bigO,
+      pathNext: p("later"),
+    });
+    expect(s.items.map((i) => i.kind)).toEqual(["continue", "daily", "watch"]);
+    expect(s.items[2]).toMatchObject({ topicId: "big-o", onPath: true, minutes: 5 });
+    expect(s.totalMinutes).toBe(20);
+  });
+
+  it("falls through to the path's next problem once the step is watched", () => {
+    const s = buildSession({ ...base, daily: { problem: p("b"), solved: false }, pathWatch: null, pathNext: p("later") });
+    expect(s.items.map((i) => [i.kind, i.problemId])).toEqual([
+      ["daily", "b"],
+      ["path", "later"],
+    ]);
   });
 
   it("is empty with nothing to do", () => {

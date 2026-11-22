@@ -105,6 +105,8 @@ function SessionRow({ item, n }: { item: SessionItem; n: number }) {
         : t("home.session.sub.continue");
   } else if (item.kind === "kata") {
     sub = t("home.session.sub.kata");
+  } else if (item.kind === "watch" || item.kind === "startWatch") {
+    sub = t(`home.session.sub.${item.kind}`);
   } else {
     sub = (
       <>
@@ -230,6 +232,9 @@ export function WeekCard() {
 
 // --- Solved rings ----------------------------------------------------------------------
 
+/** A ring with any solved problem shows at least a 6° arc, not a dot. */
+export const MIN_ARC = 6 / 360;
+
 const RINGS: { d: Difficulty; r: number; w: number; stroke: string }[] = [
   { d: "easy", r: 50, w: 10, stroke: "stroke-difficulty-easy" },
   { d: "medium", r: 36, w: 8, stroke: "stroke-difficulty-medium" },
@@ -246,58 +251,67 @@ export function SolvedCard() {
   const solved = counts.reduce((s, c) => s + c.solved, 0);
   const total = counts.reduce((s, c) => s + c.total, 0);
   return (
-    <section aria-label={t("home.solved")} className={cn(CARD, "flex flex-1 items-center gap-5 p-5")} data-testid="solved-card">
-      {problems.isPending ? (
-        <Skeleton className="h-[104px] w-full" />
-      ) : problems.error ? (
-        <ErrorNotice error={problems.error} onRetry={() => void problems.refetch()} />
-      ) : (
-        <>
-          <svg width="104" height="104" viewBox="0 0 120 120" role="img" aria-label={t("home.rings.aria", { solved, total })}>
-            {counts.map((c) => {
-              const len = 2 * Math.PI * c.r;
-              const frac = c.total > 0 ? c.solved / c.total : 0;
-              return (
-                <g key={c.d}>
-                  <circle cx="60" cy="60" r={c.r} fill="none" className="stroke-accent" strokeWidth={c.w} />
-                  {frac > 0 && (
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r={c.r}
-                      fill="none"
-                      className={c.stroke}
-                      strokeWidth={c.w}
-                      strokeLinecap="round"
-                      strokeDasharray={`${Math.max(frac * len, 0.5)} ${len}`}
-                      transform="rotate(-90 60 60)"
-                    />
-                  )}
-                </g>
-              );
-            })}
-            <text x="60" y="58" textAnchor="middle" className="fill-foreground text-[22px] font-bold">
-              {solved}
-            </text>
-            <text x="60" y="74" textAnchor="middle" className="fill-muted-foreground text-[10px]">
-              {t("home.rings.of", { total })}
-            </text>
-          </svg>
-          <div className="flex flex-1 flex-col gap-2 text-[13px]">
-            {counts.map((c) => (
-              <div key={c.d} className="flex items-center justify-between gap-2">
-                <DifficultyLabel difficulty={c.d} />
-                <span className="tabular-nums" data-testid={`solved-${c.d}`}>
-                  {t("home.solvedOf", { solved: c.solved, total: c.total })}
-                </span>
-              </div>
-            ))}
-            <Link to="/progress" className="text-xs text-primary hover:underline">
-              {t("home.rings.open")} →
-            </Link>
-          </div>
-        </>
-      )}
+    <section
+      aria-labelledby="home-solved-title"
+      className={cn(CARD, "flex flex-1 flex-col p-5")}
+      data-testid="solved-card"
+    >
+      <h2 id="home-solved-title" className="text-[13px] font-semibold">
+        {t("home.solved")}
+      </h2>
+      <div className="flex flex-1 items-center gap-5 pt-3">
+        {problems.isPending ? (
+          <Skeleton className="h-[104px] w-full" />
+        ) : problems.error ? (
+          <ErrorNotice error={problems.error} onRetry={() => void problems.refetch()} />
+        ) : (
+          <>
+            <svg width="104" height="104" viewBox="0 0 120 120" role="img" aria-label={t("home.rings.aria", { solved, total })}>
+              {counts.map((c) => {
+                const len = 2 * Math.PI * c.r;
+                const frac = c.total > 0 ? c.solved / c.total : 0;
+                return (
+                  <g key={c.d}>
+                    <circle cx="60" cy="60" r={c.r} fill="none" className="stroke-accent" strokeWidth={c.w} />
+                    {frac > 0 && (
+                      <circle
+                        cx="60"
+                        cy="60"
+                        r={c.r}
+                        fill="none"
+                        className={c.stroke}
+                        strokeWidth={c.w}
+                        strokeLinecap="round"
+                        strokeDasharray={`${Math.max(frac * len, MIN_ARC * len)} ${len}`}
+                        transform="rotate(-90 60 60)"
+                      />
+                    )}
+                  </g>
+                );
+              })}
+              <text x="60" y="58" textAnchor="middle" className="fill-foreground text-[22px] font-bold">
+                {solved}
+              </text>
+              <text x="60" y="74" textAnchor="middle" className="fill-muted-foreground text-[10px]">
+                {t("home.rings.of", { total })}
+              </text>
+            </svg>
+            <div className="flex flex-1 flex-col gap-2 text-[13px]">
+              {counts.map((c) => (
+                <div key={c.d} className="flex items-center justify-between gap-2">
+                  <DifficultyLabel difficulty={c.d} />
+                  <span className="tabular-nums" data-testid={`solved-${c.d}`}>
+                    {t("home.solvedOf", { solved: c.solved, total: c.total })}
+                  </span>
+                </div>
+              ))}
+              <Link to="/progress" className="text-xs text-primary hover:underline">
+                {t("home.rings.open")} →
+              </Link>
+            </div>
+          </>
+        )}
+      </div>
     </section>
   );
 }

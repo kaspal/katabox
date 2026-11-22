@@ -2,7 +2,7 @@
 // (the latest draft, the daily problem, the daily kata, the path's next problem). Pure
 // rules in `buildSession` (session.test.ts); `useSession` gathers the data.
 import { useMemo } from "react";
-import type { ContinueItem, Difficulty, ProblemSummary } from "@/bindings";
+import type { ContinueItem, Difficulty, LearnTopicSummary, ProblemSummary } from "@/bindings";
 import { useKataOptions } from "@/lib/kata";
 import { useDailyProblem, usePracticePrefs } from "@/lib/practice";
 import { useActivity } from "@/lib/progress";
@@ -10,15 +10,20 @@ import { useContinue, useProblems } from "@/lib/queries";
 import { localToday } from "@/lib/today";
 import type { PathProgress } from "@/practice/home/path";
 
-export type SessionKind = "continue" | "daily" | "kata" | "path" | "start";
+export type SessionKind = "continue" | "daily" | "kata" | "path" | "start" | "watch" | "startWatch";
 
-export type SessionRoute = { to: "/problems/$problemId"; params: { problemId: string } } | { to: "/kata" };
+export type SessionRoute =
+  | { to: "/problems/$problemId"; params: { problemId: string } }
+  | { to: "/learn/$subject/$topic"; params: { subject: string; topic: string } }
+  | { to: "/kata" };
 
 export type SessionItem = {
   kind: SessionKind;
   /** The problem's title (null for the kata, whose title is a translation). */
   title: string | null;
   problemId: string | null;
+  /** The Learn topic of a watch item. */
+  topicId: string | null;
   difficulty: Difficulty | null;
   pattern: string | null;
   route: SessionRoute;
@@ -46,6 +51,9 @@ export type SessionInput = {
   /** null: katas are off, or no kata is available today. */
   kata: { doneToday: boolean } | null;
   pathNext: ProblemSummary | null;
+  /** The path's current topic when it is unwatched and has no problem left to solve: the
+   * path item is then "watch this topic" (it wins over `pathNext`). */
+  pathWatch: LearnTopicSummary | null;
   /** Problems Accepted today (local day). */
   solvedToday: ReadonlySet<string>;
   /** No problem solved yet: the session starts with the path's first problem. */
@@ -56,6 +64,7 @@ export const MAX_ITEMS = 3;
 export const MINUTES: Record<Difficulty, number> = { easy: 10, medium: 20, hard: 30 };
 export const CONTINUE_MINUTES = 5;
 export const KATA_MINUTES = 10;
+export const WATCH_MINUTES = 5;
 
 const problemRoute = (problemId: string): SessionRoute => ({ to: "/problems/$problemId", params: { problemId } });
 
@@ -64,6 +73,7 @@ function problemItem(kind: SessionKind, p: ProblemSummary, doneToday: boolean, o
     kind,
     title: p.title,
     problemId: p.id,
+    topicId: null,
     difficulty: p.difficulty,
     pattern: p.pattern,
     route: problemRoute(p.id),
@@ -73,18 +83,39 @@ function problemItem(kind: SessionKind, p: ProblemSummary, doneToday: boolean, o
   };
 }
 
+function watchItem(kind: "watch" | "startWatch", t: LearnTopicSummary): SessionItem {
+  return {
+    kind,
+    title: t.title,
+    problemId: null,
+    topicId: t.id,
+    difficulty: null,
+    pattern: null,
+    route: { to: "/learn/$subject/$topic", params: { subject: t.subject, topic: t.id } },
+    minutes: WATCH_MINUTES,
+    doneToday: false,
+    onPath: true,
+  };
+}
+
 export function roundToFive(minutes: number): number {
   return Math.round(minutes / 5) * 5;
 }
 
 export function buildSession(input: SessionInput): Session {
   const items: SessionItem[] = [];
-  const pathId = input.pathNext?.id ?? null;
+  const watch = input.pathWatch;
+  // A topic to watch comes before any later problem on the path.
+  const pathNext = watch ? null : input.pathNext;
+  const pathId = pathNext?.id ?? null;
   const dailyId = input.dailyOn && input.daily ? input.daily.problem.id : null;
 
-  if (input.brandNew && input.pathNext) {
+  if (input.brandNew && watch) {
+    // A brand-new user whose first step is a topic: "Start here: watch <topic>".
+    items.push(watchItem("startWatch", watch));
+  } else if (input.brandNew && pathNext) {
     // A brand-new user: "Start here" is the path's first problem.
-    items.push(problemItem("start", input.pathNext, input.solvedToday.has(input.pathNext.id), true));
+    items.push(problemItem("start", pathNext, input.solvedToday.has(pathNext.id), true));
   }
 
   // 1. Continue: the latest draft, unless it is solved (from before today) or is the same
@@ -98,6 +129,7 @@ export function buildSession(input: SessionInput): Session {
         kind: "continue",
         title: c.title,
         problemId: c.problem_id,
+        topicId: null,
         difficulty: input.continueProblem?.difficulty ?? null,
         pattern: input.continueProblem?.pattern ?? null,
         route: problemRoute(c.problem_id),
@@ -119,6 +151,7 @@ export function buildSession(input: SessionInput): Session {
       kind: "kata",
       title: null,
       problemId: null,
+      topicId: null,
       difficulty: null,
       pattern: null,
       route: { to: "/kata" },
@@ -128,9 +161,12 @@ export function buildSession(input: SessionInput): Session {
     });
   }
 
-  // 4. The path's next problem, when there is room and it is not already in.
-  if (input.pathNext && items.length < MAX_ITEMS && !items.some((i) => i.problemId === pathId)) {
-    items.push(problemItem("path", input.pathNext, input.solvedToday.has(input.pathNext.id), true));
+  // 4. The path: the topic to watch, or its next problem, when there is room and it is
+  // not already in.
+  if (watch && items.length < MAX_ITEMS && !items.some((i) => i.topicId === watch.id)) {
+    items.push(watchItem("watch", watch));
+  } else if (pathNext && items.length < MAX_ITEMS && !items.some((i) => i.problemId === pathId)) {
+    items.push(problemItem("path", pathNext, input.solvedToday.has(pathNext.id), true));
   }
 
   const list = items.slice(0, MAX_ITEMS);
@@ -174,7 +210,8 @@ export function useSession(path: PathProgress | null | undefined) {
               doneToday: !!kataSession && kataSession.ended_at !== null && kataSession.solved > 0,
             }
           : null,
-      pathNext: path?.upcomingProblem ?? null,
+      pathNext: path?.nextProblem ?? path?.upcomingProblem ?? null,
+      pathWatch: path?.watchTopic ?? null,
       solvedToday: acceptedOn(activity.data ?? [], today),
       brandNew: !(problems.data ?? []).some((p) => p.status === "solved"),
     });
