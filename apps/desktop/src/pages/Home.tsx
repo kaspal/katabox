@@ -11,6 +11,7 @@ import { usePracticePrefs } from "@/lib/practice";
 import { useContinue, useProblems } from "@/lib/queries";
 import { DailyCard, HomeCard as Card, ReviewCard, TopicReviewCard } from "@/practice/HomeCards";
 import { RustyCard } from "@/practice/kata";
+import { PlanCard } from "@/practice/plan";
 import { relativeTime } from "@/lib/time";
 
 export { relativeTime } from "@/lib/time";
@@ -84,6 +85,7 @@ export function Home() {
         {practice.daily && <DailyCard />}
         {practice.review && <ReviewCard />}
         {practice.learnReview && <TopicReviewCard />}
+        {practice.plan && <PlanCard />}
         {practice.rusty && <RustyCard />}
       </div>
     </Page>

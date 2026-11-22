@@ -80,6 +80,8 @@ pub struct TransferCounts {
     pub settings: u32,
     pub kata_sessions: u32,
     pub kata_attempts: u32,
+    pub study_plans: u32,
+    pub plan_items: u32,
 }
 
 fn counts(d: &ExportData) -> TransferCounts {
@@ -99,6 +101,8 @@ fn counts(d: &ExportData) -> TransferCounts {
         settings: n(d.settings.len()),
         kata_sessions: n(d.kata_sessions.len()),
         kata_attempts: n(d.kata_attempts.len()),
+        study_plans: n(d.study_plans.len()),
+        plan_items: n(d.plan_items.len()),
     }
 }
 
@@ -192,6 +196,8 @@ fn validate(f: &ExportFile) -> Result<()> {
         d.settings.len(),
         d.kata_sessions.len(),
         d.kata_attempts.len(),
+        d.study_plans.len(),
+        d.plan_items.len(),
     ];
     if sizes.iter().any(|n| *n > MAX_ROWS) {
         return Err(invalid(format!("more than {MAX_ROWS} records of one kind")));
@@ -354,6 +360,34 @@ fn validate(f: &ExportFile) -> Result<()> {
             check_len(&p, code, MAX_CODE)?;
         }
     }
+    for (i, s) in d.study_plans.iter().enumerate() {
+        let p = format!("study_plans[{i}]");
+        check_time(&p, s.created_at)?;
+        check_day(&p, &s.start_day)?;
+        if !(1..=crate::plan::WEEKS_MAX).contains(&s.weeks)
+            || !(crate::plan::MINUTES_MIN..=crate::plan::MINUTES_MAX).contains(&s.minutes_per_day)
+            || !s.goal.is_object()
+            || s.goal.to_string().len() > 64 * 1024
+        {
+            return Err(invalid(format!("{p}: bad plan")));
+        }
+    }
+    for (i, it) in d.plan_items.iter().enumerate() {
+        let p = format!("plan_items[{i}]");
+        check_time(&p, it.plan_created_at)?;
+        check_time(&p, it.updated_at)?;
+        check_day(&p, &it.day)?;
+        if crate::plan::PlanItemKind::parse(&it.kind).is_none()
+            || !kb_store::plans::PLAN_STATUSES.contains(&it.status.as_str())
+            || it.minutes > 24 * 60
+            || it.position > 100_000
+        {
+            return Err(invalid(format!("{p}: bad plan item")));
+        }
+        if let Some(r) = &it.reference {
+            check_id(&p, r)?;
+        }
+    }
     Ok(())
 }
 
@@ -448,6 +482,7 @@ impl App {
             }
         };
         let stats = self.store.user.import_merge(&data).await?;
+        self.forget_ratings();
         let mut r = ImportResult::default();
         let n = |v: u64| u32::try_from(v).unwrap_or(u32::MAX);
         for s in stats.values() {

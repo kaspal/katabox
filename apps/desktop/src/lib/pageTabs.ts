@@ -6,7 +6,7 @@ import { useCallback, useEffect } from "react";
 import type { JsonValue } from "@/bindings";
 import { useSetting } from "@/lib/settings";
 
-export const PROGRESS_TABS = ["overview", "patterns", "topics", "katas", "history"] as const;
+export const PROGRESS_TABS = ["overview", "patterns", "topics", "plan", "katas", "history"] as const;
 export type ProgressTab = (typeof PROGRESS_TABS)[number];
 
 export const SETTINGS_SECTIONS = ["appearance", "editor", "practice", "languages", "learn", "data", "about"] as const;

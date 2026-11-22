@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 5); // migrations 0001-0005
+    assert_eq!(info.user_schema_version, 6); // migrations 0001-0006
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -657,7 +657,7 @@ async fn submits_drive_reviews_daily_problem_and_streak() {
 /// `PATTERN_TRACK` and the ranks); after one solve the usual daily and next rules apply.
 #[tokio::test]
 async fn a_brand_new_user_starts_at_fundamentals() {
-    use crate::practice::{PATTERN_TRACK, daily_pick, hide_unopened_sql, next_problem};
+    use crate::practice::{PATTERN_TRACK, daily_pick_rated, hide_unopened_sql, next_problem_rated};
     let app = app("brand-new").await;
     let today = "2026-11-14";
     let all = app.all_problems(UiLang::En).await.unwrap();
@@ -686,6 +686,7 @@ async fn a_brand_new_user_starts_at_fundamentals() {
         )
         .await
         .unwrap();
+    app.forget_ratings(); // the store call above bypasses Submit
     // No SQL problem opened yet: SQL is never suggested (ADR 0031).
     let all = hide_unopened_sql(app.all_problems(UiLang::En).await.unwrap(), "");
     assert!(all.iter().all(|p| p.mode != kb_core::ProblemMode::Sql));
@@ -694,7 +695,10 @@ async fn a_brand_new_user_starts_at_fundamentals() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(Some(&next), next_problem(&all, "two-sum"));
+    // The rating (expansion M2) is a soft weight on both picks.
+    let ratings = app.current_ratings().await.unwrap().by_pattern();
+    assert_eq!(ratings.len(), 1, "one solve rates one pattern");
+    assert_eq!(Some(&next), next_problem_rated(&all, "two-sum", &ratings));
     let two_sum = all.iter().find(|p| p.id == "two-sum").unwrap();
     assert_eq!(next.pattern, two_sum.pattern, "stays in two-sum's pattern");
     // Today's pick is kept all day; a new day takes the weighted pick.
@@ -705,7 +709,7 @@ async fn a_brand_new_user_starts_at_fundamentals() {
         .unwrap()
         .unwrap();
     let install = app.store.user.install_id().await.unwrap();
-    let expected = daily_pick(&all, tomorrow.parse().unwrap(), &install).unwrap();
+    let expected = daily_pick_rated(&all, tomorrow.parse().unwrap(), &install, &ratings).unwrap();
     assert_eq!(daily.problem.id, expected.id);
     assert_ne!(daily.problem.mode, kb_core::ProblemMode::Sql);
     app.close().await;
@@ -1659,4 +1663,169 @@ async fn kata_sessions_lock_and_export() {
     assert_eq!(r.added, 0);
     a.close().await;
     b.close().await;
+}
+
+/// Study plans and ratings (expansion M2): a plan from a goal, done and rescheduled
+/// items, the calendar file, and both travelling with an export; ratings replayed from
+/// submissions.
+#[tokio::test]
+async fn study_plans_and_ratings() {
+    use crate::plan_app::{PlanIcsLabels, PlanSetup};
+    let a = app("plan-a").await;
+    assert_eq!(a.plan_view(UiLang::En).await.unwrap(), None);
+    let r0 = a.ratings().await.unwrap();
+    assert_eq!((r0.overall.rating, r0.overall.events), (1200, 0));
+
+    let setup = PlanSetup {
+        patterns: vec!["arrays-hashing".into()],
+        weeks: 1,
+        minutes_per_day: 40,
+        today: "2026-11-23".into(),
+    };
+    let bad = PlanSetup {
+        weeks: 0,
+        ..setup.clone()
+    };
+    assert_eq!(
+        a.create_plan(&bad, UiLang::En).await.unwrap_err().code,
+        AppErrorCode::InvalidInput
+    );
+    let plan = a.create_plan(&setup, UiLang::En).await.unwrap();
+    assert_eq!(plan.patterns, ["arrays-hashing"]);
+    assert_eq!(
+        (plan.start_day.as_str(), plan.end_day.as_str()),
+        ("2026-11-23", "2026-11-29")
+    );
+    assert!(plan.total > 0);
+    let first = plan
+        .items
+        .iter()
+        .find(|i| i.kind == crate::plan::PlanItemKind::Problem)
+        .unwrap()
+        .clone();
+    assert!(first.title.is_some());
+
+    // Solving a planned problem marks its item done; ratings move.
+    a.store
+        .user
+        .record_submission(
+            first.reference.as_deref().unwrap(),
+            Language::Python,
+            "x",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+    a.forget_ratings();
+    let v = a.plan_view(UiLang::En).await.unwrap().unwrap();
+    let it = v
+        .items
+        .iter()
+        .find(|i| i.position == first.position)
+        .unwrap();
+    assert_eq!(it.status, "done");
+    let r = a.ratings().await.unwrap();
+    assert_eq!(r.overall.events, 1);
+    assert!(r.overall.rating > 1200);
+    assert_eq!(r.patterns[0].pattern, "arrays-hashing");
+
+    // Skip one, reschedule another (it and the pending items after it move a day).
+    let pending: Vec<_> = v
+        .items
+        .iter()
+        .filter(|i| i.status == "pending")
+        .cloned()
+        .collect();
+    a.set_plan_item(v.created_at, pending[0].position, "skipped")
+        .await
+        .unwrap();
+    assert!(
+        a.set_plan_item(v.created_at, pending[0].position, "never")
+            .await
+            .is_err()
+    );
+    if pending.len() > 1 {
+        a.reschedule_plan_item(v.created_at, pending[1].position)
+            .await
+            .unwrap();
+        let after = a.plan_view(UiLang::En).await.unwrap().unwrap();
+        let moved = after
+            .items
+            .iter()
+            .find(|i| i.position == pending[1].position)
+            .unwrap();
+        let d: kb_core::Day = pending[1].day.parse().unwrap();
+        assert_eq!(moved.day, d.add_days(1).to_string());
+    }
+
+    // The calendar file.
+    let labels = PlanIcsLabels {
+        title: "KataBox plan".into(),
+        review: "Reviews".into(),
+        kata: "Kata".into(),
+        topic: "Learn: ".into(),
+        minutes: "min".into(),
+    };
+    let dir = crate::testutil::temp_dir("plan-ics");
+    let ics = dir.join("plan.ics");
+    a.export_plan_ics(&ics, &labels, UiLang::En).await.unwrap();
+    let text = std::fs::read_to_string(&ics).unwrap();
+    assert!(text.starts_with("BEGIN:VCALENDAR\r\n") && text.contains("BEGIN:VEVENT"));
+
+    // Export → import: the plan (still the active one) and its items.
+    let file = dir.join("plan.kbx.json");
+    let counts = a.export_to(&file).await.unwrap();
+    assert_eq!(counts.study_plans, 1);
+    assert_eq!(counts.plan_items, plan.total);
+    let b = app("plan-b").await;
+    let p = b.import_preview_from(&file).await.unwrap();
+    b.import_apply(p.id).await.unwrap();
+    let vb = b.plan_view(UiLang::En).await.unwrap().unwrap();
+    assert_eq!(vb.created_at, v.created_at);
+    assert_eq!(vb.total, plan.total);
+    assert_eq!(
+        b.ratings().await.unwrap().overall.events,
+        1,
+        "replayed from the imported history"
+    );
+    a.close().await;
+    b.close().await;
+}
+
+/// The rating replay (expansion M2) stays fast: about 500 submissions over the whole
+/// catalogue, replayed from user.db (the queries, the content list and the replay).
+#[tokio::test]
+async fn rating_replay_on_500_submissions() {
+    let a = app("rating-500").await;
+    let all = a.all_problems(UiLang::En).await.unwrap();
+    let mut n = 0;
+    'outer: for round in 0..10 {
+        for p in &all {
+            let v = if round % 3 == 2 {
+                Verdict::Accepted
+            } else {
+                Verdict::WrongAnswer
+            };
+            a.store
+                .user
+                .record_submission(&p.id, Language::Python, "x", &report_with(v))
+                .await
+                .unwrap();
+            n += 1;
+            if n == 500 {
+                break 'outer;
+            }
+        }
+    }
+    a.forget_ratings();
+    let t = std::time::Instant::now();
+    let r = a.ratings().await.unwrap();
+    let cold = t.elapsed();
+    let t = std::time::Instant::now();
+    a.ratings().await.unwrap();
+    let warm = t.elapsed();
+    eprintln!("rating replay, {n} submissions: cold {cold:?}, cached {warm:?}");
+    assert!(r.overall.events > 0);
+    assert!(cold < std::time::Duration::from_secs(2), "{cold:?}");
+    a.close().await;
 }

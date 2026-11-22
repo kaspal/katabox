@@ -254,6 +254,36 @@ impl UserDb {
         .collect()
     }
 
+    /// Every submission as `(problem, accepted, created_at)`, oldest first (the skill
+    /// rating's replay, expansion M2).
+    pub async fn submission_outcomes(&self) -> Result<Vec<(String, bool, i64)>> {
+        let rows = sqlx::query(
+            "SELECT problem_id, verdict = 'accepted' AS ok, created_at FROM submissions
+             ORDER BY created_at, id",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        rows.iter()
+            .map(|r| {
+                Ok((
+                    r.try_get("problem_id")?,
+                    r.try_get::<i64, _>("ok")? != 0,
+                    r.try_get("created_at")?,
+                ))
+            })
+            .collect()
+    }
+
+    /// When each problem was first opened (UTC ms).
+    pub async fn first_opens(&self) -> Result<HashMap<String, i64>> {
+        let rows = sqlx::query("SELECT problem_id, first_opened_at FROM problem_opens")
+            .fetch_all(&self.pool)
+            .await?;
+        rows.iter()
+            .map(|r| Ok((r.try_get("problem_id")?, r.try_get("first_opened_at")?)))
+            .collect()
+    }
+
     /// The latest Accepted submission time of every problem solved (UTC ms).
     pub async fn last_accepts(&self) -> Result<HashMap<String, i64>> {
         let rows = sqlx::query(

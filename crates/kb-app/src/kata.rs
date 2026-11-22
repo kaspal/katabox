@@ -711,6 +711,7 @@ impl App {
             .user
             .record_kata_submit(session, problem, language, code, verdict, self.now_ms())
             .await?;
+        self.forget_ratings();
         let new_best = !was_solved
             && attempt
                 .time_ms

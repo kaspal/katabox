@@ -356,7 +356,8 @@
       "patterns": "By pattern",
       "topics": "By topic",
       "history": "History",
-      "katas": "Katas"
+      "katas": "Katas",
+      "plan": "Plan"
     },
     "learn": {
       "title": "Learn topics viewed",
@@ -856,7 +857,9 @@
         "interviews": "Mock interviews",
         "settings": "Settings",
         "kata_sessions": "Kata sessions",
-        "kata_attempts": "Kata attempts"
+        "kata_attempts": "Kata attempts",
+        "study_plans": "Study plans",
+        "plan_items": "Study plan items"
       }
     },
     "crossLang": {
@@ -3066,5 +3069,60 @@
       "custom": "Custom"
     },
     "inProgress": "in progress"
+  },
+  "rating": {
+    "overall": "Skill rating",
+    "label": "Skill rating {{rating}}, estimated",
+    "estimated": "est.",
+    "help_one": "Estimated from {{count}} solve: difficulty, submits and time. A guide to what to practise, not a grade.",
+    "help_other": "Estimated from {{count}} solves: difficulty, submits and time. A guide to what to practise, not a grade.",
+    "trend": "Rating trend from {{from}} to {{to}}",
+    "none": "Solve a problem to get a rating."
+  },
+  "plan": {
+    "card": "Study plan",
+    "none": "No study plan yet. Make one from a goal, a number of weeks and the minutes you have a day.",
+    "make": "Make a plan",
+    "nothingToday": "Nothing planned for today.",
+    "setting": "Study plan card on Home",
+    "kind": {
+      "topic": "Learn",
+      "kata": "Daily kata",
+      "review": "Reviews due"
+    },
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "status": {
+      "pending": "To do",
+      "done": "Done",
+      "skipped": "Skipped"
+    },
+    "done": "Done",
+    "skip": "Skip",
+    "later": "Later",
+    "undo": "Undo",
+    "range": "{{from}} to {{to}}",
+    "progress": "{{done}} of {{total}} done",
+    "progressLabel": "Plan progress",
+    "new": "New plan",
+    "archive": "Stop this plan",
+    "leftOver_one": "{{count}} item did not fit in these weeks.",
+    "leftOver_other": "{{count}} items did not fit in these weeks.",
+    "formTitle": "Make a study plan",
+    "formIntro": "Patterns in track order: each pattern's Learn topics first, then its unsolved problems by rank. The last day of each week has a kata and your reviews. A new plan replaces the current one.",
+    "weeks": "How long",
+    "weeksOption_one": "{{count}} week",
+    "weeksOption_other": "{{count}} weeks",
+    "perDay": "Time a day",
+    "goal": "Goal",
+    "allPatterns": "Every pattern, in track order",
+    "create": "Make the plan",
+    "cancel": "Cancel",
+    "ics": {
+      "export": "Export to calendar…",
+      "title": "KataBox study plan",
+      "min": "min",
+      "saved": "Calendar file saved."
+    }
   }
 }

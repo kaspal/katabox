@@ -188,6 +188,21 @@ and against the clock:
   forgotten: the score grows with the time since you last solved one and with failed
   katas on it. Turn the card off in Settings → Practice.
 
+## Skill rating and study plans
+- **Skill rating:** Progress → Overview shows an overall rating, and By pattern one per
+  pattern with a small trend line. It is **estimated** from the problems you solved
+  (their difficulty, your submits and your time) and guides what the daily problem and
+  "Next problem" suggest: a weaker pattern comes up more often, and easy problems you
+  have outgrown are skipped. It is a guide, not a grade.
+- **Study plan:** Progress → Plan → **Make the plan** from a goal (every pattern, or
+  the ones you pick), a number of weeks and the time you have a day. Each pattern's Learn
+  topics come first, then its unsolved problems; the last day of each week has a kata
+  and your reviews. Mark items **Done**, **Skip** them or move them **Later** (the rest
+  of the plan moves with them). Solved problems and viewed topics are ticked off on
+  their own. Today's items are on the Home card **Study plan** (turn it off in Settings
+  → Practice). **Export to calendar…** saves the plan as an `.ics` file for any
+  calendar app.
+
 ## Debugger and visualizer
 - **Languages:** Python and JavaScript/TypeScript, for function and program problems.
   Not PHP, Rust or SQL yet.

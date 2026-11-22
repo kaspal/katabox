@@ -21,6 +21,7 @@ pub mod learn;
 #[cfg(test)]
 mod migration_tests;
 pub mod modes;
+pub mod plans;
 pub mod practice;
 pub mod transfer;
 pub mod user;

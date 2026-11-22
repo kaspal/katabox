@@ -610,6 +610,78 @@ async interviews(lang: UiLang) : Promise<Result<InterviewResult[], AppError>> {
 }
 },
 /**
+ * Ratings per pattern and overall (replayed from the history; estimated).
+ */
+async ratings() : Promise<Result<RatingsView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("ratings") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The active study plan, if any.
+ */
+async planView(lang: UiLang) : Promise<Result<PlanView | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("plan_view", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async createPlan(setup: PlanSetup, lang: UiLang) : Promise<Result<PlanView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_plan", { setup, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Mark a plan item `pending`, `done` or `skipped`.
+ */
+async setPlanItem(plan: number, position: number, status: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_plan_item", { plan, position, status }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Move a plan item (and the pending items after it) one day later.
+ */
+async reschedulePlanItem(plan: number, position: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reschedule_plan_item", { plan, position }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async archivePlan(plan: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("archive_plan", { plan }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Progress → Plan → Export to calendar: a Save dialog, then the plan as an `.ics`
+ * file. `None` when cancelled, else the file name.
+ */
+async exportPlanIcs(labels: PlanIcsLabels, lang: UiLang) : Promise<Result<string | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("export_plan_ics", { labels, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Today's daily kata, the patterns and lists a kata can start from, and the running one.
  */
 async kataOptions(today: string, lang: UiLang) : Promise<Result<KataOptions, AppError>> {
@@ -1805,10 +1877,23 @@ export type PatternProgress = { pattern: string; solved: number; total: number;
  * The lowest-ranked unsolved problem of the pattern.
  */
 next: ProblemSummary | null }
+export type PatternRating = { pattern: string; rating: RatingView }
 /**
  * The Learn topics for one practice pattern, in Learn's own order.
  */
 export type PatternTopics = { pattern: string; topics: LearnTopicSummary[] }
+/**
+ * The words the calendar file uses, in the UI language (the UI sends them).
+ */
+export type PlanIcsLabels = { title: string; review: string; kata: string; 
+/**
+ * Put before a topic's title, e.g. "Learn: ".
+ */
+topic: string; 
+/**
+ * After the minutes, e.g. "min".
+ */
+minutes: string }
 /**
  * One component of an install plan.
  */
@@ -1817,6 +1902,36 @@ export type PlanItem = { component: string;
  * Bytes still to download (shared artifacts counted once, on first use).
  */
 download_bytes: number; installed_bytes: number }
+export type PlanItemKind = "problem" | "topic" | "review" | "kata"
+/**
+ * One item as the UI shows it.
+ */
+export type PlanItemView = { position: number; day: string; kind: PlanItemKind; reference: string | null; 
+/**
+ * The problem or topic title in the UI language (none for reviews and katas).
+ */
+title: string | null; difficulty: Difficulty | null; 
+/**
+ * For topics: the subject (the topic page's route needs it).
+ */
+subject: string | null; minutes: number; 
+/**
+ * `pending`, `done` or `skipped`.
+ */
+status: string }
+/**
+ * What to plan: the patterns (empty: every pattern in track order), how long, how much.
+ */
+export type PlanSetup = { patterns: string[]; weeks: number; minutes_per_day: number; 
+/**
+ * The user's local date, `YYYY-MM-DD`: the plan starts today.
+ */
+today: string }
+export type PlanView = { created_at: number; patterns: string[]; weeks: number; minutes_per_day: number; start_day: string; end_day: string; items: PlanItemView[]; done: number; total: number; 
+/**
+ * Topics and problems that did not fit when the plan was made.
+ */
+left_over: number }
 /**
  * What a Submit did beyond the verdict.
  */
@@ -2024,6 +2139,21 @@ reference_fast: boolean }
  */
 export type PublicTest = { index: number; input: Partial<{ [key in string]: JsonValue }>; output: JsonValue }
 export type QuizQuestion = { prompt: string; options: string[]; answer: number; explain: string }
+export type RatingPoint = { at: number; rating: number }
+export type RatingView = { 
+/**
+ * Rounded to a whole number.
+ */
+rating: number; events: number; 
+/**
+ * At most the last 30 points, oldest first.
+ */
+history: RatingPoint[] }
+export type RatingsView = { overall: RatingView; 
+/**
+ * Patterns with at least one event.
+ */
+patterns: PatternRating[] }
 /**
  * The reference solution's time at one size, at this machine's time scale.
  */
@@ -2312,7 +2442,7 @@ export type TopicReview = { topic: LearnTopicSummary; problem: ProblemSummary }
 /**
  * How many records of each kind a file holds.
  */
-export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number }
+export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number }
 /**
  * Why a trace stopped before the program ended.
  */

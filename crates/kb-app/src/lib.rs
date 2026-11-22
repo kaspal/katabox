@@ -18,8 +18,11 @@ mod error;
 pub mod interview;
 pub mod kata;
 pub mod learn_links;
+pub mod plan;
+pub mod plan_app;
 pub mod practice;
 pub mod profile;
+pub mod rating;
 mod root;
 pub mod shrink;
 pub mod transfer;
@@ -257,6 +260,9 @@ pub struct App {
     debug: std::sync::Mutex<Option<debug::Session>>,
     /// Stop requested for the running shrink (ADR 0030).
     shrink_cancel: std::sync::atomic::AtomicBool,
+    /// The skill ratings replayed from the history (expansion M2); dropped on every
+    /// Submit, kata Submit and import.
+    ratings: std::sync::Mutex<Option<Arc<rating::Ratings>>>,
 }
 
 /// Solved problems per judge language (cross-language practice, ADR 0020).
@@ -314,6 +320,7 @@ impl App {
             calibration: RwLock::new(calibration),
             clock: std::sync::Mutex::new(None),
             pending_import: std::sync::Mutex::new(None),
+            ratings: std::sync::Mutex::new(None),
             debug: std::sync::Mutex::new(None),
         })
     }
@@ -719,6 +726,7 @@ impl App {
             .user
             .record_submission(problem, language, code, &report)
             .await?;
+        self.forget_ratings();
         let practice = self
             .after_submit(
                 problem,

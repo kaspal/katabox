@@ -200,6 +200,22 @@ memoria y contra el reloj:
   quizá hayas olvidado: la puntuación crece con el tiempo desde la última vez que lo
   resolviste y con las katas fallidas en él. Desactiva la tarjeta en Ajustes → Práctica.
 
+## Nivel estimado y planes de estudio
+- **Nivel estimado:** Progreso → Resumen muestra un nivel general, y Por patrón uno por
+  patrón con una pequeña línea de evolución. Se **estima** a partir de los problemas que
+  resolviste (su dificultad, tus envíos y tu tiempo) y orienta lo que sugieren el problema
+  del día y «Siguiente problema»: un patrón más flojo aparece más a menudo, y se saltan
+  los problemas fáciles que ya superaste. Es una guía, no una nota.
+- **Plan de estudio:** Progreso → Plan → **Crear el plan** a partir de un objetivo (todos
+  los patrones o los que elijas), un número de semanas y el tiempo que tienes al día.
+  Primero van los temas de Aprender de cada patrón y luego sus problemas sin resolver; el
+  último día de cada semana tiene una kata y tus repasos. Marca las tareas como
+  **Hecho**, **Omítelas** o pásalas a **Más tarde** (el resto del plan se mueve con
+  ellas). Los problemas resueltos y los temas vistos se marcan solos. Las tareas de hoy
+  están en la tarjeta **Plan de estudio** de Inicio (desactívala en Ajustes → Práctica).
+  **Exportar al calendario…** guarda el plan como archivo `.ics` para cualquier
+  aplicación de calendario.
+
 ## Depurador y visualizador
 - **Lenguajes:** Python y JavaScript/TypeScript, en problemas de función y de programa.
   Aún no PHP, Rust ni SQL.

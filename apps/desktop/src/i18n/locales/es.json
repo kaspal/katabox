@@ -356,7 +356,8 @@
       "patterns": "Por patrón",
       "topics": "Por tema",
       "history": "Historial",
-      "katas": "Katas"
+      "katas": "Katas",
+      "plan": "Plan"
     },
     "learn": {
       "title": "Temas de Aprender vistos",
@@ -856,7 +857,9 @@
         "interviews": "Entrevistas simuladas",
         "settings": "Ajustes",
         "kata_sessions": "Sesiones de kata",
-        "kata_attempts": "Intentos de kata"
+        "kata_attempts": "Intentos de kata",
+        "study_plans": "Planes de estudio",
+        "plan_items": "Tareas de planes de estudio"
       }
     },
     "crossLang": {
@@ -3066,5 +3069,60 @@
       "custom": "A medida"
     },
     "inProgress": "en curso"
+  },
+  "rating": {
+    "overall": "Nivel estimado",
+    "label": "Nivel {{rating}}, estimado",
+    "estimated": "est.",
+    "help_one": "Estimado a partir de {{count}} problema resuelto: dificultad, envíos y tiempo. Una guía para elegir qué practicar, no una nota.",
+    "help_other": "Estimado a partir de {{count}} problemas resueltos: dificultad, envíos y tiempo. Una guía para elegir qué practicar, no una nota.",
+    "trend": "Evolución del nivel de {{from}} a {{to}}",
+    "none": "Resuelve un problema para tener un nivel."
+  },
+  "plan": {
+    "card": "Plan de estudio",
+    "none": "Aún no tienes un plan de estudio. Créalo a partir de un objetivo, un número de semanas y los minutos que tienes al día.",
+    "make": "Crear un plan",
+    "nothingToday": "Nada planificado para hoy.",
+    "setting": "Tarjeta del plan de estudio en Inicio",
+    "kind": {
+      "topic": "Aprender",
+      "kata": "Kata del día",
+      "review": "Repasos pendientes"
+    },
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "status": {
+      "pending": "Por hacer",
+      "done": "Hecho",
+      "skipped": "Omitido"
+    },
+    "done": "Hecho",
+    "skip": "Omitir",
+    "later": "Más tarde",
+    "undo": "Deshacer",
+    "range": "Del {{from}} al {{to}}",
+    "progress": "{{done}} de {{total}} hechos",
+    "progressLabel": "Avance del plan",
+    "new": "Nuevo plan",
+    "archive": "Dejar este plan",
+    "leftOver_one": "{{count}} tarea no cupo en estas semanas.",
+    "leftOver_other": "{{count}} tareas no cupieron en estas semanas.",
+    "formTitle": "Crear un plan de estudio",
+    "formIntro": "Patrones en el orden del recorrido: primero los temas de Aprender de cada patrón y luego sus problemas sin resolver por orden. El último día de cada semana tiene una kata y tus repasos. Un plan nuevo sustituye al actual.",
+    "weeks": "Duración",
+    "weeksOption_one": "{{count}} semana",
+    "weeksOption_other": "{{count}} semanas",
+    "perDay": "Tiempo al día",
+    "goal": "Objetivo",
+    "allPatterns": "Todos los patrones, en orden",
+    "create": "Crear el plan",
+    "cancel": "Cancelar",
+    "ics": {
+      "export": "Exportar al calendario…",
+      "title": "Plan de estudio de KataBox",
+      "min": "min",
+      "saved": "Archivo de calendario guardado."
+    }
   }
 }

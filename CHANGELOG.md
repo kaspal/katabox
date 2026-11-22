@@ -25,6 +25,13 @@ All notable changes to KataBox are recorded in this file. The format follows
   a kata streak and recent katas on Progress → Katas, and a **Rusty** card on Home.
   Katas never change submissions, reviews or the daily problem.
 
+- **Skill rating** per pattern and overall, estimated from your solves (difficulty,
+  submits, time), with a trend line on Progress. It nudges the daily problem towards
+  weaker patterns and lets "Next problem" skip easy problems you have outgrown.
+- **Study plans:** a goal, a number of weeks and minutes a day become a day-by-day plan
+  of Learn topics, problems, reviews and katas, with Done / Skip / Later, a Home card,
+  and **Export to calendar** (`.ics`).
+
 ### Changed
 - Exports are now format `katabox-export/v2`, which carries the new kinds of records
   added below. Files exported by 1.0.0-beta.1 (`v1`) still import.

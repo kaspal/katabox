@@ -95,7 +95,7 @@ describe("Progress tabs", () => {
     const { user, history } = renderApp("/progress");
     const list = await screen.findByRole("tablist", { name: "Progress sections" });
     const tabs = within(list).getAllByRole("tab");
-    expect(tabs.map((t) => t.textContent)).toEqual(["Overview", "By pattern", "By topic", "Katas", "History"]);
+    expect(tabs.map((t) => t.textContent)).toEqual(["Overview", "By pattern", "By topic", "Plan", "Katas", "History"]);
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
     expect(await screen.findByTestId("heatmap")).toBeInTheDocument();
     expect(screen.queryByTestId("pattern-map")).toBeNull();

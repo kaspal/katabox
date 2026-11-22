@@ -82,6 +82,16 @@ fn seeds(version: i64) -> Vec<String> {
                  (1700000030000, 'budget-pair', 1700000030950, 1, 'wrong_answer', NULL, NULL, NULL, NULL)"
                 .into(),
         ],
+        6 => vec![
+            "INSERT INTO study_plans (created_at, goal, weeks, minutes_per_day, start_day, archived) VALUES
+                 (1700000050000, '{\"patterns\":[\"arrays-hashing\"],\"left_over\":0}', 2, 30, '2026-11-23', 0)"
+                .into(),
+            "INSERT INTO plan_items VALUES
+                 (1700000050000, 0, '2026-11-23', 'topic', 'hash-tables', 15, 'done', 1700000050100),
+                 (1700000050000, 1, '2026-11-23', 'problem', 'two-sum', 20, 'pending', 1700000050000),
+                 (1700000050000, 2, '2026-11-29', 'kata', NULL, 15, 'skipped', 1700000050200)"
+                .into(),
+        ],
         _ => vec![],
     }
 }

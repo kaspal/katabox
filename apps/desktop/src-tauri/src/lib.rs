@@ -10,11 +10,13 @@ use std::path::{Path, PathBuf};
 use kb_app::debug::{DebugAction, DebugInspect, DebugStart, DebugView};
 use kb_app::interview::{InterviewResult, InterviewSetup, InterviewView};
 use kb_app::kata::{KataOptions, KataOverview, KataStart, KataView};
+use kb_app::plan_app::{PlanIcsLabels, PlanSetup, PlanView};
 use kb_app::practice::{
     DailyProblem, ListView, PatternProgress, ReviewItem, ReviewState, ReviewSummary,
     SolvedBreakdown,
 };
 use kb_app::profile::ProfileView;
+use kb_app::rating::RatingsView;
 use kb_app::transfer::{ImportPreview, ImportResult, TransferCounts};
 use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
@@ -566,6 +568,72 @@ async fn interviews(state: State<'_, AppState>, lang: UiLang) -> Res<Vec<Intervi
     state.app()?.interviews(lang).await
 }
 
+// --- Skill rating and study plans (expansion M2, ADR 0033) ---------------------------
+
+/// Ratings per pattern and overall (replayed from the history; estimated).
+#[tauri::command]
+#[specta::specta]
+async fn ratings(state: State<'_, AppState>) -> Res<RatingsView> {
+    state.app()?.ratings().await
+}
+
+/// The active study plan, if any.
+#[tauri::command]
+#[specta::specta]
+async fn plan_view(state: State<'_, AppState>, lang: UiLang) -> Res<Option<PlanView>> {
+    state.app()?.plan_view(lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn create_plan(state: State<'_, AppState>, setup: PlanSetup, lang: UiLang) -> Res<PlanView> {
+    state.app()?.create_plan(&setup, lang).await
+}
+
+/// Mark a plan item `pending`, `done` or `skipped`.
+#[tauri::command]
+#[specta::specta]
+async fn set_plan_item(
+    state: State<'_, AppState>,
+    plan: i64,
+    position: u32,
+    status: String,
+) -> Res<()> {
+    state.app()?.set_plan_item(plan, position, &status).await
+}
+
+/// Move a plan item (and the pending items after it) one day later.
+#[tauri::command]
+#[specta::specta]
+async fn reschedule_plan_item(state: State<'_, AppState>, plan: i64, position: u32) -> Res<()> {
+    state.app()?.reschedule_plan_item(plan, position).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn archive_plan(state: State<'_, AppState>, plan: i64) -> Res<()> {
+    state.app()?.archive_plan(plan).await
+}
+
+/// Progress → Plan → Export to calendar: a Save dialog, then the plan as an `.ics`
+/// file. `None` when cancelled, else the file name.
+#[tauri::command]
+#[specta::specta]
+async fn export_plan_ics(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    labels: PlanIcsLabels,
+    lang: UiLang,
+) -> Res<Option<String>> {
+    let kb = state.app()?;
+    let name = format!("katabox-plan-{}.ics", chrono_free_today());
+    let Some(path) = pick_file(app, "Calendar", &["ics"], Some(name)).await? else {
+        return Ok(None);
+    };
+    kb.export_plan_ics(&path, &labels, lang).await?;
+    Ok(path.file_name().map(|n| n.to_string_lossy().into_owned()))
+}
+
 // --- Kata drills (expansion M1, ADR 0033) ---------------------------------------------
 
 /// Today's daily kata, the patterns and lists a kata can start from, and the running one.
@@ -636,19 +704,25 @@ async fn solved_by_language(state: State<'_, AppState>) -> Res<Vec<LanguageCount
 
 /// A file path from a native dialog, opened on a blocking thread (`None`: cancelled).
 async fn pick_path(app: tauri::AppHandle, save: bool) -> Res<Option<PathBuf>> {
+    let name = save.then(|| format!("katabox-progress-{}.kbx.json", chrono_free_today()));
+    pick_file(app, "KataBox progress", &["json"], name).await
+}
+
+/// A native Open dialog (`save_as: None`) or Save dialog (`Some(default name)`) with one
+/// filter, on a blocking thread (`None`: cancelled). The webview has no dialog
+/// permission: dialogs are opened here only.
+async fn pick_file(
+    app: tauri::AppHandle,
+    filter: &'static str,
+    extensions: &'static [&'static str],
+    save_as: Option<String>,
+) -> Res<Option<PathBuf>> {
     use tauri_plugin_dialog::DialogExt;
     let picked = tauri::async_runtime::spawn_blocking(move || {
-        let dialog = app
-            .dialog()
-            .file()
-            .add_filter("KataBox progress", &["json"]);
-        if save {
-            let day = chrono_free_today();
-            dialog
-                .set_file_name(format!("katabox-progress-{day}.kbx.json"))
-                .blocking_save_file()
-        } else {
-            dialog.blocking_pick_file()
+        let dialog = app.dialog().file().add_filter(filter, extensions);
+        match save_as {
+            Some(name) => dialog.set_file_name(name).blocking_save_file(),
+            None => dialog.blocking_pick_file(),
         }
     })
     .await
@@ -933,6 +1007,13 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         interview_active,
         end_interview,
         interviews,
+        ratings,
+        plan_view,
+        create_plan,
+        set_plan_item,
+        reschedule_plan_item,
+        archive_plan,
+        export_plan_ics,
         kata_options,
         start_kata,
         kata_state,

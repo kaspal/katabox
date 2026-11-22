@@ -27,6 +27,9 @@ import type {
   KataAttemptRow,
   KataStart,
   KataView,
+  PlanSetup,
+  PlanView,
+  RatingsView,
   PracticeOutcome,
   Snapshot,
   SubmissionSummary,
@@ -356,6 +359,12 @@ export function createFakeApi(
     /** The options of each Submit. */
     submitOptions: [] as { today: string; review: boolean; lang: UiLang; kata: number | null }[],
     kata: (opts.kata ?? null) as KataView | null,
+    plan: null as PlanView | null,
+    planSetups: [] as PlanSetup[],
+    ratings: {
+      overall: { rating: 1200, events: 0, history: [] },
+      patterns: [],
+    } as RatingsView,
     interview: (opts.interview ?? null) as InterviewView | null,
     interviews: [...(opts.interviews ?? [])] as InterviewResult[],
     accepted: { ...(opts.accepted ?? {}) } as Record<string, string>,
@@ -801,6 +810,50 @@ export function createFakeApi(
       return ended;
     }),
     kataOverview: vi.fn(async () => ({ bests: [], rusty: [], streak: 0, sessions: [] })),
+    ratings: vi.fn(async () => state.ratings),
+    planView: vi.fn(async () => (state.plan ? structuredClone(state.plan) : null)),
+    createPlan: vi.fn(async (setup: PlanSetup, lang: UiLang) => {
+      const ids = PROBLEMS.filter((p) => p.status !== "solved").map((p) => p.id);
+      state.plan = {
+        created_at: 1_767_225_600_000,
+        patterns: setup.patterns.length ? setup.patterns : ["arrays-hashing"],
+        weeks: setup.weeks,
+        minutes_per_day: setup.minutes_per_day,
+        start_day: setup.today,
+        end_day: setup.today,
+        items: ids.slice(0, 2).map((id, i) => {
+          const s = summary(id, lang)!;
+          return {
+            position: i,
+            day: setup.today,
+            kind: "problem" as const,
+            reference: id,
+            title: s.title,
+            difficulty: s.difficulty,
+            subject: null,
+            minutes: 20,
+            status: "pending",
+          };
+        }),
+        done: 0,
+        total: 2,
+        left_over: 3,
+      };
+      state.planSetups.push(setup);
+      return state.plan;
+    }),
+    setPlanItem: vi.fn(async (_plan: number, position: number, status: string) => {
+      const it = state.plan?.items.find((i) => i.position === position);
+      if (it) it.status = status;
+      if (state.plan) state.plan.done = state.plan.items.filter((i) => i.status === "done").length;
+      return null;
+    }),
+    reschedulePlanItem: vi.fn(async () => null),
+    archivePlan: vi.fn(async () => {
+      state.plan = null;
+      return null;
+    }),
+    exportPlanIcs: vi.fn(async () => "katabox-plan.ics"),
     acceptedSolution: vi.fn(async (p: string, language: Language) => {
       const code = state.accepted[`${p}:${language}`];
       if (state.interview?.problems.some((x) => x.id === p)) {

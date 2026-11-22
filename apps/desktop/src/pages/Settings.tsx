@@ -350,6 +350,7 @@ function PracticeSection() {
       <dl className="space-y-3">
         <OnOffRow label={t("practice.settings.daily")} value={prefs.daily} set={prefs.setDaily} />
         <OnOffRow label={t("practice.settings.review")} value={prefs.review} set={prefs.setReview} />
+        <OnOffRow label={t("plan.setting")} value={prefs.plan} set={prefs.setPlan} />
         <OnOffRow label={t("kata.rusty.setting")} value={prefs.rusty} set={prefs.setRusty} />
         <Row label={t("welcome.again.label")}>
           <Button
@@ -508,7 +509,7 @@ const SEARCH_INDEX: [SettingsSection, string[]][] = [
     "editor",
     ["settings.keymap", "settings.ligatures", "settings.fontSize", "settings.tabWidth", "settings.editorTheme", "settings.preview"],
   ],
-  ["practice", ["practice.settings.daily", "practice.settings.review", "kata.rusty.setting", "welcome.again.label"]],
+  ["practice", ["practice.settings.daily", "practice.settings.review", "plan.setting", "kata.rusty.setting", "welcome.again.label"]],
   ["languages", ["settings.sections.languages", "settings.calibration.title", "settings.calibration.recalibrate"]],
   ["learn", ["practice.settings.learnReview", "settings.learnSpeed"]],
   ["data", ["practice.data.export", "practice.data.import"]],

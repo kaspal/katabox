@@ -11,6 +11,7 @@ use serde_json::Value;
 use sqlx::{Row, SqliteConnection};
 
 use crate::kata::{KATA_MAX_MS, KataAttemptRow, KataSessionRow};
+use crate::plans::{PlanItemRow, PlanRow};
 use crate::user::{code_hash, parse_language, parse_status, parse_verdict, verdict_code};
 use crate::{ProblemStatus, Result, SnapshotSource, UserDb};
 
@@ -155,12 +156,21 @@ pub struct ExportData {
     /// Kata attempts (expansion M1).
     #[serde(default)]
     pub kata_attempts: Vec<KataAttemptRow>,
+    /// Study plans (expansion M2).
+    #[serde(default)]
+    pub study_plans: Vec<PlanRow>,
+    /// Study plan items (expansion M2).
+    #[serde(default)]
+    pub plan_items: Vec<PlanItemRow>,
 }
 
 impl ExportData {
     /// True when the data holds none of the sections that only v2 files may have.
     pub fn v2_sections_empty(&self) -> bool {
-        self.kata_sessions.is_empty() && self.kata_attempts.is_empty()
+        self.kata_sessions.is_empty()
+            && self.kata_attempts.is_empty()
+            && self.study_plans.is_empty()
+            && self.plan_items.is_empty()
     }
 }
 
@@ -315,6 +325,8 @@ impl UserDb {
         }
         d.kata_sessions = self.katas().await?.into_iter().rev().collect();
         d.kata_attempts = self.kata_attempts().await?;
+        d.study_plans = self.plans().await?.into_iter().rev().collect();
+        d.plan_items = self.all_plan_items().await?;
         for r in sqlx::query("SELECT * FROM settings ORDER BY key")
             .fetch_all(p)
             .await?
@@ -740,6 +752,60 @@ impl UserDb {
             .await?
             .rows_affected();
             stats.entry("kata_attempts").or_default().count(n, existed);
+        }
+
+        for p in &d.study_plans {
+            let n = sqlx::query(
+                "INSERT OR IGNORE INTO study_plans
+                   (created_at, goal, weeks, minutes_per_day, start_day, archived)
+                 VALUES (?, ?, ?, ?, ?, ?)",
+            )
+            .bind(p.created_at)
+            .bind(serde_json::to_string(&p.goal)?)
+            .bind(i64::from(p.weeks))
+            .bind(i64::from(p.minutes_per_day))
+            .bind(&p.start_day)
+            .bind(p.archived)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("study_plans").or_default().count(n, n == 0);
+        }
+        // One plan stays active: the newest of the active ones.
+        sqlx::query(
+            "UPDATE study_plans SET archived = 1 WHERE archived = 0 AND created_at <
+               (SELECT max(created_at) FROM study_plans WHERE archived = 0)",
+        )
+        .execute(&mut *c)
+        .await?;
+        for i in &d.plan_items {
+            let plan = i.plan_created_at.to_string();
+            let position = i.position.to_string();
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM plan_items WHERE plan_created_at = ? AND position = ?",
+                &[&plan, &position],
+            )
+            .await?;
+            let n = sqlx::query(
+                "INSERT INTO plan_items (plan_created_at, position, day, kind, ref, minutes, status, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                 ON CONFLICT (plan_created_at, position) DO UPDATE SET
+                   day = excluded.day, status = excluded.status, updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > plan_items.updated_at",
+            )
+            .bind(i.plan_created_at)
+            .bind(i64::from(i.position))
+            .bind(&i.day)
+            .bind(&i.kind)
+            .bind(&i.reference)
+            .bind(i64::from(i.minutes))
+            .bind(&i.status)
+            .bind(i.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("plan_items").or_default().count(n, existed);
         }
 
         for r in &d.settings {

@@ -31,6 +31,10 @@ import {
   type KataOverview,
   type KataStart,
   type KataView,
+  type PlanIcsLabels,
+  type PlanSetup,
+  type PlanView,
+  type RatingsView,
   type LanguageCount,
   type TransferCounts,
   type DailyProblem,
@@ -200,6 +204,19 @@ export const api = {
   startInterview: (setup: InterviewSetup, lang: UiLang): Promise<InterviewView> =>
     call(commands.startInterview(setup, lang)),
   interviewActive: (lang: UiLang): Promise<InterviewView | null> => call(commands.interviewActive(lang)),
+
+  // Skill rating and study plans (expansion M2, ADR 0033)
+  ratings: (): Promise<RatingsView> => call(commands.ratings()),
+  planView: (lang: UiLang): Promise<PlanView | null> => call(commands.planView(lang)),
+  createPlan: (setup: PlanSetup, lang: UiLang): Promise<PlanView> => call(commands.createPlan(setup, lang)),
+  setPlanItem: (plan: number, position: number, status: "pending" | "done" | "skipped"): Promise<null> =>
+    call(commands.setPlanItem(plan, position, status)),
+  reschedulePlanItem: (plan: number, position: number): Promise<null> =>
+    call(commands.reschedulePlanItem(plan, position)),
+  archivePlan: (plan: number): Promise<null> => call(commands.archivePlan(plan)),
+  /** A Save dialog (opened by Rust), then the plan as an .ics file; null when cancelled. */
+  exportPlanIcs: (labels: PlanIcsLabels, lang: UiLang): Promise<string | null> =>
+    call(commands.exportPlanIcs(labels, lang)),
 
   // Kata drills (expansion M1, ADR 0033)
   kataOptions: (today: string, lang: UiLang): Promise<KataOptions> => call(commands.kataOptions(today, lang)),
