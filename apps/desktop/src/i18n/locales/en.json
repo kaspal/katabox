@@ -240,7 +240,6 @@
     "allSet": "All done for today.",
     "subtitle": "Pick up where you left off, then take the next step on your path.",
     "subtitleNew": "Start with the first step of your path. Each one is a short animation and a problem.",
-    "search": "Search everything",
     "session": {
       "label": "Today's session",
       "title": "Today's session · about {{minutes}} min",

@@ -11,18 +11,6 @@ export function onOpenShortcuts(handler: () => void): () => void {
   return () => window.removeEventListener(EVENT, handler);
 }
 
-/** The command palette (Ctrl K): the Shell owns it; the Home's search button opens it. */
-const PALETTE_EVENT = "katabox:palette";
-
-export function openPalette() {
-  window.dispatchEvent(new Event(PALETTE_EVENT));
-}
-
-export function onOpenPalette(handler: () => void): () => void {
-  window.addEventListener(PALETTE_EVENT, handler);
-  return () => window.removeEventListener(PALETTE_EVENT, handler);
-}
-
 /** A key name that is a word is translated (`shortcuts.key.<name>`); others show as is. */
 export const NAMED_KEYS = ["Space", "Home", "End", "Enter", "PageUp", "PageDown", "Esc"] as const;
 

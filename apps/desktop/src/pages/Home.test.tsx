@@ -127,12 +127,6 @@ describe("Home", () => {
     expect(within(review).getByRole("link", { name: "Valid Brackets" })).toHaveAttribute("href", "/problems/valid-brackets");
   });
 
-  it("opens the command palette from the search button", async () => {
-    const { user } = renderApp("/");
-    await user.click(await screen.findByTestId("home-search"));
-    expect(await screen.findByRole("dialog")).toBeInTheDocument();
-  });
-
   it("greets by the time of day", () => {
     expect([5, 11, 12, 17, 18, 23].map(greetingFor)).toEqual([
       "morning",

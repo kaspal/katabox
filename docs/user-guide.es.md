@@ -86,7 +86,6 @@ Inicio responde a «¿y ahora qué?» en unos minutos de práctica.
   problema aún por probar, y uno del patrón del problema del día.
 - **Mantenlo fresco** reúne **Repaso**, **Plan de estudio** y **Oxidados**; la tarjeta
   que desactives en Ajustes desaparece.
-- **Buscar en todo** (Ctrl+K) abre la paleta de comandos.
 
 ## Problemas y espacio de trabajo
 

@@ -80,7 +80,6 @@ The Home answers "what now?" in a few minutes of practice.
   a problem still to try, and one for the pattern of today's daily problem.
 - **Keep it fresh** holds **Reviews**, **Study plan** and **Rusty**; a card you turn off
   in Settings disappears.
-- **Search everything** (Ctrl+K) opens the command palette.
 
 ## Problems and the workspace
 

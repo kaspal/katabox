@@ -10,7 +10,7 @@ import { CommandPalette } from "@/app/CommandPalette";
 import { ShortcutsDialog } from "@/app/ShortcutsDialog";
 import { WhatsNewDialog, useWhatsNew } from "@/app/WhatsNew";
 import { useAppReady } from "@/app/appReady";
-import { onOpenPalette, onOpenShortcuts, openShortcuts } from "@/app/shortcuts";
+import { onOpenShortcuts, openShortcuts } from "@/app/shortcuts";
 import { SearchEverything, onOpenSearchEverything } from "@/app/SearchEverything";
 import { DEV_NAV, NAV } from "@/app/nav";
 import { useFocusMode } from "@/lib/focus";
@@ -77,9 +77,7 @@ export function Shell() {
     window.addEventListener("keydown", onKey);
     const off = onOpenShortcuts(() => setShortcutsOpen(true));
     const offSearch = onOpenSearchEverything(() => setSearchOpen(true));
-    const offPalette = onOpenPalette(() => setPaletteOpen(true));
     return () => {
-      offPalette();
       window.removeEventListener("keydown", onKey);
       off();
       offSearch();

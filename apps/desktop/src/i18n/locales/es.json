@@ -240,7 +240,6 @@
     "allSet": "Todo hecho por hoy.",
     "subtitle": "Retoma donde lo dejaste y da el siguiente paso de tu ruta.",
     "subtitleNew": "Empieza por el primer paso de tu ruta. Cada uno es una animación corta y un problema.",
-    "search": "Buscar en todo",
     "session": {
       "label": "Sesión de hoy",
       "title": "Sesión de hoy · unos {{minutes}} min",
