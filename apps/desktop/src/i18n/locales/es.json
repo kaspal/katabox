@@ -195,7 +195,10 @@
       "window-functions": "Funciones de ventana",
       "deque": "Cola doble",
       "range-queries": "Consultas de rango",
-      "stream": "Flujo de datos"
+      "stream": "Flujo de datos",
+      "debugging": "Depuración",
+      "recursion": "Recursión",
+      "memoization": "Memoización"
     }
   },
   "common": {
@@ -3222,5 +3225,20 @@
     "locked": "Resuelve antes el problema base.",
     "of": "Una continuación más difícil de",
     "intro": "El enunciado de abajo dice qué cambia; el resto es como en el problema base."
+  },
+  "fix": {
+    "badge": "Corregir",
+    "badgeTitle": "Corrige el error: el editor empieza con código que tiene un error",
+    "banner": "Corrige el error: el editor empieza con código que falla algunas pruebas. Encuentra el error y corrígelo.",
+    "noBuggy": "Corrige el error: este lenguaje no tiene versión con error, así que empiezas desde una solución vacía. Python y TypeScript empiezan con el código con error.",
+    "reset": "Volver al código con error",
+    "resetTitle": "¿Volver al código con error?",
+    "resetBody": "Tu código en este lenguaje se sustituye por el código original con error. Tus instantáneas del Historial se conservan.",
+    "cancel": "Cancelar",
+    "kindLabel": "Tipo",
+    "kind": {
+      "solve": "Resolver",
+      "fix": "Corregir el error"
+    }
   }
 }

@@ -2124,7 +2124,11 @@ export type ProblemSummary = { id: string; title: string; difficulty: Difficulty
 /**
  * Filled by [`crate::Store::list_problems`]; `None` from [`ContentDb`] alone.
  */
-status: ProblemStatus | null }
+status: ProblemStatus | null; 
+/**
+ * A fix-the-bug problem (expansion M6).
+ */
+fix: boolean }
 /**
  * Everything the problem page shows, in one UI language with English fallback.
  */
@@ -2176,7 +2180,15 @@ parent: string | null;
 /**
  * This problem's follow-ups, in order (empty for most problems).
  */
-followups: FollowupRef[] }
+followups: FollowupRef[]; 
+/**
+ * A fix-the-bug problem (expansion M6): the editor starts from buggy code.
+ */
+fix: boolean; 
+/**
+ * The languages that have buggy starter code (fix-the-bug problems).
+ */
+fix_languages: Language[] }
 /**
  * One measured size: the median of the repetitions, with every sample.
  */

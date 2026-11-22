@@ -19,6 +19,10 @@ All notable changes to KataBox are recorded in this file. The format follows
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
 
+- **Fix the bug:** 24 new problems that start with buggy code (an off-by-one, a memo key,
+  Dijkstra finalising too early, recursion too deep…). A **Fix** badge, a Library
+  **Kind** filter and **Reset to the buggy code**; the daily problem and next problem
+  leave them out.
 - **Follow-ups:** 40 harder variants of 30 problems (many queries, negative values, huge
   inputs, an extra rule), opened once the base problem is solved, each with its own
   tests and solutions.

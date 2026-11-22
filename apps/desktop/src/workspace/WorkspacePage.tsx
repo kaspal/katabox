@@ -33,7 +33,7 @@ import { ErrorNotice } from "@/components/ErrorNotice";
 import { PlacementBanner } from "@/onboarding/PlacementBanner";
 import { Tour } from "@/onboarding/Tour";
 import { InstallDialog } from "@/languages/InstallDialog";
-import { DifficultyLabel, ModeLabel } from "@/components/Semantic";
+import { DifficultyLabel, FixLabel, ModeLabel } from "@/components/Semantic";
 import { api } from "@/lib/api";
 import { isAppError } from "@/lib/errors";
 import { useFocusMode } from "@/lib/focus";
@@ -45,6 +45,7 @@ import { ReflectionCard, SavedReflection } from "@/practice/journal";
 import { useSnippets } from "@/practice/snippets";
 import { setActiveEditor } from "@/lib/editorBridge";
 import { FollowupBanner, FollowupTabs } from "@/workspace/Followups";
+import { FixBanner } from "@/workspace/FixBanner";
 import { snippetCompletion } from "@/workspace/editor/snippets";
 import { useKataState } from "@/lib/kata";
 import { CompareView, SolveInMenu } from "@/practice/crossLanguage";
@@ -452,6 +453,7 @@ export function WorkspacePage() {
         <h1 className="truncate text-base font-semibold">{p.title}</h1>
         <DifficultyLabel difficulty={p.difficulty} className="text-xs" />
         <ModeLabel mode={p.mode} />
+        <FixLabel fix={p.fix} />
         <div className="ml-auto flex items-center gap-2">
           {inInterview && <InterviewTimer compact />}
           {!inInterview && !inKata && !sqlProblem && (solvedIn.data?.length ?? 0) > 0 && (
@@ -636,6 +638,11 @@ export function WorkspacePage() {
                 <Skeleton className="m-4 h-40" />
               ) : (
                 <div className="flex h-full min-h-0 flex-col">
+                  <FixBanner
+                    problem={p}
+                    language={session.doc.lang}
+                    onReset={() => void session.resetToStarter(session.doc!.lang)}
+                  />
                   {toolchains.get(session.doc.lang)?.present === false && (
                     <div
                       role="status"

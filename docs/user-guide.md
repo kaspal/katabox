@@ -178,6 +178,15 @@ problem, they open from the strip under the problem's title (**Base problem · F
 1 · Follow-up 2**). A follow-up's statement says what changes; its tests, limits and
 solutions are its own, and it counts as a problem of its own in your history.
 
+## Fix the bug
+Problems with the **Fix** badge start with code that has a bug. The statement tells the
+story; the code fails some tests, and your job is to find the bug and fix it. Python and
+TypeScript start from the buggy code (some problems in PHP and Rust too); a language
+without a buggy version starts empty, and the banner above the editor says so.
+**Reset to the buggy code** in that banner brings the original code back (your snapshots
+in History stay). The Library's **Kind** filter lists only these problems, or hides them.
+The daily problem and "next problem" never suggest them.
+
 ## Kata drills
 **Kata** (in the navigation rail) re-solves problems you have already solved, from memory
 and against the clock:

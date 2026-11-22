@@ -386,6 +386,7 @@ mod tests {
             mode: kb_core::ProblemMode::Function,
             tags: vec![],
             status: solved.then_some(ProblemStatus::Solved),
+            fix: false,
         }
     }
 

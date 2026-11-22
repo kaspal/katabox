@@ -1,0 +1,18 @@
+id = "deepest-report"
+title = "Deepest Report"
+title_es = "El informe más profundo"
+difficulty = "hard"
+tags = ["tree", "recursion", "debugging"]
+pattern = "trees"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "deepestReport"
+params = [{ name = "manager", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 500 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

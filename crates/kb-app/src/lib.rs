@@ -587,6 +587,11 @@ impl App {
         if p.mode == kb_core::ProblemMode::Program {
             return Ok(kb_judge::program_starter(language)?);
         }
+        // A fix-the-bug problem starts from its buggy code (expansion M6); a language
+        // without a buggy version gets the ordinary starter.
+        if let Some(buggy) = self.store.content.starter(problem, language).await? {
+            return Ok(buggy);
+        }
         Ok(kb_judge::starter_code(language, &p.signature)?)
     }
 

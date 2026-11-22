@@ -1,0 +1,18 @@
+id = "club-count"
+title = "Club Count"
+title_es = "Número de clubes"
+difficulty = "hard"
+tags = ["union-find", "graph", "debugging"]
+pattern = "union-find"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "clubCount"
+params = [{ name = "n", type = "int" }, { name = "friendships", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

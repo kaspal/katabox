@@ -440,6 +440,7 @@ mod event_tests {
             mode: ProblemMode::Function,
             tags: vec![],
             status: None,
+            fix: false,
         }
     }
 

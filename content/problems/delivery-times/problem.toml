@@ -1,0 +1,18 @@
+id = "delivery-times"
+title = "Delivery Times"
+title_es = "Tiempos de reparto"
+difficulty = "hard"
+tags = ["graph", "shortest-path", "heap", "debugging"]
+pattern = "graphs"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "deliveryTimes"
+params = [{ name = "n", type = "int" }, { name = "roads", type = "int[][]" }, { name = "start", type = "int" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

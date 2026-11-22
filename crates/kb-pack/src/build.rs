@@ -138,6 +138,23 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         validator: fs::read_to_string(dir.join("validate.py")).ok(),
         sql,
         parent: meta.parent,
+        // Fix the bug (expansion M6): the buggy code becomes the starter.
+        fix: match meta.kind.as_deref() {
+            Some("fix") => Some(
+                kb_judge::languages::SUPPORTED
+                    .into_iter()
+                    .filter_map(|lang| {
+                        fs::read_to_string(
+                            dir.join("solutions")
+                                .join(format!("buggy.{}", lang.extension())),
+                        )
+                        .ok()
+                        .map(|code| (lang, code))
+                    })
+                    .collect(),
+            ),
+            _ => None,
+        },
     })
 }
 

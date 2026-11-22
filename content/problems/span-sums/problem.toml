@@ -1,0 +1,18 @@
+id = "span-sums"
+title = "Span Sums"
+title_es = "Sumas por tramos"
+difficulty = "medium"
+tags = ["array", "prefix-sum", "debugging"]
+pattern = "range-queries"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "spanSums"
+params = [{ name = "rain", type = "int[]" }, { name = "queries", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

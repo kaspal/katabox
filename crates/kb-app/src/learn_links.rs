@@ -145,6 +145,7 @@ mod tests {
             mode: ProblemMode::Function,
             tags: vec![],
             status,
+            fix: false,
         }
     }
 

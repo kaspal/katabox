@@ -108,6 +108,12 @@ pub fn apply_floor(
         .collect()
 }
 
+/// `all` without fix-the-bug problems (expansion M6): the daily problem, "next problem",
+/// placement and study plans suggest only problems you solve from scratch.
+pub fn without_fix(all: Vec<ProblemSummary>) -> Vec<ProblemSummary> {
+    all.into_iter().filter(|p| !p.fix).collect()
+}
+
 /// `all` without SQL problems (ADR 0031) until the user has opened one: the daily problem
 /// and "next problem" never push SQL on someone practising algorithms. Opened means a
 /// Run or Submit (a status), or `current` itself being an SQL problem.
@@ -716,7 +722,7 @@ impl App {
         lang: UiLang,
     ) -> Result<Option<ProblemSummary>> {
         let floor = self.start_floor().await?;
-        let all = hide_unopened_sql(self.all_problems(lang).await?, current);
+        let all = hide_unopened_sql(without_fix(self.all_problems(lang).await?), current);
         let all = apply_floor(all, floor.as_ref(), current);
         let ratings = self.current_ratings().await?.by_pattern();
         Ok(next_problem_rated(&all, current, &ratings).cloned())
@@ -726,7 +732,7 @@ impl App {
     pub async fn daily_problem(&self, today: &str, lang: UiLang) -> Result<Option<DailyProblem>> {
         let day = parse_day(today)?;
         let floor = self.start_floor().await?;
-        let all = hide_unopened_sql(self.all_problems(lang).await?, "");
+        let all = hide_unopened_sql(without_fix(self.all_problems(lang).await?), "");
         let all = apply_floor(all, floor.as_ref(), "");
         let pick = match self.store.user.daily_pick(day).await? {
             Some(p) if all.iter().any(|x| x.id == p.problem_id) => p,
@@ -765,7 +771,9 @@ impl App {
 
     /// The three placement problems of the welcome flow.
     pub async fn placement_problems(&self, lang: UiLang) -> Result<Vec<ProblemSummary>> {
-        Ok(placement_problems(&self.all_problems(lang).await?))
+        Ok(placement_problems(&without_fix(
+            self.all_problems(lang).await?,
+        )))
     }
 
     /// Finish the welcome flow: the floor from the placement (`None`: "new to this" or a
@@ -987,6 +995,7 @@ mod tests {
             mode: kb_core::ProblemMode::Function,
             tags: vec![],
             status: solved_.then_some(ProblemStatus::Solved),
+            fix: false,
         }
     }
 
@@ -1259,6 +1268,20 @@ mod tests {
         // From the last pattern: wraps around to the first.
         assert_eq!(next_problem(&all, "z1").unwrap().id, "a2");
         assert_eq!(next_problem(&all, "missing"), None);
+    }
+
+    #[test]
+    fn fix_problems_are_never_suggested() {
+        let mut all = vec![
+            p("a1", "arrays-hashing", 1, false),
+            p("a2", "arrays-hashing", 2, false),
+        ];
+        all[0].fix = true;
+        let kept = without_fix(all);
+        assert_eq!(
+            kept.iter().map(|x| x.id.as_str()).collect::<Vec<_>>(),
+            ["a2"]
+        );
     }
 
     #[test]

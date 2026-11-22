@@ -1,0 +1,18 @@
+id = "seat-map"
+title = "Seat Map"
+title_es = "Mapa de asientos"
+difficulty = "medium"
+tags = ["matrix", "simulation", "debugging"]
+pattern = "design"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "seatMap"
+params = [{ name = "rows", type = "int" }, { name = "cols", type = "int" }, { name = "bookings", type = "int[][]" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

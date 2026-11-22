@@ -195,7 +195,10 @@
       "window-functions": "Window functions",
       "deque": "Deque",
       "range-queries": "Range queries",
-      "stream": "Stream"
+      "stream": "Stream",
+      "debugging": "Debugging",
+      "recursion": "Recursion",
+      "memoization": "Memoization"
     }
   },
   "common": {
@@ -3222,5 +3225,20 @@
     "locked": "Solve the base problem first.",
     "of": "A harder follow-up of",
     "intro": "The statement below says what changes; everything else is as in the base problem."
+  },
+  "fix": {
+    "badge": "Fix",
+    "badgeTitle": "Fix the bug: the editor starts with code that has a bug",
+    "banner": "Fix the bug: the editor starts with code that fails some tests. Find the bug and fix it.",
+    "noBuggy": "Fix the bug: this language has no buggy version, so you start from an empty solution. Python and TypeScript start from the buggy code.",
+    "reset": "Reset to the buggy code",
+    "resetTitle": "Reset to the buggy code?",
+    "resetBody": "Your code in this language is replaced by the original buggy code. Your snapshots in History stay.",
+    "cancel": "Cancel",
+    "kindLabel": "Kind",
+    "kind": {
+      "solve": "Solve",
+      "fix": "Fix the bug"
+    }
   }
 }

@@ -120,6 +120,19 @@ export function useEditorSession(problem: string, language: Language | null, opt
     [problem],
   );
 
+  /** Replace `lang`'s code with its starter (a fix problem's buggy code; expansion M6). */
+  const resetToStarter = useCallback(
+    async (lang: Language) => {
+      window.clearTimeout(timer.current);
+      pending.current = null;
+      const text = await api.getStub(problem, lang);
+      await write(lang, text);
+      cache.current.set(`${problem}:${lang}`, text);
+      setRevision((r) => r + 1);
+    },
+    [problem, write],
+  );
+
   const current = doc && doc.lang === language ? doc : null;
   return {
     /** The document shown in the editor (possibly the previous language while loading). */
@@ -132,6 +145,7 @@ export function useEditorSession(problem: string, language: Language | null, opt
     onChange,
     flush,
     reload,
+    resetToStarter,
   };
 }
 

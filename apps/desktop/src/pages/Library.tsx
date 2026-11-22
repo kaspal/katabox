@@ -7,7 +7,7 @@ import type { Difficulty, ProblemMode, ProblemSummary, StatusFilter } from "@/bi
 import { Page } from "@/components/Page";
 import { PatternLearnLinks } from "@/components/PatternLearnLinks";
 import { ErrorNotice } from "@/components/ErrorNotice";
-import { DifficultyLabel, ModeLabel, StatusIcon, usePatternLabel, useTagLabel } from "@/components/Semantic";
+import { DifficultyLabel, FixLabel, ModeLabel, StatusIcon, usePatternLabel, useTagLabel } from "@/components/Semantic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -91,10 +91,12 @@ export function Library() {
     [all.data],
   );
   const sort = search.sort ?? "rank";
-  const rows = useMemo(
-    () => sortProblems(filtered.data ?? [], sort, search.desc ?? false, patternLabel),
-    [filtered.data, sort, search.desc],
-  );
+  const rows = useMemo(() => {
+    // The kind filter (expansion M6) is applied here: `fix` is on every summary.
+    const kind = search.kind;
+    const kept = (filtered.data ?? []).filter((p) => !kind || p.fix === (kind === "fix"));
+    return sortProblems(kept, sort, search.desc ?? false, patternLabel);
+  }, [filtered.data, sort, search.desc, search.kind]);
 
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -111,7 +113,7 @@ export function Library() {
   }, []);
 
   const hasFilters = Boolean(
-    search.q || search.difficulty || search.status || search.pattern || search.tag || search.mode,
+    search.q || search.difficulty || search.status || search.pattern || search.tag || search.mode || search.kind,
   );
   const clear = () => {
     setQuery("");
@@ -195,6 +197,21 @@ export function Library() {
           {(["function", "program", "sql"] as const).map((m) => (
             <ToggleGroupItem key={m} value={m} aria-label={t(`mode.${m}`)}>
               {t(`mode.${m}`)}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="sm"
+          aria-label={t("fix.kindLabel")}
+          value={search.kind ?? ""}
+          onValueChange={(v) => setSearch({ kind: (v || undefined) as "solve" | "fix" | undefined })}
+          data-testid="kind-filter"
+        >
+          {(["solve", "fix"] as const).map((k) => (
+            <ToggleGroupItem key={k} value={k} aria-label={t(`fix.kind.${k}`)}>
+              {t(`fix.kind.${k}`)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -439,6 +456,7 @@ function ProblemGrid({
                     <div role="gridcell" className="flex min-w-0 items-center gap-2 font-medium">
                       <span className="truncate">{p.title}</span>
                       <ModeLabel mode={p.mode} compact />
+                      <FixLabel fix={p.fix} />
                     </div>
                     <div role="gridcell">
                       <DifficultyLabel difficulty={p.difficulty} />

@@ -1,0 +1,18 @@
+id = "longest-streak"
+title = "Longest Streak"
+title_es = "La racha más larga"
+difficulty = "easy"
+tags = ["array", "debugging"]
+pattern = "arrays-hashing"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "longestRun"
+params = [{ name = "values", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

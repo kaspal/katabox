@@ -36,6 +36,8 @@ export type LibrarySearch = {
   tag?: string;
   /** Function or program problems only (ADR 0028). */
   mode?: ProblemMode;
+  /** Fix-the-bug problems only, or none of them (expansion M6). */
+  kind?: "solve" | "fix";
   sort?: SortKey;
   desc?: boolean;
   /** The Lists tab (ADR 0019), and the open list. */
@@ -56,6 +58,7 @@ export function parseLibrarySearch(s: Record<string, unknown>): LibrarySearch {
     pattern: text(s.pattern),
     tag: text(s.tag),
     mode: oneOf(s.mode, ["function", "program", "sql"] as const),
+    kind: oneOf(s.kind, ["solve", "fix"] as const),
     sort: oneOf(s.sort, SORT_KEYS),
     desc: s.desc === true || s.desc === "true" ? true : undefined,
     view: oneOf(s.view, ["lists"] as const),

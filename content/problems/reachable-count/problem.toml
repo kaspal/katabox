@@ -1,0 +1,18 @@
+id = "reachable-count"
+title = "Reachable Rooms"
+title_es = "Salas alcanzables"
+difficulty = "medium"
+tags = ["graph", "bfs", "debugging"]
+pattern = "graphs"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "reachableCount"
+params = [{ name = "n", type = "int" }, { name = "doors", type = "int[][]" }, { name = "start", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

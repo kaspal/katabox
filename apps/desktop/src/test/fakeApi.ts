@@ -70,6 +70,7 @@ export const PROBLEMS: Row[] = [
     mode: "function",
     tags: ["array", "hash-map"],
     status: "solved",
+    fix: false,
   },
   {
     id: "valid-brackets",
@@ -80,6 +81,7 @@ export const PROBLEMS: Row[] = [
     mode: "function",
     tags: ["stack", "string"],
     status: null,
+    fix: false,
   },
   {
     id: "longest-window",
@@ -90,6 +92,7 @@ export const PROBLEMS: Row[] = [
     mode: "function",
     tags: ["string"],
     status: "attempted",
+    fix: false,
   },
   {
     id: "merge-meetings",
@@ -100,6 +103,7 @@ export const PROBLEMS: Row[] = [
     mode: "function",
     tags: ["array", "sorting"],
     status: null,
+    fix: false,
   },
 ];
 
@@ -113,6 +117,7 @@ export const PROGRAM_ROW: Row = {
   mode: "program",
   tags: ["input-parsing"],
   status: null,
+  fix: false,
 };
 
 /** An SQL problem (ADR 0031), listed only with `createFakeApi({ withSql: true })`. */
@@ -125,6 +130,7 @@ export const SQL_ROW: Row = {
   mode: "sql",
   tags: ["join", "dates"],
   status: null,
+  fix: false,
 };
 
 export const SQL_TABLES = [
@@ -619,6 +625,8 @@ export function createFakeApi(
         sql_tables: sql ? SQL_TABLES : null,
         parent: null,
         followups: [],
+        fix: false,
+        fix_languages: [],
         ...(state.problemExtras[id] ?? {}),
       };
     }),

@@ -32,6 +32,8 @@ CREATE TABLE problems (
     -- A follow-up's base problem (expansion M5, ADR 0035); NULL for every other problem.
     -- Follow-ups are left out of the problem list, daily and next problem.
     parent_id     TEXT REFERENCES problems (id),
+    -- 'solve' (write a solution) or 'fix' (repair the buggy starter code; expansion M6)
+    kind          TEXT NOT NULL DEFAULT 'solve' CHECK (kind IN ('solve', 'fix')),
     CHECK ((mode = 'sql') = (schema_sql IS NOT NULL AND sql_schema IS NOT NULL))
 ) WITHOUT ROWID;
 CREATE INDEX problems_by_parent ON problems (parent_id);
@@ -69,6 +71,14 @@ CREATE TABLE tests (
     input      BLOB NOT NULL,
     output     BLOB NOT NULL,
     PRIMARY KEY (problem_id, kind, idx)
+) WITHOUT ROWID;
+
+-- A fix-the-bug problem's buggy starter code per language (expansion M6).
+CREATE TABLE starters (
+    problem_id TEXT NOT NULL REFERENCES problems (id),
+    language   TEXT NOT NULL,
+    code       TEXT NOT NULL,
+    PRIMARY KEY (problem_id, language)
 ) WITHOUT ROWID;
 
 CREATE TABLE reference_solutions (

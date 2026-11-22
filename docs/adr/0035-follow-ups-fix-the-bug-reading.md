@@ -52,3 +52,48 @@ practice formats have more:
 - Each was checked against the base so it doesn't repeat it.
 - JS-safe numbers (A1): `path-tiles--f1` caps n at 10¹⁵ and uses the prime 1 000 003, so
   every product stays below 2⁵³.
+
+## Decision: fix the bug (M6)
+**A kind, not a mode.** `kind = "fix"` in problem.toml, orthogonal to `mode`. Fix
+problems are judged exactly like function problems; a new `ProblemMode` would have
+rippled through every judge branch for nothing. The kind changes only the starter code,
+a badge, a Library filter and practice selection.
+
+**Package:** an ordinary function package plus:
+- `solutions/buggy.py` and `solutions/buggy.ts` (required), `buggy.php` and `buggy.rs`
+  (optional);
+- each buggy file contains the stub's declaration line, like the references;
+- the statement opens with a short story about the code that fails.
+
+kb-pack refuses buggy files without `kind = "fix"`, an unknown kind, a fix problem in
+program or SQL mode, and a fix follow-up.
+
+**`validate --run`:** each buggy file is judged on every test and must **not** be
+Accepted; the output names the first test that catches it (`buggy.py ok caught: test 17
+…`). The references must pass, as for every problem.
+
+**content.db 10:**
+- `problems.kind TEXT NOT NULL DEFAULT 'solve' CHECK (kind IN ('solve','fix'))`;
+- `starters(problem_id, language, code)`, the buggy code per language.
+- `ProblemSummary.fix`, `ProblemView.fix` and `ProblemView.fix_languages`.
+
+**App:**
+- `get_stub` returns the buggy code when there is one for that language, otherwise the
+  ordinary starter; the banner then says "no buggy version in this language".
+- **Reset to the buggy code** (with a confirmation) replaces the draft; snapshots stay.
+- The daily problem, next problem, placement and study plans leave fix problems out
+  (`practice::without_fix`): they suggest problems you solve from scratch. Katas, lists,
+  interviews and the rating treat them as ordinary problems.
+- The shrinker, debugger and custom tests work unchanged.
+
+**Content:** 24 problems (8 Easy, 11 Medium, 5 Hard), one classic bug each: an
+off-by-one range, integer division, a shadowed counter, the last run never compared,
+`lo < hi` missing the last slot, removing while iterating, a wrong tie-break, a
+non-empty stack accepted, overflow (A2: the inputs stay JS-safe, the TypeScript fix needs
+BigInt, and the hints say so), the best length recorded before the window is repaired, a wrong recursion base, the start
+never marked visited, sorting by end, duplicate pairs counted twice, a memo key missing
+a parameter, a min-heap instead of a max-heap, a prefix index off by one, aliased rows,
+money in floats, Dijkstra finalising on push, linking nodes instead of roots,
+`bisect_right` in a strict LIS, a choice never undone, and recursion too deep for a
+5·10⁴ chain (A2: buggy only in Python and TypeScript; no tree is deeper than 1000, the
+chain is a parent array).

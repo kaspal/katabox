@@ -99,6 +99,8 @@ pub enum Check {
     Profile,
     /// `wrong.sql` must be caught (SQL problems).
     Wrong,
+    /// A fix-the-bug problem's buggy code must fail its tests (expansion M6).
+    Buggy(Language),
 }
 
 impl Check {
@@ -111,6 +113,7 @@ impl Check {
             Check::Naive(l) => format!("naive.{}", l.extension()),
             Check::Profile => "profile".into(),
             Check::Wrong => "wrong.sql".into(),
+            Check::Buggy(l) => format!("buggy.{}", l.extension()),
         }
     }
 }
@@ -269,6 +272,30 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
             Err(e) => add(Check::Reference(lang), false, e),
         }
         references.push((lang, src));
+    }
+
+    // 2b. Fix the bug (expansion M6): every buggy file fails the tests, and the first
+    // failing test is named (the reference passes them all, checked above).
+    for lang in languages::SUPPORTED {
+        let file = dir
+            .join("solutions")
+            .join(format!("buggy.{}", lang.extension()));
+        let Ok(src) = fs::read_to_string(&file) else {
+            continue;
+        };
+        match judge_timed(&problem, lang, &src, env) {
+            Ok(r) if r.verdict.is_accepted() => add(
+                Check::Buggy(lang),
+                false,
+                "is Accepted: no test catches the bug".into(),
+            ),
+            Ok(r) => add(
+                Check::Buggy(lang),
+                true,
+                format!("caught: {}", describe_failure(&r)),
+            ),
+            Err(e) => add(Check::Buggy(lang), false, e),
+        }
     }
 
     // 3. Stress: references agree with brute on 500 generated inputs.

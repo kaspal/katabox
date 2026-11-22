@@ -1,0 +1,18 @@
+id = "first-at-least"
+title = "First At Least"
+title_es = "El primero que llega"
+difficulty = "easy"
+tags = ["binary-search", "debugging"]
+pattern = "binary-search"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "firstAtLeast"
+params = [{ name = "sorted", type = "int[]" }, { name = "x", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

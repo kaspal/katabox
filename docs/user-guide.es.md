@@ -191,6 +191,16 @@ Cuando resuelves el problema base, se abren desde la franja bajo el título
 dice qué cambia; sus pruebas, límites y soluciones son propios, y cuenta como un problema
 más en tu historial.
 
+## Corregir el error
+Los problemas con la insignia **Corregir** empiezan con código que tiene un error. El
+enunciado cuenta la historia; el código falla algunas pruebas y tu tarea es encontrar el
+error y corregirlo. Python y TypeScript empiezan con el código con error (algunos
+problemas también en PHP y Rust); un lenguaje sin versión con error empieza vacío, y el
+aviso sobre el editor lo dice. **Volver al código con error**, en ese aviso, recupera el
+código original (tus instantáneas del Historial se conservan). El filtro **Tipo** de la
+Biblioteca muestra solo estos problemas, o los oculta. El problema del día y "siguiente
+problema" nunca los sugieren.
+
 ## Katas
 **Kata** (en la barra de navegación) vuelve a resolver problemas que ya resolviste, de
 memoria y contra el reloj:

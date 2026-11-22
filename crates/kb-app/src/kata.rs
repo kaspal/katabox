@@ -747,6 +747,7 @@ mod tests {
             mode: ProblemMode::Function,
             tags: vec![],
             status: Some(ProblemStatus::Solved),
+            fix: false,
         }
     }
 

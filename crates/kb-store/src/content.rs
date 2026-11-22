@@ -17,7 +17,7 @@ use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 9;
+pub const CONTENT_SCHEMA_VERSION: i64 = 10;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -87,6 +87,8 @@ pub struct PackProblem {
     pub sql: Option<PackSql>,
     /// A follow-up's base problem (expansion M5).
     pub parent: Option<String>,
+    /// A fix-the-bug problem (expansion M6): its buggy starter code per language.
+    pub fix: Option<Vec<(Language, String)>>,
 }
 
 /// An SQL problem's schema (ADR 0031).
@@ -181,6 +183,8 @@ pub struct ProblemSummary {
     pub tags: Vec<String>,
     /// Filled by [`crate::Store::list_problems`]; `None` from [`ContentDb`] alone.
     pub status: Option<ProblemStatus>,
+    /// A fix-the-bug problem (expansion M6).
+    pub fix: bool,
 }
 
 /// A public test as shown in the UI.
@@ -234,6 +238,10 @@ pub struct ProblemView {
     pub parent: Option<String>,
     /// This problem's follow-ups, in order (empty for most problems).
     pub followups: Vec<FollowupRef>,
+    /// A fix-the-bug problem (expansion M6): the editor starts from buggy code.
+    pub fix: bool,
+    /// The languages that have buggy starter code (fix-the-bug problems).
+    pub fix_languages: Vec<Language>,
 }
 
 /// A follow-up as listed on its base problem's page (expansion M5).
@@ -329,7 +337,7 @@ impl ContentDb {
         // Text with no words (only punctuation or spaces) does not filter.
         let fts = filter.query.as_deref().and_then(fts_query);
         let rows = sqlx::query(
-            "SELECT p.id, p.difficulty, p.pattern, p.rank, p.mode,
+            "SELECT p.id, p.difficulty, p.pattern, p.rank, p.mode, p.kind,
                     COALESCE(tl.title, te.title) AS title,
                     (SELECT json_group_array(tag) FROM
                         (SELECT tag FROM problem_tags t WHERE t.problem_id = p.id ORDER BY tag)
@@ -366,6 +374,7 @@ impl ContentDb {
                     mode: parse_mode(&r.try_get::<String, _>("mode")?)?,
                     tags: serde_json::from_str(&r.try_get::<String, _>("tags")?)?,
                     status: None,
+                    fix: r.try_get::<String, _>("kind")? == "fix",
                 })
             })
             .collect()
@@ -469,6 +478,19 @@ impl ContentDb {
                 .transpose()?,
             parent: p.try_get("parent_id")?,
             followups,
+            fix: p.try_get::<String, _>("kind")? == "fix",
+            fix_languages: sqlx::query_scalar::<_, String>(
+                "SELECT language FROM starters WHERE problem_id = ? ORDER BY language",
+            )
+            .bind(id)
+            .fetch_all(&self.pool)
+            .await?
+            .iter()
+            .map(|l| {
+                l.parse::<Language>()
+                    .map_err(|e| StoreError::Corrupt(e.to_string()))
+            })
+            .collect::<Result<Vec<_>>>()?,
         })
     }
 
@@ -587,6 +609,17 @@ impl ContentDb {
             )));
         }
         Ok(Some(ProfileData { inputs, reference }))
+    }
+
+    /// A fix-the-bug problem's buggy starter code in `language` (expansion M6).
+    pub async fn starter(&self, id: &str, language: Language) -> Result<Option<String>> {
+        Ok(
+            sqlx::query_scalar("SELECT code FROM starters WHERE problem_id = ? AND language = ?")
+                .bind(id)
+                .bind(language.id())
+                .fetch_optional(&self.pool)
+                .await?,
+        )
     }
 
     pub async fn reference_solution(&self, id: &str, language: Language) -> Result<Option<String>> {
@@ -748,8 +781,8 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
     sqlx::query(
         "INSERT INTO problems (id, difficulty, pattern, rank, mode, signature, checker,
                                time_limit_ms, memory_mb, profile, validator, schema_sql,
-                               sql_schema, parent_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               sql_schema, parent_id, kind)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&p.id)
     .bind(difficulty_code(p.difficulty))
@@ -770,6 +803,7 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
             .transpose()?,
     )
     .bind(&p.parent)
+    .bind(if p.fix.is_some() { "fix" } else { "solve" })
     .execute(&mut *conn)
     .await?;
 
@@ -873,6 +907,18 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
         .bind(code)
         .execute(&mut *conn)
         .await?;
+    }
+    if let Some(starters) = &p.fix {
+        let mut starters: Vec<&(Language, String)> = starters.iter().collect();
+        starters.sort_by_key(|(l, _)| l.id());
+        for (lang, code) in starters {
+            sqlx::query("INSERT INTO starters (problem_id, language, code) VALUES (?, ?, ?)")
+                .bind(&p.id)
+                .bind(lang.id())
+                .bind(code)
+                .execute(&mut *conn)
+                .await?;
+        }
     }
     Ok(())
 }
@@ -1010,6 +1056,7 @@ pub(crate) mod tests {
             solutions: vec![(Language::Python, "def widest_gap(nums): ...\n".into())],
             sql: None,
             parent: None,
+            fix: None,
         }
     }
 
@@ -1145,6 +1192,63 @@ pub(crate) mod tests {
     }
 
     #[tokio::test]
+    async fn fix_problems_keep_their_buggy_starters() {
+        let dir = temp_dir("fix");
+        let path = dir.join("content.db");
+        let meta = PackMeta {
+            pack_id: "test".into(),
+            pack_version: "1.0.0".into(),
+            pack_date: None,
+        };
+        let mut fix = sample_problem("gap-fix", Difficulty::Medium, 1, true);
+        fix.fix = Some(vec![
+            (
+                Language::TypeScript,
+                "export function f() { return 1; }
+"
+                .into(),
+            ),
+            (
+                Language::Python,
+                "def f():
+    return 1
+"
+                .into(),
+            ),
+        ]);
+        let problems = [sample_problem("gap-a", Difficulty::Easy, 1, true), fix];
+        build(&path, &meta, &problems).await.unwrap();
+        let db = ContentDb::open(&path).await.unwrap();
+        let fixes: Vec<(String, bool)> = db
+            .list_problems(&ProblemFilter::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .map(|p| (p.id, p.fix))
+            .collect();
+        assert_eq!(fixes, [("gap-a".into(), false), ("gap-fix".into(), true)]);
+        let v = db.get_problem("gap-fix", UiLang::En).await.unwrap();
+        assert!(v.fix);
+        assert_eq!(v.fix_languages, [Language::Python, Language::TypeScript]);
+        assert_eq!(
+            db.starter("gap-fix", Language::Python)
+                .await
+                .unwrap()
+                .as_deref(),
+            Some(
+                "def f():
+    return 1
+"
+            )
+        );
+        assert_eq!(db.starter("gap-fix", Language::Rust).await.unwrap(), None);
+        let plain = db.get_problem("gap-a", UiLang::En).await.unwrap();
+        assert!(!plain.fix && plain.fix_languages.is_empty());
+        assert_eq!(db.starter("gap-a", Language::Python).await.unwrap(), None);
+        db.close().await;
+    }
+
+    #[tokio::test]
     async fn builds_and_reads_back() {
         let (_dir, db) = sample_db("build").await;
         let meta = db.meta().await.unwrap();
@@ -1186,7 +1290,7 @@ pub(crate) mod tests {
                 .await
                 .unwrap();
         assert_eq!(kinds, ["blob/blob"]);
-        assert_eq!(CONTENT_SCHEMA_VERSION, 9);
+        assert_eq!(CONTENT_SCHEMA_VERSION, 10);
         // Profile data round-trips (ADR 0024); gap-b has none.
         let mut want = packed.profile.clone().unwrap();
         want.reference.sort_by_key(|(l, _)| l.id());

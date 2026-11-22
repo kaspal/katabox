@@ -1,0 +1,18 @@
+id = "vowel-heavy-word"
+title = "Vowel-Heavy Word"
+title_es = "La palabra con más vocales"
+difficulty = "easy"
+tags = ["string", "debugging"]
+pattern = "strings"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "mostVowels"
+params = [{ name = "words", type = "string[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

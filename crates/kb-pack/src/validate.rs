@@ -68,7 +68,13 @@ pub(crate) struct ProblemToml {
     /// A follow-up's base problem (expansion M5, ADR 0035): set exactly when the package
     /// lives in `<base>/followups/<n>/`, and then the id is `<base>--f<n>`.
     pub parent: Option<String>,
+    /// `"fix"` for a fix-the-bug problem (expansion M6, ADR 0035): the editor starts from
+    /// `solutions/buggy.*`; absent for an ordinary problem.
+    pub kind: Option<String>,
 }
+
+/// The languages a fix-the-bug problem must ship buggy code in (the others are optional).
+pub(crate) const FIX_REQUIRED: [Language; 2] = [Language::Python, Language::TypeScript];
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -487,6 +493,28 @@ pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<Stri
     if sql {
         validate_sql_package(dir, &meta, &mut errs);
         return (Some(meta.difficulty), errs);
+    }
+    // Fix the bug (expansion M6): a function problem with buggy Python and TypeScript.
+    match meta.kind.as_deref() {
+        None => {
+            if dir.join("solutions/buggy.py").exists() || dir.join("solutions/buggy.ts").exists() {
+                errs.push("solutions/buggy.* is for kind = \"fix\" problems".into());
+            }
+        }
+        Some("fix") => {
+            if program || meta.parent.is_some() {
+                errs.push("a fix-the-bug problem is a function problem, not a follow-up".into());
+            }
+            for lang in FIX_REQUIRED {
+                if !dir
+                    .join(format!("solutions/buggy.{}", lang.extension()))
+                    .is_file()
+                {
+                    errs.push(format!("missing solutions/buggy.{}", lang.extension()));
+                }
+            }
+        }
+        Some(other) => errs.push(format!("unknown kind {other:?} (only \"fix\")")),
     }
     match (&meta.signature, program) {
         (Some(sig), false) => {
@@ -915,10 +943,12 @@ fn check_reference_signatures(dir: &Path, errs: &mut Vec<String>) {
             dir.join("solutions")
                 .join(format!("ref.{}", lang.extension())),
         ];
-        // brute.py, naive.py and naive.rs are solutions of the same function.
+        // brute.py, naive.py, naive.rs and buggy.* are solutions of the same function.
         let extra: &[&str] = match lang {
-            kb_core::Language::Python => &["brute.py", "naive.py"],
-            kb_core::Language::Rust => &["naive.rs"],
+            kb_core::Language::Python => &["brute.py", "naive.py", "buggy.py"],
+            kb_core::Language::Rust => &["naive.rs", "buggy.rs"],
+            kb_core::Language::TypeScript => &["buggy.ts"],
+            kb_core::Language::Php => &["buggy.php"],
             _ => &[],
         };
         files.extend(
@@ -1502,5 +1532,75 @@ mod followups {
                 .join("\n")
                 .contains("only for follow-ups")
         );
+    }
+}
+
+#[cfg(test)]
+mod fix_kind {
+    use std::fs;
+    use std::path::Path;
+
+    use super::validate_problem_meta;
+
+    fn fixture(name: &str, problem: &str) -> std::path::PathBuf {
+        let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let root = std::env::temp_dir().join(format!("kb-pack-fix-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        super::tests::copy_dir(
+            &repo.join("content/problems").join(problem),
+            &root.join(problem),
+        );
+        root.join(problem)
+    }
+
+    #[test]
+    fn a_fix_problem_needs_buggy_python_and_typescript() {
+        let d = fixture("ok", "inclusive-total");
+        let (_, errs) = validate_problem_meta(&d);
+        assert!(errs.is_empty(), "{errs:?}");
+        fs::remove_file(d.join("solutions/buggy.ts")).unwrap();
+        let errs = validate_problem_meta(&d).1.join(
+            "
+",
+        );
+        assert!(errs.contains("missing solutions/buggy.ts"), "{errs}");
+    }
+
+    #[test]
+    fn buggy_files_and_kinds_are_checked() {
+        let d = fixture("kinds", "inclusive-total");
+        let toml = fs::read_to_string(d.join("problem.toml")).unwrap();
+        let check = |text: String| {
+            fs::write(d.join("problem.toml"), text).unwrap();
+            validate_problem_meta(&d).1.join(
+                "
+",
+            )
+        };
+        assert!(
+            check(toml.replace(
+                "kind = \"fix\"
+",
+                ""
+            ))
+            .contains("kind = \"fix\" problems")
+        );
+        assert!(
+            check(toml.replace("kind = \"fix\"", "kind = \"repair\"")).contains("unknown kind")
+        );
+        // The buggy files must contain the stub's declaration line, like references.
+        fs::write(d.join("problem.toml"), &toml).unwrap();
+        fs::write(
+            d.join("solutions/buggy.py"),
+            "def other(x):
+    return 0
+",
+        )
+        .unwrap();
+        let errs = validate_problem_meta(&d).1.join(
+            "
+",
+        );
+        assert!(errs.contains("buggy.py"), "{errs}");
     }
 }

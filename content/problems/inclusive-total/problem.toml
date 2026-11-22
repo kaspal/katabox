@@ -1,0 +1,18 @@
+id = "inclusive-total"
+title = "Inclusive Total"
+title_es = "Total inclusivo"
+difficulty = "easy"
+tags = ["array", "debugging"]
+pattern = "fundamentals"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "rangeTotal"
+params = [{ name = "nums", type = "int[]" }, { name = "a", type = "int" }, { name = "b", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256
