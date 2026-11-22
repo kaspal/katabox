@@ -57,6 +57,9 @@ import type {
   ClassAssignment,
   ClassImport,
   ResultsFile,
+  DraftIssue,
+  ProblemDraft,
+  PackHead,
   PackRow,
   FocusCurrent,
   FocusSessionRow,
@@ -408,6 +411,9 @@ export function createFakeApi(
     assignments: [] as AssignmentView[],
     classResults: [] as ClassAssignment[],
     classImport: null as ClassImport | null,
+    drafts: new Map<string, ProblemDraft>(),
+    draftIssues: [] as DraftIssue[],
+    exported: [] as { ids: string[]; head: PackHead }[],
     backup: {
       folder: null,
       every_days: 7,
@@ -1056,6 +1062,61 @@ export function createFakeApi(
     importClassResults: vi.fn(async () => state.classImport),
     classResults: vi.fn(async () => state.classResults),
     saveClassCsv: vi.fn(async () => true),
+    authoringDrafts: vi.fn(async () =>
+      [...state.drafts.values()].map((d) => ({ id: d.id, title: d.title, updated_at: 1795334709000 })),
+    ),
+    authoringLoad: vi.fn(async (id: string) => {
+      const d = state.drafts.get(id);
+      if (!d) throw { code: "not_found", message: id };
+      return structuredClone(d);
+    }),
+    authoringNew: vi.fn(async (id: string): Promise<ProblemDraft> => {
+      const d: ProblemDraft = {
+        id,
+        title: "",
+        title_es: "",
+        difficulty: "easy",
+        pattern: "arrays-hashing",
+        tags: [],
+        rank: 5,
+        function: "solve",
+        params: [{ name: "nums", ty: "int[]" }],
+        returns: "int",
+        checker: "exact",
+        time_limit_ms: 1000,
+        memory_mb: 256,
+        statement: "",
+        statement_es: "",
+        hints: ["", "", ""],
+        hints_es: ["", "", ""],
+        editorial: "",
+        editorial_es: "",
+        public_tests: [],
+        hidden_tests: [],
+        reference_language: "python",
+        reference: "",
+      };
+      state.drafts.set(id, d);
+      return structuredClone(d);
+    }),
+    authoringSave: vi.fn(async (d: ProblemDraft) => {
+      state.drafts.set(d.id, structuredClone(d));
+      return [...state.draftIssues];
+    }),
+    authoringIssues: vi.fn(async () => [...state.draftIssues]),
+    authoringDelete: vi.fn(async (id: string) => {
+      state.drafts.delete(id);
+      return null;
+    }),
+    authoringCheck: vi.fn(async (): Promise<Report> => makeReport("accepted")),
+    authoringPatterns: vi.fn(async () => ["arrays-hashing", "two-pointers", "graphs"]),
+    authoringStarter: vi.fn(async (d: ProblemDraft) => `def ${d.function}(nums: list[int]) -> int:
+    pass
+`),
+    authoringExport: vi.fn(async (ids: string[], head: PackHead) => {
+      state.exported.push({ ids, head });
+      return "cd".repeat(32);
+    }),
     focusCurrent: vi.fn(async () => state.focus),
     focusStart: vi.fn(async (work: number, brk: number) => {
       state.focus = { started_at: Date.now(), work_min: work, break_min: brk };

@@ -79,7 +79,7 @@ fn pack_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
     }
     let mut failed = false;
     for d in &dirs {
-        let (_, errs) = kb_pack::validate_problem_dir(d);
+        let (_, errs) = kb_pack::validate_pack_problem_dir(d);
         for e in &errs {
             eprintln!("{}: {e}", d.display());
         }

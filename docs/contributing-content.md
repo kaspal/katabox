@@ -149,7 +149,9 @@ pack.toml --out graphs101.kbpack`. Each folder is validated like built-in conten
 file's SHA-256. Packs hold problems only (no Learn topics yet). Add
 `--assignment assignment.toml` to make an assignment for classroom mode (ADR 0039,
 docs/classroom.md); a pack that is only an assignment of built-in problems needs no
-problem folders.
+problem folders. A pack problem needs one reference solution (built-in problems need all
+four); the in-app editor (Settings → Packs → Show the problem editor) writes such
+packages from a form (ADR 0040).
 
 ## Before the pull request
 

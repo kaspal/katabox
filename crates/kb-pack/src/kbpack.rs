@@ -370,7 +370,7 @@ pub fn check_extracted(
     }
     for p in &problems {
         let id = crate::validate::problem_id_of(p);
-        let (_, e) = crate::validate::validate_problem_meta(p);
+        let (_, e) = crate::validate::validate_problem_meta_with(p, crate::validate::Rules::Pack);
         errs.extend(e.into_iter().map(|e| format!("problems/{id}: {e}")));
         match crate::validate::test_size(p) {
             Ok(size) => {

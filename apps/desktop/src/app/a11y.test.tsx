@@ -21,6 +21,7 @@ const PAGES: [string, string][] = [
   ["/learn", "learn"],
   ["/kata", "kata"],
   ["/classroom", "classroom"],
+  ["/create", "create"],
   ["/problems/two-sum", "workspace"],
 ];
 

@@ -39,6 +39,15 @@ const PATTERNS: &[&str] = &[
     "sql-advanced",
 ];
 
+/// The patterns a function or program problem may use (the in-app editor's list).
+pub(crate) fn function_patterns() -> Vec<String> {
+    PATTERNS
+        .iter()
+        .filter(|p| !SQL_PATTERNS.contains(p))
+        .map(|p| p.to_string())
+        .collect()
+}
+
 /// The patterns of SQL problems: an SQL problem has one of these, and only SQL problems
 /// do (ADR 0031).
 pub(crate) const SQL_PATTERNS: &[&str] =
@@ -401,6 +410,23 @@ fn size_text(b: TestBytes) -> String {
 
 /// Returns the parsed difficulty (when readable) and the list of errors.
 pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<String>) {
+    validate_problem_meta_with(dir, Rules::Builtin)
+}
+
+/// Which content a problem folder is checked as.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Rules {
+    /// Built-in content: a reference solution in every judge language.
+    Builtin,
+    /// A pack problem (expansion M11/M13, ADR 0038): at least one reference solution;
+    /// every other rule is the same.
+    Pack,
+}
+
+pub(crate) fn validate_problem_meta_with(
+    dir: &Path,
+    rules: Rules,
+) -> (Option<Difficulty>, Vec<String>) {
     let mut errs = Vec::new();
     let folder = problem_id_of(dir);
 
@@ -642,6 +668,8 @@ pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<Stri
         errs.push("needs at least one hidden test".into());
     }
 
+    let mut references = 0;
+    let mut missing = Vec::new();
     for lang in Language::ALL {
         if lang == Language::JavaScript {
             continue; // the TypeScript reference covers JS (types stripped)
@@ -649,9 +677,19 @@ pub(crate) fn validate_problem_meta(dir: &Path) -> (Option<Difficulty>, Vec<Stri
         let f = dir
             .join("solutions")
             .join(format!("ref.{}", lang.extension()));
-        if !f.is_file() {
-            errs.push(format!("missing reference solution {}", f.display()));
+        if f.is_file() {
+            references += 1;
+        } else {
+            missing.push(format!("missing reference solution {}", f.display()));
         }
+    }
+    match rules {
+        Rules::Builtin => errs.extend(missing),
+        Rules::Pack if references == 0 => errs.push(
+            "missing reference solution: a pack problem needs solutions/ref.py, ref.ts, ref.php or ref.rs"
+                .into(),
+        ),
+        Rules::Pack => {}
     }
     // A program problem's references are whole programs: no declaration line to match.
     if errs.is_empty() && !program {
@@ -958,6 +996,10 @@ fn check_reference_signatures(dir: &Path, errs: &mut Vec<String>) {
                 .filter(|f| f.exists()),
         );
         for file in files {
+            // A pack problem may have fewer references (built-in content has them all).
+            if !file.exists() {
+                continue;
+            }
             let src = fs::read_to_string(&file).unwrap_or_default();
             if !src.lines().any(|l| normalize(l) == line) {
                 errs.push(format!(

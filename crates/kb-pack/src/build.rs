@@ -56,11 +56,16 @@ pub(crate) fn block_on<F: std::future::Future>(f: F) -> F::Output {
 
 /// [`read_package`] for a pack's problem (expansion M11).
 pub(crate) fn read_package_for_pack(dir: &Path) -> Result<PackProblem, String> {
-    read_package(dir)
+    read_package_with(dir, true)
 }
 
 /// Read one (already validated) problem folder.
 fn read_package(dir: &Path) -> Result<PackProblem, String> {
+    read_package_with(dir, false)
+}
+
+/// `pack`: a pack problem may have fewer reference solutions than the judge languages.
+fn read_package_with(dir: &Path, pack: bool) -> Result<PackProblem, String> {
     let at = |e: String| format!("{}: {e}", dir.display());
     let meta = read_problem_toml(dir).map_err(at)?;
     let read =
@@ -105,7 +110,14 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         }
         None => {
             for lang in kb_judge::languages::SUPPORTED {
-                solutions.push((lang, read(&format!("solutions/ref.{}", lang.extension()))?));
+                let file = format!("solutions/ref.{}", lang.extension());
+                if pack {
+                    if let Some(code) = read_opt(&file)? {
+                        solutions.push((lang, code));
+                    }
+                } else {
+                    solutions.push((lang, read(&file)?));
+                }
             }
             None
         }

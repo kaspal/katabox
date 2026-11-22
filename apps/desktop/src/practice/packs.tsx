@@ -4,7 +4,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Package, RotateCw, ShieldAlert, Trash2, Upload } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Package, PencilRuler, RotateCw, ShieldAlert, Trash2, Upload } from "lucide-react";
 import type { PackPreview } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,6 +30,9 @@ export function PacksSection() {
   const [preview, setPreview] = useState<PackPreview | null>(null);
   const [restart, setRestart] = useState(false);
   const [includePacks, setIncludePacks] = useSetting<boolean>("practice.include_packs", false, (v) =>
+    typeof v === "boolean" ? v : undefined,
+  );
+  const [showCreate, setShowCreate] = useSetting<boolean>("developer.create", false, (v) =>
     typeof v === "boolean" ? v : undefined,
   );
   const open = useMutation({ mutationFn: () => api.importPackPreview(), onSuccess: (p) => p && setPreview(p) });
@@ -70,6 +74,24 @@ export function PacksSection() {
           />
           {t("packs.includeInPractice")}
         </label>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox
+            checked={showCreate}
+            onCheckedChange={(v) => setShowCreate(v === true)}
+            aria-label={t("packs.showCreate")}
+          />
+          {t("packs.showCreate")}
+        </label>
+        {showCreate && (
+          <Button size="sm" variant="outline" asChild>
+            <Link to="/create" data-testid="open-create">
+              <PencilRuler aria-hidden />
+              {t("packs.openCreate")}
+            </Link>
+          </Button>
+        )}
       </div>
       {open.error && <ErrorNotice error={open.error} />}
       {remove.error && <ErrorNotice error={remove.error} />}

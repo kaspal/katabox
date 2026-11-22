@@ -121,6 +121,12 @@ const readingSetRoute = createRoute({
   }),
   component: lazyRouteComponent(() => import("@/learn/reading/ReadingSetPage"), "ReadingSetPage"),
 });
+/** The in-app problem editor (expansion M13), shown from Settings → Packs. */
+const createProblemRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/create",
+  component: lazyRouteComponent(() => import("@/authoring/CreatePage"), "CreatePage"),
+});
 const classroomRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/classroom",
@@ -192,6 +198,7 @@ const routeTree = rootRoute.addChildren([
   helpRoute,
   interviewRoute,
   classroomRoute,
+  createProblemRoute,
   progressRoute,
   settingsRoute,
   ...devRoutes,

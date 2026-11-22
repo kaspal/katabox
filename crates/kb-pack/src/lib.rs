@@ -1,6 +1,7 @@
 //! KataBox problem packs: validation and the content.db build, shared by the `kb-pack`
 //! CLI (see `main.rs`) and the desktop app's build script.
 
+pub mod authoring;
 mod build;
 pub mod checks;
 pub mod kbpack;
@@ -23,6 +24,14 @@ pub use validate::{
 /// `pack` command use them; expansion M11).
 pub fn validate_problem_dir(dir: &std::path::Path) -> (Option<kb_core::Difficulty>, Vec<String>) {
     validate::validate_problem_meta(dir)
+}
+
+/// [`validate_problem_dir`] with a pack's rules: at least one reference solution instead
+/// of one per judge language (expansion M13, ADR 0038).
+pub fn validate_pack_problem_dir(
+    dir: &std::path::Path,
+) -> (Option<kb_core::Difficulty>, Vec<String>) {
+    validate::validate_problem_meta_with(dir, validate::Rules::Pack)
 }
 
 /// Validate every problem under `dir` and compile them into content.db at `out` (see

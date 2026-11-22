@@ -25,7 +25,7 @@ kb-pack.workspace = true
 
 [features]
 # TypeScript bindings for the desktop app (tauri-specta).
-specta = ["dep:specta", "kb-core/specta", "kb-store/specta", "kb-bridge/specta", "kb-toolchain/specta"]
+specta = ["dep:specta", "kb-core/specta", "kb-store/specta", "kb-bridge/specta", "kb-toolchain/specta", "kb-pack/specta"]
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros"] }

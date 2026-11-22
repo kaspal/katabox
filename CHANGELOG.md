@@ -24,6 +24,11 @@ All notable changes to KataBox are recorded in this file. The format follows
   text) and pack code only runs in the sandbox. Packs are marked everywhere, stay out of
   daily and next problem unless you opt in, update only to newer versions, and uninstall
   cleanly. `kb-pack pack` makes them.
+- **Problem editor:** make pack problems in a form (Settings → Packs → Show the problem
+  editor): signature with the starter code, statement, hints and editorial in English
+  and Spanish with a preview, tests with the visual builders, one reference. Drafts save
+  as you type with issues shown by field; check the reference in the sandbox and export
+  a pack that is verified like an import. Pack problems now need one reference solution.
 - **Classroom mode:** a pack can carry an assignment (due date, problems, languages, an
   optional time limit, hints on or off). Students start it on the new Classroom page;
   while it runs its rules are enforced, and the results file they export lists exactly

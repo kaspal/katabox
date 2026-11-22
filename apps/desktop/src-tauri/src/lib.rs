@@ -1125,6 +1125,101 @@ async fn save_class_csv(
     Ok(true)
 }
 
+// --- In-app problem editor (expansion M13, ADR 0040) ----------------------------------
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_drafts(state: State<'_, AppState>) -> Res<Vec<kb_app::authoring::DraftSummary>> {
+    state.app()?.authoring_drafts().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_load(
+    state: State<'_, AppState>,
+    id: String,
+) -> Res<kb_app::authoring::ProblemDraft> {
+    state.app()?.authoring_load(&id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_new(
+    state: State<'_, AppState>,
+    id: String,
+) -> Res<kb_app::authoring::ProblemDraft> {
+    state.app()?.authoring_new(&id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_save(
+    state: State<'_, AppState>,
+    draft: kb_app::authoring::ProblemDraft,
+) -> Res<Vec<kb_app::authoring::DraftIssue>> {
+    state.app()?.authoring_save(&draft).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_issues(
+    state: State<'_, AppState>,
+    id: String,
+) -> Res<Vec<kb_app::authoring::DraftIssue>> {
+    state.app()?.authoring_issues(&id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_delete(state: State<'_, AppState>, id: String) -> Res<()> {
+    state.app()?.authoring_delete(&id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_check(state: State<'_, AppState>, id: String) -> Res<Report> {
+    state.app()?.authoring_check(&id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_starter(
+    state: State<'_, AppState>,
+    draft: kb_app::authoring::ProblemDraft,
+) -> Res<String> {
+    state.app()?.authoring_starter(&draft)
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_patterns(state: State<'_, AppState>) -> Res<Vec<String>> {
+    Ok(state.app()?.authoring_patterns())
+}
+
+/// A Save dialog, then the drafts as one pack (opened again with the import checks).
+/// `None` when cancelled; otherwise the pack's SHA-256.
+#[tauri::command]
+#[specta::specta]
+async fn authoring_export(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    ids: Vec<String>,
+    head: kb_app::authoring::PackHead,
+) -> Res<Option<String>> {
+    let kb = state.app()?;
+    if !kb_app::authoring::valid_pack_id(&head.id) {
+        return Err(AppError::new(
+            AppErrorCode::InvalidInput,
+            "pack id: 3-20 lowercase letters and digits, starting with a letter",
+        ));
+    }
+    let name = format!("{}.kbpack", head.id);
+    let Some(path) = pick_file(app, "KataBox pack", &["kbpack"], Some(name)).await? else {
+        return Ok(None);
+    };
+    kb.authoring_export(&ids, &head, &path).await.map(Some)
+}
+
 // --- Focus sessions and backups (expansion M10, ADR 0037) ----------------------------
 
 #[tauri::command]
@@ -1502,6 +1597,16 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         import_class_results,
         class_results,
         save_class_csv,
+        authoring_drafts,
+        authoring_load,
+        authoring_new,
+        authoring_save,
+        authoring_issues,
+        authoring_delete,
+        authoring_check,
+        authoring_patterns,
+        authoring_starter,
+        authoring_export,
         focus_current,
         focus_start,
         focus_stop,

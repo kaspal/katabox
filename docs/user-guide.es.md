@@ -206,6 +206,20 @@ no. Desinstalar quita los archivos del paquete; tu historial en sus problemas se
 conserva. Los cambios se aplican al reiniciar. Para crear un paquete: `kb-pack pack
 CARPETA... --manifest pack.toml --out mio.kbpack` (ver docs/contributing-content.md).
 
+## Crear problemas
+Para crear problemas para un paquete sin escribir archivos a mano, marca **Ajustes →
+Paquetes → Mostrar el editor de problemas** y ábrelo. Crea un borrador con su id y
+rellena el formulario: los títulos, la dificultad y el patrón, la firma de la función,
+el enunciado, las pistas y la solución explicada (en inglés y español, con vista
+previa), las pruebas públicas y ocultas (con los mismos constructores visuales que las
+pruebas personalizadas) y una solución de referencia (**Insertar el código inicial** da
+la declaración exacta que espera el juez). Los borradores se guardan mientras escribes, y
+cada cosa por corregir aparece junto a su campo. **Comprobar en el entorno aislado**
+ejecuta tu referencia con todas las pruebas. **Exportar como paquete…** escribe un
+`.kbpack` y lo comprueba igual que una importación antes de conservarlo. Los problemas de
+un paquete necesitan una referencia; los integrados, los cuatro lenguajes
+(docs/problem-authoring.md).
+
 ## Aula
 Un paquete puede traer una tarea de un profesor: un título, una fecha de entrega,
 problemas, los lenguajes a usar, un límite de tiempo opcional y si las pistas siguen

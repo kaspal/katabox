@@ -18,6 +18,8 @@ a pack off as built-in content.
   built-in content and writes a deterministic zip (sorted entries, fixed timestamps).
 - Pack problems are stored as `<pack>--<id>`; pack ids are `[a-z][a-z0-9]{2,19}` (no
   `-`, so no collision with built-in ids or follow-ups).
+- **Amended by ADR 0040 (M13):** a pack problem needs one reference solution instead of
+  one per judge language; every other structural rule is the built-in one.
 - **Not yet:** Learn topics in packs (they need a tracer mapping and their own trust
   rendering) and the optional "Check in sandbox" of a whole pack. Both are on the report's
   Deferred list; v1 packs hold problems only and anything else is refused.

@@ -2493,3 +2493,113 @@ async fn classroom_assignment_locks_results_and_teacher_import() {
         "{text}"
     );
 }
+
+/// A complete draft for the in-app editor tests (an original problem).
+pub(crate) fn tallest_draft() -> kb_pack::authoring::ProblemDraft {
+    use kb_pack::authoring::{DraftTest, ProblemDraft};
+    let t = |nums: &[i64], out: i64| DraftTest {
+        input: json!({ "nums": nums }).as_object().unwrap().clone(),
+        output: out.into(),
+    };
+    ProblemDraft {
+        title: "Tallest Tower".into(),
+        title_es: "La torre más alta".into(),
+        tags: vec!["array".into()],
+        function: "tallest".into(),
+        statement: "Given tower heights `nums`, return the tallest.".into(),
+        statement_es: "Dadas las alturas `nums`, devuelve la mayor.".into(),
+        hints: vec![
+            "Look at each tower once.".into(),
+            String::new(),
+            String::new(),
+        ],
+        editorial: "Keep the best value seen so far.".into(),
+        public_tests: vec![t(&[1, 5, 3], 5), t(&[7], 7)],
+        hidden_tests: vec![t(&[-4, -2, -9], -2), t(&[2, 2, 2], 2)],
+        reference: "def tallest(nums: list[int]) -> int:\n    return max(nums)\n".into(),
+        ..ProblemDraft::new("tallest-tower")
+    }
+}
+
+/// The in-app editor (expansion M13, ADR 0040): drafts only under `authoring/`, issues by
+/// field, and an exported pack that the import accepts.
+#[tokio::test]
+async fn authoring_drafts_issues_and_export() {
+    let p = crate::testutil::paths("authoring");
+    let a = App::open(&p).await.unwrap();
+    for bad in ["../x", "A", "a--b", ""] {
+        assert_eq!(
+            a.authoring_new(bad).await.unwrap_err().code,
+            AppErrorCode::InvalidInput,
+            "{bad}"
+        );
+    }
+    let fresh = a.authoring_new("tallest-tower").await.unwrap();
+    assert!(a.authoring_new("tallest-tower").await.is_err(), "taken");
+    let issues = a.authoring_issues("tallest-tower").await.unwrap();
+    assert!(issues.iter().any(|i| i.field == "statement"), "{issues:?}");
+    assert_eq!(a.authoring_load("tallest-tower").await.unwrap(), fresh);
+
+    let d = tallest_draft();
+    assert_eq!(a.authoring_save(&d).await.unwrap(), vec![]);
+    assert!(
+        p.local_data_dir
+            .join("authoring/tallest-tower/package/tallest-tower/solutions/ref.py")
+            .is_file()
+    );
+    let list = a.authoring_drafts().await.unwrap();
+    assert_eq!(
+        list.iter()
+            .map(|x| (x.id.as_str(), x.title.as_str()))
+            .collect::<Vec<_>>(),
+        [("tallest-tower", "Tallest Tower")]
+    );
+    // Not runnable before the issues are fixed.
+    let mut broken = d.clone();
+    broken.id = "broken".into();
+    broken.statement.clear();
+    a.authoring_save(&broken).await.unwrap();
+    assert_eq!(
+        a.authoring_check("broken").await.unwrap_err().code,
+        AppErrorCode::InvalidInput
+    );
+
+    // Export: refused with issues or a taken id, accepted otherwise; the file imports.
+    let head = crate::authoring::PackHead {
+        id: "towers".into(),
+        name: "Towers \"one\"".into(),
+        author: "Ana".into(),
+        version: "1.0.0".into(),
+        licence: "CC-BY-SA-4.0".into(),
+    };
+    let out = crate::testutil::temp_dir("authoring-out").join("towers.kbpack");
+    let err = a
+        .authoring_export(&["broken".into()], &head, &out)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::PackRefused);
+    assert!(err.message.contains("broken:"), "{err}");
+    let mut taken = head.clone();
+    taken.id = "two-sum".into();
+    let err = a
+        .authoring_export(&["tallest-tower".into()], &taken, &out)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::PackRefused);
+    assert!(!out.exists(), "a refused export leaves no file");
+    let sha = a
+        .authoring_export(&["tallest-tower".into()], &head, &out)
+        .await
+        .unwrap();
+    assert_eq!(sha.len(), 64);
+    let preview = a.import_pack_preview(&out).await.unwrap();
+    assert_eq!(
+        (preview.id.as_str(), preview.name.as_str(), preview.problems),
+        ("towers", "Towers \"one\"", 1)
+    );
+    a.import_pack_cancel(preview.token);
+
+    a.authoring_delete("broken").await.unwrap();
+    assert!(!p.local_data_dir.join("authoring/broken").exists());
+    assert_eq!(a.authoring_drafts().await.unwrap().len(), 1);
+}

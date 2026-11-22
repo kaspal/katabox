@@ -790,6 +790,90 @@ async saveClassCsv(assignment: string) : Promise<Result<boolean, AppError>> {
     else return { status: "error", error: e  as any };
 }
 },
+async authoringDrafts() : Promise<Result<DraftSummary[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_drafts") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringLoad(id: string) : Promise<Result<ProblemDraft, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_load", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringNew(id: string) : Promise<Result<ProblemDraft, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_new", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringSave(draft: ProblemDraft) : Promise<Result<DraftIssue[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_save", { draft }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringIssues(id: string) : Promise<Result<DraftIssue[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_issues", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringDelete(id: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_delete", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringCheck(id: string) : Promise<Result<Report, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_check", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringPatterns() : Promise<Result<string[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_patterns") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringStarter(draft: ProblemDraft) : Promise<Result<string, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_starter", { draft }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * A Save dialog, then the drafts as one pack (opened again with the import checks).
+ * `None` when cancelled; otherwise the pack's SHA-256.
+ */
+async authoringExport(ids: string[], head: PackHead) : Promise<Result<string | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_export", { ids, head }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async focusCurrent() : Promise<Result<FocusCurrent | null, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("focus_current") };
@@ -1868,6 +1952,28 @@ export type Difficulty = "easy" | "medium" | "hard"
 export type DifficultyCount = { difficulty: Difficulty; solved: number; total: number }
 export type Draft = { code: string; updated_at: number }
 /**
+ * One problem with the draft, tied to the form field it belongs to.
+ */
+export type DraftIssue = { 
+/**
+ * A form field (`title`, `signature`, `public_tests`, …) or `general`.
+ */
+field: string; message: string }
+export type DraftParam = { name: string; 
+/**
+ * A judge type such as `int[]` or `TreeNode`.
+ */
+ty: string }
+/**
+ * One draft in the editor's list.
+ */
+export type DraftSummary = { id: string; title: string; 
+/**
+ * UTC milliseconds of the last save.
+ */
+updated_at: number }
+export type DraftTest = { input: Partial<{ [key in string]: JsonValue }>; output: JsonValue }
+/**
  * Why the editorial is unlocked.
  */
 export type EditorialReason = 
@@ -2438,6 +2544,10 @@ export type PackAction = "install" |
  */
 "not_newer"
 /**
+ * What a pack made from drafts says about itself (its manifest).
+ */
+export type PackHead = { id: string; name: string; author: string; version: string; licence: string }
+/**
  * What a pack would do, shown before importing (T13: unsigned, author as stated).
  */
 export type PackPreview = { 
@@ -2545,6 +2655,14 @@ next: ProblemSummary | null }
  * Prints made while the step `step` ran (or before the first step).
  */
 export type PrintChunk = { step: number; text: string }
+/**
+ * Everything the editor's form holds.
+ */
+export type ProblemDraft = { id: string; title: string; title_es: string; difficulty: Difficulty; pattern: string; tags: string[]; rank: number; function: string; params: DraftParam[]; returns: string; checker: string; time_limit_ms: number; memory_mb: number; statement: string; statement_es: string; 
+/**
+ * Up to three tiers, from a nudge to almost the answer.
+ */
+hints: string[]; hints_es: string[]; editorial: string; editorial_es: string; public_tests: DraftTest[]; hidden_tests: DraftTest[]; reference_language: Language; reference: string }
 /**
  * Which problems to list. Every field is optional; `None` means "any".
  */

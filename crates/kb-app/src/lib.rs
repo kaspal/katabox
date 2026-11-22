@@ -11,6 +11,7 @@
 //! - Responses redact what hidden tests returned and printed; user.db keeps the full
 //!   Report.
 
+pub mod authoring;
 pub mod backup;
 mod calibration;
 pub mod classroom;

@@ -192,6 +192,18 @@ the pack's files; your history on its problems stays. Changes take effect after 
 restart. To make a pack: `kb-pack pack PROBLEM_DIR... --manifest pack.toml --out
 my.kbpack` (see docs/contributing-content.md).
 
+## Create problems
+To make problems for a pack without writing files by hand, tick **Settings → Packs →
+Show the problem editor** and open it. Create a draft by its id, then fill the form: the
+titles, difficulty and pattern, the function signature, the statement, hints and
+editorial (in English and Spanish, with a preview), the public and hidden tests (with the
+same visual builders as custom tests), and one reference solution (**Insert the starter
+code** gives the exact declaration the judge expects). Drafts are saved as you type, and
+every problem left to fix is shown next to its field. **Check in sandbox** runs your
+reference on every test. **Export as pack…** writes a `.kbpack` and checks it exactly
+like an import before keeping it. Pack problems need one reference; built-in problems
+need all four languages (docs/problem-authoring.md).
+
 ## Classroom
 A pack can carry an assignment from a teacher: a title, a due date, problems, the
 languages to use, an optional time limit, and whether hints stay on. Install it like any

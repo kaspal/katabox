@@ -20,10 +20,15 @@ serde_json.workspace = true
 sha2.workspace = true
 tokio.workspace = true
 toml.workspace = true
+specta = { workspace = true, optional = true }
 # The pins kb-toolchain already uses (Cargo.lock); packs are zips (expansion M11).
 # flate2's default features pick its pure-Rust backend for zip's deflate.
 flate2 = "1.1.11"
 zip = { version = "7.3.0", default-features = false, features = ["deflate-flate2"] }
+
+[features]
+# TypeScript bindings for the in-app editor's types (expansion M13).
+specta = ["dep:specta", "kb-core/specta", "kb-store/specta"]
 
 [dev-dependencies]
 sqlx.workspace = true
