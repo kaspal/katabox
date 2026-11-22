@@ -114,15 +114,19 @@ describe("Home", () => {
     expect(again.querySelector(".kb-pulse")).toBeNull();
   });
 
-  it("suggests what to watch next: the path's next topic and a watched topic to practise", async () => {
+  it("offers an unwatched step without problems in the session, and Watch next does not repeat it", async () => {
     const fake = setFakeApi();
-    // Bubble Sort links only two-sum (solved); Quick Sort, viewed last, also links valid-brackets.
+    // Bubble Sort links only two-sum (solved); Quick Sort, viewed last, also links
+    // valid-brackets; Insertion Sort (current) has no linked problems.
     await fake.api.setSetting("learn.viewed", ["bubble-sort", "quick-sort"]);
     renderApp("/");
-    const path = await screen.findByTestId("watch-path");
-    expect(within(path).getByRole("link", { name: "Insertion Sort" })).toHaveAttribute("href", "/learn/sorting/insertion-sort");
-    expect(path).toHaveTextContent("On your path");
+    const watch = await screen.findByTestId("session-item-watch");
+    expect(watch).toHaveTextContent("Watch: Insertion Sort");
+    expect(within(watch).getByTestId("on-path-badge")).toBeInTheDocument();
+    expect(within(watch).getByRole("link")).toHaveAttribute("href", "/learn/sorting/insertion-sort");
     const review = await screen.findByTestId("watch-review");
+    expect(screen.queryByTestId("watch-path")).toBeNull();
+    expect(within(screen.getByTestId("watch-next")).queryByRole("link", { name: "Insertion Sort" })).toBeNull();
     expect(within(review).getByRole("link", { name: "Quick Sort" })).toHaveAttribute("href", "/learn/sorting/quick-sort");
     expect(within(review).getByRole("link", { name: "Valid Brackets" })).toHaveAttribute("href", "/problems/valid-brackets");
   });

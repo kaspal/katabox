@@ -70,7 +70,10 @@ export function Home() {
 
       <PathCard home={home} />
 
-      <WatchNext path={home.progress} />
+      <WatchNext
+        path={home.progress}
+        exclude={(s.session?.items ?? []).flatMap((i) => (i.topicId ? [i.topicId] : []))}
+      />
 
       {fresh.length > 0 && (
         <section aria-label={t("home.fresh.title")} className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]" data-testid="keep-fresh">

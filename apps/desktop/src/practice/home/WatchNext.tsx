@@ -18,33 +18,49 @@ import { CARD } from "@/practice/home/TodayRow";
 
 type Pick = { topic: LearnTopicSummary; kind: "path" | "review" | "weak"; problem: ProblemSummary | null };
 
+export const WATCH_CARDS = 3;
+
+/** Up to three distinct topics, never one the session already offers (`exclude`): the
+ * path's next topic, a watched topic to practise, then unwatched topics for the daily's
+ * pattern, then along the path, then anywhere, until there are three. */
 export function pickWatchNext(input: {
   path: PathProgress | null;
   review: { topic: LearnTopicSummary; problem: ProblemSummary } | null;
   patternTopics: LearnTopicSummary[];
   catalog: LearnTopicSummary[];
   viewed: ReadonlySet<string>;
+  exclude?: ReadonlySet<string>;
 }): Pick[] {
   const out: Pick[] = [];
-  const taken = new Set<string>();
+  const taken = new Set<string>(input.exclude ?? []);
   const add = (p: Pick) => {
-    if (taken.has(p.topic.id)) return;
+    if (out.length >= WATCH_CARDS || taken.has(p.topic.id)) return;
     taken.add(p.topic.id);
     out.push(p);
   };
   const path = input.path;
   if (path?.nextTopic) add({ topic: path.nextTopic, kind: "path", problem: path.nextProblem });
   if (input.review) add({ topic: input.review.topic, kind: "review", problem: input.review.problem });
-  const unseen = (t: LearnTopicSummary) => !input.viewed.has(t.id) && !taken.has(t.id);
-  const weak =
-    input.patternTopics.find(unseen) ??
-    path?.steps.slice(path.current + 1).map((s) => s.topic).find(unseen) ??
-    input.catalog.find(unseen);
-  if (weak) add({ topic: weak, kind: "weak", problem: null });
-  return out.slice(0, 3);
+  const fallbacks = [
+    ...input.patternTopics,
+    ...(path?.steps.slice(path.current + 1).map((s) => s.topic) ?? []),
+    ...input.catalog,
+  ];
+  for (const topic of fallbacks) {
+    if (out.length >= WATCH_CARDS) break;
+    if (!input.viewed.has(topic.id)) add({ topic, kind: "weak", problem: null });
+  }
+  return out;
 }
 
-export function WatchNext({ path }: { path: PathProgress | null | undefined }) {
+export function WatchNext({
+  path,
+  exclude = [],
+}: {
+  path: PathProgress | null | undefined;
+  /** Topics the session already suggests watching. */
+  exclude?: string[];
+}) {
   const { t } = useTranslation();
   const { viewed } = useViewed();
   const prefs = usePracticePrefs();
@@ -66,6 +82,7 @@ export function WatchNext({ path }: { path: PathProgress | null | undefined }) {
           patternTopics: (byPattern.data ?? []).find((p) => p.pattern === pattern)?.topics ?? [],
           catalog: all,
           viewed: new Set(viewed),
+          exclude: new Set(exclude),
         });
   return (
     <section aria-labelledby="home-watch-title" data-testid="watch-next">
@@ -152,11 +169,13 @@ function WatchCard({ pick, subject }: { pick: Pick; subject: LearnSubject | unde
   );
 }
 
-type Family = "bars" | "graph" | "tree" | "grid" | "strip";
+type Family = "curve" | "bars" | "graph" | "tree" | "grid" | "strip";
 
 /** Subject icon (content/learn/subjects.toml) → thumbnail family. */
 export function thumbFamily(icon: string): Family {
-  if (["chart-column", "chart-line", "trending-up", "sigma"].includes(icon)) return "bars";
+  // Complexity, recursion and math (Foundations, Math and geometry).
+  if (["chart-line", "sigma"].includes(icon)) return "curve";
+  if (["chart-column", "trending-up"].includes(icon)) return "bars";
   if (icon === "graph") return "graph";
   if (icon === "tree") return "tree";
   if (["grid", "table", "database"].includes(icon)) return "grid";
@@ -169,6 +188,15 @@ function Thumb({ icon }: { icon: string }) {
   const family = thumbFamily(icon);
   return (
     <svg viewBox="0 0 300 110" className="block h-[110px] w-full bg-background" aria-hidden data-family={family}>
+      {family === "curve" && (
+        <>
+          {/* Faint axes, then 1, n and n² rising from the origin. */}
+          <path d="M60 96 H250 M60 96 V14" fill="none" stroke={v("edge")} strokeOpacity={0.35} strokeWidth={1.5} />
+          <path d="M60 88 H244" fill="none" stroke={v("sorted")} strokeWidth={3} strokeLinecap="round" />
+          <path d="M60 96 L244 40" fill="none" stroke={v("compare")} strokeWidth={3} strokeLinecap="round" />
+          <path d="M60 96 Q170 94 214 18" fill="none" stroke={v("swap")} strokeWidth={3} strokeLinecap="round" />
+        </>
+      )}
       {family === "bars" &&
         [40, 60, 74, 25, 84, 50, 66, 32].map((h, i) => (
           <rect
