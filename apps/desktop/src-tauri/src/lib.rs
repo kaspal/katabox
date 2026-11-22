@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 use kb_app::debug::{DebugAction, DebugInspect, DebugStart, DebugView};
 use kb_app::interview::{InterviewResult, InterviewSetup, InterviewView};
+use kb_app::journal::{JournalOverview, MistakeView};
 use kb_app::kata::{KataOptions, KataOverview, KataStart, KataView};
 use kb_app::plan_app::{PlanIcsLabels, PlanSetup, PlanView};
 use kb_app::practice::{
@@ -25,6 +26,7 @@ use kb_app::{
 use kb_app::{LanguageCount, LearnTopicView};
 use kb_core::debug::EvalResult;
 use kb_core::{JudgeEvent, Language, Report};
+use kb_store::journal::ReflectionRow;
 use kb_store::kata::KataAttemptRow;
 use kb_store::{AcceptedSolution, ActivityRow, LearnPath, LearnSubject, LearnTopicSummary};
 use kb_store::{
@@ -568,6 +570,72 @@ async fn interviews(state: State<'_, AppState>, lang: UiLang) -> Res<Vec<Intervi
     state.app()?.interviews(lang).await
 }
 
+// --- Mistake journal and reflections (expansion M3, ADR 0034) ------------------------
+
+/// Progress → Mistakes: counts per tag with the latest examples.
+#[tauri::command]
+#[specta::specta]
+async fn journal_overview(state: State<'_, AppState>, lang: UiLang) -> Res<JournalOverview> {
+    state.app()?.journal_overview(lang).await
+}
+
+/// A failed submission's tags and note (`None` for an Accepted one).
+#[tauri::command]
+#[specta::specta]
+async fn submission_mistake(
+    state: State<'_, AppState>,
+    submission: i64,
+) -> Res<Option<MistakeView>> {
+    state.app()?.submission_mistake(submission).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn set_submission_mistake(
+    state: State<'_, AppState>,
+    submission: i64,
+    tags: Vec<String>,
+    note: String,
+) -> Res<()> {
+    state
+        .app()?
+        .set_submission_mistake(submission, &tags, &note)
+        .await
+}
+
+/// The shrinker found a smaller failing input for this submission's failure.
+#[tauri::command]
+#[specta::specta]
+async fn tag_shrunk(state: State<'_, AppState>, submission: i64) -> Res<()> {
+    state.app()?.tag_shrunk(submission).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn reflection(state: State<'_, AppState>, problem: String) -> Res<Option<ReflectionRow>> {
+    state.app()?.reflection(&problem).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn set_reflection(
+    state: State<'_, AppState>,
+    problem: String,
+    why: String,
+    time_class: Option<String>,
+    space_class: Option<String>,
+) -> Res<()> {
+    state
+        .app()?
+        .set_reflection(
+            &problem,
+            &why,
+            time_class.as_deref(),
+            space_class.as_deref(),
+        )
+        .await
+}
+
 // --- Skill rating and study plans (expansion M2, ADR 0033) ---------------------------
 
 /// Ratings per pattern and overall (replayed from the history; estimated).
@@ -1007,6 +1075,12 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         interview_active,
         end_interview,
         interviews,
+        journal_overview,
+        submission_mistake,
+        set_submission_mistake,
+        tag_shrunk,
+        reflection,
+        set_reflection,
         ratings,
         plan_view,
         create_plan,

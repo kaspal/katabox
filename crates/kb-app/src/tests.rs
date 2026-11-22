@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 6); // migrations 0001-0006
+    assert_eq!(info.user_schema_version, 7); // migrations 0001-0007
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -1828,4 +1828,123 @@ async fn rating_replay_on_500_submissions() {
     assert!(r.overall.events > 0);
     assert!(cold < std::time::Duration::from_secs(2), "{cold:?}");
     a.close().await;
+}
+
+/// The mistake journal and reflections (expansion M3): old and new failures are tagged,
+/// the user edits tags and notes, the shrinker adds its tag, reflections are checked,
+/// and all of it travels with an export.
+#[tokio::test]
+async fn mistake_journal_and_reflections() {
+    let a = app("journal-a").await;
+    // A failure made "before the journal": tagged on first look.
+    let old = a
+        .store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Python,
+            "x",
+            &report_with(Verdict::WrongAnswer),
+        )
+        .await
+        .unwrap();
+    let tle = a
+        .store
+        .user
+        .record_submission(
+            "nested-brackets",
+            Language::Rust,
+            "y",
+            &report_with(Verdict::TimeLimitExceeded),
+        )
+        .await
+        .unwrap();
+    let ok = a
+        .store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Python,
+            "z",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+    let j = a.journal_overview(UiLang::En).await.unwrap();
+    assert_eq!(j.failures, 2);
+    let tags: Vec<(&str, u32)> = j.tags.iter().map(|t| (t.tag.as_str(), t.count)).collect();
+    assert_eq!(tags, [("wa", 1), ("tle", 1)]);
+    assert_eq!(j.tags[0].examples[0].title, "Two Sum");
+
+    assert_eq!(a.submission_mistake(ok).await.unwrap(), None);
+    let m = a.submission_mistake(old).await.unwrap().unwrap();
+    assert_eq!(m.auto_tags, ["wa"]);
+    a.set_submission_mistake(old, &["wa".into(), "edge:empty".into()], "empty input")
+        .await
+        .unwrap();
+    assert_eq!(
+        a.set_submission_mistake(old, &["nonsense".into()], "")
+            .await
+            .unwrap_err()
+            .code,
+        AppErrorCode::InvalidInput
+    );
+    assert!(
+        a.set_submission_mistake(ok, &["wa".into()], "")
+            .await
+            .is_err()
+    );
+    a.tag_shrunk(tle).await.unwrap();
+    let m = a.submission_mistake(tle).await.unwrap().unwrap();
+    assert_eq!(m.tags, ["tle", "shrunk"]);
+
+    assert_eq!(a.reflection("two-sum").await.unwrap(), None);
+    a.set_reflection(
+        "two-sum",
+        " one pass with a map ",
+        Some("O(n)"),
+        Some("O(n)"),
+    )
+    .await
+    .unwrap();
+    assert!(
+        a.set_reflection("two-sum", "x", Some("O(fast)"), None)
+            .await
+            .is_err()
+    );
+    assert!(
+        a.set_reflection("two-sum", &"x".repeat(501), None, None)
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        a.reflection("two-sum").await.unwrap().unwrap().why,
+        "one pass with a map"
+    );
+
+    let dir = crate::testutil::temp_dir("journal-export");
+    let file = dir.join("j.kbx.json");
+    let counts = a.export_to(&file).await.unwrap();
+    assert_eq!((counts.mistakes, counts.reflections), (2, 1));
+    let b = app("journal-b").await;
+    let p = b.import_preview_from(&file).await.unwrap();
+    b.import_apply(p.id).await.unwrap();
+    let jb = b.journal_overview(UiLang::En).await.unwrap();
+    assert_eq!(jb.failures, 2);
+    assert!(
+        jb.tags
+            .iter()
+            .any(|t| t.tag == "edge:empty" && t.examples[0].note == "empty input")
+    );
+    assert_eq!(
+        b.reflection("two-sum")
+            .await
+            .unwrap()
+            .unwrap()
+            .time_class
+            .as_deref(),
+        Some("O(n)")
+    );
+    a.close().await;
+    b.close().await;
 }

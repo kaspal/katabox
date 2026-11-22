@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import { relativeTime } from "@/lib/time";
 import { CodeEditor } from "@/workspace/editor/CodeEditor";
 import { ResultView, mb, ms } from "@/workspace/results/ResultView";
+import { MistakeEditor } from "@/practice/journal";
 
 export function SubmissionsTab({ problemId }: { problemId: string }) {
   const { t, i18n } = useTranslation();
@@ -66,6 +67,7 @@ function SubmissionDetail({ id, onBack }: { id: number; onBack: () => void }) {
       ) : (
         <>
           <ResultView report={q.data.report} />
+          {q.data.verdict !== "accepted" && <MistakeEditor submission={id} />}
           <h4 className="text-sm font-semibold">
             {t("workspace.submissions.code", { language: t(`languages.${q.data.language}`) })}
           </h4>

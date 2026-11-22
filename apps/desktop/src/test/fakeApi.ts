@@ -28,6 +28,9 @@ import type {
   KataStart,
   KataView,
   PlanSetup,
+  JournalOverview,
+  MistakeView,
+  ReflectionRow,
   PlanView,
   RatingsView,
   PracticeOutcome,
@@ -361,6 +364,9 @@ export function createFakeApi(
     kata: (opts.kata ?? null) as KataView | null,
     plan: null as PlanView | null,
     planSetups: [] as PlanSetup[],
+    journal: { failures: 0, tags: [] } as JournalOverview,
+    mistakes: new Map<number, MistakeView>(),
+    reflections: new Map<string, ReflectionRow>(),
     ratings: {
       overall: { rating: 1200, events: 0, history: [] },
       patterns: [],
@@ -811,6 +817,22 @@ export function createFakeApi(
     }),
     kataOverview: vi.fn(async () => ({ bests: [], rusty: [], streak: 0, sessions: [] })),
     ratings: vi.fn(async () => state.ratings),
+    journalOverview: vi.fn(async () => state.journal),
+    submissionMistake: vi.fn(async (id: number) => {
+      const s = submissions.find((x) => x.id === id);
+      if (!s || s.verdict === "accepted") return null;
+      return state.mistakes.get(id) ?? { auto_tags: ["wa"], tags: ["wa"], note: "" };
+    }),
+    setSubmissionMistake: vi.fn(async (id: number, tags: string[], note: string) => {
+      state.mistakes.set(id, { auto_tags: ["wa"], tags, note });
+      return null;
+    }),
+    tagShrunk: vi.fn(async () => null),
+    reflection: vi.fn(async (p: string) => state.reflections.get(p) ?? null),
+    setReflection: vi.fn(async (p: string, why: string, time: string | null, space: string | null) => {
+      state.reflections.set(p, { problem_id: p, why, time_class: time, space_class: space, updated_at: Date.now() });
+      return null;
+    }),
     planView: vi.fn(async () => (state.plan ? structuredClone(state.plan) : null)),
     createPlan: vi.fn(async (setup: PlanSetup, lang: UiLang) => {
       const ids = PROBLEMS.filter((p) => p.status !== "solved").map((p) => p.id);

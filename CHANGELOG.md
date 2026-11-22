@@ -32,6 +32,13 @@ All notable changes to KataBox are recorded in this file. The format follows
   of Learn topics, problems, reviews and katas, with Done / Skip / Later, a Home card,
   and **Export to calendar** (`.ics`).
 
+- **Mistake journal:** failed submissions are tagged automatically (wrong answer, time
+  or memory limit, the kind of runtime error, edge cases found in the failing input,
+  "found by the shrinker"); change the tags and add a note. **Your common mistakes** on
+  Progress → Mistakes.
+- **Reflections:** after Accepted, an optional "why it works" and a complexity pick,
+  shown again in Notes, review mode and katas.
+
 ### Changed
 - Exports are now format `katabox-export/v2`, which carries the new kinds of records
   added below. Files exported by 1.0.0-beta.1 (`v1`) still import.

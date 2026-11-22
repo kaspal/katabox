@@ -357,7 +357,8 @@
       "topics": "By topic",
       "history": "History",
       "katas": "Katas",
-      "plan": "Plan"
+      "plan": "Plan",
+      "mistakes": "Mistakes"
     },
     "learn": {
       "title": "Learn topics viewed",
@@ -859,7 +860,9 @@
         "kata_sessions": "Kata sessions",
         "kata_attempts": "Kata attempts",
         "study_plans": "Study plans",
-        "plan_items": "Study plan items"
+        "plan_items": "Study plan items",
+        "mistakes": "Mistake journal entries",
+        "reflections": "Reflections"
       }
     },
     "crossLang": {
@@ -3124,5 +3127,56 @@
       "min": "min",
       "saved": "Calendar file saved."
     }
+  },
+  "journal": {
+    "title": "What went wrong",
+    "intro": "KataBox tagged what it could tell from the failure. Change the tags and add a note: they feed \"Your common mistakes\" on Progress.",
+    "tags": "Tags",
+    "auto": "found by KataBox",
+    "note": "Note",
+    "save": "Save tags and note",
+    "saved": "Saved.",
+    "saveError": "Could not save.",
+    "none": "No failed submissions yet. When a Submit fails, its mistakes are collected here.",
+    "failures_one": "Your common mistakes, from {{count}} failed submission",
+    "failures_other": "Your common mistakes, from {{count}} failed submissions",
+    "filter": "Show",
+    "allTags": "Every tag",
+    "tag": {
+      "wa": "Wrong answer",
+      "tle": "Too slow (time limit)",
+      "mle": "Too much memory",
+      "ole": "Too much output",
+      "compile": "Does not compile",
+      "runtime_index": "Index out of range",
+      "runtime_key": "Missing key",
+      "runtime_null": "None / null / undefined",
+      "runtime_zero_division": "Division by zero",
+      "runtime_recursion": "Recursion too deep",
+      "runtime_overflow": "Integer overflow",
+      "runtime_type": "Wrong type or value",
+      "runtime_other": "Other runtime error",
+      "edge_empty": "Empty input",
+      "edge_single": "One element",
+      "edge_max": "Largest input",
+      "edge_negative": "Negative numbers",
+      "edge_zero": "Zero",
+      "edge_duplicates": "Duplicates",
+      "shrunk": "Found by the shrinker",
+      "logic": "Wrong idea"
+    }
+  },
+  "reflection": {
+    "title": "Why does it work?",
+    "why": "In one sentence (optional): it is shown again when you review this problem.",
+    "time": "Time",
+    "space": "Space",
+    "unset": "Not set",
+    "other": "Other",
+    "save": "Save",
+    "saved": "Saved.",
+    "yours": "Your note on why it works:",
+    "timeIs": "time {{c}}",
+    "spaceIs": "space {{c}}"
   }
 }

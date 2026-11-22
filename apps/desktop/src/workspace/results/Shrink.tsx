@@ -20,6 +20,8 @@ export type ShrinkCase = {
   disabledReason: string | null;
   /** Add an input to the custom tests (Testcases tab). */
   addCustom: (input: CustomInput) => void;
+  /** A smaller failing input was found (the journal tags the submission, M3). */
+  onShrunk?: () => void;
 };
 
 export const ShrinkContext = createContext<ShrinkCase | null>(null);
@@ -49,6 +51,7 @@ export function ShrinkPanel({ input }: { input: CustomInput }) {
         setState({ kind: "running", progress: e }),
       );
       setState({ kind: "done", result });
+      if (result.size < result.original_size) ctx.onShrunk?.();
     } catch (error) {
       setState({ kind: "error", error });
     }

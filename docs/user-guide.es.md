@@ -216,6 +216,19 @@ memoria y contra el reloj:
   **Exportar al calendario…** guarda el plan como archivo `.ics` para cualquier
   aplicación de calendario.
 
+## Diario de errores y reflexiones
+- Tras un **envío** fallido, KataBox etiqueta lo que puede deducir: respuesta incorrecta,
+  demasiado lento, demasiada memoria, el tipo de error de ejecución (índice fuera de rango,
+  división entre cero, recursión demasiado profunda…) y, a partir de la entrada que falla,
+  casos límite como una entrada vacía, un solo elemento, el valor más grande, números
+  negativos o duplicados. Abre el envío en la pestaña **Envíos** para cambiar las
+  etiquetas y añadir una nota.
+- **Progreso → Errores** muestra **Tus errores habituales**: cuántas veces aparece cada
+  etiqueta, con los ejemplos más recientes.
+- Tras **Aceptado**, puedes escribir en una frase **por qué funciona** y elegir su
+  complejidad en tiempo y espacio. Tu nota vuelve arriba en la pestaña **Notas**, cuando
+  pasas un repaso y cuando resuelves el problema en una kata.
+
 ## Depurador y visualizador
 - **Lenguajes:** Python y JavaScript/TypeScript, en problemas de función y de programa.
   Aún no PHP, Rust ni SQL.

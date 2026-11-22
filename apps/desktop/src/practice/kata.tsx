@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDuration, useKataOverview } from "@/lib/kata";
 import { cn } from "@/lib/utils";
 import { HomeCard } from "@/practice/HomeCards";
+import { SavedReflection } from "@/practice/journal";
 
 /** Milliseconds since `since`, ticking every second from the wall clock. */
 function useElapsed(since: number | null): number {
@@ -101,6 +102,7 @@ export function KataBar({
             : t("kata.solvedIn", { time: formatDuration(outcome!.attempt.time_ms ?? 0), count: outcome!.attempt.submits })
           : t("kata.fromMemory")}
       </p>
+      {solvedNow && <SavedReflection problemId={problemId} />}
     </ExerciseShell>
   );
 }

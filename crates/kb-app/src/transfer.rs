@@ -82,6 +82,8 @@ pub struct TransferCounts {
     pub kata_attempts: u32,
     pub study_plans: u32,
     pub plan_items: u32,
+    pub mistakes: u32,
+    pub reflections: u32,
 }
 
 fn counts(d: &ExportData) -> TransferCounts {
@@ -103,6 +105,8 @@ fn counts(d: &ExportData) -> TransferCounts {
         kata_attempts: n(d.kata_attempts.len()),
         study_plans: n(d.study_plans.len()),
         plan_items: n(d.plan_items.len()),
+        mistakes: n(d.mistakes.len()),
+        reflections: n(d.reflections.len()),
     }
 }
 
@@ -198,6 +202,8 @@ fn validate(f: &ExportFile) -> Result<()> {
         d.kata_attempts.len(),
         d.study_plans.len(),
         d.plan_items.len(),
+        d.mistakes.len(),
+        d.reflections.len(),
     ];
     if sizes.iter().any(|n| *n > MAX_ROWS) {
         return Err(invalid(format!("more than {MAX_ROWS} records of one kind")));
@@ -386,6 +392,23 @@ fn validate(f: &ExportFile) -> Result<()> {
         }
         if let Some(r) = &it.reference {
             check_id(&p, r)?;
+        }
+    }
+    for (i, m) in d.mistakes.iter().enumerate() {
+        let p = format!("mistakes[{i}]");
+        check_id(&p, &m.problem_id)?;
+        check_time(&p, m.submitted_at)?;
+        check_time(&p, m.updated_at)?;
+        if m.language.parse::<kb_core::Language>().is_err() || !crate::journal::valid_mistake(m) {
+            return Err(invalid(format!("{p}: bad journal entry")));
+        }
+    }
+    for (i, r) in d.reflections.iter().enumerate() {
+        let p = format!("reflections[{i}]");
+        check_id(&p, &r.problem_id)?;
+        check_time(&p, r.updated_at)?;
+        if !crate::journal::valid_reflection(r) {
+            return Err(invalid(format!("{p}: bad reflection")));
         }
     }
     Ok(())

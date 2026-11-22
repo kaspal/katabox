@@ -203,6 +203,18 @@ and against the clock:
   → Practice). **Export to calendar…** saves the plan as an `.ics` file for any
   calendar app.
 
+## Mistake journal and reflections
+- After a failed **Submit**, KataBox tags what it can tell: wrong answer, too slow, too
+  much memory, the kind of runtime error (index out of range, division by zero, recursion
+  too deep…) and, from the failing input, edge cases such as an empty input, one element,
+  the largest value, negative numbers or duplicates. Open the submission in the
+  **Submissions** tab to change the tags and add a note.
+- **Progress → Mistakes** shows **Your common mistakes**: how often each tag appears,
+  with the latest examples.
+- After **Accepted**, you can write in one sentence **why it works** and pick its time
+  and space complexity. Your note comes back at the top of the **Notes** tab, after a
+  review passes and after you solve the problem in a kata.
+
 ## Debugger and visualizer
 - **Languages:** Python and JavaScript/TypeScript, for function and program problems.
   Not PHP, Rust or SQL yet.

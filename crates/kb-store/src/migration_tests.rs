@@ -92,6 +92,12 @@ fn seeds(version: i64) -> Vec<String> {
                  (1700000050000, 2, '2026-11-29', 'kata', NULL, 15, 'skipped', 1700000050200)"
                 .into(),
         ],
+        7 => vec![
+            "INSERT INTO mistakes VALUES
+                 ('two-sum', 'python', 1700000002000, '[\"wa\",\"edge:duplicates\"]', '[\"wa\"]', 'forgot equal values', 1700000060000)"
+                .into(),
+            "INSERT INTO reflections VALUES ('two-sum', 'one pass with a map of seen values', 'O(n)', 'O(n)', 1700000061000)".into(),
+        ],
         _ => vec![],
     }
 }

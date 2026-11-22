@@ -30,6 +30,7 @@ import { StreakBadge, formatDay } from "@/practice/shared";
 import { Scorecard } from "@/practice/interview";
 import { KatasTab } from "@/practice/kata";
 import { PlanTab } from "@/practice/plan";
+import { MistakesTab } from "@/practice/journal";
 import { RatingBadge } from "@/practice/rating";
 import { useRatings } from "@/lib/plan";
 
@@ -382,6 +383,10 @@ export function Progress() {
 
         <TabsContent value="katas">
           <KatasTab />
+        </TabsContent>
+
+        <TabsContent value="mistakes">
+          <MistakesTab />
         </TabsContent>
 
         <TabsContent value="history">

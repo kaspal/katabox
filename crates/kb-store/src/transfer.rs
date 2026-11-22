@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{Row, SqliteConnection};
 
+use crate::journal::{MistakeRow, ReflectionRow};
 use crate::kata::{KATA_MAX_MS, KataAttemptRow, KataSessionRow};
 use crate::plans::{PlanItemRow, PlanRow};
 use crate::user::{code_hash, parse_language, parse_status, parse_verdict, verdict_code};
@@ -162,6 +163,12 @@ pub struct ExportData {
     /// Study plan items (expansion M2).
     #[serde(default)]
     pub plan_items: Vec<PlanItemRow>,
+    /// The mistake journal (expansion M3).
+    #[serde(default)]
+    pub mistakes: Vec<MistakeRow>,
+    /// Reflections after Accepted (expansion M3).
+    #[serde(default)]
+    pub reflections: Vec<ReflectionRow>,
 }
 
 impl ExportData {
@@ -171,6 +178,8 @@ impl ExportData {
             && self.kata_attempts.is_empty()
             && self.study_plans.is_empty()
             && self.plan_items.is_empty()
+            && self.mistakes.is_empty()
+            && self.reflections.is_empty()
     }
 }
 
@@ -327,6 +336,8 @@ impl UserDb {
         d.kata_attempts = self.kata_attempts().await?;
         d.study_plans = self.plans().await?.into_iter().rev().collect();
         d.plan_items = self.all_plan_items().await?;
+        d.mistakes = self.mistakes().await?;
+        d.reflections = self.reflections().await?;
         for r in sqlx::query("SELECT * FROM settings ORDER BY key")
             .fetch_all(p)
             .await?
@@ -806,6 +817,60 @@ impl UserDb {
             .await?
             .rows_affected();
             stats.entry("plan_items").or_default().count(n, existed);
+        }
+
+        for m in &d.mistakes {
+            let at = m.submitted_at.to_string();
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM mistakes WHERE problem_id = ? AND language = ? AND submitted_at = ?",
+                &[&m.problem_id, &m.language, &at],
+            )
+            .await?;
+            let n = sqlx::query(
+                "INSERT INTO mistakes (problem_id, language, submitted_at, auto_tags, tags, note, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)
+                 ON CONFLICT (problem_id, language, submitted_at) DO UPDATE SET
+                   auto_tags = excluded.auto_tags, tags = excluded.tags, note = excluded.note,
+                   updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > mistakes.updated_at",
+            )
+            .bind(&m.problem_id)
+            .bind(&m.language)
+            .bind(m.submitted_at)
+            .bind(serde_json::to_string(&m.auto_tags)?)
+            .bind(serde_json::to_string(&m.tags)?)
+            .bind(&m.note)
+            .bind(m.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("mistakes").or_default().count(n, existed);
+        }
+        for r in &d.reflections {
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM reflections WHERE problem_id = ?",
+                &[&r.problem_id],
+            )
+            .await?;
+            let n = sqlx::query(
+                "INSERT INTO reflections (problem_id, why, time_class, space_class, updated_at)
+                 VALUES (?, ?, ?, ?, ?)
+                 ON CONFLICT (problem_id) DO UPDATE SET why = excluded.why,
+                   time_class = excluded.time_class, space_class = excluded.space_class,
+                   updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > reflections.updated_at",
+            )
+            .bind(&r.problem_id)
+            .bind(&r.why)
+            .bind(&r.time_class)
+            .bind(&r.space_class)
+            .bind(r.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("reflections").or_default().count(n, existed);
         }
 
         for r in &d.settings {

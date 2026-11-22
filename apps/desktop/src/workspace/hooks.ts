@@ -145,6 +145,8 @@ export function useJudge(problem: string) {
   const [practice, setPractice] = useState<PracticeOutcome | null>(null);
   /** What the last kata Submit did (expansion M1). */
   const [kata, setKata] = useState<KataOutcome | null>(null);
+  /** The stored submission of the last Submit (none after a Run or a kata Submit). */
+  const [submissionId, setSubmissionId] = useState<number | null>(null);
   // Unmeasured (null) until the first Run or Submit measures this machine.
   const measured = useCalibration().data != null;
   const [busy, setBusy] = useState<"run" | "submit" | null>(null);
@@ -162,6 +164,7 @@ export function useJudge(problem: string) {
     setError(null);
     setPractice(null);
     setKata(null);
+    setSubmissionId(null);
     setLastKind(null);
     setJudged(null);
     setPhase({ kind: "idle" });
@@ -230,13 +233,14 @@ export function useJudge(problem: string) {
         );
         setPractice(result.practice);
         setKata(result.kata);
+        setSubmissionId(result.submission_id > 0 ? result.submission_id : null);
         if (result.kata) void queryClient.invalidateQueries({ queryKey: ["kata"] });
         return result.report;
       }),
     [problem, start, lang, queryClient],
   );
 
-  return { busy, phase, report, error, lastKind, judged, run, submit, practice, kata };
+  return { busy, phase, report, error, lastKind, judged, run, submit, practice, kata, submissionId };
 }
 
 /**

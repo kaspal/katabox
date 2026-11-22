@@ -610,6 +610,63 @@ async interviews(lang: UiLang) : Promise<Result<InterviewResult[], AppError>> {
 }
 },
 /**
+ * Progress → Mistakes: counts per tag with the latest examples.
+ */
+async journalOverview(lang: UiLang) : Promise<Result<JournalOverview, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("journal_overview", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * A failed submission's tags and note (`None` for an Accepted one).
+ */
+async submissionMistake(submission: number) : Promise<Result<MistakeView | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("submission_mistake", { submission }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setSubmissionMistake(submission: number, tags: string[], note: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_submission_mistake", { submission, tags, note }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The shrinker found a smaller failing input for this submission's failure.
+ */
+async tagShrunk(submission: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("tag_shrunk", { submission }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async reflection(problem: string) : Promise<Result<ReflectionRow | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reflection", { problem }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setReflection(problem: string, why: string, timeClass: string | null, spaceClass: string | null) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_reflection", { problem, why, timeClass, spaceClass }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Ratings per pattern and overall (replayed from the history; estimated).
  */
 async ratings() : Promise<Result<RatingsView, AppError>> {
@@ -1489,6 +1546,15 @@ export type InterviewView = { id: number;
  * UTC milliseconds.
  */
 started_at: number; ends_at: number; duration_s: number; remaining_s: number; mix: string; languages: Language[]; problems: ProblemSummary[] }
+export type JournalOverview = { 
+/**
+ * Failed submissions in the journal.
+ */
+failures: number; 
+/**
+ * Tags by count (then display order); only tags in use.
+ */
+tags: MistakeTagCount[] }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
 /**
  * Progress of one judge run, sent to the UI as it happens. The sandbox returns output
@@ -1865,6 +1931,13 @@ export type MessageCode =
  * The harness said it finished but some tests have no result.
  */
 "incomplete_results"
+export type MistakeExample = { problem_id: string; title: string; language: string; submitted_at: number; note: string }
+export type MistakeTagCount = { tag: string; count: number; 
+/**
+ * The latest few, newest first.
+ */
+examples: MistakeExample[] }
+export type MistakeView = { auto_tags: string[]; tags: string[]; note: string }
 /**
  * How the traced call ended.
  */
@@ -2158,6 +2231,10 @@ patterns: PatternRating[] }
  * The reference solution's time at one size, at this machine's time scale.
  */
 export type ReferencePoint = { n: number; us: number }
+/**
+ * A reflection after Accepted (also an export row).
+ */
+export type ReflectionRow = { problem_id: string; why: string; time_class: string | null; space_class: string | null; updated_at: number }
 export type Report = { verdict: Verdict; 
 /**
  * Tests that ran, in order. When the batch stopped early (time limit, crash) the
@@ -2442,7 +2519,7 @@ export type TopicReview = { topic: LearnTopicSummary; problem: ProblemSummary }
 /**
  * How many records of each kind a file holds.
  */
-export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number }
+export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number; mistakes: number; reflections: number }
 /**
  * Why a trace stopped before the program ended.
  */

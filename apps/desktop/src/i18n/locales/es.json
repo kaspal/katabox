@@ -357,7 +357,8 @@
       "topics": "Por tema",
       "history": "Historial",
       "katas": "Katas",
-      "plan": "Plan"
+      "plan": "Plan",
+      "mistakes": "Errores"
     },
     "learn": {
       "title": "Temas de Aprender vistos",
@@ -859,7 +860,9 @@
         "kata_sessions": "Sesiones de kata",
         "kata_attempts": "Intentos de kata",
         "study_plans": "Planes de estudio",
-        "plan_items": "Tareas de planes de estudio"
+        "plan_items": "Tareas de planes de estudio",
+        "mistakes": "Entradas del diario de errores",
+        "reflections": "Reflexiones"
       }
     },
     "crossLang": {
@@ -3124,5 +3127,56 @@
       "min": "min",
       "saved": "Archivo de calendario guardado."
     }
+  },
+  "journal": {
+    "title": "Qué salió mal",
+    "intro": "KataBox etiquetó lo que pudo deducir del fallo. Cambia las etiquetas y añade una nota: alimentan «Tus errores habituales» en Progreso.",
+    "tags": "Etiquetas",
+    "auto": "encontrada por KataBox",
+    "note": "Nota",
+    "save": "Guardar etiquetas y nota",
+    "saved": "Guardado.",
+    "saveError": "No se pudo guardar.",
+    "none": "Aún no hay envíos fallidos. Cuando un envío falle, sus errores se reunirán aquí.",
+    "failures_one": "Tus errores habituales, de {{count}} envío fallido",
+    "failures_other": "Tus errores habituales, de {{count}} envíos fallidos",
+    "filter": "Mostrar",
+    "allTags": "Todas las etiquetas",
+    "tag": {
+      "wa": "Respuesta incorrecta",
+      "tle": "Demasiado lento (tiempo límite)",
+      "mle": "Demasiada memoria",
+      "ole": "Demasiada salida",
+      "compile": "No compila",
+      "runtime_index": "Índice fuera de rango",
+      "runtime_key": "Clave inexistente",
+      "runtime_null": "None / null / undefined",
+      "runtime_zero_division": "División entre cero",
+      "runtime_recursion": "Recursión demasiado profunda",
+      "runtime_overflow": "Desbordamiento de enteros",
+      "runtime_type": "Tipo o valor incorrecto",
+      "runtime_other": "Otro error de ejecución",
+      "edge_empty": "Entrada vacía",
+      "edge_single": "Un solo elemento",
+      "edge_max": "Entrada más grande",
+      "edge_negative": "Números negativos",
+      "edge_zero": "Cero",
+      "edge_duplicates": "Duplicados",
+      "shrunk": "Encontrado al buscar una entrada más pequeña",
+      "logic": "Idea equivocada"
+    }
+  },
+  "reflection": {
+    "title": "¿Por qué funciona?",
+    "why": "En una frase (opcional): se vuelve a mostrar cuando repases este problema.",
+    "time": "Tiempo",
+    "space": "Espacio",
+    "unset": "Sin indicar",
+    "other": "Otra",
+    "save": "Guardar",
+    "saved": "Guardado.",
+    "yours": "Tu nota de por qué funciona:",
+    "timeIs": "tiempo {{c}}",
+    "spaceIs": "espacio {{c}}"
   }
 }

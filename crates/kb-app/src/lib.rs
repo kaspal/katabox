@@ -16,6 +16,7 @@ pub mod debug;
 pub mod diagnostics;
 mod error;
 pub mod interview;
+pub mod journal;
 pub mod kata;
 pub mod learn_links;
 pub mod plan;
@@ -727,6 +728,10 @@ impl App {
             .record_submission(problem, language, code, &report)
             .await?;
         self.forget_ratings();
+        if !report.verdict.is_accepted() {
+            // The mistake journal (expansion M3): tag the failure now.
+            self.tag_new_failures().await?;
+        }
         let practice = self
             .after_submit(
                 problem,

@@ -31,6 +31,9 @@ import {
   type KataOverview,
   type KataStart,
   type KataView,
+  type JournalOverview,
+  type MistakeView,
+  type ReflectionRow,
   type PlanIcsLabels,
   type PlanSetup,
   type PlanView,
@@ -204,6 +207,17 @@ export const api = {
   startInterview: (setup: InterviewSetup, lang: UiLang): Promise<InterviewView> =>
     call(commands.startInterview(setup, lang)),
   interviewActive: (lang: UiLang): Promise<InterviewView | null> => call(commands.interviewActive(lang)),
+
+  // Mistake journal and reflections (expansion M3, ADR 0034)
+  journalOverview: (lang: UiLang): Promise<JournalOverview> => call(commands.journalOverview(lang)),
+  submissionMistake: (submission: number): Promise<MistakeView | null> =>
+    call(commands.submissionMistake(submission)),
+  setSubmissionMistake: (submission: number, tags: string[], note: string): Promise<null> =>
+    call(commands.setSubmissionMistake(submission, tags, note)),
+  tagShrunk: (submission: number): Promise<null> => call(commands.tagShrunk(submission)),
+  reflection: (problem: string): Promise<ReflectionRow | null> => call(commands.reflection(problem)),
+  setReflection: (problem: string, why: string, time: string | null, space: string | null): Promise<null> =>
+    call(commands.setReflection(problem, why, time, space)),
 
   // Skill rating and study plans (expansion M2, ADR 0033)
   ratings: (): Promise<RatingsView> => call(commands.ratings()),

@@ -16,6 +16,7 @@
 
 pub mod blob;
 pub mod content;
+pub mod journal;
 pub mod kata;
 pub mod learn;
 #[cfg(test)]

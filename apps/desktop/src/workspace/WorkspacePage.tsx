@@ -41,6 +41,7 @@ import { useReviewActions, useReviewState } from "@/lib/practice";
 import { useInterviewActive, useSolvedLanguages } from "@/lib/modes";
 import { InterviewTimer } from "@/practice/interview";
 import { KataBar } from "@/practice/kata";
+import { ReflectionCard, SavedReflection } from "@/practice/journal";
 import { useKataState } from "@/lib/kata";
 import { CompareView, SolveInMenu } from "@/practice/crossLanguage";
 import { useAppInfo, useProblem } from "@/lib/queries";
@@ -251,6 +252,11 @@ export function WorkspacePage() {
           language,
           code: () => session.doc?.text ?? "",
           disabledReason: busy || dbg.busy || dbg.active ? t("results.shrink.busy") : null,
+          onShrunk: () => {
+            if (judge.lastKind === "submit" && judge.submissionId !== null) {
+              void api.tagShrunk(judge.submissionId).catch(() => {});
+            }
+          },
           addCustom: (input) => {
             setCustoms((cs) => [...cs, { id: Math.max(0, ...cs.map((c) => c.id)) + 1, values: valuesFrom(signature, input) }]);
             setTab("testcases");
@@ -563,6 +569,7 @@ export function WorkspacePage() {
                   ),
                 })
             : t("practice.review.banner")}
+          {reviewPassed && <SavedReflection problemId={problemId} />}
         </div>
       )}
       <ResizablePanelGroup
@@ -703,8 +710,14 @@ export function WorkspacePage() {
                   celebrate={celebrate}
                   practice={judge.lastKind === "submit" ? judge.practice : null}
                   complexity={
-                    p.profile && judge.report?.verdict === "accepted" && judge.judged ? (
-                      <ComplexityPanel state={complexity.state} onMeasure={() => void complexity.measure()} disabled={busy} />
+                    judge.report?.verdict === "accepted" &&
+                    ((p.profile && judge.judged) || (judge.lastKind === "submit" && !inKata && !inInterview)) ? (
+                      <>
+                        {p.profile && judge.judged && (
+                          <ComplexityPanel state={complexity.state} onMeasure={() => void complexity.measure()} disabled={busy} />
+                        )}
+                        {judge.lastKind === "submit" && !inKata && !inInterview && <ReflectionCard problemId={problemId} />}
+                      </>
                     ) : null
                   }
                   debugPanel={
