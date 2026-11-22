@@ -45,8 +45,8 @@ The rail on the left opens **Home**, **Library**, **Learn**, **Interview**,
 **Progress** and **Settings**. The **Command palette** (Ctrl+K, or the button in the
 top bar) jumps to any page, problem or Learn topic, and switches theme and language.
 
-- **Home:** **Continue** (your last draft), **Solved**, the **Daily problem**, your
-  **Review** queue and a **Review a topic** card.
+- **Home:** today's session, this week, what you solved, your learning path and what
+  to watch next (see **Home** below).
 - **Library:** search (press `/`), filter by difficulty, status, pattern, tag and
   problem type (Function, Program, SQL), sort by any column. ↑ / ↓ move, Enter opens.
   The **Lists** tab holds your own lists.
@@ -59,6 +59,28 @@ top bar) jumps to any page, problem or Learn topic, and switches theme and langu
   - **History:** past mock interviews.
 
   The tab you used last opens next time.
+
+## Home
+The Home answers "what now?" in a few minutes of practice.
+
+- **Today's session** lists one to three short items: **Continue** your latest draft,
+  the **Daily problem**, the **Daily kata**, and the next problem on your path, each with
+  an estimate (about 5 minutes to continue, 10 for a kata, 10 / 20 / 30 for an Easy /
+  Medium / Hard problem). A problem that is both the daily pick and the next step on
+  your path appears once, marked **On your path**. Finished items get a check mark;
+  **Start session** opens the first one left. **Customise** opens Settings → Practice,
+  where the daily problem, katas and the other cards are turned on or off.
+- **This week** shows a square per day (filled when you submitted), today ringed, and
+  your daily and kata streaks. **Solved** shows Easy, Medium and Hard as three rings.
+- **Your path** follows a Learn path (**Start here** until you pick another with
+  **Change path**). A step is done when you have watched the topic and solved one of its
+  linked problems (watching is enough for a topic without problems). Select a step to
+  open its topic; **See the whole map** opens Learn.
+- **Watch next** suggests three topics: the next one on your path, one you watched with
+  a problem still to try, and one for the pattern of today's daily problem.
+- **Keep it fresh** holds **Reviews**, **Study plan** and **Rusty**; a card you turn off
+  in Settings disappears.
+- **Search everything** (Ctrl+K) opens the command palette.
 
 ## Problems and the workspace
 
@@ -154,8 +176,8 @@ shows the limit for the language you picked, e.g. **Time limit (Python)**.
 - **Lists:** **Add to list** from a Library row or the workspace header; manage lists
   in **Library → Lists** (**New list**, **Rename**, **Delete**, drag rows or Alt+↑ /
   Alt+↓ to reorder).
-- Turn the Home cards on or off in **Settings → Practice** (the **Review a topic** card
-  is in **Settings → Learn**).
+- Turn the Home cards on or off in **Settings → Practice** (the **Review a topic**
+  suggestion is in **Settings → Learn**).
 
 ## Mock interviews
 **Interview → Start a mock interview:**
@@ -406,6 +428,10 @@ window). **Search settings** finds a setting by its name.
     (Brasil)), **Contrast** (Normal, High), **Motion** (Follow the system, Reduce);
   - with the Portuguese interface, **Problems and lessons in** picks English or Spanish
     for problems and Learn, which are written in those two languages (English by default);
+  - **Startup animation**: **After an install or update** (the default: the full
+    animation plays on the first start after installing or updating, and otherwise
+    closes as soon as KataBox is ready), **Every time**, or **Never**. It never slows
+    start-up beyond those few seconds;
   - **Reset window size and position**. KataBox reopens where you left it, at the same
     size, and maximised if it was. If that screen is gone, it opens centred on the main
     screen.

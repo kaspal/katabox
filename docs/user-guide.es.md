@@ -49,8 +49,8 @@ La barra de la izquierda abre **Inicio**, **Biblioteca**, **Aprender**, **Entrev
 superior) salta a cualquier página, problema o tema de Aprender, y cambia el tema y el
 idioma.
 
-- **Inicio:** **Continuar** (tu último borrador), **Resueltos**, el **Problema del día**,
-  tu **Repaso** y la tarjeta **Repasar un tema**.
+- **Inicio:** la sesión de hoy, esta semana, lo que resolviste, tu ruta de aprendizaje
+  y qué ver ahora (consulta **Inicio** más abajo).
 - **Biblioteca:** busca (pulsa `/`), filtra por dificultad, estado, patrón, etiqueta y
   tipo de problema (Función, Programa, SQL) y ordena por cualquier columna. ↑ / ↓ para
   moverte, Intro para abrir. La pestaña **Listas** guarda tus propias listas.
@@ -63,6 +63,30 @@ idioma.
   - **Historial:** las entrevistas simuladas anteriores.
 
   La próxima vez se abre la última pestaña que usaste.
+
+## Inicio
+Inicio responde a «¿y ahora qué?» en unos minutos de práctica.
+
+- **Sesión de hoy** muestra de uno a tres pasos cortos: **Continuar** tu último
+  borrador, el **Problema del día**, la **Kata del día** y el siguiente problema de tu
+  ruta, cada uno con una estimación (unos 5 minutos para continuar, 10 para una kata,
+  10 / 20 / 30 para un problema Fácil / Medio / Difícil). Un problema que es a la vez el
+  del día y el siguiente de tu ruta aparece una sola vez, marcado **En tu ruta**. Lo
+  terminado lleva una marca; **Empezar sesión** abre el primero que queda.
+  **Personalizar** abre Ajustes → Práctica, donde se activan o desactivan el problema
+  del día, las katas y las demás tarjetas.
+- **Esta semana** muestra un cuadrado por día (relleno si enviaste algo), hoy marcado, y
+  tus rachas diaria y de katas. **Resueltos** muestra Fácil, Medio y Difícil en tres
+  anillos.
+- **Tu ruta** sigue una ruta de Aprender (**Empieza aquí** hasta que elijas otra con
+  **Cambiar ruta**). Un paso está hecho cuando viste el tema y resolviste uno de sus
+  problemas enlazados (basta con verlo si el tema no tiene problemas). Elige un paso
+  para abrir su tema; **Ver el mapa completo** abre Aprender.
+- **Para ver ahora** sugiere tres temas: el siguiente de tu ruta, uno que viste con un
+  problema aún por probar, y uno del patrón del problema del día.
+- **Mantenlo fresco** reúne **Repaso**, **Plan de estudio** y **Oxidados**; la tarjeta
+  que desactives en Ajustes desaparece.
+- **Buscar en todo** (Ctrl+K) abre la paleta de comandos.
 
 ## Problemas y espacio de trabajo
 
@@ -166,7 +190,7 @@ más tiempo. El espacio de trabajo muestra el del lenguaje elegido, p. ej. **Tie
 - **Listas:** **Añadir a una lista** desde una fila de la Biblioteca o la cabecera del
   espacio de trabajo; gestiónalas en **Biblioteca → Listas** (**Nueva lista**,
   **Renombrar**, **Eliminar**; arrastra las filas o usa Alt+↑ / Alt+↓ para ordenarlas).
-- Activa o desactiva las tarjetas de Inicio en **Ajustes → Práctica** (la tarjeta
+- Activa o desactiva las tarjetas de Inicio en **Ajustes → Práctica** (la sugerencia
   **Repasar un tema** está en **Ajustes → Aprender**).
 
 ## Entrevistas simuladas
@@ -445,6 +469,10 @@ ventana es estrecha). **Buscar en los ajustes** encuentra un ajuste por su nombr
   - con la interfaz en portugués, **Problemas y lecciones en** elige inglés o español
     para los problemas y Aprender, que están escritos en esos dos idiomas (inglés por
     defecto);
+  - **Animación de inicio**: **Tras instalar o actualizar** (por defecto: la animación
+    completa se ve en el primer arranque después de instalar o actualizar; si no, se
+    cierra en cuanto KataBox está listo), **Siempre** o **Nunca**. Nunca retrasa el
+    inicio más allá de esos segundos;
   - **Restablecer el tamaño y la posición de la ventana**. KataBox se vuelve a abrir
     donde lo dejaste, con el mismo tamaño y maximizado si lo estaba. Si esa pantalla ya
     no está, se abre centrado en la pantalla principal.
