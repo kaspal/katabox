@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CommandPalette } from "@/app/CommandPalette";
 import { ShortcutsDialog } from "@/app/ShortcutsDialog";
 import { WhatsNewDialog, useWhatsNew } from "@/app/WhatsNew";
-import { onOpenShortcuts, openShortcuts } from "@/app/shortcuts";
+import { onOpenPalette, onOpenShortcuts, openShortcuts } from "@/app/shortcuts";
 import { SearchEverything, onOpenSearchEverything } from "@/app/SearchEverything";
 import { DEV_NAV, NAV } from "@/app/nav";
 import { useFocusMode } from "@/lib/focus";
@@ -74,7 +74,9 @@ export function Shell() {
     window.addEventListener("keydown", onKey);
     const off = onOpenShortcuts(() => setShortcutsOpen(true));
     const offSearch = onOpenSearchEverything(() => setSearchOpen(true));
+    const offPalette = onOpenPalette(() => setPaletteOpen(true));
     return () => {
+      offPalette();
       window.removeEventListener("keydown", onKey);
       off();
       offSearch();
@@ -105,8 +107,8 @@ export function Shell() {
         aria-label={t("nav.label")}
         className="row-span-2 flex flex-col items-center gap-1 border-r bg-rail py-2"
       >
-        <span className="mb-2 flex size-9 items-center justify-center text-primary" aria-hidden>
-          <Logo className="size-6" />
+        <span className="mb-2 flex size-10 items-center justify-center" aria-hidden>
+          <Logo className="size-8" />
         </span>
         {[...NAV, ...DEV_NAV].map((item) => (
           <Tooltip key={item.to}>

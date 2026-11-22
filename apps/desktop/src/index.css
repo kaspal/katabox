@@ -173,6 +173,29 @@
   scroll-behavior: auto !important;
 }
 
+/* Home → Your path (ADR 0041): the current step pulses, never under reduced motion (the
+   component also leaves the element out then). */
+@keyframes kb-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.47);
+    opacity: 0;
+  }
+}
+.kb-pulse {
+  animation: kb-pulse 2.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kb-pulse {
+    animation: none;
+    opacity: 0;
+  }
+}
+
 /* High contrast: the selected toggle or tab gets a ring, not only a lighter fill. */
 .hc [data-state="on"],
 .hc [role="tab"][data-state="active"] {
