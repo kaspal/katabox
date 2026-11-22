@@ -1,6 +1,6 @@
 //! KataBox problem packs.
 //!
-//! `kb-pack validate [DIR] [--run [--problems ID,ID | --from FILE]] [--learn [--topics ID,ID] [--subject ID]] [--root ROOT]` —
+//! `kb-pack validate [DIR] [--run [--problems ID,ID | --from FILE]] [--learn [--topics ID,ID] [--subject ID] [--sets ID,ID]] [--root ROOT]` —
 //! checks every problem folder under DIR and the Learn topics in content/learn (ADR 0029;
 //! `--learn`: only the topics; `--topics` / `--subject` limit the sandbox runs to those
 //! topics, and an unknown id is an error; `--problems` / `--from` (one id per line) limit
@@ -47,14 +47,63 @@ use kb_pack::{BuildOptions, build, run_references, validate_all, validate_learn_
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run [--problems ID,ID | --from FILE]] [--learn [--topics ID,ID] [--subject ID]] [--root ROOT]\n  \
+const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run [--problems ID,ID | --from FILE]] [--learn [--topics ID,ID] [--subject ID] [--sets ID,ID]] [--root ROOT]\n  \
                      kb-pack generate PROBLEM_DIR [--size max|small] --seeds 1,2 [--from N] [--root ROOT]\n  \
                      kb-pack profile PROBLEM_DIR [--root ROOT]\n  \
                      kb-pack profile --inputs [DIR] [--root ROOT]
                        kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]
                        kb-pack new ID [--mode function|program|sql] [DIR]
                        kb-pack new-topic SUBJECT ID [LEARN_DIR]
-                       kb-pack preview PROBLEM_DIR [--out DIR]";
+                       kb-pack preview PROBLEM_DIR [--out DIR]
+                       kb-pack pack PROBLEM_DIR... --manifest PACK_TOML [--assignment ASSIGNMENT_TOML] --out FILE.kbpack";
+
+/// `kb-pack pack PROBLEM_DIR... --manifest pack.toml --out x.kbpack` (expansion M11, ADR
+/// 0038): validate each folder like built-in content, then write a deterministic pack with
+/// every file's SHA-256 in its manifest.
+fn pack_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
+    let (mut dirs, mut manifest, mut out, mut assignment) = (Vec::new(), None, None, None);
+    while let Some(a) = args.next() {
+        match a.as_str() {
+            "--manifest" => manifest = args.next().map(PathBuf::from),
+            "--out" => out = args.next().map(PathBuf::from),
+            "--assignment" => assignment = args.next().map(PathBuf::from),
+            s if s.starts_with("--") => return usage(&format!("unknown option {s}")),
+            _ => dirs.push(PathBuf::from(a)),
+        }
+    }
+    let (Some(manifest), Some(out)) = (manifest, out) else {
+        return usage("pack needs --manifest and --out");
+    };
+    if dirs.is_empty() && assignment.is_none() {
+        return usage("pack needs at least one problem folder (or an --assignment)");
+    }
+    let mut failed = false;
+    for d in &dirs {
+        let (_, errs) = kb_pack::validate_pack_problem_dir(d);
+        for e in &errs {
+            eprintln!("{}: {e}", d.display());
+        }
+        failed |= !errs.is_empty();
+    }
+    if failed {
+        eprintln!("not packed: fix the problems above");
+        return ExitCode::FAILURE;
+    }
+    match kb_pack::kbpack::write_pack_with(&dirs, &manifest, assignment.as_deref(), &out) {
+        Ok(sha) => {
+            println!(
+                "wrote {} ({} problem folder(s), SHA-256 {sha})",
+                out.display(),
+                dirs.len()
+            );
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("{e}");
+            ExitCode::FAILURE
+        }
+    }
+}
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
@@ -66,6 +115,7 @@ fn main() -> ExitCode {
         Some("new") => new_cmd(args),
         Some("new-topic") => new_topic_cmd(args),
         Some("preview") => preview_cmd(args),
+        Some("pack") => pack_cmd(args),
         _ => usage(""),
     }
 }
@@ -201,6 +251,17 @@ fn validate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
                 Some(v) => filter.subject = Some(v),
                 None => return usage("--subject needs a value"),
             },
+            "--sets" => match args.next() {
+                Some(v) => {
+                    filter.sets = v
+                        .split(',')
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                        .map(str::to_string)
+                        .collect()
+                }
+                None => return usage("--sets needs a value"),
+            },
             "--root" => match args.next() {
                 Some(r) => run_root = Some(r.into()),
                 None => return usage("--root needs a value"),
@@ -210,8 +271,10 @@ fn validate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
         }
     }
     let root = run_root.unwrap_or_else(|| "target/katabox".into());
-    if (!filter.topics.is_empty() || filter.subject.is_some()) && !learn_only {
-        return usage("--topics and --subject need --learn");
+    if (!filter.topics.is_empty() || filter.subject.is_some() || !filter.sets.is_empty())
+        && !learn_only
+    {
+        return usage("--topics, --subject and --sets need --learn");
     }
     if !only.is_empty() && (learn_only || !run) {
         return usage("--problems and --from need --run (and not --learn)");

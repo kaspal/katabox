@@ -10,7 +10,7 @@ import { SeeItAnimated } from "@/workspace/problem/SeeItAnimated";
 
 /** Locked until solved or after enough failed submissions (decided in kb-app). The
  * "See it animated" Learn links name the technique, so they unlock with it. */
-export function EditorialTab({ problemId }: { problemId: string }) {
+export function EditorialTab({ problemId, pack = false }: { problemId: string; pack?: boolean }) {
   const { t } = useTranslation();
   const { lang } = usePrefs();
   const q = useQuery({
@@ -44,7 +44,7 @@ export function EditorialTab({ problemId }: { problemId: string }) {
         {e.reason === "accepted" ? t("workspace.editorial.unlockedSolved") : t("workspace.editorial.unlockedAttempts")}
       </p>
       <SeeItAnimated problemId={problemId} />
-      <Markdown text={e.text ?? ""} />
+      <Markdown text={e.text ?? ""} trust={pack ? "pack" : "app"} />
     </div>
   );
 }

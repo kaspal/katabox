@@ -1,5 +1,7 @@
 function gridPaths(rows: number, cols: number, cells: number[]): number[] {
-  const ways = Array.from({ length: rows }, () => new Array<number>(cols).fill(0));
+  const ways = Array.from({ length: rows }, () =>
+    new Array<number>(cols).fill(0),
+  );
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       if (cells[r * cols + c] === 1) {

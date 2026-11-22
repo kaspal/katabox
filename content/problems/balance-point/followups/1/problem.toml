@@ -1,0 +1,18 @@
+id = "balance-point--f1"
+parent = "balance-point"
+title = "Balance Point: Two Pivots"
+title_es = "Punto de equilibrio: dos apoyos"
+difficulty = "hard"
+tags = ["array", "prefix-sum", "hash-map"]
+pattern = "arrays-hashing"
+rank = 8
+
+[signature]
+name = "twoPivots"
+params = [{ name = "weights", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

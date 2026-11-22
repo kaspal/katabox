@@ -54,23 +54,35 @@ function Code({ className, children }: { className?: string; children?: React.Re
 /** Renders an in-app link (an href with the `learn:` scheme, ADR 0029). */
 export type InternalLink = (href: string, children: React.ReactNode) => React.ReactNode;
 
+/** KaTeX for text from a pack (expansion M11, T7): no \href or other trusted commands,
+ * and limits on sizes and macro expansion. */
+const PACK_KATEX = { trust: false, maxSize: 10, maxExpand: 200, strict: "ignore" as const };
+
 export function Markdown({
   text,
   className,
   internalLink,
+  trust = "app",
 }: {
   text: string;
   className?: string;
   /** When set, `learn:` links are kept and rendered by this instead of an <a>. */
   internalLink?: InternalLink;
+  /** `pack`: text from an imported pack (T7): links are plain text, images their alt
+   * text, no URL is kept, and KaTeX runs untrusted with limits. */
+  trust?: "app" | "pack";
 }) {
+  const pack = trust === "pack";
   return (
-    <div className={cn("kb-prose", className)}>
+    <div className={cn("kb-prose", className)} data-trust={trust}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
-        urlTransform={(url) => (internalLink && url.startsWith("learn:") ? url : defaultUrlTransform(url))}
+        rehypePlugins={[pack ? [rehypeKatex, PACK_KATEX] : rehypeKatex]}
+        urlTransform={(url) =>
+          pack ? "" : internalLink && url.startsWith("learn:") ? url : defaultUrlTransform(url)
+        }
         components={{
+
           code: ({ className: cls, children }) => <Code className={cls}>{children}</Code>,
           pre: ({ children }) => (
             <pre className="my-3 overflow-x-auto rounded-md border bg-muted/50 p-3 leading-relaxed">{children}</pre>
@@ -83,6 +95,10 @@ export function Markdown({
                 {children}
               </a>
             ),
+          ...(pack && {
+            a: ({ children }: { children?: React.ReactNode }) => <span data-link-text>{children}</span>,
+            img: ({ alt }: { alt?: string }) => <span data-image-alt>{alt ?? ""}</span>,
+          }),
         }}
       >
         {text}

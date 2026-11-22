@@ -1,0 +1,18 @@
+id = "product-mod"
+title = "Product Modulo"
+title_es = "Producto módulo"
+difficulty = "medium"
+tags = ["math", "debugging"]
+pattern = "math"
+rank = 6
+kind = "fix"
+
+[signature]
+name = "productMod"
+params = [{ name = "nums", type = "int[]" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

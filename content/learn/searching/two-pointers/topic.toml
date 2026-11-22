@@ -5,6 +5,7 @@ title = "Two pointers"
 title_es = "Dos punteros"
 tags = ["two-pointers", "sorted-input"]
 problems = ["budget-pair", "gift-trio", "ferry-trips"]
+reading = ["complexity-loops/6"]
 presets = ["random", "few-unique"]
 default = [40, 3, 8, 12, 15, 21, 25, 29, 33, 41]
 

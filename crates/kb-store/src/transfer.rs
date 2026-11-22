@@ -1,6 +1,6 @@
 //! Progress export and import (ADR 0020): every user.db record a user would want on
 //! another machine, as plain data, and a merge that keeps the newer record on conflicts.
-//! The file envelope (`katabox-export/v1`), size cap and value checks live in kb-app;
+//! The file envelope (`katabox-export/v2`, v1 still read), size cap and value checks live in kb-app;
 //! this module reads all rows and merges rows inside one transaction.
 
 use std::collections::HashMap;
@@ -10,6 +10,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{Row, SqliteConnection};
 
+use crate::focus::FocusSessionRow;
+use crate::journal::{MistakeRow, ReflectionRow};
+use crate::kata::{KATA_MAX_MS, KataAttemptRow, KataSessionRow};
+use crate::plans::{PlanItemRow, PlanRow};
+use crate::reading_answers::ReadingAnswerRow;
+use crate::snippets::SnippetRow;
+use crate::stress::StressBruteRow;
 use crate::user::{code_hash, parse_language, parse_status, parse_verdict, verdict_code};
 use crate::{ProblemStatus, Result, SnapshotSource, UserDb};
 
@@ -146,6 +153,54 @@ pub struct ExportData {
     pub lists: Vec<ListExport>,
     pub interviews: Vec<InterviewExport>,
     pub settings: Vec<SettingRow>,
+    // Sections added by `katabox-export/v2` (expansion) go below, each
+    // `#[serde(default)]` so v1 files still parse.
+    /// Kata sessions (expansion M1).
+    #[serde(default)]
+    pub kata_sessions: Vec<KataSessionRow>,
+    /// Kata attempts (expansion M1).
+    #[serde(default)]
+    pub kata_attempts: Vec<KataAttemptRow>,
+    /// Study plans (expansion M2).
+    #[serde(default)]
+    pub study_plans: Vec<PlanRow>,
+    /// Study plan items (expansion M2).
+    #[serde(default)]
+    pub plan_items: Vec<PlanItemRow>,
+    /// The mistake journal (expansion M3).
+    #[serde(default)]
+    pub mistakes: Vec<MistakeRow>,
+    /// Reflections after Accepted (expansion M3).
+    #[serde(default)]
+    pub reflections: Vec<ReflectionRow>,
+    /// The snippet library (expansion M4).
+    #[serde(default)]
+    pub snippets: Vec<SnippetRow>,
+    /// Answers to reading exercises (expansion M7).
+    #[serde(default)]
+    pub reading_answers: Vec<ReadingAnswerRow>,
+    /// The stress lab's brute-force solutions (expansion M8).
+    #[serde(default)]
+    pub stress_brutes: Vec<StressBruteRow>,
+    /// Finished focus sessions (expansion M10).
+    #[serde(default)]
+    pub focus_sessions: Vec<FocusSessionRow>,
+}
+
+impl ExportData {
+    /// True when the data holds none of the sections that only v2 files may have.
+    pub fn v2_sections_empty(&self) -> bool {
+        self.kata_sessions.is_empty()
+            && self.kata_attempts.is_empty()
+            && self.study_plans.is_empty()
+            && self.plan_items.is_empty()
+            && self.mistakes.is_empty()
+            && self.reflections.is_empty()
+            && self.snippets.is_empty()
+            && self.reading_answers.is_empty()
+            && self.stress_brutes.is_empty()
+            && self.focus_sessions.is_empty()
+    }
 }
 
 /// How many records an import adds, updates (newer wins) or keeps as they were.
@@ -297,6 +352,16 @@ impl UserDb {
                 results: s.results,
             });
         }
+        d.kata_sessions = self.katas().await?.into_iter().rev().collect();
+        d.kata_attempts = self.kata_attempts().await?;
+        d.study_plans = self.plans().await?.into_iter().rev().collect();
+        d.plan_items = self.all_plan_items().await?;
+        d.mistakes = self.mistakes().await?;
+        d.reflections = self.reflections().await?;
+        d.snippets = self.snippets().await?;
+        d.reading_answers = self.reading_answers().await?;
+        d.stress_brutes = self.stress_brutes().await?;
+        d.focus_sessions = self.focus_sessions().await?.into_iter().rev().collect();
         for r in sqlx::query("SELECT * FROM settings ORDER BY key")
             .fetch_all(p)
             .await?
@@ -366,6 +431,17 @@ impl UserDb {
         }
         for r in &d.settings {
             n += u64::from(has(p, "SELECT 1 FROM settings WHERE key = ?", &[&r.key]).await?);
+        }
+        for r in &d.kata_attempts {
+            let session = r.session_started_at.to_string();
+            n += u64::from(
+                has(
+                    p,
+                    "SELECT 1 FROM kata_attempts WHERE session_started_at = ? AND problem_id = ?",
+                    &[&session, &r.problem_id],
+                )
+                .await?,
+            );
         }
         Ok(n)
     }
@@ -653,6 +729,270 @@ impl UserDb {
             .await?
             .rows_affected();
             stats.entry("interviews").or_default().count(n, n == 0);
+        }
+
+        for s in &d.kata_sessions {
+            // A session that never ended is imported as ended when it would have expired.
+            let ended = s.ended_at.or(Some(s.started_at + KATA_MAX_MS));
+            let n = sqlx::query(
+                "INSERT OR IGNORE INTO kata_sessions
+                   (started_at, day, kind, source, problem_ids, duration_s, ended_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)",
+            )
+            .bind(s.started_at)
+            .bind(&s.day)
+            .bind(s.kind.id())
+            .bind(&s.source)
+            .bind(serde_json::to_string(&s.problem_ids)?)
+            .bind(s.duration_s)
+            .bind(ended)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("kata_sessions").or_default().count(n, n == 0);
+        }
+
+        for a in &d.kata_attempts {
+            let session = a.session_started_at.to_string();
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM kata_attempts WHERE session_started_at = ? AND problem_id = ?",
+                &[&session, &a.problem_id],
+            )
+            .await?;
+            // The imported attempt wins when it solved what the local one did not, or
+            // counts more submits with the same outcome.
+            let n = sqlx::query(
+                "INSERT INTO kata_attempts (session_started_at, problem_id, started_at, submits,
+                   verdict, solved_at, time_ms, language, code)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 ON CONFLICT (session_started_at, problem_id) DO UPDATE SET
+                   started_at = excluded.started_at, submits = excluded.submits,
+                   verdict = excluded.verdict, solved_at = excluded.solved_at,
+                   time_ms = excluded.time_ms, language = excluded.language, code = excluded.code
+                 WHERE (kata_attempts.solved_at IS NULL AND excluded.solved_at IS NOT NULL)
+                    OR (excluded.submits > kata_attempts.submits
+                        AND (kata_attempts.solved_at IS NULL) = (excluded.solved_at IS NULL))",
+            )
+            .bind(a.session_started_at)
+            .bind(&a.problem_id)
+            .bind(a.started_at)
+            .bind(i64::from(a.submits))
+            .bind(a.verdict.map(verdict_code).transpose()?)
+            .bind(a.solved_at)
+            .bind(a.time_ms)
+            .bind(a.language.map(|l| l.id()))
+            .bind(&a.code)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("kata_attempts").or_default().count(n, existed);
+        }
+
+        for p in &d.study_plans {
+            let n = sqlx::query(
+                "INSERT OR IGNORE INTO study_plans
+                   (created_at, goal, weeks, minutes_per_day, start_day, archived)
+                 VALUES (?, ?, ?, ?, ?, ?)",
+            )
+            .bind(p.created_at)
+            .bind(serde_json::to_string(&p.goal)?)
+            .bind(i64::from(p.weeks))
+            .bind(i64::from(p.minutes_per_day))
+            .bind(&p.start_day)
+            .bind(p.archived)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("study_plans").or_default().count(n, n == 0);
+        }
+        // One plan stays active: the newest of the active ones.
+        sqlx::query(
+            "UPDATE study_plans SET archived = 1 WHERE archived = 0 AND created_at <
+               (SELECT max(created_at) FROM study_plans WHERE archived = 0)",
+        )
+        .execute(&mut *c)
+        .await?;
+        for i in &d.plan_items {
+            let plan = i.plan_created_at.to_string();
+            let position = i.position.to_string();
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM plan_items WHERE plan_created_at = ? AND position = ?",
+                &[&plan, &position],
+            )
+            .await?;
+            let n = sqlx::query(
+                "INSERT INTO plan_items (plan_created_at, position, day, kind, ref, minutes, status, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                 ON CONFLICT (plan_created_at, position) DO UPDATE SET
+                   day = excluded.day, status = excluded.status, updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > plan_items.updated_at",
+            )
+            .bind(i.plan_created_at)
+            .bind(i64::from(i.position))
+            .bind(&i.day)
+            .bind(&i.kind)
+            .bind(&i.reference)
+            .bind(i64::from(i.minutes))
+            .bind(&i.status)
+            .bind(i.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("plan_items").or_default().count(n, existed);
+        }
+
+        for m in &d.mistakes {
+            let at = m.submitted_at.to_string();
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM mistakes WHERE problem_id = ? AND language = ? AND submitted_at = ?",
+                &[&m.problem_id, &m.language, &at],
+            )
+            .await?;
+            let n = sqlx::query(
+                "INSERT INTO mistakes (problem_id, language, submitted_at, auto_tags, tags, note, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)
+                 ON CONFLICT (problem_id, language, submitted_at) DO UPDATE SET
+                   auto_tags = excluded.auto_tags, tags = excluded.tags, note = excluded.note,
+                   updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > mistakes.updated_at",
+            )
+            .bind(&m.problem_id)
+            .bind(&m.language)
+            .bind(m.submitted_at)
+            .bind(serde_json::to_string(&m.auto_tags)?)
+            .bind(serde_json::to_string(&m.tags)?)
+            .bind(&m.note)
+            .bind(m.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("mistakes").or_default().count(n, existed);
+        }
+        for r in &d.reflections {
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM reflections WHERE problem_id = ?",
+                &[&r.problem_id],
+            )
+            .await?;
+            let n = sqlx::query(
+                "INSERT INTO reflections (problem_id, why, time_class, space_class, updated_at)
+                 VALUES (?, ?, ?, ?, ?)
+                 ON CONFLICT (problem_id) DO UPDATE SET why = excluded.why,
+                   time_class = excluded.time_class, space_class = excluded.space_class,
+                   updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > reflections.updated_at",
+            )
+            .bind(&r.problem_id)
+            .bind(&r.why)
+            .bind(&r.time_class)
+            .bind(&r.space_class)
+            .bind(r.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("reflections").or_default().count(n, existed);
+        }
+
+        for s in &d.snippets {
+            let existed = row_exists(c, "SELECT 1 FROM snippets WHERE uid = ?", &[&s.uid]).await?;
+            let n = sqlx::query(
+                "INSERT INTO snippets (uid, language, name, tags, body, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)
+                 ON CONFLICT (uid) DO UPDATE SET language = excluded.language, name = excluded.name,
+                   tags = excluded.tags, body = excluded.body, updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > snippets.updated_at",
+            )
+            .bind(&s.uid)
+            .bind(&s.language)
+            .bind(&s.name)
+            .bind(serde_json::to_string(&s.tags)?)
+            .bind(&s.body)
+            .bind(s.created_at)
+            .bind(s.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("snippets").or_default().count(n, existed);
+        }
+
+        for a in &d.reading_answers {
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM reading_answers WHERE item_id = ?",
+                &[&a.item_id],
+            )
+            .await?;
+            let n = sqlx::query(
+                "INSERT INTO reading_answers (item_id, attempts, correct_at, updated_at)
+                 VALUES (?, ?, ?, ?)
+                 ON CONFLICT (item_id) DO UPDATE SET attempts = excluded.attempts,
+                   correct_at = excluded.correct_at, updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > reading_answers.updated_at",
+            )
+            .bind(&a.item_id)
+            .bind(a.attempts)
+            .bind(a.correct_at)
+            .bind(a.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats
+                .entry("reading_answers")
+                .or_default()
+                .count(n, existed);
+        }
+
+        for b in &d.stress_brutes {
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM stress_brutes WHERE problem_id = ? AND language = ?",
+                &[&b.problem_id, &b.language],
+            )
+            .await?;
+            let n = sqlx::query(
+                "INSERT INTO stress_brutes (problem_id, language, code, updated_at)
+                 VALUES (?, ?, ?, ?)
+                 ON CONFLICT (problem_id, language) DO UPDATE SET code = excluded.code,
+                   updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > stress_brutes.updated_at",
+            )
+            .bind(&b.problem_id)
+            .bind(&b.language)
+            .bind(&b.code)
+            .bind(b.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("stress_brutes").or_default().count(n, existed);
+        }
+
+        for f in &d.focus_sessions {
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM focus_sessions WHERE started_at = ?",
+                &[&f.started_at.to_string()],
+            )
+            .await?;
+            // A session is finished once written: the same start never changes.
+            let n = sqlx::query(
+                "INSERT OR IGNORE INTO focus_sessions
+                   (started_at, ended_at, work_min, break_min, cycles, summary)
+                 VALUES (?, ?, ?, ?, ?, ?)",
+            )
+            .bind(f.started_at)
+            .bind(f.ended_at)
+            .bind(f.work_min)
+            .bind(f.break_min)
+            .bind(f.cycles)
+            .bind(serde_json::to_string(&f.summary)?)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("focus_sessions").or_default().count(n, existed);
         }
 
         for r in &d.settings {

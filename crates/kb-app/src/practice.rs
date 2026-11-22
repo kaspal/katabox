@@ -108,6 +108,25 @@ pub fn apply_floor(
         .collect()
 }
 
+/// `all` without fix-the-bug problems (expansion M6): the daily problem, "next problem",
+/// placement and study plans suggest only problems you solve from scratch.
+pub fn without_fix(all: Vec<ProblemSummary>) -> Vec<ProblemSummary> {
+    all.into_iter().filter(|p| !p.fix).collect()
+}
+
+/// The setting that lets the daily problem and "next problem" suggest pack problems too
+/// (expansion M11, review A3; off by default).
+pub const INCLUDE_PACKS: &str = "practice.include_packs";
+
+/// What practice suggestions draw from: no fix-the-bug problems, and no pack problems
+/// unless `include_packs`.
+pub fn practice_pool(all: Vec<ProblemSummary>, include_packs: bool) -> Vec<ProblemSummary> {
+    without_fix(all)
+        .into_iter()
+        .filter(|p| include_packs || p.pack.is_none())
+        .collect()
+}
+
 /// `all` without SQL problems (ADR 0031) until the user has opened one: the daily problem
 /// and "next problem" never push SQL on someone practising algorithms. Opened means a
 /// Run or Submit (a status), or `current` itself being an SQL problem.
@@ -359,6 +378,38 @@ pub fn pattern_progress(all: &[ProblemSummary]) -> Vec<PatternProgress> {
 /// Never a solved problem, never `current`. Before the first solve it is [`start_here`]
 /// (unless that is `current`).
 pub fn next_problem<'a>(all: &'a [ProblemSummary], current: &str) -> Option<&'a ProblemSummary> {
+    next_problem_rated(all, current, &HashMap::new())
+}
+
+/// The lowest-ranked unsolved problem of `pattern` at or above `min_rank`, skipping Easy
+/// problems the pattern's rating has outgrown (expansion M2) when a harder one is left.
+fn lowest_unsolved_rated<'a>(
+    all: &'a [ProblemSummary],
+    pattern: &str,
+    min_rank: u8,
+    skip: &str,
+    ratings: &HashMap<String, f64>,
+) -> Option<&'a ProblemSummary> {
+    let r = ratings.get(pattern).copied();
+    let outgrown = |p: &ProblemSummary| {
+        p.difficulty == kb_core::Difficulty::Easy
+            && crate::rating::skip_easy(r, crate::rating::problem_rating(p.difficulty, p.rank))
+    };
+    all.iter()
+        .filter(|p| p.pattern == pattern && p.rank >= min_rank && !solved(p) && p.id != skip)
+        .filter(|p| !outgrown(p))
+        .min_by(|a, b| a.rank.cmp(&b.rank).then_with(|| a.id.cmp(&b.id)))
+        .or_else(|| lowest_unsolved(all, pattern, min_rank, skip))
+}
+
+/// [`next_problem`] with the skill ratings as a soft weight (expansion M2, ADR 0033):
+/// inside a pattern, Easy problems its rating has outgrown are skipped while a harder
+/// unsolved one remains. With no ratings it is exactly [`next_problem`].
+pub fn next_problem_rated<'a>(
+    all: &'a [ProblemSummary],
+    current: &str,
+    ratings: &HashMap<String, f64>,
+) -> Option<&'a ProblemSummary> {
     let here = all.iter().find(|p| p.id == current)?;
     if brand_new(all)
         && let Some(start) = start_here(all)
@@ -366,7 +417,7 @@ pub fn next_problem<'a>(all: &'a [ProblemSummary], current: &str) -> Option<&'a 
     {
         return Some(start);
     }
-    if let Some(p) = lowest_unsolved(all, &here.pattern, here.rank, current) {
+    if let Some(p) = lowest_unsolved_rated(all, &here.pattern, here.rank, current, ratings) {
         return Some(p);
     }
     let mut patterns: Vec<&str> = all.iter().map(|p| p.pattern.as_str()).collect();
@@ -378,7 +429,7 @@ pub fn next_problem<'a>(all: &'a [ProblemSummary], current: &str) -> Option<&'a 
         .unwrap_or(0);
     for k in 1..=patterns.len() {
         let pat = patterns[(at + k) % patterns.len()];
-        if let Some(p) = lowest_unsolved(all, pat, 0, current) {
+        if let Some(p) = lowest_unsolved_rated(all, pat, 0, current, ratings) {
             return Some(p);
         }
     }
@@ -419,6 +470,18 @@ pub fn daily_pick<'a>(
     day: Day,
     install_id: &str,
 ) -> Option<&'a ProblemSummary> {
+    daily_pick_rated(all, day, install_id, &HashMap::new())
+}
+
+/// [`daily_pick`] with the skill ratings as a soft weight (expansion M2, ADR 0033): a
+/// pattern rated below 1500 weighs up to twice as much ([`crate::rating::practice_factor`]).
+/// With no ratings it is exactly [`daily_pick`].
+pub fn daily_pick_rated<'a>(
+    all: &'a [ProblemSummary],
+    day: Day,
+    install_id: &str,
+    ratings: &HashMap<String, f64>,
+) -> Option<&'a ProblemSummary> {
     if brand_new(all) {
         return start_here(all);
     }
@@ -432,10 +495,17 @@ pub fn daily_pick<'a>(
     candidates.sort_by(|a, b| a.id.cmp(&b.id));
     let weakest = weakest_pattern(all);
     let weight = |p: &ProblemSummary| {
-        if weakest.as_deref() == Some(p.pattern.as_str()) {
+        let base = if weakest.as_deref() == Some(p.pattern.as_str()) {
             WEAKEST_WEIGHT
         } else {
             1
+        };
+        if ratings.is_empty() {
+            base
+        } else {
+            // Integer weights (×100) keep the pick exact on every platform.
+            let f = crate::rating::practice_factor(ratings.get(&p.pattern).copied());
+            base * (100.0 * f).round() as u64
         }
     };
     let total: u64 = candidates.iter().map(|p| weight(p)).sum();
@@ -630,6 +700,18 @@ pub(crate) fn parse_day(today: &str) -> Result<Day> {
 
 impl App {
     /// Every problem with its status, titles in `lang`.
+    /// What practice suggestions draw from ([`practice_pool`]).
+    pub(crate) async fn practice_problems(&self, lang: UiLang) -> Result<Vec<ProblemSummary>> {
+        let include = self
+            .store
+            .user
+            .get_setting(INCLUDE_PACKS)
+            .await?
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        Ok(practice_pool(self.all_problems(lang).await?, include))
+    }
+
     pub(crate) async fn all_problems(&self, lang: UiLang) -> Result<Vec<ProblemSummary>> {
         Ok(self
             .store
@@ -665,23 +747,25 @@ impl App {
         lang: UiLang,
     ) -> Result<Option<ProblemSummary>> {
         let floor = self.start_floor().await?;
-        let all = hide_unopened_sql(self.all_problems(lang).await?, current);
+        let all = hide_unopened_sql(self.practice_problems(lang).await?, current);
         let all = apply_floor(all, floor.as_ref(), current);
-        Ok(next_problem(&all, current).cloned())
+        let ratings = self.current_ratings().await?.by_pattern();
+        Ok(next_problem_rated(&all, current, &ratings).cloned())
     }
 
     /// Today's daily problem (picked on the first call of the day, then kept all day).
     pub async fn daily_problem(&self, today: &str, lang: UiLang) -> Result<Option<DailyProblem>> {
         let day = parse_day(today)?;
         let floor = self.start_floor().await?;
-        let all = hide_unopened_sql(self.all_problems(lang).await?, "");
+        let all = hide_unopened_sql(self.practice_problems(lang).await?, "");
         let all = apply_floor(all, floor.as_ref(), "");
         let pick = match self.store.user.daily_pick(day).await? {
             Some(p) if all.iter().any(|x| x.id == p.problem_id) => p,
             // No pick yet, or the picked problem left the pack: pick (again).
             existing => {
                 let install = self.store.user.install_id().await?;
-                let Some(choice) = daily_pick(&all, day, &install) else {
+                let ratings = self.current_ratings().await?.by_pattern();
+                let Some(choice) = daily_pick_rated(&all, day, &install, &ratings) else {
                     return Ok(None);
                 };
                 if existing.is_some() {
@@ -712,7 +796,7 @@ impl App {
 
     /// The three placement problems of the welcome flow.
     pub async fn placement_problems(&self, lang: UiLang) -> Result<Vec<ProblemSummary>> {
-        Ok(placement_problems(&self.all_problems(lang).await?))
+        Ok(placement_problems(&self.practice_problems(lang).await?))
     }
 
     /// Finish the welcome flow: the floor from the placement (`None`: "new to this" or a
@@ -934,6 +1018,8 @@ mod tests {
             mode: kb_core::ProblemMode::Function,
             tags: vec![],
             status: solved_.then_some(ProblemStatus::Solved),
+            fix: false,
+            pack: None,
         }
     }
 
@@ -1076,6 +1162,62 @@ mod tests {
     }
 
     #[test]
+    fn ratings_are_a_soft_weight() {
+        // No ratings: exactly the unrated picks.
+        let all: Vec<ProblemSummary> = vec![
+            pd("e1", "stack", 1, Difficulty::Easy, false),
+            pd("e2", "stack", 2, Difficulty::Easy, false),
+            pd("m3", "stack", 3, Difficulty::Medium, false),
+            pd("g1", "graphs", 1, Difficulty::Easy, false),
+            pd("done", "graphs", 2, Difficulty::Easy, true),
+        ];
+        let none = HashMap::new();
+        for k in 0..40 {
+            let d = day("2026-01-01").add_days(k);
+            assert_eq!(
+                daily_pick_rated(&all, d, "i", &none),
+                daily_pick(&all, d, "i")
+            );
+        }
+        assert_eq!(
+            next_problem_rated(&all, "done", &none),
+            next_problem(&all, "done")
+        );
+        // A stack rating well above its easies: next skips them while a medium is left.
+        let high: HashMap<String, f64> = [("stack".to_string(), 1500.0)].into();
+        assert_eq!(next_problem(&all, "e1").unwrap().id, "e2");
+        assert_eq!(next_problem_rated(&all, "e1", &high).unwrap().id, "m3");
+        let only_easy = vec![
+            pd("e1", "stack", 1, Difficulty::Easy, false),
+            pd("e2", "stack", 2, Difficulty::Easy, false),
+        ];
+        assert_eq!(
+            next_problem_rated(&only_easy, "e1", &high).unwrap().id,
+            "e2",
+            "never a dead end"
+        );
+        // A low-rated pattern is picked more often by the daily problem.
+        let low: HashMap<String, f64> =
+            [("graphs".to_string(), 900.0), ("stack".to_string(), 1600.0)].into();
+        let graphs = |r: &HashMap<String, f64>| {
+            (0..400)
+                .filter(|k| {
+                    daily_pick_rated(&all, day("2026-01-01").add_days(*k), "i", r)
+                        .unwrap()
+                        .pattern
+                        == "graphs"
+                })
+                .count()
+        };
+        assert!(
+            graphs(&low) > graphs(&none),
+            "{} vs {}",
+            graphs(&low),
+            graphs(&none)
+        );
+    }
+
+    #[test]
     fn sorting_comes_right_after_arrays_and_hashing() {
         let all = vec![
             p("a1", "arrays-hashing", 1, false),
@@ -1150,6 +1292,23 @@ mod tests {
         // From the last pattern: wraps around to the first.
         assert_eq!(next_problem(&all, "z1").unwrap().id, "a2");
         assert_eq!(next_problem(&all, "missing"), None);
+    }
+
+    #[test]
+    fn fix_problems_are_never_suggested() {
+        let mut all = vec![
+            p("a1", "arrays-hashing", 1, false),
+            p("a2", "arrays-hashing", 2, false),
+        ];
+        all[0].fix = true;
+        all[1].pack = Some("drills".into());
+        assert_eq!(practice_pool(all.clone(), false).len(), 0);
+        assert_eq!(practice_pool(all.clone(), true).len(), 1);
+        let kept = without_fix(all);
+        assert_eq!(
+            kept.iter().map(|x| x.id.as_str()).collect::<Vec<_>>(),
+            ["a2"]
+        );
     }
 
     #[test]

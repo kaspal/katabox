@@ -19,6 +19,81 @@ All notable changes to KataBox are recorded in this file. The format follows
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
 
+- **Problem packs:** import `.kbpack` problem sets (Settings → Packs) after a preview that
+  shows what the pack is; every file is checked (names, types, sizes, hashes, metadata,
+  text) and pack code only runs in the sandbox. Packs are marked everywhere, stay out of
+  daily and next problem unless you opt in, update only to newer versions, and uninstall
+  cleanly. `kb-pack pack` makes them.
+- **Debugger auto-play:** step automatically at 0.5×, 1× or 2×, so the Visualize tab
+  plays like an animation.
+- **Polish:** the workspace's tab lists have accessible names; Learn code samples no
+  longer have lines over 80 columns.
+- **Portuguese (Brazil) interface:** every screen in Português (Brasil), chosen in
+  Settings → Appearance, the command palette or the welcome screen. Problems and Learn
+  stay in English or Spanish (your choice, English by default).
+- **Problem editor:** make pack problems in a form (Settings → Packs → Show the problem
+  editor): signature with the starter code, statement, hints and editorial in English
+  and Spanish with a preview, tests with the visual builders, one reference. Drafts save
+  as you type with issues shown by field; check the reference in the sandbox and export
+  a pack that is verified like an import. Pack problems now need one reference solution.
+- **Classroom mode:** a pack can carry an assignment (due date, problems, languages, an
+  optional time limit, hints on or off). Students start it on the new Classroom page;
+  while it runs its rules are enforced, and the results file they export lists exactly
+  what it holds and carries a hash chain that shows casual edits. Teachers import results
+  files, see a student × problem table and export a CSV safe to open in a spreadsheet.
+  Offline and account-free, so not cheat-proof (docs/classroom.md, also ES and pt-BR).
+- **Focus sessions:** work and break periods on the wall clock, a top-bar chip with Stop,
+  a notice when the phase changes, and what each session achieved on Progress.
+- **Automatic backups:** an export to a folder you choose, every few days and optionally
+  on exit; the newest ones are kept and KataBox deletes only its own backup files.
+- **Visual test builders:** build custom-test values as a tree, rows, a grid or a graph
+  (JSON stays in sync), and **Check inputs** against the problem's constraints without
+  running code.
+- **Stress test:** a results-pane tab that runs your solution against your own brute force
+  on many small inputs in the sandbox (from the problem's generator, or random values
+  without Python) until they disagree, then lets you debug, shrink or keep that input.
+  Brute forces are kept per problem and language and travel with an export.
+- **Reading code:** 70 short exercises in Python and TypeScript on Learn home: "what does
+  this print?" (loops, strings, references, recursion, scope) and complexity (loops,
+  recursion, data structures). Every answer is checked by running the code when the app
+  is built; progress travels with an export.
+- **Fix the bug:** 24 new problems that start with buggy code (an off-by-one, a memo key,
+  Dijkstra finalising too early, recursion too deep…). A **Fix** badge, a Library
+  **Kind** filter and **Reset to the buggy code**; the daily problem and next problem
+  leave them out.
+- **Follow-ups:** 40 harder variants of 30 problems (many queries, negative values, huge
+  inputs, an extra rule), opened once the base problem is solved, each with its own
+  tests and solutions.
+- **Kata drills:** re-solve solved problems from memory against the clock. A daily kata
+  of three problems (leaning towards the rusty ones) or a set from a pattern or a list;
+  the editor starts empty and help stays locked until the kata ends. Personal bests,
+  a kata streak and recent katas on Progress → Katas, and a **Rusty** card on Home.
+  Katas never change submissions, reviews or the daily problem.
+
+- **Skill rating** per pattern and overall, estimated from your solves (difficulty,
+  submits, time), with a trend line on Progress. It nudges the daily problem towards
+  weaker patterns and lets "Next problem" skip easy problems you have outgrown.
+- **Study plans:** a goal, a number of weeks and minutes a day become a day-by-day plan
+  of Learn topics, problems, reviews and katas, with Done / Skip / Later, a Home card,
+  and **Export to calendar** (`.ics`).
+
+- **Mistake journal:** failed submissions are tagged automatically (wrong answer, time
+  or memory limit, the kind of runtime error, edge cases found in the failing input,
+  "found by the shrinker"); change the tags and add a note. **Your common mistakes** on
+  Progress → Mistakes.
+- **Reflections:** after Accepted, an optional "why it works" and a complexity pick,
+  shown again in Notes, review mode and katas.
+
+- **Snippets:** your own code per language, inserted with `/snip` in the editor or from
+  the command palette (Settings → Editor → Snippets).
+- **Compare submissions** side by side in the Submissions tab.
+- **Search everything** (Ctrl+Shift+P): problems, Learn topics, snippets, settings and
+  the user guide, which is now also inside the app (**Help**).
+
+### Changed
+- Exports are now format `katabox-export/v2`, which carries the new kinds of records
+  added below. Files exported by 1.0.0-beta.1 (`v1`) still import.
+
 ### Fixed
 - The command palette now finds a command typed exactly as its label, punctuation
   included ("Theme: Dark"), and ignores accents.

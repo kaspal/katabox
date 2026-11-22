@@ -11,16 +11,29 @@
 //! - Responses redact what hidden tests returned and printed; user.db keeps the full
 //!   Report.
 
+pub mod authoring;
+pub mod backup;
 mod calibration;
+pub mod classroom;
+pub mod comforts;
 pub mod debug;
 pub mod diagnostics;
 mod error;
+pub mod focus;
 pub mod interview;
+pub mod journal;
+pub mod kata;
 pub mod learn_links;
+pub mod packs;
+pub mod plan;
+pub mod plan_app;
 pub mod practice;
 pub mod profile;
+pub mod rating;
+pub mod reading;
 mod root;
 pub mod shrink;
+pub mod stress;
 pub mod transfer;
 pub mod uninstall;
 pub mod window;
@@ -208,6 +221,9 @@ pub struct SubmitResult {
     pub report: Report,
     /// Reviews, the daily problem, the streak and what to solve next (ADR 0019).
     pub practice: practice::PracticeOutcome,
+    /// A kata Submit (expansion M1): the attempt, and whether it beat the best time.
+    /// Such a Submit stores no submission (`submission_id` is 0).
+    pub kata: Option<kata::KataOutcome>,
 }
 
 /// The practice context of a Submit (ADR 0019).
@@ -220,10 +236,23 @@ pub struct SubmitOptions {
     pub review: bool,
     /// Language of the suggested next problem's title.
     pub lang: UiLang,
+    /// Submitted in the running kata that started at this time (UTC ms): recorded as a
+    /// kata attempt only (expansion M1).
+    pub kata: Option<i64>,
 }
 
 /// A user-written test input for Run: argument values keyed by parameter name.
 pub type CustomInput = Map<String, Value>;
+
+/// What "Check" found for each custom input (expansion M9).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct CustomCheck {
+    /// Per input: `None` when it is valid, else why not.
+    pub problems: Vec<Option<String>>,
+    /// The problem's validate.py ran (it needs the Python runtime).
+    pub constraints_checked: bool,
+}
 
 #[derive(Debug)]
 pub struct App {
@@ -250,6 +279,13 @@ pub struct App {
     debug: std::sync::Mutex<Option<debug::Session>>,
     /// Stop requested for the running shrink (ADR 0030).
     shrink_cancel: std::sync::atomic::AtomicBool,
+    stress_cancel: std::sync::atomic::AtomicBool,
+    /// The app's local data folder (packs live under it; expansion M11).
+    local_dir: PathBuf,
+    pending_pack: std::sync::Mutex<Option<packs::PendingPack>>,
+    /// The skill ratings replayed from the history (expansion M2); dropped on every
+    /// Submit, kata Submit and import.
+    ratings: std::sync::Mutex<Option<Arc<rating::Ratings>>>,
 }
 
 /// Solved problems per judge language (cross-language practice, ADR 0020).
@@ -263,7 +299,9 @@ pub struct LanguageCount {
 impl App {
     /// Open both stores and pick the sandbox root (see [`root`] for the order).
     pub async fn open(paths: &AppPaths) -> Result<App> {
-        let store = Store::open(&paths.content_db, &paths.user_db).await?;
+        let mut store = Store::open(&paths.content_db, &paths.user_db).await?;
+        // Installed packs (expansion M11) are merged into the content the app reads.
+        packs::open_content(&mut store, &paths.content_db, &paths.local_data_dir).await?;
         let setting = store
             .user
             .get_setting(SANDBOX_ROOT_SETTING)
@@ -304,9 +342,13 @@ impl App {
                 .unwrap_or_default(),
             judging: tokio::sync::Mutex::new(()),
             shrink_cancel: std::sync::atomic::AtomicBool::new(false),
+            stress_cancel: std::sync::atomic::AtomicBool::new(false),
+            local_dir: paths.local_data_dir.clone(),
+            pending_pack: std::sync::Mutex::new(None),
             calibration: RwLock::new(calibration),
             clock: std::sync::Mutex::new(None),
             pending_import: std::sync::Mutex::new(None),
+            ratings: std::sync::Mutex::new(None),
             debug: std::sync::Mutex::new(None),
         })
     }
@@ -502,9 +544,25 @@ impl App {
     pub async fn get_problem(&self, id: &str, lang: UiLang) -> Result<ProblemView> {
         let mut view = self.store.content.get_problem(id, lang).await?;
         view.editorial = None;
-        // Mock interview (ADR 0020): hint texts never reach the UI.
-        if self.in_interview(id).await? {
+        // Mock interview (ADR 0020) and kata (expansion M1): hint texts never reach the UI.
+        // So is an assignment without hints (expansion M12).
+        if self.in_interview(id).await?
+            || self.in_kata(id).await?
+            || self.assignment_locks_help(id).await?
+        {
             view.hints.clear();
+        }
+        // Follow-ups (expansion M5) open once their base is solved.
+        if !view.followups.is_empty() {
+            let solved = self
+                .store
+                .user
+                .problem_status(id)
+                .await?
+                .is_some_and(|s| s.status == kb_store::ProblemStatus::Solved);
+            for f in &mut view.followups {
+                f.unlocked = solved;
+            }
         }
         view.time_scale = calibration::scale_of(self.calibration().as_ref());
         view.time_limits = calibration::time_limits(view.time_limit_ms, view.time_scale);
@@ -559,6 +617,11 @@ impl App {
         if p.mode == kb_core::ProblemMode::Program {
             return Ok(kb_judge::program_starter(language)?);
         }
+        // A fix-the-bug problem starts from its buggy code (expansion M6); a language
+        // without a buggy version gets the ordinary starter.
+        if let Some(buggy) = self.store.content.starter(problem, language).await? {
+            return Ok(buggy);
+        }
         Ok(kb_judge::starter_code(language, &p.signature)?)
     }
 
@@ -595,6 +658,10 @@ impl App {
     }
 
     pub async fn save_draft(&self, problem: &str, language: Language, code: &str) -> Result<()> {
+        // A kata re-solves from memory: its code never becomes a draft (expansion M1).
+        if self.in_kata(problem).await? {
+            return Ok(());
+        }
         Ok(self.store.user.save_draft(problem, language, code).await?)
     }
 
@@ -649,10 +716,13 @@ impl App {
             tests.extend(self.custom_tests(&p, language, custom).await?);
         }
         let report = self.judge(p, tests, language, code, on_event).await?;
-        self.store
-            .user
-            .record_run(problem, language, code, report.verdict)
-            .await?;
+        // Kata runs leave no History snapshot (expansion M1).
+        if !self.in_kata(problem).await? {
+            self.store
+                .user
+                .record_run(problem, language, code, report.verdict)
+                .await?;
+        }
         Ok(report)
     }
 
@@ -675,8 +745,25 @@ impl App {
         self.ensure_calibrated().await;
         let p = self.problem(problem).await?;
         ensure_language_fits(&p, language)?;
+        let kata = match opts.kata {
+            Some(session) => Some(self.kata_for(session, problem).await?),
+            None => None,
+        };
         let tests = p.tests.clone();
         let mut report = self.judge(p, tests, language, code, on_event).await?;
+        if let Some(s) = kata {
+            // A kata Submit is kept apart: no submission, status, review or daily change.
+            let outcome = self
+                .record_kata(s.started_at, problem, language, code, report.verdict)
+                .await?;
+            report.redact_hidden();
+            return Ok(SubmitResult {
+                submission_id: 0,
+                report,
+                practice: practice::PracticeOutcome::default(),
+                kata: Some(outcome),
+            });
+        }
         let was_solved = self
             .store
             .user
@@ -688,6 +775,11 @@ impl App {
             .user
             .record_submission(problem, language, code, &report)
             .await?;
+        self.forget_ratings();
+        if !report.verdict.is_accepted() {
+            // The mistake journal (expansion M3): tag the failure now.
+            self.tag_new_failures().await?;
+        }
         let practice = self
             .after_submit(
                 problem,
@@ -703,6 +795,7 @@ impl App {
             submission_id,
             report,
             practice,
+            kata: None,
         })
     }
 
@@ -750,6 +843,60 @@ impl App {
 
     /// Turn custom inputs into tests whose expected outputs come from the reference
     /// solution in `language`.
+    /// Check custom inputs without running any solution (expansion M9's "Check"): the
+    /// signature's types, then the problem's validate.py in the sandbox (one run) when the
+    /// Python runtime is installed. One entry per input: `None` when valid, else why not.
+    pub async fn check_custom(
+        &self,
+        problem: &str,
+        inputs: Vec<CustomInput>,
+    ) -> Result<CustomCheck> {
+        let _one = self.judge_slot()?;
+        if inputs.len() > 32 {
+            return Err(AppError::new(AppErrorCode::InvalidInput, "too many inputs"));
+        }
+        let p = self.problem(problem).await?;
+        let mut problems: Vec<Option<String>> = inputs
+            .iter()
+            .map(|x| kb_judge::check_input(x, &p.signature).err())
+            .collect();
+        let python = self.toolchains.runtime_installed(Language::Python);
+        let validator = if python {
+            self.store.content.validator(&p.id).await?
+        } else {
+            None
+        };
+        let constraints_checked = validator.is_some();
+        if let Some(v) = validator {
+            let typed: Vec<(usize, Map<String, Value>)> = inputs
+                .into_iter()
+                .enumerate()
+                .filter(|(i, _)| problems[*i].is_none())
+                .collect();
+            if !typed.is_empty() {
+                let env = self.env();
+                let given: Vec<Map<String, Value>> = typed.iter().map(|(_, x)| x.clone()).collect();
+                let answers = tokio::task::spawn_blocking(move || {
+                    let refs: Vec<&Map<String, Value>> = given.iter().collect();
+                    let limits = kb_judge::ScriptLimits {
+                        cpu_time_ms: 10_000,
+                        memory_mb: 512,
+                        max_output_bytes: 1024 * 1024,
+                    };
+                    kb_judge::validate_inputs(&env, &v, &refs, limits)
+                })
+                .await??;
+                for ((i, _), a) in typed.iter().zip(answers) {
+                    problems[*i] = a;
+                }
+            }
+        }
+        Ok(CustomCheck {
+            problems,
+            constraints_checked,
+        })
+    }
+
     async fn custom_tests(
         &self,
         p: &Problem,
@@ -980,8 +1127,10 @@ impl App {
             .collect())
     }
 
-    /// In a mock interview, only the session's languages may be judged on its problems.
+    /// In a mock interview, only the session's languages may be judged on its problems;
+    /// in a running assignment, only its languages (expansion M12).
     async fn ensure_interview_language(&self, problem: &str, language: Language) -> Result<()> {
+        self.ensure_assignment_language(problem, language).await?;
         match self.running_session().await? {
             Some(s)
                 if s.problem_ids.iter().any(|p| p == problem)
@@ -997,6 +1146,10 @@ impl App {
     }
 
     pub async fn get_note(&self, problem: &str) -> Result<Option<String>> {
+        // A kata re-solves from memory: the notes wait until it ends (expansion M1).
+        if self.in_kata(problem).await? {
+            return Err(kata::locked());
+        }
         Ok(self.store.user.get_note(problem).await?)
     }
 

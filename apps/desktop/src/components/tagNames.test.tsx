@@ -8,6 +8,7 @@ import { PROBLEMS } from "@/test/fakeApi";
 import { setFakeApi, useFakeApi } from "@/test/mockApi";
 import en from "@/i18n/locales/en.json";
 import es from "@/i18n/locales/es.json";
+import ptBR from "@/i18n/locales/pt-BR.json";
 
 vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
 
@@ -18,8 +19,10 @@ describe("Tag names", () => {
     for (const tag of new Set(PROBLEMS.flatMap((p) => p.tags))) {
       expect(en.tag.names).toHaveProperty([tag]);
       expect(es.tag.names).toHaveProperty([tag]);
+      expect(ptBR.tag.names).toHaveProperty([tag]);
     }
     expect(Object.keys(es.tag.names).sort()).toEqual(Object.keys(en.tag.names).sort());
+    expect(Object.keys(ptBR.tag.names).sort()).toEqual(Object.keys(en.tag.names).sort());
 
     await i18n.changeLanguage("en");
     const { result } = renderHook(() => useTagLabel(), {

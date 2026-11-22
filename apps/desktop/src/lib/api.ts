@@ -5,6 +5,28 @@ import { Channel } from "@tauri-apps/api/core";
 import { recordError } from "@/lib/diagnostics";
 import {
   commands,
+  type CustomCheck,
+  type BackupStatus,
+  type PackPreview,
+  type AssignmentView,
+  type ClassAssignment,
+  type ClassImport,
+  type ResultsFile,
+  type DraftIssue,
+  type DraftSummary,
+  type PackHead,
+  type ProblemDraft,
+  type PackRow,
+  type FocusCurrent,
+  type FocusSessionRow,
+  type StressEvent,
+  type StressResult,
+  type ReadingAnswer,
+  type ReadingAnswerRow,
+  type ReadingLink,
+  type ReadingResult,
+  type ReadingSetSummary,
+  type ReadingSetView,
   type AppError,
   type AppInfo,
   type Diagnostics,
@@ -26,6 +48,21 @@ import {
   type InterviewResult,
   type InterviewSetup,
   type InterviewView,
+  type KataAttemptRow,
+  type KataOptions,
+  type KataOverview,
+  type KataStart,
+  type KataView,
+  type SearchResults,
+  type SnippetInput,
+  type SnippetRow,
+  type JournalOverview,
+  type MistakeView,
+  type ReflectionRow,
+  type PlanIcsLabels,
+  type PlanSetup,
+  type PlanView,
+  type RatingsView,
   type LanguageCount,
   type TransferCounts,
   type DailyProblem,
@@ -147,6 +184,67 @@ export const api = {
     return call(commands.shrink(problem, language, code, input, ch));
   },
   cancelShrink: (): Promise<null> => call(commands.cancelShrink()),
+  checkCustom: (problem: string, inputs: CustomInput[]): Promise<CustomCheck> =>
+    call(commands.checkCustom(problem, inputs)),
+  // Problem packs (expansion M11, ADR 0038)
+  importPackPreview: (): Promise<PackPreview | null> => call(commands.importPackPreview()),
+  importPackApply: (token: number): Promise<PackRow> => call(commands.importPackApply(token)),
+  importPackCancel: (token: number): Promise<null> => call(commands.importPackCancel(token)),
+  packs: (): Promise<PackRow[]> => call(commands.packs()),
+  uninstallPack: (id: string): Promise<null> => call(commands.uninstallPack(id)),
+  restartApp: (): Promise<void> => commands.restartApp(),
+  // In-app problem editor (expansion M13, ADR 0040)
+  authoringDrafts: (): Promise<DraftSummary[]> => call(commands.authoringDrafts()),
+  authoringLoad: (id: string): Promise<ProblemDraft> => call(commands.authoringLoad(id)),
+  authoringNew: (id: string): Promise<ProblemDraft> => call(commands.authoringNew(id)),
+  authoringSave: (draft: ProblemDraft): Promise<DraftIssue[]> => call(commands.authoringSave(draft)),
+  authoringIssues: (id: string): Promise<DraftIssue[]> => call(commands.authoringIssues(id)),
+  authoringDelete: (id: string): Promise<null> => call(commands.authoringDelete(id)),
+  authoringCheck: (id: string): Promise<Report> => call(commands.authoringCheck(id)),
+  authoringPatterns: (): Promise<string[]> => call(commands.authoringPatterns()),
+  authoringStarter: (draft: ProblemDraft): Promise<string> => call(commands.authoringStarter(draft)),
+  authoringExport: (ids: string[], head: PackHead): Promise<string | null> =>
+    call(commands.authoringExport(ids, head)),
+  // Classroom mode (expansion M12, ADR 0039)
+  assignments: (lang: UiLang): Promise<AssignmentView[]> => call(commands.assignments(lang)),
+  assignment: (id: string, lang: UiLang): Promise<AssignmentView> => call(commands.assignment(id, lang)),
+  startAssignment: (id: string, lang: UiLang): Promise<AssignmentView> => call(commands.startAssignment(id, lang)),
+  finishAssignment: (id: string, lang: UiLang): Promise<AssignmentView> => call(commands.finishAssignment(id, lang)),
+  assignmentResults: (id: string, student: string, includeCode: boolean): Promise<ResultsFile> =>
+    call(commands.assignmentResults(id, student, includeCode)),
+  saveAssignmentResults: (id: string, student: string, includeCode: boolean): Promise<ResultsFile | null> =>
+    call(commands.saveAssignmentResults(id, student, includeCode)),
+  importClassResults: (): Promise<ClassImport | null> => call(commands.importClassResults()),
+  classResults: (): Promise<ClassAssignment[]> => call(commands.classResults()),
+  saveClassCsv: (assignment: string): Promise<boolean> => call(commands.saveClassCsv(assignment)),
+  // Focus sessions and backups (expansion M10, ADR 0037)
+  focusCurrent: (): Promise<FocusCurrent | null> => call(commands.focusCurrent()),
+  focusStart: (work: number, brk: number): Promise<FocusCurrent> => call(commands.focusStart(work, brk)),
+  focusStop: (): Promise<FocusSessionRow | null> => call(commands.focusStop()),
+  focusSessions: (): Promise<FocusSessionRow[]> => call(commands.focusSessions()),
+  backupStatus: (): Promise<BackupStatus> => call(commands.backupStatus()),
+  setBackupOptions: (every: number, keep: number, onExit: boolean): Promise<BackupStatus> =>
+    call(commands.setBackupOptions(every, keep, onExit)),
+  backupNow: (): Promise<BackupStatus> => call(commands.backupNow()),
+  chooseBackupFolder: (): Promise<BackupStatus | null> => call(commands.chooseBackupFolder()),
+  clearBackupFolder: (): Promise<BackupStatus> => call(commands.clearBackupFolder()),
+  // The stress lab (expansion M8, ADR 0036)
+  stressTest: (
+    problem: string,
+    language: Language,
+    code: string,
+    brute: string,
+    onEvent: (e: StressEvent) => void,
+  ): Promise<StressResult> => {
+    const ch = new Channel<StressEvent>();
+    ch.onmessage = onEvent;
+    return call(commands.stressTest(problem, language, code, brute, ch));
+  },
+  cancelStress: (): Promise<null> => call(commands.cancelStress()),
+  stressBrute: (problem: string, language: Language): Promise<string | null> =>
+    call(commands.stressBrute(problem, language)),
+  saveStressBrute: (problem: string, language: Language, code: string): Promise<null> =>
+    call(commands.saveStressBrute(problem, language, code)),
   submit: (
     problem: string,
     language: Language,
@@ -195,6 +293,52 @@ export const api = {
   startInterview: (setup: InterviewSetup, lang: UiLang): Promise<InterviewView> =>
     call(commands.startInterview(setup, lang)),
   interviewActive: (lang: UiLang): Promise<InterviewView | null> => call(commands.interviewActive(lang)),
+
+  // Snippets and search (expansion M4, ADR 0034)
+  // Reading exercises (expansion M7, ADR 0035)
+  readingSets: (lang: UiLang): Promise<ReadingSetSummary[]> => call(commands.readingSets(lang)),
+  readingSet: (id: string, lang: UiLang): Promise<ReadingSetView> => call(commands.readingSet(id, lang)),
+  readingAnswers: (): Promise<ReadingAnswerRow[]> => call(commands.readingAnswers()),
+  readingLinks: (topic: string, lang: UiLang): Promise<ReadingLink[]> =>
+    call(commands.readingLinks(topic, lang)),
+  answerReading: (item: string, answer: ReadingAnswer, lang: UiLang): Promise<ReadingResult> =>
+    call(commands.answerReading(item, answer, lang)),
+  snippets: (): Promise<SnippetRow[]> => call(commands.snippets()),
+  saveSnippet: (snippet: SnippetInput): Promise<SnippetRow> => call(commands.saveSnippet(snippet)),
+  deleteSnippet: (uid: string): Promise<null> => call(commands.deleteSnippet(uid)),
+  searchAll: (query: string, lang: UiLang): Promise<SearchResults> => call(commands.searchAll(query, lang)),
+
+  // Mistake journal and reflections (expansion M3, ADR 0034)
+  journalOverview: (lang: UiLang): Promise<JournalOverview> => call(commands.journalOverview(lang)),
+  submissionMistake: (submission: number): Promise<MistakeView | null> =>
+    call(commands.submissionMistake(submission)),
+  setSubmissionMistake: (submission: number, tags: string[], note: string): Promise<null> =>
+    call(commands.setSubmissionMistake(submission, tags, note)),
+  tagShrunk: (submission: number): Promise<null> => call(commands.tagShrunk(submission)),
+  reflection: (problem: string): Promise<ReflectionRow | null> => call(commands.reflection(problem)),
+  setReflection: (problem: string, why: string, time: string | null, space: string | null): Promise<null> =>
+    call(commands.setReflection(problem, why, time, space)),
+
+  // Skill rating and study plans (expansion M2, ADR 0033)
+  ratings: (): Promise<RatingsView> => call(commands.ratings()),
+  planView: (lang: UiLang): Promise<PlanView | null> => call(commands.planView(lang)),
+  createPlan: (setup: PlanSetup, lang: UiLang): Promise<PlanView> => call(commands.createPlan(setup, lang)),
+  setPlanItem: (plan: number, position: number, status: "pending" | "done" | "skipped"): Promise<null> =>
+    call(commands.setPlanItem(plan, position, status)),
+  reschedulePlanItem: (plan: number, position: number): Promise<null> =>
+    call(commands.reschedulePlanItem(plan, position)),
+  archivePlan: (plan: number): Promise<null> => call(commands.archivePlan(plan)),
+  /** A Save dialog (opened by Rust), then the plan as an .ics file; null when cancelled. */
+  exportPlanIcs: (labels: PlanIcsLabels, lang: UiLang): Promise<string | null> =>
+    call(commands.exportPlanIcs(labels, lang)),
+
+  // Kata drills (expansion M1, ADR 0033)
+  kataOptions: (today: string, lang: UiLang): Promise<KataOptions> => call(commands.kataOptions(today, lang)),
+  startKata: (start: KataStart, lang: UiLang): Promise<KataView> => call(commands.startKata(start, lang)),
+  kataState: (lang: UiLang): Promise<KataView | null> => call(commands.kataState(lang)),
+  kataOpen: (problem: string): Promise<KataAttemptRow> => call(commands.kataOpen(problem)),
+  endKata: (lang: UiLang): Promise<KataView | null> => call(commands.endKata(lang)),
+  kataOverview: (today: string, lang: UiLang): Promise<KataOverview> => call(commands.kataOverview(today, lang)),
   endInterview: (lang: UiLang): Promise<InterviewResult> => call(commands.endInterview(lang)),
   interviews: (lang: UiLang): Promise<InterviewResult[]> => call(commands.interviews(lang)),
   acceptedSolution: (problem: string, language: Language): Promise<AcceptedSolution | null> =>

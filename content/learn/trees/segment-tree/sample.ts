@@ -1,4 +1,10 @@
-function build(tree: number[], a: number[], node: number, lo: number, hi: number): void {
+function build(
+  tree: number[],
+  a: number[],
+  node: number,
+  lo: number,
+  hi: number,
+): void {
   if (lo === hi) {
     tree[node] = a[lo]; // @step leaf
     return;
@@ -9,7 +15,14 @@ function build(tree: number[], a: number[], node: number, lo: number, hi: number
   tree[node] = tree[2 * node] + tree[2 * node + 1]; // @step merge
 }
 
-function query(tree: number[], node: number, lo: number, hi: number, left: number, right: number): number {
+function query(
+  tree: number[],
+  node: number,
+  lo: number,
+  hi: number,
+  left: number,
+  right: number,
+): number {
   if (right < lo || hi < left) {
     return 0; // @step outside
   }
@@ -17,10 +30,20 @@ function query(tree: number[], node: number, lo: number, hi: number, left: numbe
     return tree[node]; // @step inside
   }
   const mid = Math.floor((lo + hi) / 2);
-  return query(tree, 2 * node, lo, mid, left, right) + query(tree, 2 * node + 1, mid + 1, hi, left, right);
+  return (
+    query(tree, 2 * node, lo, mid, left, right) +
+    query(tree, 2 * node + 1, mid + 1, hi, left, right)
+  );
 }
 
-function update(tree: number[], node: number, lo: number, hi: number, i: number, value: number): void {
+function update(
+  tree: number[],
+  node: number,
+  lo: number,
+  hi: number,
+  i: number,
+  value: number,
+): void {
   if (lo === hi) {
     tree[node] = value; // @step set
     return;
@@ -37,7 +60,8 @@ function run(a: number[], ops: (string | number)[][]): number[] {
   build(tree, a, 1, 0, n - 1);
   const out: number[] = [];
   for (const op of ops) {
-    if (op[0] === "sum") out.push(query(tree, 1, 0, n - 1, op[1] as number, op[2] as number));
+    const [kind, a, b] = op as [string, number, number];
+    if (kind === "sum") out.push(query(tree, 1, 0, n - 1, a, b));
     else update(tree, 1, 0, n - 1, op[1] as number, op[2] as number);
   }
   return out;

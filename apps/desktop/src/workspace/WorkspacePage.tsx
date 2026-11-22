@@ -33,13 +33,22 @@ import { ErrorNotice } from "@/components/ErrorNotice";
 import { PlacementBanner } from "@/onboarding/PlacementBanner";
 import { Tour } from "@/onboarding/Tour";
 import { InstallDialog } from "@/languages/InstallDialog";
-import { DifficultyLabel, ModeLabel } from "@/components/Semantic";
+import { DifficultyLabel, FixLabel, ModeLabel, PackLabel } from "@/components/Semantic";
 import { api } from "@/lib/api";
 import { isAppError } from "@/lib/errors";
 import { useFocusMode } from "@/lib/focus";
 import { useReviewActions, useReviewState } from "@/lib/practice";
 import { useInterviewActive, useSolvedLanguages } from "@/lib/modes";
 import { InterviewTimer } from "@/practice/interview";
+import { KataBar } from "@/practice/kata";
+import { ReflectionCard, SavedReflection } from "@/practice/journal";
+import { useSnippets } from "@/practice/snippets";
+import { setActiveEditor } from "@/lib/editorBridge";
+import { FollowupBanner, FollowupTabs } from "@/workspace/Followups";
+import { FixBanner } from "@/workspace/FixBanner";
+import { StressPanel } from "@/workspace/results/Stress";
+import { snippetCompletion } from "@/workspace/editor/snippets";
+import { useKataState } from "@/lib/kata";
 import { CompareView, SolveInMenu } from "@/practice/crossLanguage";
 import { useAppInfo, useProblem } from "@/lib/queries";
 import { AddToListMenu, formatDay } from "@/practice/shared";
@@ -84,6 +93,11 @@ export function WorkspacePage() {
   const navigate = useNavigate({ from: "/problems/$problemId" });
   const search = route.useSearch();
   const reviewMode = search.review === true;
+  // A kata (expansion M1) re-solves from memory: starter code, no drafts, help locked.
+  const kataState = useKataState();
+  const kataView =
+    search.kata !== undefined && kataState.data?.started_at === search.kata ? kataState.data : null;
+  const inKata = kataState.data?.problems.some((x) => x.id === problemId) === true;
   const compare = search.compare ?? null;
   const interview = useInterviewActive();
   const inInterview = interview.data?.problems.some((x) => x.id === problemId) === true;
@@ -105,7 +119,7 @@ export function WorkspacePage() {
   // SQL problems take SQL and nothing else takes SQL: until the language fits the problem
   // (just after opening one), no document is loaded.
   const fits = problem.data !== undefined && language !== null && (language === "sql") === sqlProblem;
-  const session = useEditorSession(problemId, fits ? language : null, { review: reviewMode });
+  const session = useEditorSession(problemId, fits ? language : null, { review: reviewMode || inKata });
   const docLang = session.doc?.lang ?? null;
   // TypeScript can be edited as plain JavaScript (per problem): only the grammar and the
   // language server change; the draft and the judge stay TypeScript (ADR 0024).
@@ -142,6 +156,19 @@ export function WorkspacePage() {
   // PHP has no language server on Windows: offer keywords and common functions instead.
   const basicCompletion = docLang === "php" && server.status.state === "unavailable";
   const editorView = useRef<EditorView | null>(null);
+  // Your snippets for this language: `/snip` in the editor (expansion M4).
+  const snippets = useSnippets();
+  const snippetExt = useMemo(
+    () => snippetCompletion((snippets.data ?? []).filter((s) => s.language === docLang)),
+    [snippets.data, docLang],
+  );
+  const baseLsp = sqlProblem ? sqlCompletion : basicCompletion ? phpBasicCompletion : server.extension;
+  const editorExtras = useMemo(() => [baseLsp ?? [], snippetExt], [baseLsp, snippetExt]);
+  // The palette inserts snippets into this editor while it is open.
+  useEffect(() => {
+    if (editorView.current && docLang) setActiveEditor({ view: editorView.current, language: docLang });
+    return () => setActiveEditor(null);
+  }, [docLang]);
   const judge = useJudge(problemId);
   // Review mode stays on until a review-mode Submit passes; then the old code may be seen.
   const reviewOutcome = judge.practice?.review?.outcome;
@@ -172,6 +199,12 @@ export function WorkspacePage() {
   useEffect(() => {
     void api.markOpened(problemId).catch(() => {});
   }, [problemId]);
+
+  // A kata problem's clock starts when it first opens.
+  const kataStarted = kataView?.started_at ?? null;
+  useEffect(() => {
+    if (kataStarted !== null) void api.kataOpen(problemId).catch(() => {});
+  }, [problemId, kataStarted]);
 
   // Starting language: this problem's latest draft, else the last language used.
   useEffect(() => {
@@ -238,6 +271,11 @@ export function WorkspacePage() {
           language,
           code: () => session.doc?.text ?? "",
           disabledReason: busy || dbg.busy || dbg.active ? t("results.shrink.busy") : null,
+          onShrunk: () => {
+            if (judge.lastKind === "submit" && judge.submissionId !== null) {
+              void api.tagShrunk(judge.submissionId).catch(() => {});
+            }
+          },
           addCustom: (input) => {
             setCustoms((cs) => [...cs, { id: Math.max(0, ...cs.map((c) => c.id)) + 1, values: valuesFrom(signature, input) }]);
             setTab("testcases");
@@ -283,8 +321,8 @@ export function WorkspacePage() {
     if (!ready || !language || session.code === null) return;
     setTab("result");
     await session.flush();
-    await judge.submit(language, session.code, { review: locked });
-  }, [ready, language, session, judge, locked]);
+    await judge.submit(language, session.code, { review: locked, kata: kataView?.started_at ?? null });
+  }, [ready, language, session, judge, locked, kataView]);
 
   // A brief celebration when a submission is Accepted.
   useEffect(() => {
@@ -416,9 +454,11 @@ export function WorkspacePage() {
         <h1 className="truncate text-base font-semibold">{p.title}</h1>
         <DifficultyLabel difficulty={p.difficulty} className="text-xs" />
         <ModeLabel mode={p.mode} />
+        <FixLabel fix={p.fix} />
+        <PackLabel pack={p.pack} />
         <div className="ml-auto flex items-center gap-2">
           {inInterview && <InterviewTimer compact />}
-          {!inInterview && !sqlProblem && (solvedIn.data?.length ?? 0) > 0 && (
+          {!inInterview && !inKata && !sqlProblem && (solvedIn.data?.length ?? 0) > 0 && (
             <SolveInMenu
               solved={solvedIn.data ?? []}
               current={language}
@@ -528,6 +568,13 @@ export function WorkspacePage() {
         </div>
       </div>
 
+      <FollowupTabs problem={p} />
+      <FollowupBanner problem={p} />
+      {kataView && (
+        <div className="border-b px-3 py-2">
+          <KataBar view={kataView} problemId={problemId} outcome={judge.kata} />
+        </div>
+      )}
       {reviewMode && (
         <div
           role="status"
@@ -545,6 +592,7 @@ export function WorkspacePage() {
                   ),
                 })
             : t("practice.review.banner")}
+          {reviewPassed && <SavedReflection problemId={problemId} />}
         </div>
       )}
       <ResizablePanelGroup
@@ -563,6 +611,8 @@ export function WorkspacePage() {
               locks={
                 inInterview
                   ? { tabs: ["hints", "editorial", "submissions", "history"], reason: "interview" }
+                  : inKata
+                    ? { tabs: ["hints", "editorial", "submissions", "notes", "history"], reason: "kata" }
                   : locked
                     ? { tabs: ["submissions", "history"], reason: "review" }
                     : null
@@ -590,6 +640,11 @@ export function WorkspacePage() {
                 <Skeleton className="m-4 h-40" />
               ) : (
                 <div className="flex h-full min-h-0 flex-col">
+                  <FixBanner
+                    problem={p}
+                    language={session.doc.lang}
+                    onReset={() => void session.resetToStarter(session.doc!.lang)}
+                  />
                   {toolchains.get(session.doc.lang)?.present === false && (
                     <div
                       role="status"
@@ -631,9 +686,7 @@ export function WorkspacePage() {
                       ligatures={ligatures}
                       tabWidth={tabWidth}
                       colorTheme={editorTheme}
-                      lspExtension={
-                        sqlProblem ? sqlCompletion : basicCompletion ? phpBasicCompletion : server.extension
-                      }
+                      lspExtension={editorExtras}
                       debugExtension={debugEditor}
                       readOnly={dbg.active}
                       ariaLabel={t("workspace.editorLabel", { language: t(`languages.${session.doc.lang}`) })}
@@ -644,7 +697,10 @@ export function WorkspacePage() {
                       onRun={() => void run()}
                       onSubmit={() => void submit()}
                       onStatus={setEditorStatus}
-                      onView={(v) => (editorView.current = v)}
+                      onView={(v) => {
+                        editorView.current = v;
+                        setActiveEditor(v && docLang ? { view: v, language: docLang } : null);
+                      }}
                     />
                     </div>
                   </div>
@@ -683,8 +739,19 @@ export function WorkspacePage() {
                   celebrate={celebrate}
                   practice={judge.lastKind === "submit" ? judge.practice : null}
                   complexity={
-                    p.profile && judge.report?.verdict === "accepted" && judge.judged ? (
-                      <ComplexityPanel state={complexity.state} onMeasure={() => void complexity.measure()} disabled={busy} />
+                    judge.report?.verdict === "accepted" &&
+                    ((p.profile && judge.judged) || (judge.lastKind === "submit" && !inKata && !inInterview)) ? (
+                      <>
+                        {p.profile && judge.judged && (
+                          <ComplexityPanel state={complexity.state} onMeasure={() => void complexity.measure()} disabled={busy} />
+                        )}
+                        {judge.lastKind === "submit" && !inKata && !inInterview && <ReflectionCard problemId={problemId} />}
+                      </>
+                    ) : null
+                  }
+                  stressPanel={
+                    language ? (
+                      <StressPanel problemId={problemId} language={language} mode={p.mode} />
                     ) : null
                   }
                   debugPanel={

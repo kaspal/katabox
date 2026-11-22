@@ -28,6 +28,12 @@ import { localToday, useToday } from "@/lib/today";
 import { Heatmap } from "@/practice/heatmap";
 import { StreakBadge, formatDay } from "@/practice/shared";
 import { Scorecard } from "@/practice/interview";
+import { KatasTab } from "@/practice/kata";
+import { PlanTab } from "@/practice/plan";
+import { MistakesTab } from "@/practice/journal";
+import { RatingBadge } from "@/practice/rating";
+import { useRatings } from "@/lib/plan";
+import { FocusCard } from "@/practice/focus";
 
 /** By topic shows the largest topics first; "Show all" lists the rest. */
 const TOPICS_SHOWN = 24;
@@ -113,6 +119,8 @@ export function Progress() {
   const tagLabel = useTagLabel();
   const today = useToday();
   const patterns = usePatterns();
+  const ratings = useRatings();
+  const ratingOf = (pattern: string) => ratings.data?.patterns.find((r) => r.pattern === pattern)?.rating;
   const streak = useStreak();
   const byLanguage = useSolvedByLanguage();
   const interviews = useInterviews();
@@ -169,6 +177,17 @@ export function Progress() {
               value={activity.data ? totals.submissions : "–"}
             />
           </div>
+          <Section title={t("rating.overall")} testId="overall-rating">
+            {ratings.data && ratings.data.overall.events > 0 ? (
+              <RatingBadge view={ratings.data.overall} />
+            ) : (
+              <p className="text-sm text-muted-foreground">{t("rating.none")}</p>
+            )}
+          </Section>
+
+          <Section title={t("focus.title")} testId="focus">
+            <FocusCard />
+          </Section>
 
           <Section title={t("progress.heatmap.title")} testId="activity">
             {activity.isPending ? (
@@ -285,6 +304,7 @@ export function Progress() {
                           {t("practice.patterns.solved", { solved: p.solved, total: p.total })}
                         </span>
                       </div>
+                      {ratingOf(p.pattern) && <RatingBadge view={ratingOf(p.pattern)!} />}
                       <Bar
                         value={p.total === 0 ? 0 : (100 * p.solved) / p.total}
                         aria-label={`${patternLabel(p.pattern)}: ${t("practice.patterns.solved", { solved: p.solved, total: p.total })}`}
@@ -360,6 +380,18 @@ export function Progress() {
           </Section>
 
           <LearnViewed />
+        </TabsContent>
+
+        <TabsContent value="plan">
+          <PlanTab />
+        </TabsContent>
+
+        <TabsContent value="katas">
+          <KatasTab />
+        </TabsContent>
+
+        <TabsContent value="mistakes">
+          <MistakesTab />
         </TabsContent>
 
         <TabsContent value="history">

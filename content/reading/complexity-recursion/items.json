@@ -1,0 +1,102 @@
+[
+  {
+    "n": 1,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Each call does constant work and makes one call with n − 1, so there are n + 1 calls: O(n). None of them returns until the last one does, so n frames sit on the call stack at once: O(n) space.",
+    "explain_es": "Cada llamada hace trabajo constante y una sola llamada con n − 1, así que hay n + 1 llamadas: O(n). Ninguna vuelve hasta que vuelve la última, así que n marcos se acumulan en la pila de llamadas: espacio O(n).",
+    "time": "O(n)",
+    "space": "O(n)",
+    "dominant": {"python": 4, "typescript": 5}
+  },
+  {
+    "n": 2,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Each call halves n, so there are about log₂ n calls before n reaches 1: O(log n). The stack is as deep as the number of calls: O(log n) space.",
+    "explain_es": "Cada llamada divide n entre dos, así que hay unas log₂ n llamadas antes de llegar a 1: O(log n). La pila es tan profunda como el número de llamadas: espacio O(log n).",
+    "time": "O(log n)",
+    "space": "O(log n)",
+    "dominant": {"python": 4, "typescript": 5}
+  },
+  {
+    "n": 3,
+    "prompt": "f counts the moves of the Towers of Hanoi with n disks. How do the time and the extra space grow with n?",
+    "prompt_es": "f cuenta los movimientos de las Torres de Hanói con n discos. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Every call with k > 0 makes two calls with k − 1, so the call tree doubles at each level: 1 + 2 + 4 + … + 2ⁿ = 2ⁿ⁺¹ − 1 calls, O(2ⁿ). Only one path of the tree is on the stack at a time, n frames deep: O(n) space.",
+    "explain_es": "Cada llamada con k > 0 hace dos llamadas con k − 1, así que el árbol de llamadas se duplica en cada nivel: 1 + 2 + 4 + … + 2ⁿ = 2ⁿ⁺¹ − 1 llamadas, O(2ⁿ). En la pila solo hay un camino del árbol a la vez, de n marcos: espacio O(n).",
+    "time": "O(2ⁿ)",
+    "space": "O(n)",
+    "dominant": {"python": 7, "typescript": 9}
+  },
+  {
+    "n": 4,
+    "prompt": "ways makes two calls, but remembers its answers. How do the time and the extra space grow with n?",
+    "prompt_es": "ways hace dos llamadas, pero recuerda sus respuestas. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Each k from 2 to n is computed once and stored in memo; every later call for it is a constant-time lookup, so there are about 2n calls in all: O(n). The memo holds n entries and the first chain of calls goes n frames deep: O(n) space.",
+    "explain_es": "Cada k de 2 a n se calcula una vez y se guarda en memo; las llamadas posteriores son una consulta de tiempo constante, así que hay unas 2n llamadas en total: O(n). El memo guarda n entradas y la primera cadena de llamadas llega a n marcos: espacio O(n).",
+    "time": "O(n)",
+    "space": "O(n)",
+    "dominant": {"python": 8, "typescript": 11}
+  },
+  {
+    "n": 5,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "power calls itself once with e // 2 and uses the result twice (half * half), so there are about log₂ n calls, each doing constant work: O(log n). The stack holds those log n frames: O(log n) space.",
+    "explain_es": "power se llama una vez con e // 2 y usa el resultado dos veces (half * half), así que hay unas log₂ n llamadas, cada una con trabajo constante: O(log n). La pila guarda esos log n marcos: espacio O(log n).",
+    "time": "O(log n)",
+    "space": "O(log n)",
+    "dominant": {"python": 7, "typescript": 9}
+  },
+  {
+    "n": 6,
+    "prompt": "This version calls power twice instead of reusing half. How do the time and the extra space grow with n?",
+    "prompt_es": "Esta versión llama a power dos veces en lugar de reutilizar half. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Two calls on e // 2 double the calls on each level, and there are about log₂ n + 2 levels down to e = 0: about 4n calls in all, O(n). It is not O(2ⁿ) because the exponent halves instead of dropping by one. The stack is still log n deep: O(log n) space.",
+    "explain_es": "Dos llamadas con e // 2 duplican las llamadas en cada nivel, y hay unos log₂ n + 2 niveles hasta e = 0: unas 4n llamadas en total, O(n). No es O(2ⁿ) porque el exponente se divide entre dos en lugar de bajar de uno en uno. La pila sigue teniendo log n de profundidad: espacio O(log n).",
+    "time": "O(n)",
+    "space": "O(log n)",
+    "dominant": {"python": 7, "typescript": 9}
+  },
+  {
+    "n": 7,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The call for n runs a loop of n steps, then recurses on n − 1: n + (n − 1) + … + 1 = n(n + 1)/2 steps, O(n²). The recursion is n calls deep: O(n) space for the stack.",
+    "explain_es": "La llamada para n ejecuta un bucle de n pasos y luego se llama con n − 1: n + (n − 1) + … + 1 = n(n + 1)/2 pasos, O(n²). La recursión tiene n llamadas de profundidad: espacio O(n) para la pila.",
+    "time": "O(n²)",
+    "space": "O(n)",
+    "dominant": {"python": 5, "typescript": 6}
+  },
+  {
+    "n": 8,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The loops cost n + n/2 + n/4 + …, a halving series that adds up to less than 2n: O(n), even though there are log n levels. The stack is log n calls deep: O(log n) space.",
+    "explain_es": "Los bucles cuestan n + n/2 + n/4 + …, una serie que se divide entre dos y suma menos de 2n: O(n), aunque haya log n niveles. La pila tiene log n llamadas de profundidad: espacio O(log n).",
+    "time": "O(n)",
+    "space": "O(log n)",
+    "dominant": {"python": 5, "typescript": 6}
+  },
+  {
+    "n": 9,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Merge sort halves the list about log₂ n times, and on each level of the call tree the merge loops touch all n elements once: O(n log n). nums, the halves and the merged lists hold O(n) values at a time (n + n/2 + n/4 + …), more than the log n stack: O(n) space.",
+    "explain_es": "Merge sort parte la lista por la mitad unas log₂ n veces y, en cada nivel del árbol de llamadas, los bucles de mezcla tocan los n elementos una vez: O(n log n). nums, las mitades y las listas mezcladas guardan O(n) valores a la vez (n + n/2 + n/4 + …), más que la pila de log n: espacio O(n).",
+    "time": "O(n log n)",
+    "space": "O(n)",
+    "dominant": {"python": 13, "typescript": 19}
+  },
+  {
+    "n": 10,
+    "prompt": "f counts the subsets of {0, …, n − 1} whose sum is a multiple of 3. How do the time and the extra space grow with n?",
+    "prompt_es": "f cuenta los subconjuntos de {0, …, n − 1} cuya suma es múltiplo de 3. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "For each of the n numbers the code tries both taking it and skipping it, so the call tree has 2ⁿ leaves and about 2ⁿ⁺¹ calls: O(2ⁿ). Only one path from the root to a leaf is on the stack at a time, n + 1 frames: O(n) space.",
+    "explain_es": "Para cada uno de los n números el código prueba a tomarlo y a saltarlo, así que el árbol de llamadas tiene 2ⁿ hojas y unas 2ⁿ⁺¹ llamadas: O(2ⁿ). En la pila solo hay un camino de la raíz a una hoja a la vez, n + 1 marcos: espacio O(n).",
+    "time": "O(2ⁿ)",
+    "space": "O(n)",
+    "dominant": {"python": 7, "typescript": 9}
+  }
+]

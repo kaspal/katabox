@@ -62,6 +62,11 @@ pub enum AppErrorCode {
     LockedInInterview,
     /// A mock interview is already running.
     InterviewActive,
+    /// Locked while a kata runs: hints, editorial, submissions, History, notes
+    /// (expansion M1).
+    LockedInKata,
+    /// A kata is already running (expansion M1).
+    KataActive,
     /// Fewer than two unsolved problems the user has never opened.
     NotEnoughProblems,
     /// The import file is not a valid KataBox export.
@@ -74,6 +79,17 @@ pub enum AppErrorCode {
     ProfileUnavailable,
     /// The failing-test shrinker does not work here (a program problem, no reference).
     ShrinkUnavailable,
+    /// The stress lab does not work here (an SQL problem, or a program problem without
+    /// gen.py or the Python runtime; expansion M8).
+    StressUnavailable,
+    /// A pack failed a check, is already installed, or is not newer (expansion M11); the
+    /// message lists why.
+    PackRefused,
+    /// Locked while an assignment without hints runs (expansion M12): hints, editorial,
+    /// history and solutions of its problems.
+    LockedInAssignment,
+    /// Another assignment is already running (expansion M12).
+    AssignmentActive,
     /// Anything else, including the app failing to start.
     Internal,
 }

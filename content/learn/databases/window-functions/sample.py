@@ -21,6 +21,7 @@ def check_with_sqlite(rows, out):
     db.execute("CREATE TABLE t (id INTEGER PRIMARY KEY, p INTEGER, v INTEGER)")
     db.executemany("INSERT INTO t (p, v) VALUES (?, ?)", rows)
     result = db.execute(
-        "SELECT SUM(v) OVER (PARTITION BY p ORDER BY id ROWS UNBOUNDED PRECEDING) FROM t ORDER BY id"
+        "SELECT SUM(v) OVER (PARTITION BY p ORDER BY id"
+        " ROWS UNBOUNDED PRECEDING) FROM t ORDER BY id"
     ).fetchall()
     assert [row[0] for row in result] == out, "SQLite's running totals differ"

@@ -1,5 +1,5 @@
 //! Progress export and import (ADR 0020): one `.kbx.json` file, format
-//! `katabox-export/v1`. Import is strict — size cap, exact format, no unknown fields,
+//! `katabox-export/v2` (v1 files still import; expansion M0). Import is strict — size cap, exact format, no unknown fields,
 //! every value checked — and merges by key, keeping the newer record. Nothing in a file
 //! is ever executed: code is stored as text.
 
@@ -11,7 +11,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{App, AppError, AppErrorCode, CALIBRATION_SETTING, Result, SANDBOX_ROOT_SETTING};
 
-pub const EXPORT_FORMAT: &str = "katabox-export/v1";
+/// The format every export writes. v2 adds the expansion's record kinds, each an
+/// optional (`serde(default)`) section of [`ExportData`].
+pub const EXPORT_FORMAT: &str = "katabox-export/v2";
+/// The previous format: still imported, as long as it holds none of v2's sections.
+pub const EXPORT_FORMAT_V1: &str = "katabox-export/v1";
 /// Largest file Import reads.
 pub const IMPORT_MAX_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_ROWS: usize = 200_000;
@@ -33,10 +37,15 @@ const UI_SETTINGS: [&str; 2] = ["ui.contrast", "ui.motion"];
 
 /// Settings an import may write.
 fn importable_setting(key: &str) -> bool {
-    ["editor.", "workspace.", "practice."]
+    ["editor.", "workspace.", "practice.", "focus."]
         .iter()
         .any(|p| key.starts_with(p) && key.len() <= 64)
+        // The running focus session stays on this machine (expansion M10).
+        && key != crate::focus::CURRENT
         || key == "ui_lang"
+        // The content language when the UI is in a language content doesn't come in
+        // (expansion M14).
+        || key == "content_lang"
         || key == "theme"
         || LEARN_SETTINGS.contains(&key)
         || UI_SETTINGS.contains(&key)
@@ -74,6 +83,16 @@ pub struct TransferCounts {
     pub lists: u32,
     pub interviews: u32,
     pub settings: u32,
+    pub kata_sessions: u32,
+    pub kata_attempts: u32,
+    pub study_plans: u32,
+    pub plan_items: u32,
+    pub mistakes: u32,
+    pub reflections: u32,
+    pub snippets: u32,
+    pub reading_answers: u32,
+    pub stress_brutes: u32,
+    pub focus_sessions: u32,
 }
 
 fn counts(d: &ExportData) -> TransferCounts {
@@ -91,6 +110,16 @@ fn counts(d: &ExportData) -> TransferCounts {
         lists: n(d.lists.len()),
         interviews: n(d.interviews.len()),
         settings: n(d.settings.len()),
+        kata_sessions: n(d.kata_sessions.len()),
+        kata_attempts: n(d.kata_attempts.len()),
+        study_plans: n(d.study_plans.len()),
+        plan_items: n(d.plan_items.len()),
+        mistakes: n(d.mistakes.len()),
+        reflections: n(d.reflections.len()),
+        snippets: n(d.snippets.len()),
+        reading_answers: n(d.reading_answers.len()),
+        stress_brutes: n(d.stress_brutes.len()),
+        focus_sessions: n(d.focus_sessions.len()),
     }
 }
 
@@ -158,11 +187,14 @@ fn check_day(path: &str, s: &str) -> Result<()> {
 
 /// Every value of a parsed file, checked (types were already checked by serde).
 fn validate(f: &ExportFile) -> Result<()> {
-    if f.format != EXPORT_FORMAT {
+    if f.format != EXPORT_FORMAT && f.format != EXPORT_FORMAT_V1 {
         return Err(invalid(format!(
-            "format must be {EXPORT_FORMAT:?}, got {:?}",
+            "format must be {EXPORT_FORMAT:?} or {EXPORT_FORMAT_V1:?}, got {:?}",
             f.format
         )));
+    }
+    if f.format == EXPORT_FORMAT_V1 && !f.data.v2_sections_empty() {
+        return Err(invalid(format!("a {EXPORT_FORMAT_V1} file has v2 records")));
     }
     check_len("app_version", &f.app_version, 64)?;
     let d = &f.data;
@@ -179,6 +211,16 @@ fn validate(f: &ExportFile) -> Result<()> {
         d.lists.len(),
         d.interviews.len(),
         d.settings.len(),
+        d.kata_sessions.len(),
+        d.kata_attempts.len(),
+        d.study_plans.len(),
+        d.plan_items.len(),
+        d.mistakes.len(),
+        d.reflections.len(),
+        d.snippets.len(),
+        d.reading_answers.len(),
+        d.stress_brutes.len(),
+        d.focus_sessions.len(),
     ];
     if sizes.iter().any(|n| *n > MAX_ROWS) {
         return Err(invalid(format!("more than {MAX_ROWS} records of one kind")));
@@ -306,6 +348,144 @@ fn validate(f: &ExportFile) -> Result<()> {
             return Err(invalid(format!("{p}: value too large")));
         }
     }
+    for (i, s) in d.kata_sessions.iter().enumerate() {
+        let p = format!("kata_sessions[{i}]");
+        check_time(&p, s.started_at)?;
+        if let Some(t) = s.ended_at {
+            check_time(&p, t)?;
+        }
+        check_day(&p, &s.day)?;
+        if s.problem_ids.is_empty()
+            || s.problem_ids.len() > crate::kata::SET_KATA_MAX
+            || !(0..=86_400).contains(&s.duration_s)
+        {
+            return Err(invalid(format!("{p}: bad session")));
+        }
+        for id in &s.problem_ids {
+            check_id(&p, id)?;
+        }
+        if let Some(src) = &s.source {
+            check_len(&p, src, 128)?;
+        }
+    }
+    for (i, a) in d.kata_attempts.iter().enumerate() {
+        let p = format!("kata_attempts[{i}]");
+        check_id(&p, &a.problem_id)?;
+        check_time(&p, a.session_started_at)?;
+        check_time(&p, a.started_at)?;
+        if let Some(t) = a.solved_at {
+            check_time(&p, t)?;
+        }
+        if a.time_ms.is_some_and(|t| t < 0) || a.submits > 100_000 {
+            return Err(invalid(format!("{p}: bad attempt")));
+        }
+        if let Some(code) = &a.code {
+            check_len(&p, code, MAX_CODE)?;
+        }
+    }
+    for (i, s) in d.study_plans.iter().enumerate() {
+        let p = format!("study_plans[{i}]");
+        check_time(&p, s.created_at)?;
+        check_day(&p, &s.start_day)?;
+        if !(1..=crate::plan::WEEKS_MAX).contains(&s.weeks)
+            || !(crate::plan::MINUTES_MIN..=crate::plan::MINUTES_MAX).contains(&s.minutes_per_day)
+            || !s.goal.is_object()
+            || s.goal.to_string().len() > 64 * 1024
+        {
+            return Err(invalid(format!("{p}: bad plan")));
+        }
+    }
+    for (i, it) in d.plan_items.iter().enumerate() {
+        let p = format!("plan_items[{i}]");
+        check_time(&p, it.plan_created_at)?;
+        check_time(&p, it.updated_at)?;
+        check_day(&p, &it.day)?;
+        if crate::plan::PlanItemKind::parse(&it.kind).is_none()
+            || !kb_store::plans::PLAN_STATUSES.contains(&it.status.as_str())
+            || it.minutes > 24 * 60
+            || it.position > 100_000
+        {
+            return Err(invalid(format!("{p}: bad plan item")));
+        }
+        if let Some(r) = &it.reference {
+            check_id(&p, r)?;
+        }
+    }
+    for (i, m) in d.mistakes.iter().enumerate() {
+        let p = format!("mistakes[{i}]");
+        check_id(&p, &m.problem_id)?;
+        check_time(&p, m.submitted_at)?;
+        check_time(&p, m.updated_at)?;
+        if m.language.parse::<kb_core::Language>().is_err() || !crate::journal::valid_mistake(m) {
+            return Err(invalid(format!("{p}: bad journal entry")));
+        }
+    }
+    for (i, r) in d.reflections.iter().enumerate() {
+        let p = format!("reflections[{i}]");
+        check_id(&p, &r.problem_id)?;
+        check_time(&p, r.updated_at)?;
+        if !crate::journal::valid_reflection(r) {
+            return Err(invalid(format!("{p}: bad reflection")));
+        }
+    }
+    for (i, s) in d.snippets.iter().enumerate() {
+        let p = format!("snippets[{i}]");
+        check_time(&p, s.created_at)?;
+        check_time(&p, s.updated_at)?;
+        let lang_ok = s
+            .language
+            .parse::<kb_core::Language>()
+            .is_ok_and(|l| kb_judge::languages::SUPPORTED.contains(&l));
+        if !crate::comforts::valid_uid(&s.uid)
+            || !lang_ok
+            || crate::comforts::check_snippet(&s.name, &s.tags, &s.body).is_err()
+        {
+            return Err(invalid(format!("{p}: bad snippet")));
+        }
+    }
+    for (i, a) in d.reading_answers.iter().enumerate() {
+        let p = format!("reading_answers[{i}]");
+        check_time(&p, a.updated_at)?;
+        if let Some(t) = a.correct_at {
+            check_time(&p, t)?;
+        }
+        let id_ok = a.item_id.split_once('/').is_some_and(|(set, n)| {
+            !set.is_empty()
+                && set.len() <= 64
+                && set
+                    .bytes()
+                    .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+                && n.parse::<u32>().is_ok_and(|n| (1..=9999).contains(&n))
+                && !n.starts_with('0')
+        });
+        if !id_ok || !(1..=1_000_000).contains(&a.attempts) {
+            return Err(invalid(format!("{p}: bad reading answer")));
+        }
+    }
+    for (i, b) in d.stress_brutes.iter().enumerate() {
+        let p = format!("stress_brutes[{i}]");
+        check_id(&p, &b.problem_id)?;
+        check_time(&p, b.updated_at)?;
+        let lang_ok = b
+            .language
+            .parse::<kb_core::Language>()
+            .is_ok_and(|l| kb_judge::languages::SUPPORTED.contains(&l));
+        if !lang_ok || b.code.len() > crate::stress::MAX_BRUTE_BYTES {
+            return Err(invalid(format!("{p}: bad brute-force solution")));
+        }
+    }
+    for (i, f) in d.focus_sessions.iter().enumerate() {
+        let p = format!("focus_sessions[{i}]");
+        check_time(&p, f.started_at)?;
+        check_time(&p, f.ended_at)?;
+        if f.ended_at < f.started_at
+            || !crate::focus::WORK_MIN.contains(&f.work_min)
+            || !crate::focus::BREAK_MIN.contains(&f.break_min)
+            || f.cycles > 10_000
+        {
+            return Err(invalid(format!("{p}: bad focus session")));
+        }
+    }
     Ok(())
 }
 
@@ -400,6 +580,7 @@ impl App {
             }
         };
         let stats = self.store.user.import_merge(&data).await?;
+        self.forget_ratings();
         let mut r = ImportResult::default();
         let n = |v: u64| u32::try_from(v).unwrap_or(u32::MAX);
         for s in stats.values() {
@@ -436,6 +617,7 @@ mod tests {
             "workspace.layout",
             "practice.daily",
             "ui_lang",
+            "content_lang",
             "theme",
             "learn.viewed",
             "learn.last",

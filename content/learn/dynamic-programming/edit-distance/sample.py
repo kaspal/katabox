@@ -10,5 +10,7 @@ def edit_distance(a, b):
             if a[i - 1] == b[j - 1]:
                 cost[i][j] = cost[i - 1][j - 1]  # @step same
             else:
-                cost[i][j] = 1 + min(cost[i - 1][j - 1], cost[i - 1][j], cost[i][j - 1])  # @step change
+                cost[i][j] = 1 + min(  # @step change
+                    cost[i - 1][j - 1], cost[i - 1][j], cost[i][j - 1]
+                )
     return [cost[m][n]]

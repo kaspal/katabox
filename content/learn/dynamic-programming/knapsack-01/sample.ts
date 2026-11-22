@@ -1,6 +1,8 @@
 function knapsack(capacity: number, items: number[][]): number[] {
   const n = items.length;
-  const best = Array.from({ length: n + 1 }, () => new Array<number>(capacity + 1).fill(0));
+  const best = Array.from({ length: n + 1 }, () =>
+    new Array<number>(capacity + 1).fill(0),
+  );
   for (let i = 1; i <= n; i++) {
     const [weight, value] = items[i - 1];
     for (let c = 0; c <= capacity; c++) {

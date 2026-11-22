@@ -15,19 +15,31 @@
 //! needs no `DATABASE_URL`.
 
 pub mod blob;
+pub mod classroom;
 pub mod content;
+pub mod focus;
+pub mod journal;
+pub mod kata;
 pub mod learn;
+#[cfg(test)]
+mod migration_tests;
 pub mod modes;
+pub mod packs;
+pub mod plans;
 pub mod practice;
+pub mod reading;
+pub mod reading_answers;
+pub mod snippets;
+pub mod stress;
 pub mod transfer;
 pub mod user;
 
 use std::path::Path;
 
 pub use content::{
-    CONTENT_SCHEMA_VERSION, ContentDb, ContentMeta, JudgeData, PackMeta, PackProblem, PackSql,
-    PackText, ProblemFilter, ProblemSummary, ProblemView, ProfileData, PublicTest, StatusFilter,
-    UiLang, build, build_with_learn,
+    CONTENT_SCHEMA_VERSION, ContentDb, ContentMeta, FollowupRef, JudgeData, PackMeta, PackProblem,
+    PackSql, PackText, ProblemFilter, ProblemSummary, ProblemView, ProfileData, PublicTest,
+    StatusFilter, UiLang, build, build_with_learn,
 };
 pub use learn::{
     LearnComplexity, LearnInput, LearnPack, LearnPath, LearnSample, LearnSubject, LearnTopic,
@@ -36,6 +48,10 @@ pub use learn::{
 };
 pub use modes::{AcceptedSolution, SessionRow, SubmitFact};
 pub use practice::{ActivityRow, DailyPick, INSTALL_ID_SETTING, ListRow, ReviewRow};
+pub use reading::{
+    DominantLine, PackReadingItem, PackReadingSet, ReadingItemData, ReadingItemView, ReadingKind,
+    ReadingLink, ReadingSetSummary, ReadingSetView,
+};
 pub use transfer::ExportData;
 pub use user::{
     BACKUPS_KEPT, Draft, DraftRef, ProblemStatus, SNAPSHOT_CAP, Snapshot, SnapshotSource,

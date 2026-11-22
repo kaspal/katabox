@@ -1,0 +1,18 @@
+id = "average-grade"
+title = "Average Grade"
+title_es = "Nota media"
+difficulty = "easy"
+tags = ["math", "debugging"]
+pattern = "fundamentals"
+rank = 3
+kind = "fix"
+
+[signature]
+name = "averageGrade"
+params = [{ name = "grades", type = "int[]" }]
+returns = "float"
+
+[judge]
+checker = "float:1e-6"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

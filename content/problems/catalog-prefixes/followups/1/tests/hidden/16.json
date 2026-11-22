@@ -1,0 +1,1 @@
+{"input":{"ops":["add","remove","add","add","count","count"],"words":["ab","ab","a","ca","a","a"]},"output":[1,1]}

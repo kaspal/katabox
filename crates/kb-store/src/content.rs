@@ -17,7 +17,7 @@ use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 8;
+pub const CONTENT_SCHEMA_VERSION: i64 = 13;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -85,6 +85,14 @@ pub struct PackProblem {
     pub validator: Option<String>,
     /// SQL problems (ADR 0031): `schema.sql` as written, and its tables as JSON.
     pub sql: Option<PackSql>,
+    /// A follow-up's base problem (expansion M5).
+    pub parent: Option<String>,
+    /// A fix-the-bug problem (expansion M6): its buggy starter code per language.
+    pub fix: Option<Vec<(Language, String)>>,
+    /// gen.py (expansion M8): the stress lab generates inputs with it, in the sandbox.
+    pub generator: Option<String>,
+    /// The pack it came from (expansion M11); `None` for built-in content.
+    pub pack: Option<String>,
 }
 
 /// An SQL problem's schema (ADR 0031).
@@ -179,6 +187,10 @@ pub struct ProblemSummary {
     pub tags: Vec<String>,
     /// Filled by [`crate::Store::list_problems`]; `None` from [`ContentDb`] alone.
     pub status: Option<ProblemStatus>,
+    /// A fix-the-bug problem (expansion M6).
+    pub fix: bool,
+    /// The pack it came from (expansion M11); `None` for built-in content.
+    pub pack: Option<String>,
 }
 
 /// A public test as shown in the UI.
@@ -228,6 +240,27 @@ pub struct ProblemView {
     /// An SQL problem's tables (ADR 0031): `[{"name", "columns": [{"name", "type",
     /// "primary_key", "not_null", "references"}]}]`, for the schema panel and completion.
     pub sql_tables: Option<Value>,
+    /// A follow-up's base problem (expansion M5).
+    pub parent: Option<String>,
+    /// This problem's follow-ups, in order (empty for most problems).
+    pub followups: Vec<FollowupRef>,
+    /// A fix-the-bug problem (expansion M6): the editor starts from buggy code.
+    pub fix: bool,
+    /// The languages that have buggy starter code (fix-the-bug problems).
+    pub fix_languages: Vec<Language>,
+    /// The pack it came from (expansion M11): its text is shown as untrusted.
+    pub pack: Option<String>,
+}
+
+/// A follow-up as listed on its base problem's page (expansion M5).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct FollowupRef {
+    pub id: String,
+    pub title: String,
+    pub difficulty: Difficulty,
+    /// Unlocked once the base is solved (filled by the app; false as read).
+    pub unlocked: bool,
 }
 
 /// What the judge needs: settings and every test (public first, then hidden).
@@ -249,7 +282,7 @@ pub struct JudgeData {
 /// Read-only handle to content.db.
 #[derive(Debug, Clone)]
 pub struct ContentDb {
-    pool: SqlitePool,
+    pub(crate) pool: SqlitePool,
 }
 
 impl ContentDb {
@@ -312,7 +345,7 @@ impl ContentDb {
         // Text with no words (only punctuation or spaces) does not filter.
         let fts = filter.query.as_deref().and_then(fts_query);
         let rows = sqlx::query(
-            "SELECT p.id, p.difficulty, p.pattern, p.rank, p.mode,
+            "SELECT p.id, p.difficulty, p.pattern, p.rank, p.mode, p.kind, p.pack_id,
                     COALESCE(tl.title, te.title) AS title,
                     (SELECT json_group_array(tag) FROM
                         (SELECT tag FROM problem_tags t WHERE t.problem_id = p.id ORDER BY tag)
@@ -327,6 +360,7 @@ impl ContentDb {
                AND (?5 IS NULL OR p.id IN
                     (SELECT problem_id FROM problem_fts WHERE problem_fts MATCH ?5))
                AND (?6 IS NULL OR p.mode = ?6)
+               AND p.parent_id IS NULL
              ORDER BY p.rank, p.id",
         )
         .bind(lang.code())
@@ -348,6 +382,8 @@ impl ContentDb {
                     mode: parse_mode(&r.try_get::<String, _>("mode")?)?,
                     tags: serde_json::from_str(&r.try_get::<String, _>("tags")?)?,
                     status: None,
+                    fix: r.try_get::<String, _>("kind")? == "fix",
+                    pack: r.try_get("pack_id")?,
                 })
             })
             .collect()
@@ -403,6 +439,27 @@ impl ContentDb {
         })
         .collect::<Result<Vec<_>>>()?;
 
+        let followups = sqlx::query(
+            "SELECT p.id, p.difficulty, COALESCE(tl.title, te.title) AS title FROM problems p
+             JOIN problem_texts te ON te.problem_id = p.id AND te.lang = 'en'
+             LEFT JOIN problem_texts tl ON tl.problem_id = p.id AND tl.lang = ?2
+             WHERE p.parent_id = ?1 ORDER BY p.id",
+        )
+        .bind(id)
+        .bind(lang.code())
+        .fetch_all(&self.pool)
+        .await?
+        .iter()
+        .map(|r| {
+            Ok(FollowupRef {
+                id: r.try_get("id")?,
+                title: r.try_get("title")?,
+                difficulty: parse_difficulty(&r.try_get::<String, _>("difficulty")?)?,
+                unlocked: false,
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+
         Ok(ProblemView {
             id: id.to_string(),
             lang,
@@ -428,6 +485,22 @@ impl ContentDb {
                 .try_get::<Option<String>, _>("sql_schema")?
                 .map(|s| serde_json::from_str(&s))
                 .transpose()?,
+            parent: p.try_get("parent_id")?,
+            followups,
+            fix: p.try_get::<String, _>("kind")? == "fix",
+            pack: p.try_get("pack_id")?,
+            fix_languages: sqlx::query_scalar::<_, String>(
+                "SELECT language FROM starters WHERE problem_id = ? ORDER BY language",
+            )
+            .bind(id)
+            .fetch_all(&self.pool)
+            .await?
+            .iter()
+            .map(|l| {
+                l.parse::<Language>()
+                    .map_err(|e| StoreError::Corrupt(e.to_string()))
+            })
+            .collect::<Result<Vec<_>>>()?,
         })
     }
 
@@ -548,6 +621,37 @@ impl ContentDb {
         Ok(Some(ProfileData { inputs, reference }))
     }
 
+    /// Every built-in problem id (follow-ups too): a pack id may not equal one.
+    pub async fn builtin_ids(&self) -> Result<Vec<String>> {
+        Ok(
+            sqlx::query_scalar("SELECT id FROM problems WHERE pack_id IS NULL ORDER BY id")
+                .fetch_all(&self.pool)
+                .await?,
+        )
+    }
+
+    /// A problem's gen.py (expansion M8), when it has one.
+    pub async fn generator(&self, id: &str) -> Result<Option<String>> {
+        Ok(
+            sqlx::query_scalar::<_, Option<String>>("SELECT generator FROM problems WHERE id = ?")
+                .bind(id)
+                .fetch_optional(&self.pool)
+                .await?
+                .flatten(),
+        )
+    }
+
+    /// A fix-the-bug problem's buggy starter code in `language` (expansion M6).
+    pub async fn starter(&self, id: &str, language: Language) -> Result<Option<String>> {
+        Ok(
+            sqlx::query_scalar("SELECT code FROM starters WHERE problem_id = ? AND language = ?")
+                .bind(id)
+                .bind(language.id())
+                .fetch_optional(&self.pool)
+                .await?,
+        )
+    }
+
     pub async fn reference_solution(&self, id: &str, language: Language) -> Result<Option<String>> {
         Ok(sqlx::query_scalar(
             "SELECT code FROM reference_solutions WHERE problem_id = ? AND language = ?",
@@ -557,6 +661,59 @@ impl ContentDb {
         .fetch_optional(&self.pool)
         .await?)
     }
+}
+
+/// The tables a pack contributes (expansion M11): problems only.
+const PACK_TABLES: [&str; 10] = [
+    "problems",
+    "problem_tags",
+    "problem_texts",
+    "hints",
+    "tests",
+    "starters",
+    "reference_solutions",
+    "profile_inputs",
+    "profile_reference",
+    "problem_fts",
+];
+
+/// The content the app opens when packs are installed (expansion M11, ADR 0038): a copy of
+/// the core content.db with every pack's problem rows added (ids are already namespaced
+/// `<pack>--<id>`). Written to `<out>.tmp`, then renamed. Every query then works unchanged.
+pub async fn merge_packs(core: &Path, packs: &[PathBuf], out: &Path) -> Result<()> {
+    let tmp = out.with_extension("db.tmp");
+    let _ = std::fs::remove_file(&tmp);
+    std::fs::copy(core, &tmp)?;
+    {
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect_with(SqliteConnectOptions::new().filename(&tmp))
+            .await?;
+        let mut conn = pool.acquire().await?;
+        for (k, pack) in packs.iter().enumerate() {
+            // Same schema as the core (open refuses any other version).
+            ContentDb::open(pack).await?.close().await;
+            let alias = format!("p{k}");
+            sqlx::query(&format!("ATTACH DATABASE ? AS {alias}"))
+                .bind(pack.to_string_lossy().into_owned())
+                .execute(&mut *conn)
+                .await?;
+            let mut tx = sqlx::Connection::begin(&mut *conn).await?;
+            for t in PACK_TABLES {
+                sqlx::query(&format!("INSERT INTO main.{t} SELECT * FROM {alias}.{t}"))
+                    .execute(&mut *tx)
+                    .await?;
+            }
+            tx.commit().await?;
+            sqlx::query(&format!("DETACH DATABASE {alias}"))
+                .execute(&mut *conn)
+                .await?;
+        }
+        drop(conn);
+        pool.close().await;
+    }
+    std::fs::rename(&tmp, out)?;
+    Ok(())
 }
 
 /// Write `problems` into a new content.db at `out`. Builds into `<out>.tmp` and renames
@@ -599,6 +756,16 @@ fn check_pack(problems: &[PackProblem]) -> Result<()> {
         if !seen.insert(p.id.as_str()) {
             return Err(StoreError::InvalidPack(format!(
                 "duplicate problem id {}",
+                p.id
+            )));
+        }
+        if let Some(parent) = &p.parent
+            && !problems
+                .iter()
+                .any(|b| &b.id == parent && b.parent.is_none())
+        {
+            return Err(StoreError::InvalidPack(format!(
+                "{}: its base {parent} is not in the pack",
                 p.id
             )));
         }
@@ -683,6 +850,7 @@ async fn write_pack(
         insert_problem(&mut tx, p).await?;
     }
     insert_learn(&mut tx, learn).await?;
+    crate::reading::insert_reading(&mut tx, &learn.reading, &learn.reading_links).await?;
     tx.commit().await?;
     sqlx::raw_sql("VACUUM").execute(&mut conn).await?;
     conn.close().await?;
@@ -697,8 +865,8 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
     sqlx::query(
         "INSERT INTO problems (id, difficulty, pattern, rank, mode, signature, checker,
                                time_limit_ms, memory_mb, profile, validator, schema_sql,
-                               sql_schema)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               sql_schema, parent_id, kind, generator, pack_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&p.id)
     .bind(difficulty_code(p.difficulty))
@@ -718,6 +886,10 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
             .map(|s| serde_json::to_string(&s.tables))
             .transpose()?,
     )
+    .bind(&p.parent)
+    .bind(if p.fix.is_some() { "fix" } else { "solve" })
+    .bind(&p.generator)
+    .bind(&p.pack)
     .execute(&mut *conn)
     .await?;
 
@@ -821,6 +993,18 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
         .bind(code)
         .execute(&mut *conn)
         .await?;
+    }
+    if let Some(starters) = &p.fix {
+        let mut starters: Vec<&(Language, String)> = starters.iter().collect();
+        starters.sort_by_key(|(l, _)| l.id());
+        for (lang, code) in starters {
+            sqlx::query("INSERT INTO starters (problem_id, language, code) VALUES (?, ?, ?)")
+                .bind(&p.id)
+                .bind(lang.id())
+                .bind(code)
+                .execute(&mut *conn)
+                .await?;
+        }
     }
     Ok(())
 }
@@ -957,6 +1141,10 @@ pub(crate) mod tests {
             ],
             solutions: vec![(Language::Python, "def widest_gap(nums): ...\n".into())],
             sql: None,
+            parent: None,
+            fix: None,
+            generator: Some("def generate(seed, size):\n    return {}\n".into()),
+            pack: None,
         }
     }
 
@@ -1049,6 +1237,160 @@ pub(crate) mod tests {
         assert_eq!(fts_query(" -- ()"), None);
     }
 
+    /// Follow-ups (expansion M5): stored with their base, left out of the problem list,
+    /// listed on the base's page, and refused without their base.
+    #[tokio::test]
+    async fn follow_ups_hang_off_their_base() {
+        let dir = temp_dir("followups");
+        let path = dir.join("content.db");
+        let meta = PackMeta {
+            pack_id: "test".into(),
+            pack_version: "1.0.0".into(),
+            pack_date: None,
+        };
+        let mut f1 = sample_problem("gap-a--f1", Difficulty::Hard, 1, true);
+        f1.parent = Some("gap-a".into());
+        let problems = [
+            sample_problem("gap-a", Difficulty::Easy, 1, true),
+            f1.clone(),
+        ];
+        build(&path, &meta, &problems).await.unwrap();
+        let db = ContentDb::open(&path).await.unwrap();
+        let ids: Vec<String> = db
+            .list_problems(&ProblemFilter::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .map(|p| p.id)
+            .collect();
+        assert_eq!(ids, ["gap-a"]);
+        let base = db.get_problem("gap-a", UiLang::Es).await.unwrap();
+        assert_eq!(base.parent, None);
+        assert_eq!(base.followups.len(), 1);
+        assert_eq!(base.followups[0].id, "gap-a--f1");
+        assert_eq!(base.followups[0].title, "Título de gap-a--f1");
+        assert!(!base.followups[0].unlocked);
+        let f = db.get_problem("gap-a--f1", UiLang::En).await.unwrap();
+        assert_eq!(f.parent.as_deref(), Some("gap-a"));
+        assert!(db.judge_data("gap-a--f1").await.is_ok());
+        db.close().await;
+        // A follow-up without its base is refused.
+        let lone = temp_dir("followups-lone").join("content.db");
+        assert!(build(&lone, &meta, &[f1]).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn fix_problems_keep_their_buggy_starters() {
+        let dir = temp_dir("fix");
+        let path = dir.join("content.db");
+        let meta = PackMeta {
+            pack_id: "test".into(),
+            pack_version: "1.0.0".into(),
+            pack_date: None,
+        };
+        let mut fix = sample_problem("gap-fix", Difficulty::Medium, 1, true);
+        fix.fix = Some(vec![
+            (
+                Language::TypeScript,
+                "export function f() { return 1; }
+"
+                .into(),
+            ),
+            (
+                Language::Python,
+                "def f():
+    return 1
+"
+                .into(),
+            ),
+        ]);
+        let problems = [sample_problem("gap-a", Difficulty::Easy, 1, true), fix];
+        build(&path, &meta, &problems).await.unwrap();
+        let db = ContentDb::open(&path).await.unwrap();
+        let fixes: Vec<(String, bool)> = db
+            .list_problems(&ProblemFilter::default())
+            .await
+            .unwrap()
+            .into_iter()
+            .map(|p| (p.id, p.fix))
+            .collect();
+        assert_eq!(fixes, [("gap-a".into(), false), ("gap-fix".into(), true)]);
+        let v = db.get_problem("gap-fix", UiLang::En).await.unwrap();
+        assert!(v.fix);
+        assert_eq!(v.fix_languages, [Language::Python, Language::TypeScript]);
+        assert_eq!(
+            db.starter("gap-fix", Language::Python)
+                .await
+                .unwrap()
+                .as_deref(),
+            Some(
+                "def f():
+    return 1
+"
+            )
+        );
+        assert_eq!(db.starter("gap-fix", Language::Rust).await.unwrap(), None);
+        let plain = db.get_problem("gap-a", UiLang::En).await.unwrap();
+        assert!(!plain.fix && plain.fix_languages.is_empty());
+        assert_eq!(db.starter("gap-a", Language::Python).await.unwrap(), None);
+        // gen.py travels too (expansion M8).
+        assert!(
+            db.generator("gap-a")
+                .await
+                .unwrap()
+                .unwrap()
+                .contains("def generate")
+        );
+        assert_eq!(db.generator("missing").await.unwrap(), None);
+        db.close().await;
+    }
+
+    #[tokio::test]
+    async fn packs_merge_into_a_copy_of_the_core() {
+        let dir = temp_dir("merge");
+        let meta = |id: &str| PackMeta {
+            pack_id: id.into(),
+            pack_version: "1.0.0".into(),
+            pack_date: None,
+        };
+        let core = dir.join("core.db");
+        build(
+            &core,
+            &meta("core"),
+            &[sample_problem("gap-a", Difficulty::Easy, 1, true)],
+        )
+        .await
+        .unwrap();
+        let mut p = sample_problem("drills--gap-b", Difficulty::Hard, 1, true);
+        p.pack = Some("drills".into());
+        let pack = dir.join("drills.db");
+        build(&pack, &meta("drills"), &[p]).await.unwrap();
+        let merged = dir.join("merged.db");
+        merge_packs(&core, &[pack], &merged).await.unwrap();
+        let db = ContentDb::open(&merged).await.unwrap();
+        let list = db.list_problems(&ProblemFilter::default()).await.unwrap();
+        let mut ids: Vec<(&str, Option<&str>)> = list
+            .iter()
+            .map(|p| (p.id.as_str(), p.pack.as_deref()))
+            .collect();
+        ids.sort();
+        assert_eq!(ids, [("drills--gap-b", Some("drills")), ("gap-a", None)]);
+        let v = db.get_problem("drills--gap-b", UiLang::En).await.unwrap();
+        assert_eq!(v.pack.as_deref(), Some("drills"));
+        assert!(db.judge_data("drills--gap-b").await.is_ok());
+        // Full-text search finds pack problems too.
+        let found = db
+            .list_problems(&ProblemFilter {
+                query: Some("gap-b".into()),
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+        assert!(found.iter().any(|p| p.id == "drills--gap-b"), "{found:?}");
+        assert_eq!(db.meta().await.unwrap().pack_id, "core");
+        db.close().await;
+    }
+
     #[tokio::test]
     async fn builds_and_reads_back() {
         let (_dir, db) = sample_db("build").await;
@@ -1091,7 +1433,7 @@ pub(crate) mod tests {
                 .await
                 .unwrap();
         assert_eq!(kinds, ["blob/blob"]);
-        assert_eq!(CONTENT_SCHEMA_VERSION, 8);
+        assert_eq!(CONTENT_SCHEMA_VERSION, 13);
         // Profile data round-trips (ADR 0024); gap-b has none.
         let mut want = packed.profile.clone().unwrap();
         want.reference.sort_by_key(|(l, _)| l.id());

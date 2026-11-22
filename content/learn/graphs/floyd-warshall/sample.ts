@@ -1,7 +1,9 @@
 const INF = 999;
 
 function floydWarshall(n: number, edges: number[][]): number[] {
-  const dist = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 0 : INF)));
+  const dist = Array.from({ length: n }, (_, i) =>
+    Array.from({ length: n }, (_, j) => (i === j ? 0 : INF)),
+  );
   for (const [u, v, w] of edges) dist[u][v] = w;
   for (let k = 0; k < n; k++) {
     const through = dist[k]; // @step pivot

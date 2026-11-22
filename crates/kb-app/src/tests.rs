@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 4); // migrations 0001-0004
+    assert_eq!(info.user_schema_version, 13); // migrations 0001-0013
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -365,6 +365,7 @@ fn submit_opts() -> SubmitOptions {
         today: "2026-11-14".into(),
         review: false,
         lang: kb_store::UiLang::En,
+        kata: None,
     }
 }
 
@@ -656,7 +657,7 @@ async fn submits_drive_reviews_daily_problem_and_streak() {
 /// `PATTERN_TRACK` and the ranks); after one solve the usual daily and next rules apply.
 #[tokio::test]
 async fn a_brand_new_user_starts_at_fundamentals() {
-    use crate::practice::{PATTERN_TRACK, daily_pick, hide_unopened_sql, next_problem};
+    use crate::practice::{PATTERN_TRACK, daily_pick_rated, hide_unopened_sql, next_problem_rated};
     let app = app("brand-new").await;
     let today = "2026-11-14";
     let all = app.all_problems(UiLang::En).await.unwrap();
@@ -685,15 +686,23 @@ async fn a_brand_new_user_starts_at_fundamentals() {
         )
         .await
         .unwrap();
-    // No SQL problem opened yet: SQL is never suggested (ADR 0031).
-    let all = hide_unopened_sql(app.all_problems(UiLang::En).await.unwrap(), "");
+    app.forget_ratings(); // the store call above bypasses Submit
+    // No SQL problem opened yet: SQL is never suggested (ADR 0031); fix-the-bug problems
+    // never are (expansion M6).
+    let all = hide_unopened_sql(
+        crate::practice::without_fix(app.all_problems(UiLang::En).await.unwrap()),
+        "",
+    );
     assert!(all.iter().all(|p| p.mode != kb_core::ProblemMode::Sql));
     let next = app
         .next_problem("two-sum", UiLang::En)
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(Some(&next), next_problem(&all, "two-sum"));
+    // The rating (expansion M2) is a soft weight on both picks.
+    let ratings = app.current_ratings().await.unwrap().by_pattern();
+    assert_eq!(ratings.len(), 1, "one solve rates one pattern");
+    assert_eq!(Some(&next), next_problem_rated(&all, "two-sum", &ratings));
     let two_sum = all.iter().find(|p| p.id == "two-sum").unwrap();
     assert_eq!(next.pattern, two_sum.pattern, "stays in two-sum's pattern");
     // Today's pick is kept all day; a new day takes the weighted pick.
@@ -704,9 +713,10 @@ async fn a_brand_new_user_starts_at_fundamentals() {
         .unwrap()
         .unwrap();
     let install = app.store.user.install_id().await.unwrap();
-    let expected = daily_pick(&all, tomorrow.parse().unwrap(), &install).unwrap();
+    let expected = daily_pick_rated(&all, tomorrow.parse().unwrap(), &install, &ratings).unwrap();
     assert_eq!(daily.problem.id, expected.id);
     assert_ne!(daily.problem.mode, kb_core::ProblemMode::Sql);
+    assert!(!daily.problem.fix);
     app.close().await;
 }
 
@@ -1072,7 +1082,7 @@ async fn export_import_round_trip_reproduces_progress_and_home() {
     assert_eq!(counts.submissions, 5);
     assert_eq!(counts.interviews, 1);
     let text = std::fs::read_to_string(&file).unwrap();
-    assert!(text.contains("\"format\": \"katabox-export/v1\""));
+    assert!(text.contains("\"format\": \"katabox-export/v2\""));
     assert!(
         !text.contains("machine-a"),
         "machine-specific settings stay home"
@@ -1240,6 +1250,41 @@ async fn import_keeps_the_newer_record_and_never_downgrades() {
     b.close().await;
 }
 
+/// A file written by 1.0.0-beta.1 (`katabox-export/v1`) still imports after v2.
+#[tokio::test]
+async fn a_v1_export_still_imports() {
+    let dir = crate::testutil::temp_dir("export-v1");
+    let file = dir.join("old.kbx.json");
+    std::fs::write(&file, include_str!("../tests/fixtures/export-v1.kbx.json")).unwrap();
+    let b = app("export-v1").await;
+    let preview = b.import_preview_from(&file).await.unwrap();
+    assert_eq!(preview.counts.submissions, 2);
+    assert_eq!(preview.counts.lists, 1);
+    let r = b.import_apply(preview.id).await.unwrap();
+    assert!(r.added > 0);
+    assert_eq!(
+        b.store.user.get_note("two-sum").await.unwrap().as_deref(),
+        Some("use a map")
+    );
+    assert_eq!(
+        b.get_setting("editor.keymap").await.unwrap(),
+        Some(json!("vim"))
+    );
+    // Re-exported, it is a v2 file that imports again.
+    let again = dir.join("again.kbx.json");
+    b.export_to(&again).await.unwrap();
+    assert!(
+        std::fs::read_to_string(&again)
+            .unwrap()
+            .contains("katabox-export/v2")
+    );
+    let c = app("export-v1-again").await;
+    let p = c.import_preview_from(&again).await.unwrap();
+    assert_eq!(p.counts.submissions, 2);
+    b.close().await;
+    c.close().await;
+}
+
 #[tokio::test]
 async fn import_rejects_bad_files_and_imports_nothing() {
     let a = app("reject-a").await;
@@ -1265,7 +1310,7 @@ async fn import_rejects_bad_files_and_imports_nothing() {
     let cases: Vec<(&str, Mutation)> = vec![
         (
             "format",
-            Box::new(|v| v["format"] = json!("katabox-export/v2")),
+            Box::new(|v| v["format"] = json!("katabox-export/v3")),
         ),
         (
             "unknown field",
@@ -1465,4 +1510,1096 @@ async fn finishing_the_welcome_sets_the_start_floor_and_picks_a_problem() {
             .unwrap(),
         Some(serde_json::Value::Bool(true))
     );
+}
+
+/// Kata drills (expansion M1): start from solved problems only, lock the problem's
+/// history and help while running, keep drafts out, and travel with an export.
+#[tokio::test]
+async fn kata_sessions_lock_and_export() {
+    use crate::kata::KataStart;
+    use kb_store::kata::KataKind;
+    let today = "2026-11-21";
+    let a = app("kata-a").await;
+    let start = |kind: KataKind, source: Option<&str>| KataStart {
+        kind,
+        source: source.map(str::to_string),
+        problems: vec![],
+        today: today.into(),
+    };
+    // Nothing solved yet: no kata.
+    let err = a
+        .start_kata(&start(KataKind::Daily, None), UiLang::En)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::InvalidInput);
+    for pid in ["two-sum", "budget-pair"] {
+        a.store
+            .user
+            .record_submission(
+                pid,
+                Language::Python,
+                "solved",
+                &report_with(Verdict::Accepted),
+            )
+            .await
+            .unwrap();
+    }
+    a.set_note("two-sum", "use a map").await.unwrap();
+    let o = a.kata_options(today, UiLang::En).await.unwrap();
+    assert_eq!(o.daily.len(), 2, "only two problems are solved");
+    assert!(o.running.is_none());
+    // Unsolved problems never join a custom kata.
+    let mut custom = start(KataKind::Custom, None);
+    custom.problems = vec!["nested-brackets".into()];
+    assert_eq!(
+        a.start_kata(&custom, UiLang::En).await.unwrap_err().code,
+        AppErrorCode::InvalidInput
+    );
+
+    let view = a
+        .start_kata(&start(KataKind::Daily, None), UiLang::En)
+        .await
+        .unwrap();
+    assert_eq!(view.problems.len(), 2);
+    assert_eq!(view.duration_s, crate::kata::DAILY_KATA_S);
+    // One kata at a time, and no mock interview meanwhile.
+    assert_eq!(
+        a.start_kata(
+            &start(KataKind::Pattern, Some("arrays-hashing")),
+            UiLang::En
+        )
+        .await
+        .unwrap_err()
+        .code,
+        AppErrorCode::KataActive
+    );
+    // Locked while running: submissions, notes, hints; drafts are not saved.
+    assert_eq!(
+        a.list_submissions("two-sum").await.unwrap_err().code,
+        AppErrorCode::LockedInKata
+    );
+    assert_eq!(
+        a.get_note("two-sum").await.unwrap_err().code,
+        AppErrorCode::LockedInKata
+    );
+    assert_eq!(
+        a.unlocked_hints("two-sum").await.unwrap_err().code,
+        AppErrorCode::LockedInKata
+    );
+    assert!(
+        a.get_problem("two-sum", UiLang::En)
+            .await
+            .unwrap()
+            .hints
+            .is_empty()
+    );
+    a.save_draft("two-sum", Language::Python, "from memory")
+        .await
+        .unwrap();
+    assert_eq!(
+        a.store
+            .user
+            .load_draft("two-sum", Language::Python)
+            .await
+            .unwrap(),
+        None
+    );
+    // Problems outside the kata stay open.
+    a.list_submissions("nested-brackets").await.unwrap();
+
+    let attempt = a.kata_open("two-sum").await.unwrap();
+    assert_eq!(attempt.submits, 0);
+    let outcome = a
+        .record_kata(
+            view.started_at,
+            "two-sum",
+            Language::Python,
+            "def twoSum(): ...",
+            Verdict::Accepted,
+        )
+        .await
+        .unwrap();
+    assert!(outcome.new_best && outcome.previous_best_ms.is_none());
+    assert_eq!(outcome.attempt.submits, 1);
+    // A kata solve is not a submission.
+    assert_eq!(
+        a.store
+            .user
+            .list_submissions("two-sum")
+            .await
+            .unwrap()
+            .len(),
+        1
+    );
+
+    let ended = a.end_kata(UiLang::En).await.unwrap().unwrap();
+    assert_eq!(ended.solved, 1);
+    assert_eq!(
+        a.get_note("two-sum").await.unwrap().as_deref(),
+        Some("use a map")
+    );
+    // Today's daily kata runs once.
+    assert_eq!(
+        a.start_kata(&start(KataKind::Daily, None), UiLang::En)
+            .await
+            .unwrap_err()
+            .code,
+        AppErrorCode::InvalidInput
+    );
+    let overview = a.kata_overview(today, UiLang::En).await.unwrap();
+    assert_eq!(overview.streak, 1);
+    assert_eq!(overview.bests.len(), 1);
+    assert_eq!(overview.sessions.len(), 1);
+
+    // Export → import carries the sessions and attempts.
+    let dir = crate::testutil::temp_dir("kata-export");
+    let file = dir.join("kata.kbx.json");
+    let counts = a.export_to(&file).await.unwrap();
+    assert_eq!((counts.kata_sessions, counts.kata_attempts), (1, 1));
+    let b = app("kata-b").await;
+    let p = b.import_preview_from(&file).await.unwrap();
+    b.import_apply(p.id).await.unwrap();
+    let ob = b.kata_overview(today, UiLang::En).await.unwrap();
+    assert_eq!(ob.streak, 1);
+    assert_eq!(ob.bests, overview.bests);
+    // A second import changes nothing.
+    let p = b.import_preview_from(&file).await.unwrap();
+    let r = b.import_apply(p.id).await.unwrap();
+    assert_eq!(r.added, 0);
+    a.close().await;
+    b.close().await;
+}
+
+/// Study plans and ratings (expansion M2): a plan from a goal, done and rescheduled
+/// items, the calendar file, and both travelling with an export; ratings replayed from
+/// submissions.
+#[tokio::test]
+async fn study_plans_and_ratings() {
+    use crate::plan_app::{PlanIcsLabels, PlanSetup};
+    let a = app("plan-a").await;
+    assert_eq!(a.plan_view(UiLang::En).await.unwrap(), None);
+    let r0 = a.ratings().await.unwrap();
+    assert_eq!((r0.overall.rating, r0.overall.events), (1200, 0));
+
+    let setup = PlanSetup {
+        patterns: vec!["arrays-hashing".into()],
+        weeks: 1,
+        minutes_per_day: 40,
+        today: "2026-11-23".into(),
+    };
+    let bad = PlanSetup {
+        weeks: 0,
+        ..setup.clone()
+    };
+    assert_eq!(
+        a.create_plan(&bad, UiLang::En).await.unwrap_err().code,
+        AppErrorCode::InvalidInput
+    );
+    let plan = a.create_plan(&setup, UiLang::En).await.unwrap();
+    assert_eq!(plan.patterns, ["arrays-hashing"]);
+    assert_eq!(
+        (plan.start_day.as_str(), plan.end_day.as_str()),
+        ("2026-11-23", "2026-11-29")
+    );
+    assert!(plan.total > 0);
+    let first = plan
+        .items
+        .iter()
+        .find(|i| i.kind == crate::plan::PlanItemKind::Problem)
+        .unwrap()
+        .clone();
+    assert!(first.title.is_some());
+
+    // Solving a planned problem marks its item done; ratings move.
+    a.store
+        .user
+        .record_submission(
+            first.reference.as_deref().unwrap(),
+            Language::Python,
+            "x",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+    a.forget_ratings();
+    let v = a.plan_view(UiLang::En).await.unwrap().unwrap();
+    let it = v
+        .items
+        .iter()
+        .find(|i| i.position == first.position)
+        .unwrap();
+    assert_eq!(it.status, "done");
+    let r = a.ratings().await.unwrap();
+    assert_eq!(r.overall.events, 1);
+    assert!(r.overall.rating > 1200);
+    assert_eq!(r.patterns[0].pattern, "arrays-hashing");
+
+    // Skip one, reschedule another (it and the pending items after it move a day).
+    let pending: Vec<_> = v
+        .items
+        .iter()
+        .filter(|i| i.status == "pending")
+        .cloned()
+        .collect();
+    a.set_plan_item(v.created_at, pending[0].position, "skipped")
+        .await
+        .unwrap();
+    assert!(
+        a.set_plan_item(v.created_at, pending[0].position, "never")
+            .await
+            .is_err()
+    );
+    if pending.len() > 1 {
+        a.reschedule_plan_item(v.created_at, pending[1].position)
+            .await
+            .unwrap();
+        let after = a.plan_view(UiLang::En).await.unwrap().unwrap();
+        let moved = after
+            .items
+            .iter()
+            .find(|i| i.position == pending[1].position)
+            .unwrap();
+        let d: kb_core::Day = pending[1].day.parse().unwrap();
+        assert_eq!(moved.day, d.add_days(1).to_string());
+    }
+
+    // The calendar file.
+    let labels = PlanIcsLabels {
+        title: "KataBox plan".into(),
+        review: "Reviews".into(),
+        kata: "Kata".into(),
+        topic: "Learn: ".into(),
+        minutes: "min".into(),
+    };
+    let dir = crate::testutil::temp_dir("plan-ics");
+    let ics = dir.join("plan.ics");
+    a.export_plan_ics(&ics, &labels, UiLang::En).await.unwrap();
+    let text = std::fs::read_to_string(&ics).unwrap();
+    assert!(text.starts_with("BEGIN:VCALENDAR\r\n") && text.contains("BEGIN:VEVENT"));
+
+    // Export → import: the plan (still the active one) and its items.
+    let file = dir.join("plan.kbx.json");
+    let counts = a.export_to(&file).await.unwrap();
+    assert_eq!(counts.study_plans, 1);
+    assert_eq!(counts.plan_items, plan.total);
+    let b = app("plan-b").await;
+    let p = b.import_preview_from(&file).await.unwrap();
+    b.import_apply(p.id).await.unwrap();
+    let vb = b.plan_view(UiLang::En).await.unwrap().unwrap();
+    assert_eq!(vb.created_at, v.created_at);
+    assert_eq!(vb.total, plan.total);
+    assert_eq!(
+        b.ratings().await.unwrap().overall.events,
+        1,
+        "replayed from the imported history"
+    );
+    a.close().await;
+    b.close().await;
+}
+
+/// The rating replay (expansion M2) stays fast: about 500 submissions over the whole
+/// catalogue, replayed from user.db (the queries, the content list and the replay).
+#[tokio::test]
+async fn rating_replay_on_500_submissions() {
+    let a = app("rating-500").await;
+    let all = a.all_problems(UiLang::En).await.unwrap();
+    let mut n = 0;
+    'outer: for round in 0..10 {
+        for p in &all {
+            let v = if round % 3 == 2 {
+                Verdict::Accepted
+            } else {
+                Verdict::WrongAnswer
+            };
+            a.store
+                .user
+                .record_submission(&p.id, Language::Python, "x", &report_with(v))
+                .await
+                .unwrap();
+            n += 1;
+            if n == 500 {
+                break 'outer;
+            }
+        }
+    }
+    a.forget_ratings();
+    let t = std::time::Instant::now();
+    let r = a.ratings().await.unwrap();
+    let cold = t.elapsed();
+    let t = std::time::Instant::now();
+    a.ratings().await.unwrap();
+    let warm = t.elapsed();
+    eprintln!("rating replay, {n} submissions: cold {cold:?}, cached {warm:?}");
+    assert!(r.overall.events > 0);
+    assert!(cold < std::time::Duration::from_secs(2), "{cold:?}");
+    a.close().await;
+}
+
+/// The mistake journal and reflections (expansion M3): old and new failures are tagged,
+/// the user edits tags and notes, the shrinker adds its tag, reflections are checked,
+/// and all of it travels with an export.
+#[tokio::test]
+async fn mistake_journal_and_reflections() {
+    let a = app("journal-a").await;
+    // A failure made "before the journal": tagged on first look.
+    let old = a
+        .store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Python,
+            "x",
+            &report_with(Verdict::WrongAnswer),
+        )
+        .await
+        .unwrap();
+    let tle = a
+        .store
+        .user
+        .record_submission(
+            "nested-brackets",
+            Language::Rust,
+            "y",
+            &report_with(Verdict::TimeLimitExceeded),
+        )
+        .await
+        .unwrap();
+    let ok = a
+        .store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Python,
+            "z",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+    let j = a.journal_overview(UiLang::En).await.unwrap();
+    assert_eq!(j.failures, 2);
+    let tags: Vec<(&str, u32)> = j.tags.iter().map(|t| (t.tag.as_str(), t.count)).collect();
+    assert_eq!(tags, [("wa", 1), ("tle", 1)]);
+    assert_eq!(j.tags[0].examples[0].title, "Two Sum");
+
+    assert_eq!(a.submission_mistake(ok).await.unwrap(), None);
+    let m = a.submission_mistake(old).await.unwrap().unwrap();
+    assert_eq!(m.auto_tags, ["wa"]);
+    a.set_submission_mistake(old, &["wa".into(), "edge:empty".into()], "empty input")
+        .await
+        .unwrap();
+    assert_eq!(
+        a.set_submission_mistake(old, &["nonsense".into()], "")
+            .await
+            .unwrap_err()
+            .code,
+        AppErrorCode::InvalidInput
+    );
+    assert!(
+        a.set_submission_mistake(ok, &["wa".into()], "")
+            .await
+            .is_err()
+    );
+    a.tag_shrunk(tle).await.unwrap();
+    let m = a.submission_mistake(tle).await.unwrap().unwrap();
+    assert_eq!(m.tags, ["tle", "shrunk"]);
+
+    assert_eq!(a.reflection("two-sum").await.unwrap(), None);
+    a.set_reflection(
+        "two-sum",
+        " one pass with a map ",
+        Some("O(n)"),
+        Some("O(n)"),
+    )
+    .await
+    .unwrap();
+    assert!(
+        a.set_reflection("two-sum", "x", Some("O(fast)"), None)
+            .await
+            .is_err()
+    );
+    assert!(
+        a.set_reflection("two-sum", &"x".repeat(501), None, None)
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        a.reflection("two-sum").await.unwrap().unwrap().why,
+        "one pass with a map"
+    );
+
+    let dir = crate::testutil::temp_dir("journal-export");
+    let file = dir.join("j.kbx.json");
+    let counts = a.export_to(&file).await.unwrap();
+    assert_eq!((counts.mistakes, counts.reflections), (2, 1));
+    let b = app("journal-b").await;
+    let p = b.import_preview_from(&file).await.unwrap();
+    b.import_apply(p.id).await.unwrap();
+    let jb = b.journal_overview(UiLang::En).await.unwrap();
+    assert_eq!(jb.failures, 2);
+    assert!(
+        jb.tags
+            .iter()
+            .any(|t| t.tag == "edge:empty" && t.examples[0].note == "empty input")
+    );
+    assert_eq!(
+        b.reflection("two-sum")
+            .await
+            .unwrap()
+            .unwrap()
+            .time_class
+            .as_deref(),
+        Some("O(n)")
+    );
+    a.close().await;
+    b.close().await;
+}
+
+/// Snippets and "Search everything" (expansion M4): save, edit, delete, search across
+/// problems, topics and snippets, and export the library.
+#[tokio::test]
+async fn snippets_and_search_everything() {
+    use crate::comforts::SnippetInput;
+    let a = app("snip-a").await;
+    let s = a
+        .save_snippet(&SnippetInput {
+            uid: None,
+            language: Language::Python,
+            name: "Binary search".into(),
+            tags: vec!["Search".into()],
+            body: "lo, hi = 0, len(a) - 1".into(),
+        })
+        .await
+        .unwrap();
+    assert_eq!(s.uid.len(), 16);
+    assert_eq!(s.tags, ["search"]);
+    let edited = a
+        .save_snippet(&SnippetInput {
+            uid: Some(s.uid.clone()),
+            language: Language::Python,
+            name: "Binary search (lower bound)".into(),
+            tags: vec![],
+            body: "lo, hi = 0, len(a)".into(),
+        })
+        .await
+        .unwrap();
+    assert_eq!(
+        (edited.uid.as_str(), edited.created_at),
+        (s.uid.as_str(), s.created_at)
+    );
+    assert!(
+        a.save_snippet(&SnippetInput {
+            uid: None,
+            language: Language::Sql,
+            name: "x".into(),
+            tags: vec![],
+            body: "SELECT 1".into(),
+        })
+        .await
+        .is_err()
+    );
+    assert_eq!(a.snippets().await.unwrap().len(), 1);
+
+    let r = a.search_all("two sum", UiLang::En).await.unwrap();
+    assert!(r.problems.iter().any(|p| p.id == "two-sum"));
+    let r = a.search_all("lower bound", UiLang::En).await.unwrap();
+    assert_eq!(r.snippets.len(), 1);
+    assert!(
+        a.search_all("  ", UiLang::En)
+            .await
+            .unwrap()
+            .problems
+            .is_empty()
+    );
+
+    let dir = crate::testutil::temp_dir("snip-export");
+    let file = dir.join("s.kbx.json");
+    assert_eq!(a.export_to(&file).await.unwrap().snippets, 1);
+    let b = app("snip-b").await;
+    let p = b.import_preview_from(&file).await.unwrap();
+    b.import_apply(p.id).await.unwrap();
+    assert_eq!(b.snippets().await.unwrap(), a.snippets().await.unwrap());
+    a.delete_snippet(&s.uid).await.unwrap();
+    assert!(a.snippets().await.unwrap().is_empty());
+    a.close().await;
+    b.close().await;
+}
+
+/// Reading exercises (expansion M7): the bundled sets, the answer check, progress and the
+/// export round trip.
+#[tokio::test]
+async fn reading_answers_are_checked_counted_and_exported() {
+    use crate::reading::ReadingAnswer;
+    let a = app("reading").await;
+    let sets = a.reading_sets(UiLang::En).await.unwrap();
+    assert_eq!(sets.len(), 8);
+    assert_eq!(sets.iter().map(|s| s.items).sum::<u32>(), 70);
+    let set = a.reading_set("print-basics", UiLang::En).await.unwrap();
+    assert_eq!(set.items[0].choices, ["10", "15", "4"]);
+    let print = |output: &str| ReadingAnswer {
+        language: Language::Python,
+        output: Some(output.into()),
+        time: None,
+        space: None,
+    };
+    let wrong = a
+        .answer_reading("print-basics/1", print("15"), UiLang::Es)
+        .await
+        .unwrap();
+    assert!(!wrong.correct);
+    assert_eq!(wrong.output.as_deref(), Some("10"));
+    assert!(wrong.explanation.contains("rango"));
+    let right = a
+        .answer_reading("print-basics/1", print("10\n"), UiLang::En)
+        .await
+        .unwrap();
+    assert!(right.correct && right.attempts == 2);
+    let complexity = a
+        .answer_reading(
+            "complexity-loops/2",
+            ReadingAnswer {
+                language: Language::TypeScript,
+                output: None,
+                time: Some("O(log n)".into()),
+                space: Some("O(1)".into()),
+            },
+            UiLang::En,
+        )
+        .await
+        .unwrap();
+    assert!(complexity.correct);
+    assert_eq!(complexity.dominant_line, Some(3));
+    // Only Python and TypeScript versions exist; unknown items are not found.
+    let mut rust = print("10");
+    rust.language = Language::Rust;
+    assert!(
+        a.answer_reading("print-basics/1", rust, UiLang::En)
+            .await
+            .is_err()
+    );
+    assert!(
+        a.answer_reading("print-basics/99", print("10"), UiLang::En)
+            .await
+            .is_err()
+    );
+    // Topic links come from topic.toml.
+    let links = a.reading_links("big-o-growth", UiLang::En).await.unwrap();
+    assert_eq!(
+        links.first().map(|l| l.id.as_str()),
+        Some("complexity-loops/1")
+    );
+
+    // Export, then import into a fresh app: the answers come back.
+    let file = crate::testutil::temp_dir("reading-export").join("x.kbx.json");
+    a.export_to(&file).await.unwrap();
+    let b = app("reading-import").await;
+    let preview = b.import_preview_from(&file).await.unwrap();
+    assert_eq!(preview.counts.reading_answers, 2);
+    b.import_apply(preview.id).await.unwrap();
+    let rows = b.reading_answers().await.unwrap();
+    assert_eq!(rows.len(), 2);
+    assert!(
+        rows.iter()
+            .any(|r| r.item_id == "print-basics/1" && r.attempts == 2 && r.correct_at.is_some())
+    );
+}
+
+/// Backups (expansion M10, review A4): the README on the first backup, the newest `keep`
+/// backups kept, and files that are not ours never touched.
+#[tokio::test]
+async fn backups_prune_only_their_own_files() {
+    let a = app("backup").await;
+    let folder = crate::testutil::temp_dir("backup-folder");
+    std::fs::write(folder.join("holiday.jpg"), b"not ours").unwrap();
+    std::fs::write(folder.join("katabox-backup-notes.txt"), b"not ours either").unwrap();
+    assert!(a.backup_now().await.is_err(), "no folder chosen yet");
+    a.set_backup_folder(Some(&folder)).await.unwrap();
+    a.set_backup_options(7, 2, true).await.unwrap();
+    let day = 86_400_000;
+    let t0 = 1_795_334_709_000;
+    for k in 0..3 {
+        a.set_clock(Some(t0 + k * day));
+        a.backup_now().await.unwrap();
+    }
+    let mut names: Vec<String> = std::fs::read_dir(&folder)
+        .unwrap()
+        .flatten()
+        .map(|e| e.file_name().into_string().unwrap())
+        .collect();
+    names.sort();
+    assert_eq!(
+        names,
+        [
+            "README-katabox-backups.txt",
+            "holiday.jpg",
+            "katabox-backup-20261123-080509.kbx.json",
+            "katabox-backup-20261124-080509.kbx.json",
+            "katabox-backup-notes.txt",
+        ]
+    );
+    // A backup imports like an export.
+    let b = app("backup-restore").await;
+    b.import_preview_from(&folder.join("katabox-backup-20261124-080509.kbx.json"))
+        .await
+        .unwrap();
+    // Due rules: not on start within the week; on exit when that option is on.
+    let s = a.backup_status().await.unwrap();
+    assert_eq!(s.last, Some(t0 + 2 * day));
+    assert_eq!(s.next_due, Some(t0 + 9 * day));
+    a.set_clock(Some(t0 + 3 * day));
+    assert!(!a.backup_if_due(false).await);
+    assert!(a.backup_if_due(true).await);
+    // A missing folder is reported, not fatal.
+    std::fs::remove_dir_all(&folder).unwrap();
+    a.set_clock(Some(t0 + 30 * day));
+    assert!(!a.backup_if_due(false).await);
+    assert!(a.backup_status().await.unwrap().error.is_some());
+}
+
+/// Focus sessions (expansion M10): the running one is a setting; Stop keeps a summary.
+#[tokio::test]
+async fn focus_sessions_survive_and_summarise() {
+    let a = app("focus").await;
+    let t0 = 1_795_334_709_000;
+    a.set_clock(Some(t0));
+    assert!(a.focus_start(4, 5).await.is_err());
+    a.focus_start(25, 5).await.unwrap();
+    assert_eq!(a.focus_current().await.unwrap().unwrap().started_at, t0);
+    a.set_clock(Some(t0 + 40 * 60_000));
+    let row = a.focus_stop().await.unwrap().unwrap();
+    // One work period done, the second under way.
+    assert_eq!(
+        (row.cycles, row.ended_at - row.started_at),
+        (1, 40 * 60_000)
+    );
+    assert_eq!(a.focus_current().await.unwrap(), None);
+    assert_eq!(a.focus_stop().await.unwrap(), None);
+    assert_eq!(a.focus_sessions().await.unwrap(), vec![row]);
+}
+
+/// Packs (expansion M11, ADR 0038, review A3): preview, install, the merged content after a
+/// restart, practice leaves pack problems out by default, the update rule, uninstall
+/// keeps history.
+#[tokio::test]
+async fn packs_install_update_and_uninstall() {
+    use crate::packs::PackAction;
+    let p = crate::testutil::paths("packs");
+    let work = crate::testutil::temp_dir("packs-src");
+    let make = |version: &str, file: &str| {
+        let m = work.join(format!("{file}.toml"));
+        std::fs::write(
+            &m,
+            format!("id = \"drills\"\nname = \"Drills\"\nauthor = \"Ana\"\nversion = \"{version}\"\nlicence = \"CC-BY-SA-4.0\"\nmin_app = \"1.0.0-beta.1\"\n"),
+        )
+        .unwrap();
+        let out = work.join(format!("{file}.kbpack"));
+        kb_pack::kbpack::write_pack(
+            &[crate::testutil::repo().join("content/problems/budget-pair")],
+            &m,
+            &out,
+        )
+        .unwrap();
+        out
+    };
+    let v1 = make("1.0.0", "v1");
+    let a = App::open(&p).await.unwrap();
+    let preview = a.import_pack_preview(&v1).await.unwrap();
+    assert_eq!(
+        (preview.action, preview.problems, preview.installed.clone()),
+        (PackAction::Install, 1, None)
+    );
+    assert_eq!(preview.sha256.len(), 64);
+    a.import_pack_apply(preview.token).await.unwrap();
+    a.close().await;
+
+    // After a restart the pack's problem is in the library, marked, and judgeable data.
+    let a = App::open(&p).await.unwrap();
+    let all = a.list_problems(&ProblemFilter::default()).await.unwrap();
+    let pack_p = all
+        .iter()
+        .find(|x| x.id == "drills--budget-pair")
+        .expect("pack problem listed");
+    assert_eq!(pack_p.pack.as_deref(), Some("drills"));
+    assert!(
+        a.get_problem("drills--budget-pair", UiLang::En)
+            .await
+            .unwrap()
+            .pack
+            .is_some()
+    );
+    // A3: not suggested unless asked for.
+    let pool = a.practice_problems(UiLang::En).await.unwrap();
+    assert!(pool.iter().all(|x| x.pack.is_none()));
+    a.set_setting(crate::practice::INCLUDE_PACKS, &json!(true))
+        .await
+        .unwrap();
+    assert!(
+        a.practice_problems(UiLang::En)
+            .await
+            .unwrap()
+            .iter()
+            .any(|x| x.pack.is_some())
+    );
+    // History on a pack problem.
+    a.store
+        .user
+        .record_submission(
+            "drills--budget-pair",
+            Language::Python,
+            "x",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+
+    // The same file: nothing to do; an older or equal version: refused; newer: update.
+    let same = a.import_pack_preview(&v1).await.unwrap();
+    assert_eq!(same.action, PackAction::Same);
+    assert_eq!(
+        a.import_pack_apply(same.token).await.unwrap_err().code,
+        AppErrorCode::PackRefused
+    );
+    let v0 = make("0.9.0", "v0");
+    let older = a.import_pack_preview(&v0).await.unwrap();
+    assert_eq!(older.action, PackAction::NotNewer);
+    assert_eq!(
+        a.import_pack_apply(older.token).await.unwrap_err().code,
+        AppErrorCode::PackRefused
+    );
+    let v2 = make("1.1.0", "v2");
+    let newer = a.import_pack_preview(&v2).await.unwrap();
+    assert_eq!(
+        (newer.action, newer.installed.as_deref()),
+        (PackAction::Update, Some("1.0.0"))
+    );
+    a.import_pack_apply(newer.token).await.unwrap();
+    assert_eq!(a.packs().await.unwrap()[0].version, "1.1.0");
+
+    // Uninstall: only its folder goes; after a restart the problem is gone, history stays.
+    a.uninstall_pack("drills").await.unwrap();
+    assert!(!p.local_data_dir.join("packs/drills").exists());
+    a.close().await;
+    let a = App::open(&p).await.unwrap();
+    assert!(
+        a.list_problems(&ProblemFilter::default())
+            .await
+            .unwrap()
+            .iter()
+            .all(|x| x.pack.is_none())
+    );
+    assert!(
+        !a.store
+            .user
+            .list_submissions("drills--budget-pair")
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    assert!(a.packs().await.unwrap().is_empty());
+    // A refused pack leaves nothing behind.
+    std::fs::write(work.join("bad.kbpack"), b"not a zip").unwrap();
+    let err = a
+        .import_pack_preview(&work.join("bad.kbpack"))
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::PackRefused);
+    let leftovers: Vec<_> = std::fs::read_dir(p.local_data_dir.join("packs"))
+        .unwrap()
+        .flatten()
+        .filter(|e| e.file_name().to_string_lossy().starts_with(".staging"))
+        .collect();
+    assert!(leftovers.is_empty(), "{leftovers:?}");
+}
+
+/// Classroom mode (expansion M12, ADR 0039): an assignment pack, its locks while it runs
+/// (kb-app, not only the UI), the results file and its chain, the teacher's import and CSV.
+#[tokio::test]
+async fn classroom_assignment_locks_results_and_teacher_import() {
+    use crate::classroom::AssignmentState;
+    let p = crate::testutil::paths("classroom");
+    let work = crate::testutil::temp_dir("classroom-src");
+    let m = work.join("pack.toml");
+    std::fs::write(
+        &m,
+        "id = \"week\"\nname = \"Week 3\"\nauthor = \"Ms. Ana\"\nversion = \"1.0.0\"\nlicence = \"CC-BY-SA-4.0\"\nmin_app = \"1.0.0-beta.1\"\n",
+    )
+    .unwrap();
+    let at = work.join("assignment.toml");
+    std::fs::write(
+        &at,
+        "title = \"Week 3\"\ndue = \"2026-12-01\"\nproblems = [\"budget-pair\", \"two-sum\"]\nlanguages = [\"python\"]\ntime_limit_min = 60\nhints = false\n",
+    )
+    .unwrap();
+    let file = work.join("week.kbpack");
+    kb_pack::kbpack::write_pack_with(
+        &[crate::testutil::repo().join("content/problems/budget-pair")],
+        &m,
+        Some(&at),
+        &file,
+    )
+    .unwrap();
+    let a = App::open(&p).await.unwrap();
+    let preview = a.import_pack_preview(&file).await.unwrap();
+    assert_eq!(preview.assignment.as_deref(), Some("Week 3"));
+    a.import_pack_apply(preview.token).await.unwrap();
+    a.close().await;
+    let a = App::open(&p).await.unwrap();
+
+    let list = a.assignments(UiLang::En).await.unwrap();
+    assert_eq!(list.len(), 1);
+    let v = &list[0];
+    assert_eq!(v.state, AssignmentState::NotStarted);
+    assert_eq!(
+        v.problems.iter().map(|x| x.id.as_str()).collect::<Vec<_>>(),
+        ["week--budget-pair", "two-sum"]
+    );
+    assert!(v.problems.iter().all(|x| x.summary.is_some()));
+    // Not started: nothing is locked yet, and there are no results.
+    a.unlocked_hints("two-sum").await.unwrap();
+    assert!(a.assignment_results("week", "Ana", false).await.is_err());
+
+    // Running: help is locked (hints = false) and only Python is judged, in kb-app.
+    a.store
+        .user
+        .record_submission(
+            "two-sum",
+            Language::Python,
+            "before",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+    // Distinct milliseconds for "before", the start and the submissions after it.
+    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    let v = a.start_assignment("week", UiLang::En).await.unwrap();
+    tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    assert_eq!(v.state, AssignmentState::Running);
+    assert!(v.ends_at.is_some());
+    let locked = |e: AppError| assert_eq!(e.code, AppErrorCode::LockedInAssignment, "{e}");
+    locked(a.unlocked_hints("two-sum").await.unwrap_err());
+    locked(a.unlock_hint("two-sum", 1).await.unwrap_err());
+    locked(a.editorial("two-sum", UiLang::En).await.unwrap_err());
+    locked(a.list_submissions("week--budget-pair").await.unwrap_err());
+    locked(
+        a.accepted_solution("two-sum", Language::Python)
+            .await
+            .unwrap_err(),
+    );
+    assert!(
+        a.get_problem("two-sum", UiLang::En)
+            .await
+            .unwrap()
+            .hints
+            .is_empty()
+    );
+    // Other problems stay open.
+    a.unlocked_hints("budget-pair").await.unwrap();
+    let wrong_lang = a
+        .run("two-sum", Language::Rust, "fn main() {}", vec![], |_| {})
+        .await
+        .unwrap_err();
+    assert_eq!(wrong_lang.code, AppErrorCode::InvalidInput, "{wrong_lang}");
+    assert!(wrong_lang.message.contains("assignment"), "{wrong_lang}");
+    // Only one assignment at a time; starting again is a no-op.
+    assert_eq!(
+        a.start_assignment("week", UiLang::En)
+            .await
+            .unwrap()
+            .started_at,
+        v.started_at
+    );
+
+    // Submissions while it runs count; the one before does not.
+    for (code, verdict) in [("wa", Verdict::WrongAnswer), ("ok", Verdict::Accepted)] {
+        a.store
+            .user
+            .record_submission("two-sum", Language::Python, code, &report_with(verdict))
+            .await
+            .unwrap();
+    }
+    let results = a.assignment_results("week", " Ana ", true).await.unwrap();
+    assert_eq!(results.student, "Ana");
+    assert_eq!(results.entries.len(), 2);
+    let two = &results.entries[1];
+    assert_eq!(
+        (two.submits, two.best_verdict, two.code.as_deref()),
+        (2, Some(Verdict::Accepted), Some("ok"))
+    );
+    assert_eq!(results.entries[0].submits, 0);
+    assert!(crate::classroom::chain_ok(&results));
+    assert!(
+        a.assignment_results("week", "", false)
+            .await
+            .unwrap_err()
+            .message
+            .contains("name")
+    );
+    let no_code = a.assignment_results("week", "Ana", false).await.unwrap();
+    assert!(no_code.entries.iter().all(|e| e.code.is_none()));
+
+    // The time limit ends it: the locks lift.
+    let started = v.started_at.unwrap();
+    a.set_clock(Some(started + 61 * 60_000));
+    let v = a.assignment("week", UiLang::En).await.unwrap();
+    assert_eq!(v.state, AssignmentState::Finished);
+    assert_eq!(v.submitted_at, Some(started + 60 * 60_000));
+    a.unlocked_hints("two-sum").await.unwrap();
+    a.set_clock(None);
+
+    // Teacher side: save, import (twice: a duplicate), an edited copy, a hostile file.
+    let out = work.join("ana.results.json");
+    a.save_assignment_results("week", "Ana", true, &out)
+        .await
+        .unwrap();
+    let mut edited: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&out).unwrap()).unwrap();
+    edited["student"] = json!("Bo");
+    edited["entries"][0]["submits"] = json!(1);
+    edited["entries"][0]["best_verdict"] = json!("accepted");
+    edited["entries"][0]["language"] = json!("python");
+    let bo = work.join("bo.results.json");
+    std::fs::write(&bo, serde_json::to_vec(&edited).unwrap()).unwrap();
+    let evil = work.join("evil.results.json");
+    std::fs::write(&evil, b"{\"format\":\"katabox-export/v2\"}").unwrap();
+    let imported = a
+        .import_class_results(&[out.clone(), out.clone(), bo, evil])
+        .await
+        .unwrap();
+    assert_eq!(
+        (imported.added, imported.duplicates, imported.edited),
+        (2, 1, 1)
+    );
+    assert_eq!(imported.refused.len(), 1);
+    let class = a.class_results().await.unwrap();
+    assert_eq!(class.len(), 1);
+    assert_eq!(class[0].title, "Week 3");
+    let flags: Vec<(String, bool)> = class[0]
+        .students
+        .iter()
+        .map(|s| (s.student.clone(), s.chain_ok))
+        .collect();
+    assert_eq!(
+        flags,
+        [("Ana".to_string(), true), ("Bo".to_string(), false)]
+    );
+    let csv = work.join("week.csv");
+    a.save_class_csv("week", &csv).await.unwrap();
+    let text = std::fs::read_to_string(&csv).unwrap();
+    assert!(
+        text.contains("Ana,yes,two-sum,python,accepted,2,"),
+        "{text}"
+    );
+    assert!(
+        text.contains("Bo,no,week--budget-pair,python,accepted,1,"),
+        "{text}"
+    );
+}
+
+/// A complete draft for the in-app editor tests (an original problem).
+pub(crate) fn tallest_draft() -> kb_pack::authoring::ProblemDraft {
+    use kb_pack::authoring::{DraftTest, ProblemDraft};
+    let t = |nums: &[i64], out: i64| DraftTest {
+        input: json!({ "nums": nums }).as_object().unwrap().clone(),
+        output: out.into(),
+    };
+    ProblemDraft {
+        title: "Tallest Tower".into(),
+        title_es: "La torre más alta".into(),
+        tags: vec!["array".into()],
+        function: "tallest".into(),
+        statement: "Given tower heights `nums`, return the tallest.".into(),
+        statement_es: "Dadas las alturas `nums`, devuelve la mayor.".into(),
+        hints: vec![
+            "Look at each tower once.".into(),
+            String::new(),
+            String::new(),
+        ],
+        editorial: "Keep the best value seen so far.".into(),
+        public_tests: vec![t(&[1, 5, 3], 5), t(&[7], 7)],
+        hidden_tests: vec![t(&[-4, -2, -9], -2), t(&[2, 2, 2], 2)],
+        reference: "def tallest(nums: list[int]) -> int:\n    return max(nums)\n".into(),
+        ..ProblemDraft::new("tallest-tower")
+    }
+}
+
+/// The in-app editor (expansion M13, ADR 0040): drafts only under `authoring/`, issues by
+/// field, and an exported pack that the import accepts.
+#[tokio::test]
+async fn authoring_drafts_issues_and_export() {
+    let p = crate::testutil::paths("authoring");
+    let a = App::open(&p).await.unwrap();
+    for bad in ["../x", "A", "a--b", ""] {
+        assert_eq!(
+            a.authoring_new(bad).await.unwrap_err().code,
+            AppErrorCode::InvalidInput,
+            "{bad}"
+        );
+    }
+    let fresh = a.authoring_new("tallest-tower").await.unwrap();
+    assert!(a.authoring_new("tallest-tower").await.is_err(), "taken");
+    let issues = a.authoring_issues("tallest-tower").await.unwrap();
+    assert!(issues.iter().any(|i| i.field == "statement"), "{issues:?}");
+    assert_eq!(a.authoring_load("tallest-tower").await.unwrap(), fresh);
+
+    let d = tallest_draft();
+    assert_eq!(a.authoring_save(&d).await.unwrap(), vec![]);
+    assert!(
+        p.local_data_dir
+            .join("authoring/tallest-tower/package/tallest-tower/solutions/ref.py")
+            .is_file()
+    );
+    let list = a.authoring_drafts().await.unwrap();
+    assert_eq!(
+        list.iter()
+            .map(|x| (x.id.as_str(), x.title.as_str()))
+            .collect::<Vec<_>>(),
+        [("tallest-tower", "Tallest Tower")]
+    );
+    // Not runnable before the issues are fixed.
+    let mut broken = d.clone();
+    broken.id = "broken".into();
+    broken.statement.clear();
+    a.authoring_save(&broken).await.unwrap();
+    assert_eq!(
+        a.authoring_check("broken").await.unwrap_err().code,
+        AppErrorCode::InvalidInput
+    );
+
+    // Export: refused with issues or a taken id, accepted otherwise; the file imports.
+    let head = crate::authoring::PackHead {
+        id: "towers".into(),
+        name: "Towers \"one\"".into(),
+        author: "Ana".into(),
+        version: "1.0.0".into(),
+        licence: "CC-BY-SA-4.0".into(),
+    };
+    let out = crate::testutil::temp_dir("authoring-out").join("towers.kbpack");
+    let err = a
+        .authoring_export(&["broken".into()], &head, &out)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::PackRefused);
+    assert!(err.message.contains("broken:"), "{err}");
+    let mut taken = head.clone();
+    taken.id = "two-sum".into();
+    let err = a
+        .authoring_export(&["tallest-tower".into()], &taken, &out)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::PackRefused);
+    assert!(!out.exists(), "a refused export leaves no file");
+    let sha = a
+        .authoring_export(&["tallest-tower".into()], &head, &out)
+        .await
+        .unwrap();
+    assert_eq!(sha.len(), 64);
+    let preview = a.import_pack_preview(&out).await.unwrap();
+    assert_eq!(
+        (preview.id.as_str(), preview.name.as_str(), preview.problems),
+        ("towers", "Towers \"one\"", 1)
+    );
+    a.import_pack_cancel(preview.token);
+
+    a.authoring_delete("broken").await.unwrap();
+    assert!(!p.local_data_dir.join("authoring/broken").exists());
+    assert_eq!(a.authoring_drafts().await.unwrap().len(), 1);
 }

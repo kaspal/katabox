@@ -20,6 +20,10 @@ pub struct LearnPack {
     pub topics: Vec<PackTopic>,
     /// Learning paths (Phase 6): ordered topic lists shown on Learn home.
     pub paths: Vec<PackPath>,
+    /// Reading exercises (expansion M7).
+    pub reading: Vec<crate::reading::PackReadingSet>,
+    /// `(topic, <set>/<n>)`: reading items on a topic's Practice tab, in order.
+    pub reading_links: Vec<(String, String)>,
 }
 
 /// A learning path as `content/learn/paths.toml` holds it.
@@ -212,7 +216,7 @@ pub(crate) fn check_learn(pack: &LearnPack) -> Result<()> {
             return bad(format!("path {}: unknown topic {t}", p.id));
         }
     }
-    Ok(())
+    crate::reading::check_reading(&pack.reading, &pack.reading_links, &topics)
 }
 
 pub(crate) async fn insert_learn(conn: &mut SqliteConnection, pack: &LearnPack) -> Result<()> {
@@ -566,6 +570,59 @@ pub(crate) mod tests {
                 blurb_es: "Primeros pasos".into(),
                 topics: vec!["bubble-sort".into(), "quick-sort".into()],
             }],
+            reading: vec![crate::reading::PackReadingSet {
+                id: "print-basics".into(),
+                ord: 1,
+                kind: crate::reading::ReadingKind::Print,
+                title_en: "Print basics".into(),
+                title_es: "Lo básico de imprimir".into(),
+                blurb_en: "Loops and ranges".into(),
+                blurb_es: "Bucles y rangos".into(),
+                items: vec![crate::reading::PackReadingItem {
+                    code_py: "for i in range(3):
+    print(i)
+"
+                    .into(),
+                    code_ts: "for (let i = 0; i < 3; i++) console.log(i);
+"
+                    .into(),
+                    data: crate::reading::ReadingItemData {
+                        n: 1,
+                        prompt: "What does it print?".into(),
+                        prompt_es: "¿Qué imprime?".into(),
+                        explain: "0 to 2.".into(),
+                        explain_es: "De 0 a 2.".into(),
+                        answer: Some(
+                            "0
+1
+2"
+                            .into(),
+                        ),
+                        answer_py: None,
+                        answer_ts: None,
+                        choices: vec![
+                            "0
+1
+2"
+                            .into(),
+                            "1
+2
+3"
+                            .into(),
+                            "0
+1
+2
+3"
+                            .into(),
+                        ],
+                        time: None,
+                        space: None,
+                        dominant: None,
+                        sizes: vec![],
+                    },
+                }],
+            }],
+            reading_links: vec![("bubble-sort".into(), "print-basics/1".into())],
         }
     }
 
@@ -580,6 +637,40 @@ pub(crate) mod tests {
         let problems = [sample_problem("gap-a", Difficulty::Easy, 1, true)];
         build_with_learn(&path, &meta, &problems, learn).await?;
         ContentDb::open(&path).await
+    }
+
+    #[tokio::test]
+    async fn reading_sets_round_trip_without_answers() {
+        let db = learn_db("learn-reading", &sample_learn()).await.unwrap();
+        let sets = db.reading_sets(UiLang::Es).await.unwrap();
+        assert_eq!(sets.len(), 1);
+        assert_eq!(
+            (sets[0].title.as_str(), sets[0].items),
+            ("Lo básico de imprimir", 1)
+        );
+        let set = db.reading_set("print-basics", UiLang::En).await.unwrap();
+        assert_eq!(set.items[0].id, "print-basics/1");
+        assert_eq!(set.items[0].choices.len(), 3);
+        assert!(set.items[0].code_python.contains("range(3)"));
+        let full = db.reading_item("print-basics/1").await.unwrap();
+        assert_eq!(
+            full.data.answer_for(true),
+            Some(
+                "0
+1
+2"
+            )
+        );
+        let links = db.reading_links("bubble-sort", UiLang::En).await.unwrap();
+        assert_eq!(links.len(), 1);
+        assert_eq!((links[0].set.as_str(), links[0].n), ("print-basics", 1));
+        assert!(db.reading_item("print-basics/9").await.is_err());
+        assert!(db.reading_set("nope", UiLang::En).await.is_err());
+        // A link to an unknown item is refused.
+        let mut bad = sample_learn();
+        bad.reading_links
+            .push(("bubble-sort".into(), "print-basics/2".into()));
+        assert!(learn_db("learn-reading-bad", &bad).await.is_err());
     }
 
     #[tokio::test]

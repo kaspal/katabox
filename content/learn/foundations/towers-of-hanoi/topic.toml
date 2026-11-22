@@ -5,6 +5,7 @@ title = "Towers of Hanoi"
 title_es = "Torres de Hanói"
 tags = ["recursion"]
 problems = []
+reading = ["complexity-recursion/3"]
 presets = ["random"]
 default = [3]
 

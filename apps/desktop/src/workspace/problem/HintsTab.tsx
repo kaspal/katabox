@@ -42,7 +42,7 @@ export function HintsTab({ problem }: { problem: ProblemView }) {
               {t("workspace.hints.tier", { tier })}
             </h3>
             {isOpen ? (
-              <Markdown text={hint} />
+              <Markdown text={hint} trust={problem.pack ? "pack" : "app"} />
             ) : tier === next ? (
               <Button
                 size="sm"

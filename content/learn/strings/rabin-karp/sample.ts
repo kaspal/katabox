@@ -26,7 +26,8 @@ function rabinKarp(text: string, pattern: string): number[] {
     }
     if (i + m < n) {
       // % can be negative in TypeScript: add MOD before the second %.
-      window = ((((window - code(text[i]) * high) % MOD) + MOD) * BASE + code(text[i + m])) % MOD; // @step roll
+      const dropped = (((window - code(text[i]) * high) % MOD) + MOD) % MOD;
+      window = (dropped * BASE + code(text[i + m])) % MOD; // @step roll
     }
   }
   return [hits.length, collisions, ...hits];

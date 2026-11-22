@@ -30,6 +30,8 @@ function reverse(head: ListNode | null): ListNode | null {
 
 function run(values: number[]): number[] {
   const out: number[] = [];
-  for (let node = reverse(build(values)); node !== null; node = node.next) out.push(node.value);
+  for (let node = reverse(build(values)); node !== null; node = node.next) {
+    out.push(node.value);
+  }
   return out;
 }

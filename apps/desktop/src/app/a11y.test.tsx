@@ -6,48 +6,22 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderApp } from "@/test/renderApp";
 import { setFakeApi, useFakeApi } from "@/test/mockApi";
+import { unnamed } from "@/test/a11y";
 
 vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
-
-function nameOf(el: Element): string {
-  const labelledBy = el.getAttribute("aria-labelledby");
-  if (labelledBy) {
-    return labelledBy
-      .split(/\s+/)
-      .map((id) => document.getElementById(id)?.textContent ?? "")
-      .join(" ")
-      .trim();
-  }
-  const aria = el.getAttribute("aria-label")?.trim();
-  if (aria) return aria;
-  // <label for> names any labelable element, buttons included (Radix checkboxes are buttons).
-  const forLabel = el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`)?.textContent?.trim() : "";
-  if (forLabel) return forLabel;
-  if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
-    const viaFor = el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`)?.textContent : null;
-    const wrap = el.closest("label")?.textContent;
-    return (viaFor ?? wrap ?? el.getAttribute("title") ?? el.getAttribute("placeholder") ?? "").trim();
-  }
-  return (el.textContent ?? el.getAttribute("title") ?? "").trim();
-}
-
-function unnamed(root: ParentNode): string[] {
-  const selector = 'button, a[href], [role="button"], [role="link"], [role="tab"], [role="radio"], input:not([type="hidden"]), select, textarea, [role="combobox"], [role="switch"], [role="checkbox"]';
-  return [...root.querySelectorAll(selector)]
-    .filter((el) => !el.closest("[hidden], [aria-hidden='true']"))
-    .filter((el) => nameOf(el) === "")
-    .map((el) => el.outerHTML.slice(0, 160));
-}
 
 const PAGES: [string, string][] = [
   ["/", "home"],
   ["/library", "library"],
   // Every Progress tab and Settings section (ui-polish).
-  ...["overview", "patterns", "topics", "history"].map((tab): [string, string] => [`/progress?tab=${tab}`, "progress"]),
-  ...["appearance", "editor", "practice", "languages", "learn", "data", "about"].map(
+  ...["overview", "patterns", "topics", "plan", "katas", "mistakes", "history"].map((tab): [string, string] => [`/progress?tab=${tab}`, "progress"]),
+  ...["appearance", "editor", "practice", "languages", "learn", "data", "packs", "about"].map(
     (section): [string, string] => [`/settings?section=${section}`, "settings"],
   ),
   ["/learn", "learn"],
+  ["/kata", "kata"],
+  ["/classroom", "classroom"],
+  ["/create", "create"],
   ["/problems/two-sum", "workspace"],
 ];
 
@@ -66,8 +40,8 @@ describe("accessibility pass", () => {
     expect(screen.getByTestId("skip-link")).toHaveAttribute("href", "#main");
     expect(unnamed(document.body), `unnamed controls on ${path}`).toEqual([]);
     // Progress tabs and Settings sections: a named tablist, and the selected tab controls a
-    // panel labelled by it. (The workspace's tablists predate this check.)
-    if (!/^\/(progress|settings)/.test(path)) return;
+    // panel labelled by it; the workspace's tablists too (expansion M15).
+    if (!/^\/(progress|settings|problems)/.test(path)) return;
     for (const list of document.querySelectorAll('[role="tablist"]')) {
       if (list.closest("[hidden], [aria-hidden='true']")) continue;
       const named = list.getAttribute("aria-label") || list.closest("nav[aria-label]");

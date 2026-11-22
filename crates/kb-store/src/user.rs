@@ -48,6 +48,42 @@ pub(crate) const MIGRATIONS: &[Migration] = &[
         version: 4,
         sql: include_str!("../migrations/0004_practice_modes.sql"),
     },
+    Migration {
+        version: 5,
+        sql: include_str!("../migrations/0005_katas.sql"),
+    },
+    Migration {
+        version: 6,
+        sql: include_str!("../migrations/0006_study_plans.sql"),
+    },
+    Migration {
+        version: 7,
+        sql: include_str!("../migrations/0007_journal.sql"),
+    },
+    Migration {
+        version: 8,
+        sql: include_str!("../migrations/0008_snippets.sql"),
+    },
+    Migration {
+        version: 9,
+        sql: include_str!("../migrations/0009_reading.sql"),
+    },
+    Migration {
+        version: 10,
+        sql: include_str!("../migrations/0010_stress.sql"),
+    },
+    Migration {
+        version: 11,
+        sql: include_str!("../migrations/0011_focus.sql"),
+    },
+    Migration {
+        version: 12,
+        sql: include_str!("../migrations/0012_packs.sql"),
+    },
+    Migration {
+        version: 13,
+        sql: include_str!("../migrations/0013_classroom.sql"),
+    },
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -822,7 +858,7 @@ pub(crate) mod tests {
     use kb_core::{Message, MessageCode, TestKind, TestResult};
     use serde_json::json;
 
-    const TABLES: [&str; 13] = [
+    const TABLES: [&str; 26] = [
         "settings",
         "drafts",
         "submissions",
@@ -836,6 +872,19 @@ pub(crate) mod tests {
         "list_items",
         "problem_opens",
         "interview_sessions",
+        "kata_sessions",
+        "kata_attempts",
+        "study_plans",
+        "plan_items",
+        "mistakes",
+        "reflections",
+        "snippets",
+        "reading_answers",
+        "stress_brutes",
+        "focus_sessions",
+        "packs",
+        "assignments",
+        "class_results",
     ];
 
     async fn fresh(name: &str) -> (PathBuf, UserDb) {

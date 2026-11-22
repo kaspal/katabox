@@ -19,11 +19,15 @@ def hash_join(a):
 
 
 def check_with_sqlite(left, right, out):
-    """SQLite runs the same join; its rows must be ours (L order, then R order)."""
+    """SQLite runs the same join; its rows must be ours (L, then R order)."""
     db = sqlite3.connect(":memory:")
     db.execute("CREATE TABLE l (key INTEGER, a INTEGER)")
     db.execute("CREATE TABLE r (key INTEGER, b INTEGER)")
     db.executemany("INSERT INTO l VALUES (?, ?)", left)
     db.executemany("INSERT INTO r VALUES (?, ?)", right)
-    rows = db.execute("SELECT l.key, l.a, r.b FROM l JOIN r ON l.key = r.key ORDER BY l.rowid, r.rowid").fetchall()
-    assert [v for row in rows for v in row] == out, "SQLite gives a different join"
+    rows = db.execute(
+        "SELECT l.key, l.a, r.b FROM l JOIN r ON l.key = r.key"
+        " ORDER BY l.rowid, r.rowid"
+    ).fetchall()
+    got = [v for row in rows for v in row]
+    assert got == out, "SQLite gives a different join"

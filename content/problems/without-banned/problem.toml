@@ -1,0 +1,18 @@
+id = "without-banned"
+title = "Without the Banned"
+title_es = "Sin los vetados"
+difficulty = "easy"
+tags = ["array", "hash-map", "debugging"]
+pattern = "arrays-hashing"
+rank = 4
+kind = "fix"
+
+[signature]
+name = "withoutBanned"
+params = [{ name = "items", type = "int[]" }, { name = "banned", type = "int[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

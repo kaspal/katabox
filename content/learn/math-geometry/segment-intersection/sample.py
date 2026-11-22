@@ -4,7 +4,10 @@ def orient(a, b, c):
 
 
 def on_segment(a, b, c):
-    return min(a[0], b[0]) <= c[0] <= max(a[0], b[0]) and min(a[1], b[1]) <= c[1] <= max(a[1], b[1])
+    return (
+        min(a[0], b[0]) <= c[0] <= max(a[0], b[0])
+        and min(a[1], b[1]) <= c[1] <= max(a[1], b[1])
+    )
 
 
 def intersects(p1, p2, p3, p4):

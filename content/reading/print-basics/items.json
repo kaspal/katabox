@@ -1,0 +1,73 @@
+[
+  {
+    "n": 1,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "The range stops before 5, so the loop adds 1 + 2 + 3 + 4 = 10.",
+    "explain_es": "El rango se detiene antes de 5, así que el bucle suma 1 + 2 + 3 + 4 = 10.",
+    "answer": "10",
+    "choices": ["10", "15", "4"]
+  },
+  {
+    "n": 2,
+    "prompt": "What does this print? Type the output, one line per print.",
+    "prompt_es": "¿Qué imprime? Escribe la salida, una línea por cada impresión.",
+    "explain": "Both languages divide 7 by 2 as 3.5. Python's // and TypeScript's Math.floor round down to 3.",
+    "explain_es": "Los dos lenguajes dividen 7 entre 2 como 3.5. El // de Python y Math.floor de TypeScript redondean hacia abajo a 3.",
+    "answer": "3.5\n3"
+  },
+  {
+    "n": 3,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "Index -1 (xs[-1] in Python, xs.at(-1) in TypeScript) is the last element, 23, and -2 is the one before it, 16. The list has 5 items, so 5 // 2 = 2 picks the middle element, 15.",
+    "explain_es": "El índice -1 (xs[-1] en Python, xs.at(-1) en TypeScript) es el último elemento, 23, y -2 es el anterior, 16. La lista tiene 5 elementos, así que 5 // 2 = 2 elige el del medio, 15.",
+    "answer": "23\n16\n15",
+    "choices": ["23\n16\n15", "4\n8\n15", "23\n16\n16", "23\n15\n15"]
+  },
+  {
+    "n": 4,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "n goes 20, 10, 5, 16, 8, 4, 2, 1: seven changes, and steps grows once per change. The while condition n > 1 is checked before each pass, so the loop stops as soon as n reaches 1.",
+    "explain_es": "n pasa por 20, 10, 5, 16, 8, 4, 2, 1: siete cambios, y steps crece una vez por cambio. La condición n > 1 se comprueba antes de cada vuelta, así que el bucle para en cuanto n llega a 1.",
+    "answer": "7",
+    "choices": ["7", "8", "6"]
+  },
+  {
+    "n": 5,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "continue skips the multiples of 3 (0, 3, 6) before anything is printed. At 8 the break ends the whole loop, so 8 and 9 never print.",
+    "explain_es": "continue salta los múltiplos de 3 (0, 3, 6) antes de imprimir nada. Al llegar a 8, break termina todo el bucle, así que 8 y 9 nunca se imprimen.",
+    "answer": "1\n2\n4\n5\n7",
+    "choices": ["1\n2\n4\n5\n7", "1\n2\n4\n5\n7\n8", "0\n1\n2\n4\n5\n7", "1\n2\n4\n5"]
+  },
+  {
+    "n": 6,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "break only leaves the inner loop. For each i the inner loop counts the j values below i before breaking: 0 + 1 + 2 = 3.",
+    "explain_es": "break solo sale del bucle interior. Para cada i, el bucle interior cuenta los valores de j menores que i antes de romper: 0 + 1 + 2 = 3.",
+    "answer": "3",
+    "choices": ["3", "0", "6", "9"]
+  },
+  {
+    "n": 7,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "The loop starts at 10 and steps down by 3 while i stays above 0: 10, 7, 4, 1. The next value, -2, fails the condition, so there are 4 numbers.",
+    "explain_es": "El bucle empieza en 10 y baja de 3 en 3 mientras i siga por encima de 0: 10, 7, 4, 1. El siguiente valor, -2, no cumple la condición, así que hay 4 números.",
+    "answer": "10 7 4 1\n4",
+    "choices": ["10 7 4 1\n4", "10 7 4\n3", "9 6 3\n3", "10 7 4 1 -2\n5"]
+  },
+  {
+    "n": 8,
+    "prompt": "What does this print? Type the output, one line per print.",
+    "prompt_es": "¿Qué imprime? Escribe la salida, una línea por cada impresión.",
+    "explain": "9 / 4 is 2.25 in both languages, rounding down gives 2 and the remainder is 1. The last line differs: Python's / always gives a float, so 8 / 4 prints 2.0, while JavaScript has one number type and prints 2.",
+    "explain_es": "9 / 4 es 2.25 en los dos lenguajes, redondear hacia abajo da 2 y el resto es 1. La última línea cambia: el / de Python siempre da un float, así que 8 / 4 imprime 2.0, mientras que JavaScript tiene un solo tipo de número e imprime 2.",
+    "answer_py": "2.25\n2\n1\n2.0",
+    "answer_ts": "2.25\n2\n1\n2"
+  }
+]

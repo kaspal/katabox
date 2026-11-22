@@ -1,0 +1,18 @@
+id = "warmer-ahead--f1"
+parent = "warmer-ahead"
+title = "Warmer Ahead: All Year Round"
+title_es = "Más calor por delante: todo el año"
+difficulty = "medium"
+tags = ["stack", "monotonic-stack", "array"]
+pattern = "stack"
+rank = 7
+
+[signature]
+name = "daysUntilWarmerAround"
+params = [{ name = "temps", type = "int[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -1,0 +1,18 @@
+id = "race-results"
+title = "Race Results"
+title_es = "Resultados de la carrera"
+difficulty = "easy"
+tags = ["sorting", "debugging"]
+pattern = "sorting"
+rank = 4
+kind = "fix"
+
+[signature]
+name = "raceOrder"
+params = [{ name = "names", type = "string[]" }, { name = "times", type = "int[]" }]
+returns = "string[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import i18next from "i18next";
 import en from "@/i18n/locales/en.json";
 import es from "@/i18n/locales/es.json";
+import ptBR from "@/i18n/locales/pt-BR.json";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describeError, describeMessage } from "@/lib/errors";
@@ -14,18 +15,44 @@ function keys(obj: object, prefix = ""): string[] {
   );
 }
 
+const LOCALES = [
+  ["en", en],
+  ["es", es],
+  ["pt-BR", ptBR],
+] as const;
+
+function value(res: object, key: string): unknown {
+  return key.split(".").reduce<unknown>((o, p) => (o as Record<string, unknown>)[p], res);
+}
+
+/** `{{name}}` placeholders and `$t(...)` references, sorted. */
+function variables(text: string): string[] {
+  return [...text.matchAll(/\{\{\s*([\w.]+)[^}]*\}\}|\$t\(([^)]*)\)/g)].map((m) => m[1] ?? `$t(${m[2]})`).sort();
+}
+
 describe("i18n resources", () => {
-  it("English and Spanish have the same keys", () => {
+  it("English, Spanish and Portuguese have the same keys", () => {
     expect(keys(es).sort()).toEqual(keys(en).sort());
+    expect(keys(ptBR).sort()).toEqual(keys(en).sort());
   });
 
   it("no translation is empty", () => {
-    for (const [lang, res] of [["en", en], ["es", es]] as const) {
+    for (const [lang, res] of LOCALES) {
       const empty = keys(res).filter((k) => {
-        const v = k.split(".").reduce<unknown>((o, p) => (o as Record<string, unknown>)[p], res);
+        const v = value(res, k);
         return typeof v !== "string" || v.trim() === "";
       });
       expect(empty, lang).toEqual([]);
+    }
+  });
+
+  it("every translation keeps the English placeholders (expansion M14)", () => {
+    for (const [lang, res] of LOCALES) {
+      const differ = keys(en).filter((k) => {
+        const v = value(res, k);
+        return typeof v === "string" && variables(v).join("|") !== variables(value(en, k) as string).join("|");
+      });
+      expect(differ, lang).toEqual([]);
     }
   });
 });

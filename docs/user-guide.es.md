@@ -183,6 +183,171 @@ más tiempo. El espacio de trabajo muestra el del lenguaje elegido, p. ej. **Tie
   **Resultado** (resueltos, aciertos a la primera, tiempo usado, y tiempo y envíos por
   problema). Las entrevistas anteriores están en Progreso.
 
+## Continuaciones
+Algunos problemas tienen **continuaciones**: hermanos más difíciles que cambian una cosa
+(muchas consultas en vez de una, valores negativos, una entrada enorme, una regla más).
+Cuando resuelves el problema base, se abren desde la franja bajo el título
+(**Problema base · Continuación 1 · Continuación 2**). El enunciado de una continuación
+dice qué cambia; sus pruebas, límites y soluciones son propios, y cuenta como un problema
+más en tu historial.
+
+## Paquetes de problemas
+Un paquete es un conjunto de problemas que alguien creó y compartió como archivo
+`.kbpack`. **Ajustes → Paquetes → Importar un paquete…** lo abre y muestra qué es antes
+de instalar nada: el nombre, el autor *según declara* (los paquetes no están firmados),
+la versión, la licencia, cuántos problemas tiene y el SHA-256 del archivo. KataBox
+comprueba cada archivo antes y rechaza lo que no sea seguro o esté mal formado. Los
+problemas de un paquete llevan su nombre como insignia, y la Biblioteca puede mostrar
+solo los incluidos o solo los de paquetes. Su texto se muestra sin enlaces ni imágenes,
+y su código solo se ejecuta en el entorno aislado. El problema del día y "siguiente
+problema" dejan fuera los problemas de paquetes salvo que marques la opción de esa misma
+página. Una versión más nueva de un paquete sustituye a la instalada; una más antigua,
+no. Desinstalar quita los archivos del paquete; tu historial en sus problemas se
+conserva. Los cambios se aplican al reiniciar. Para crear un paquete: `kb-pack pack
+CARPETA... --manifest pack.toml --out mio.kbpack` (ver docs/contributing-content.md).
+
+## Crear problemas
+Para crear problemas para un paquete sin escribir archivos a mano, marca **Ajustes →
+Paquetes → Mostrar el editor de problemas** y ábrelo. Crea un borrador con su id y
+rellena el formulario: los títulos, la dificultad y el patrón, la firma de la función,
+el enunciado, las pistas y la solución explicada (en inglés y español, con vista
+previa), las pruebas públicas y ocultas (con los mismos constructores visuales que las
+pruebas personalizadas) y una solución de referencia (**Insertar el código inicial** da
+la declaración exacta que espera el juez). Los borradores se guardan mientras escribes, y
+cada cosa por corregir aparece junto a su campo. **Comprobar en el entorno aislado**
+ejecuta tu referencia con todas las pruebas. **Exportar como paquete…** escribe un
+`.kbpack` y lo comprueba igual que una importación antes de conservarlo. Los problemas de
+un paquete necesitan una referencia; los integrados, los cuatro lenguajes
+(docs/problem-authoring.md).
+
+## Aula
+Un paquete puede traer una tarea de un profesor: un título, una fecha de entrega,
+problemas, los lenguajes a usar, un límite de tiempo opcional y si las pistas siguen
+disponibles. Instálalo como cualquier paquete y abre **Aula**. Pulsa **Empezar** cuando
+estés listo: mientras está en curso, sus problemas solo aceptan sus lenguajes y, con las
+pistas desactivadas, sus pistas, solución explicada, envíos anteriores e Historial están
+bloqueados. Termina cuando pulsas **Terminar ahora** o cuando se agota el tiempo.
+**Exportar resultados** muestra exactamente lo que contendrá el archivo (tu nombre, la
+tarea, las horas y, por problema, el mejor veredicto, los envíos, el tiempo hasta el
+primer Aceptado y el lenguaje; tu código solo si lo marcas) antes de guardarlo. Los
+profesores importan los archivos que reciben en **Resultados de la clase**, ven una fila
+por estudiante y exportan un CSV. Un archivo editado tras exportarse queda marcado.
+KataBox funciona sin conexión y sin cuentas, así que esto no es a prueba de trampas. Ver
+docs/classroom.es.md (también en inglés y portugués).
+
+## Sesiones de concentración
+Inicia una sesión de concentración desde Progreso → Resumen o la paleta de comandos
+("Iniciar sesión de concentración"). Un indicador en la barra superior muestra si estás
+trabajando o descansando y cuánto queda; al cambiar de fase aparece un aviso breve. La
+duración del trabajo y del descanso está en la misma tarjeta (25 y 5 minutos por
+defecto). La sesión sigue en marcha aunque cierres y vuelvas a abrir KataBox. Al
+detenerla, la tarjeta muestra lo que hiciste: problemas tocados y resueltos, katas y
+elementos del plan.
+
+## Copias de seguridad automáticas
+Ajustes → Datos → **Copias de seguridad automáticas**: elige una carpeta y KataBox
+escribe allí una exportación de tu progreso cada pocos días (7 por defecto) y, si
+quieres, cada vez que se cierra. **Copiar ahora** escribe una en el momento. Para
+restaurar una, usa **Importar**. KataBox conserva las copias más recientes (5 por
+defecto) y borra solo sus propios archivos `katabox-backup-….kbx.json` de esa carpeta,
+nunca nada más; un README en la carpeta lo explica. Usar una carpeta sincronizada
+(OneDrive, Dropbox…) es decisión tuya.
+
+## Construir pruebas personalizadas
+Bajo el valor de cada prueba personalizada, **Construir visualmente** abre un constructor
+adecuado al tipo: un árbol que haces crecer pulsando nodos, filas que puedes añadir,
+quitar y reordenar, una cuadrícula cuyas celdas cambias al pulsarlas, o un grafo en el que
+pulsas dos nodos para unirlos. El campo JSON de arriba se mantiene sincronizado y
+editable. **Comprobar entradas** comprueba cada prueba personalizada con las
+restricciones del problema (en el entorno aislado, sin ejecutar tu código).
+
+## Prueba de estrés
+Cuando tu solución pasa los ejemplos pero no estás seguro de ella, abre la pestaña
+**Prueba de estrés** bajo el editor. Escribe una fuerza bruta lenta pero claramente
+correcta (por ejemplo, probar todos los pares) y pulsa **Iniciar prueba de estrés**:
+KataBox ejecuta ambas sobre muchas entradas pequeñas en el entorno aislado hasta que no
+coinciden, y muestra esa entrada con las dos salidas. Desde ahí puedes depurarla,
+añadirla a tus pruebas o reducirla. Tu fuerza bruta se guarda para la próxima vez. Sin el
+entorno de Python, las entradas son valores aleatorios pequeños que no se comprueban
+contra las restricciones del problema; los problemas de programa necesitan Python. Los
+problemas SQL no tienen prueba de estrés.
+
+## Leer código
+**Aprender → Leer código** tiene fragmentos cortos para leer, en Python o TypeScript
+(selector sobre el código):
+- **¿Qué imprime?** Elige la salida, o escríbela cuando no hay opciones.
+- **Complejidad:** elige cómo crecen el tiempo y el espacio extra con n. La respuesta
+  marca la línea que domina el coste.
+Cada respuesta muestra la explicación. Tu progreso se guarda por elemento y viaja con la
+exportación. Algunos temas de Aprender enlazan ejercicios de lectura desde su pestaña
+Práctica.
+
+## Corregir el error
+Los problemas con la insignia **Corregir** empiezan con código que tiene un error. El
+enunciado cuenta la historia; el código falla algunas pruebas y tu tarea es encontrar el
+error y corregirlo. Python y TypeScript empiezan con el código con error (algunos
+problemas también en PHP y Rust); un lenguaje sin versión con error empieza vacío, y el
+aviso sobre el editor lo dice. **Volver al código con error**, en ese aviso, recupera el
+código original (tus instantáneas del Historial se conservan). El filtro **Tipo** de la
+Biblioteca muestra solo estos problemas, o los oculta. El problema del día y "siguiente
+problema" nunca los sugieren.
+
+## Katas
+**Kata** (en la barra de navegación) vuelve a resolver problemas que ya resolviste, de
+memoria y contra el reloj:
+- **Kata del día:** tres problemas resueltos elegidos para hoy, con preferencia por los
+  que llevas tiempo sin tocar. Unos 15 minutos; el reloj muestra el tiempo de más pero
+  nunca te detiene.
+- **Elige un conjunto:** hasta cinco problemas resueltos de un patrón o de una de tus
+  listas, los más oxidados primero, diez minutos cada uno.
+- El editor empieza con el código inicial. Las pistas, la solución explicada, tus envíos,
+  el historial y las notas quedan **bloqueados durante la kata** hasta que termina.
+- Una kata nunca cambia tus envíos, el estado de los problemas, los repasos ni el problema
+  del día. Sus resultados están en **Progreso → Katas**: tus récords (mejor tiempo, menos
+  envíos), la racha de katas y las katas recientes.
+- **Oxidados** (tarjeta de Inicio, y en Progreso → Katas) muestra problemas resueltos que
+  quizá hayas olvidado: la puntuación crece con el tiempo desde la última vez que lo
+  resolviste y con las katas fallidas en él. Desactiva la tarjeta en Ajustes → Práctica.
+
+## Nivel estimado y planes de estudio
+- **Nivel estimado:** Progreso → Resumen muestra un nivel general, y Por patrón uno por
+  patrón con una pequeña línea de evolución. Se **estima** a partir de los problemas que
+  resolviste (su dificultad, tus envíos y tu tiempo) y orienta lo que sugieren el problema
+  del día y «Siguiente problema»: un patrón más flojo aparece más a menudo, y se saltan
+  los problemas fáciles que ya superaste. Es una guía, no una nota.
+- **Plan de estudio:** Progreso → Plan → **Crear el plan** a partir de un objetivo (todos
+  los patrones o los que elijas), un número de semanas y el tiempo que tienes al día.
+  Primero van los temas de Aprender de cada patrón y luego sus problemas sin resolver; el
+  último día de cada semana tiene una kata y tus repasos. Marca las tareas como
+  **Hecho**, **Omítelas** o pásalas a **Más tarde** (el resto del plan se mueve con
+  ellas). Los problemas resueltos y los temas vistos se marcan solos. Las tareas de hoy
+  están en la tarjeta **Plan de estudio** de Inicio (desactívala en Ajustes → Práctica).
+  **Exportar al calendario…** guarda el plan como archivo `.ics` para cualquier
+  aplicación de calendario.
+
+## Diario de errores y reflexiones
+- Tras un **envío** fallido, KataBox etiqueta lo que puede deducir: respuesta incorrecta,
+  demasiado lento, demasiada memoria, el tipo de error de ejecución (índice fuera de rango,
+  división entre cero, recursión demasiado profunda…) y, a partir de la entrada que falla,
+  casos límite como una entrada vacía, un solo elemento, el valor más grande, números
+  negativos o duplicados. Abre el envío en la pestaña **Envíos** para cambiar las
+  etiquetas y añadir una nota.
+- **Progreso → Errores** muestra **Tus errores habituales**: cuántas veces aparece cada
+  etiqueta, con los ejemplos más recientes.
+- Tras **Aceptado**, puedes escribir en una frase **por qué funciona** y elegir su
+  complejidad en tiempo y espacio. Tu nota vuelve arriba en la pestaña **Notas**, cuando
+  pasas un repaso y cuando resuelves el problema en una kata.
+
+## Fragmentos, comparar envíos y búsqueda
+- **Fragmentos:** Ajustes → Editor → **Fragmentos de código** guarda tu propio código por
+  lenguaje. En el editor, escribe `/snip` y elige uno; o pulsa Ctrl+K y elige **Insertar
+  fragmento: …**.
+- **Comparar envíos:** en la pestaña **Envíos**, **Comparar** y marca dos: se muestran
+  uno al lado del otro.
+- **Buscar en todo** (Ctrl+Shift+P, o desde la paleta de comandos) encuentra problemas,
+  temas de Aprender, tus fragmentos, ajustes y secciones de esta guía. **Ayuda** (desde la
+  paleta) muestra esta guía dentro de la aplicación.
+
 ## Depurador y visualizador
 - **Lenguajes:** Python y JavaScript/TypeScript, en problemas de función y de programa.
   Aún no PHP, Rust ni SQL.
@@ -197,6 +362,10 @@ más tiempo. El espacio de trabajo muestra el del lenguaje elegido, p. ej. **Tie
 - **Barra:** **Continuar** (F5), **Paso a paso por encima** (F10), **Paso a paso por
   instrucciones** (F11), **Paso a paso para salir** (Mayús+F11), **Paso atrás**
   (Mayús+F10), **Reiniciar** (Ctrl+Mayús+F5), **Detener la depuración** (Mayús+F5).
+- **Reproducción automática:** el botón de reproducir junto a la barra avanza a la
+  siguiente línea solo, a 0,5×, 1× o 2× (un paso por segundo a 1×), así la pestaña
+  Visualizar se ve como una animación. Se pausa al pulsarlo otra vez o cuando la
+  ejecución termina.
 - **Paneles:** **Variables** (Locales / Globales, desplegables), **Inspección**, **Pila
   de llamadas** y **Consola de depuración** (evalúa en el marco seleccionado; nunca
   cambia el programa).
@@ -255,7 +424,7 @@ excedidos:
 ## Exportar e importar
 **Ajustes → Datos:**
 - **Exportar…** guarda tu progreso en un archivo (`.kbx.json`, formato
-  `katabox-export/v1`): estados de problemas, envíos, instantáneas del historial, notas,
+  `katabox-export/v2`; los archivos v1 se siguen importando): estados de problemas, envíos, instantáneas del historial, notas,
   borradores, pistas desbloqueadas, problemas abiertos, repasos, problemas del día,
   listas, entrevistas simuladas, ajustes y tu progreso en Aprender (temas vistos y
   posición de Continuar).
@@ -271,8 +440,11 @@ Los ajustes tienen una sección por tema, a la izquierda (o en pestañas arriba,
 ventana es estrecha). **Buscar en los ajustes** encuentra un ajuste por su nombre.
 
 - **Apariencia:**
-  - **Tema** (Sistema, Claro, Oscuro), **Idioma** (English, Español), **Contraste**
-    (Normal, Alto), **Movimiento** (Seguir al sistema, Reducir);
+  - **Tema** (Sistema, Claro, Oscuro), **Idioma** (English, Español, Português
+    (Brasil)), **Contraste** (Normal, Alto), **Movimiento** (Seguir al sistema, Reducir);
+  - con la interfaz en portugués, **Problemas y lecciones en** elige inglés o español
+    para los problemas y Aprender, que están escritos en esos dos idiomas (inglés por
+    defecto);
   - **Restablecer el tamaño y la posición de la ventana**. KataBox se vuelve a abrir
     donde lo dejaste, con el mismo tamaño y maximizado si lo estaba. Si esa pantalla ya
     no está, se abre centrado en la pantalla principal.
@@ -299,6 +471,7 @@ paleta de comandos o usa el botón del teclado en la barra superior.
 | Dónde | Teclas | Acción |
 | --- | --- | --- |
 | En cualquier sitio | Ctrl+K | Paleta de comandos |
+| En cualquier sitio | Ctrl+Shift+P | Buscar en todo |
 | Biblioteca | `/` | Buscar problemas |
 | Biblioteca | ↑ / ↓, RePág / AvPág, Inicio / Fin, Intro | Recorrer la lista, abrir un problema |
 | Biblioteca → Listas | Alt+↑ / Alt+↓ | Mover una fila de la lista |

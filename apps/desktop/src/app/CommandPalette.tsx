@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { BarChart3, GraduationCap, Keyboard, Languages, Monitor, Moon, Settings2, Sun } from "lucide-react";
+import { BarChart3, GraduationCap, Keyboard, Languages, Monitor, Moon, ScrollText, Search, Settings2, Square, Sun, Timer } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -13,6 +13,10 @@ import {
 import { DifficultyLabel, useTagLabel } from "@/components/Semantic";
 import { DEV_NAV, NAV, WORKSPACE_ICON } from "@/app/nav";
 import { openShortcuts } from "@/app/shortcuts";
+import { openSearchEverything } from "@/app/SearchEverything";
+import { activeEditor, insertIntoEditor, onActiveEditor } from "@/lib/editorBridge";
+import { useSnippets } from "@/practice/snippets";
+import { useFocusActions, useFocusBreak, useFocusCurrent, useFocusWork } from "@/practice/focus";
 import { paletteFilter } from "@/app/paletteFilter";
 import { PROGRESS_TABS, SETTINGS_SECTIONS } from "@/lib/pageTabs";
 import { UI_LANGS } from "@/i18n";
@@ -33,10 +37,19 @@ export function CommandPalette({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { theme, lang, setTheme, setLang } = usePrefs();
+  const { theme, uiLang, setTheme, setUiLang } = usePrefs();
   const problems = useProblems();
   const learn = useLearnCatalog();
   const tagLabel = useTagLabel();
+  const snippets = useSnippets();
+  const focusNow = useFocusCurrent();
+  const focus = useFocusActions();
+  const [focusWork] = useFocusWork();
+  const [focusBreak] = useFocusBreak();
+  // Snippets for the open editor's language, inserted at its cursor.
+  const [editor, setEditor] = useState(activeEditor());
+  useEffect(() => onActiveEditor(() => setEditor(activeEditor())), []);
+  const insertable = editor ? (snippets.data ?? []).filter((s) => s.language === editor.language) : [];
   // Each opening starts empty, even when reopened during the closing animation.
   const [search, setSearch] = useState("");
   useEffect(() => {
@@ -129,6 +142,22 @@ export function CommandPalette({
             )),
           )}
         </CommandGroup>
+        <CommandGroup heading={t("focus.title")}>
+          {focusNow.data ? (
+            <CommandItem value={t("focus.paletteStop")} onSelect={() => run(() => focus.stop.mutate())}>
+              <Square aria-hidden />
+              {t("focus.paletteStop")}
+            </CommandItem>
+          ) : (
+            <CommandItem
+              value={t("focus.paletteStart", { work: focusWork, brk: focusBreak })}
+              onSelect={() => run(() => focus.start.mutate({ work: focusWork, brk: focusBreak }))}
+            >
+              <Timer aria-hidden />
+              {t("focus.paletteStart", { work: focusWork, brk: focusBreak })}
+            </CommandItem>
+          )}
+        </CommandGroup>
         <CommandGroup heading={t("palette.theme")}>
           {THEMES.map((th) => {
             const Icon = THEME_ICON[th];
@@ -150,15 +179,37 @@ export function CommandPalette({
             <CommandItem
               key={l}
               value={`language ${t("palette.language")}: ${t(`language.${l}`)}`}
-              onSelect={() => run(() => setLang(l))}
-              data-checked={lang === l}
+              onSelect={() => run(() => setUiLang(l))}
+              data-checked={uiLang === l}
             >
               <Languages aria-hidden />
               {t("palette.language")}: {t(`language.${l}`)}
             </CommandItem>
           ))}
         </CommandGroup>
+        {insertable.length > 0 && (
+          <CommandGroup heading={t("search.snippets")}>
+            {insertable.map((s) => (
+              <CommandItem
+                key={s.uid}
+                value={`snippet ${t("palette.insertSnippet", { name: s.name })} ${s.tags.join(" ")}`}
+                onSelect={() => run(() => void insertIntoEditor(s.body))}
+              >
+                <ScrollText aria-hidden />
+                {t("palette.insertSnippet", { name: s.name })}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
         <CommandGroup heading={t("palette.help")}>
+          <CommandItem value={`help ${t("search.title")} Ctrl Shift P`} onSelect={() => run(openSearchEverything)}>
+            <Search aria-hidden />
+            {t("search.title")}
+          </CommandItem>
+          <CommandItem value={`help ${t("help.title")}`} onSelect={() => run(() => void navigate({ to: "/help" }))}>
+            <GraduationCap aria-hidden />
+            {t("help.title")}
+          </CommandItem>
           <CommandItem value={`help ${t("shortcuts.open")} F1`} onSelect={() => run(openShortcuts)}>
             <Keyboard aria-hidden />
             {t("shortcuts.open")}

@@ -1,0 +1,18 @@
+id = "k-letter-stretch"
+title = "k-Letter Stretch"
+title_es = "Tramo de k letras"
+difficulty = "medium"
+tags = ["sliding-window", "string", "debugging"]
+pattern = "sliding-window"
+rank = 6
+kind = "fix"
+
+[signature]
+name = "longestWithKLetters"
+params = [{ name = "text", type = "string" }, { name = "k", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

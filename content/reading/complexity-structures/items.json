@@ -1,0 +1,102 @@
+[
+  {
+    "n": 1,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The loop runs n times and each pass does one set lookup and at most one insert, both O(1) on average for a hash set: O(n). The set can end up holding a key for many of the n values: O(n) space.",
+    "explain_es": "El bucle se ejecuta n veces y cada vuelta hace una consulta al conjunto y como mucho una inserción, ambas O(1) de media en un conjunto hash: O(n). El conjunto puede acabar guardando una clave por muchos de los n valores: espacio O(n).",
+    "time": "O(n)",
+    "space": "O(n)",
+    "dominant": {"python": 4, "typescript": 4}
+  },
+  {
+    "n": 2,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "For each of the n values of a, the while loop scans b from the start and usually reaches its end, since most values are missing: about n steps each, n · n in all, O(n²). The two lists hold 2n numbers: O(n) space.",
+    "explain_es": "Para cada uno de los n valores de a, el while recorre b desde el principio y casi siempre llega al final, porque la mayoría de valores no están: unos n pasos cada vez, n · n en total, O(n²). Las dos listas guardan 2n números: espacio O(n).",
+    "time": "O(n²)",
+    "space": "O(n)",
+    "dominant": {"python": 7, "typescript": 11}
+  },
+  {
+    "n": 3,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The while loop is a binary search: it halves the range lo..hi each pass, so it takes about log₂ n passes, and it runs once for each of the n queries: O(n log n). The sorted list evens holds n numbers: O(n) space.",
+    "explain_es": "El while es una búsqueda binaria: reduce el rango lo..hi a la mitad en cada vuelta, así que tarda unas log₂ n vueltas, y se ejecuta una vez por cada una de las n consultas: O(n log n). La lista ordenada evens guarda n números: espacio O(n).",
+    "time": "O(n log n)",
+    "space": "O(n)",
+    "dominant": {"python": 7, "typescript": 11}
+  },
+  {
+    "n": 4,
+    "prompt": "The while sits inside the for. How do the time and the extra space grow with n?",
+    "prompt_es": "El while está dentro del for. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Each index is pushed once and popped at most once, so over the whole run the while line pops at most n times in total, not n times per pass: about 2n steps in all, so O(n) even in the worst case (each pass costs O(1) amortised). vals, answer and the stack each hold up to n values: O(n) space.",
+    "explain_es": "Cada índice entra en la pila una vez y sale como mucho una vez, así que en toda la ejecución el while saca como mucho n elementos en total, no n por vuelta: unos 2n pasos en total, así que O(n) incluso en el peor caso (cada vuelta cuesta O(1) amortizado). vals, answer y la pila guardan hasta n valores cada una: espacio O(n).",
+    "time": "O(n)",
+    "space": "O(n)",
+    "dominant": {"python": 6, "typescript": 9}
+  },
+  {
+    "n": 5,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The inner loop fills one cell per pass, n cells for each of the n rows: n² steps, O(n²). Every cell stays in grid until the end, so the grid itself takes n² numbers: O(n²) space.",
+    "explain_es": "El bucle interior rellena una celda por vuelta, n celdas por cada una de las n filas: n² pasos, O(n²). Todas las celdas se quedan en grid hasta el final, así que la cuadrícula ocupa n² números: espacio O(n²).",
+    "time": "O(n²)",
+    "space": "O(n²)",
+    "dominant": {"python": 5, "typescript": 5}
+  },
+  {
+    "n": 6,
+    "prompt": "f answers 2n range-sum queries with prefix sums. How do the time and the extra space grow with n?",
+    "prompt_es": "f responde 2n consultas de suma de rango con sumas prefijas. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Building prefix takes n steps; after that each query is one subtraction, O(1), however wide the range is, so the 2n queries cost 2n steps: n + 2n, O(n). The prefix list holds n + 1 numbers: O(n) space.",
+    "explain_es": "Construir prefix cuesta n pasos; después cada consulta es una resta, O(1), sea cual sea el ancho del rango, así que las 2n consultas cuestan 2n pasos: n + 2n, O(n). La lista prefix guarda n + 1 números: espacio O(n).",
+    "time": "O(n)",
+    "space": "O(n)",
+    "dominant": {"python": 6, "typescript": 7}
+  },
+  {
+    "n": 7,
+    "prompt": "f builds its own list nums, in descending order. How do the time and the extra space grow with n?",
+    "prompt_es": "f construye su propia lista nums, en orden descendente. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Descending order is the worst case for insertion sort: every new key is smaller than all the sorted ones, so the while loop shifts i elements for each i, 1 + 2 + … + (n − 1) = n(n − 1)/2 shifts: O(n²). The sort works in place, but nums itself holds n numbers: O(n) space.",
+    "explain_es": "El orden descendente es el peor caso de la ordenación por inserción: cada clave nueva es menor que todas las ya ordenadas, así que el while desplaza i elementos por cada i, 1 + 2 + … + (n − 1) = n(n − 1)/2 desplazamientos: O(n²). Ordena en el sitio, pero nums ya guarda n números: espacio O(n).",
+    "time": "O(n²)",
+    "space": "O(n)",
+    "dominant": {"python": 6, "typescript": 9}
+  },
+  {
+    "n": 8,
+    "prompt": "f walks a complete binary tree of n nodes (node i has children 2i + 1 and 2i + 2) with an explicit stack. How do the time and the extra space grow with n?",
+    "prompt_es": "f recorre un árbol binario completo de n nodos (el nodo i tiene los hijos 2i + 1 y 2i + 2) con una pila explícita. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Each node is pushed once and popped once, with constant work per pop: O(n). Because the left child is always popped next, the stack only holds the pending right children along the current path, at most one per level of a tree log₂ n levels deep: O(log n) space.",
+    "explain_es": "Cada nodo entra en la pila una vez y sale una vez, con trabajo constante en cada salida: O(n). Como el hijo izquierdo siempre sale a continuación, la pila solo guarda los hijos derechos pendientes del camino actual, como mucho uno por nivel de un árbol de log₂ n niveles: espacio O(log n).",
+    "time": "O(n)",
+    "space": "O(log n)",
+    "dominant": {"python": 4, "typescript": 4}
+  },
+  {
+    "n": 9,
+    "prompt": "f turns a list into a max-heap from the bottom up. How do the time and the extra space grow with n?",
+    "prompt_es": "f convierte una lista en un montículo de máximos de abajo arriba. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "sift_down from a node goes at most as many levels as lie below it. Half the nodes are leaves and are skipped, a quarter can move 1 level, an eighth 2 levels, and so on, and that sum stays below n: O(n), not O(n log n). The heap list holds n numbers and the sifting loop needs only constant extra: O(n) space.",
+    "explain_es": "sift_down desde un nodo baja como mucho tantos niveles como haya por debajo. La mitad de los nodos son hojas y se saltan, una cuarta parte puede bajar 1 nivel, una octava 2 niveles, y así sucesivamente, y esa suma no pasa de n: O(n), no O(n log n). La lista heap guarda n números y el bucle de hundir solo necesita espacio constante: espacio O(n).",
+    "time": "O(n)",
+    "space": "O(n)",
+    "dominant": {"python": 8, "typescript": 13}
+  },
+  {
+    "n": 10,
+    "prompt": "f is heap sort on a list it builds itself: build the heap, then move the maximum to the end n − 1 times. How do the time and the extra space grow with n?",
+    "prompt_es": "f es heap sort sobre una lista que construye ella misma: construye el montículo y luego lleva el máximo al final n − 1 veces. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Building the heap is O(n). Then each of the n − 1 extractions sifts a small value down from the root, through up to log₂ n levels: O(n log n) in all, which dominates. The sort works in place, but the heap list holds n numbers: O(n) space.",
+    "explain_es": "Construir el montículo es O(n). Después, cada una de las n − 1 extracciones hunde un valor pequeño desde la raíz a través de hasta log₂ n niveles: O(n log n) en total, que es lo que domina. Ordena en el sitio, pero la lista heap guarda n números: espacio O(n).",
+    "time": "O(n log n)",
+    "space": "O(n)",
+    "dominant": {"python": 7, "typescript": 11}
+  }
+]

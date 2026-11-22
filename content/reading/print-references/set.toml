@@ -1,0 +1,7 @@
+id = "print-references"
+order = 3
+kind = "print"
+title = "Print: references"
+title_es = "Imprimir: referencias"
+blurb = "Aliasing, copies and shared rows: read the code, predict the output"
+blurb_es = "Alias, copias y filas compartidas: lee el código y predice la salida"

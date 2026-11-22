@@ -14,7 +14,9 @@
     "progress": "Progress",
     "settings": "Settings",
     "smoke": "Smoke screen (dev)",
-    "interview": "Interview"
+    "interview": "Interview",
+    "kata": "Kata",
+    "classroom": "Classroom"
   },
   "palette": {
     "open": "Command palette",
@@ -26,7 +28,8 @@
     "language": "Language",
     "topics": "Learn topics",
     "topic": "Learn: {{title}}",
-    "help": "Help"
+    "help": "Help",
+    "insertSnippet": "Insert snippet: {{name}}"
   },
   "theme": {
     "label": "Theme",
@@ -37,7 +40,8 @@
   "language": {
     "label": "Language",
     "en": "English",
-    "es": "Español"
+    "es": "Español",
+    "pt-BR": "Português (Brasil)"
   },
   "difficulty": {
     "label": "Difficulty",
@@ -190,7 +194,13 @@
       "two-pointers": "Two pointers",
       "undo-redo": "Undo and redo",
       "union-find": "Union-find",
-      "window-functions": "Window functions"
+      "window-functions": "Window functions",
+      "deque": "Deque",
+      "range-queries": "Range queries",
+      "stream": "Stream",
+      "debugging": "Debugging",
+      "recursion": "Recursion",
+      "memoization": "Memoization"
     }
   },
   "common": {
@@ -253,7 +263,8 @@
       "submissions": "Submissions",
       "notes": "Notes",
       "history": "History",
-      "schema": "Tables"
+      "schema": "Tables",
+      "label": "Problem sections"
     },
     "limits": {
       "time": "Time limit",
@@ -278,7 +289,11 @@
       "none": "No submissions yet.",
       "back": "All submissions",
       "code": "Code ({{language}})",
-      "codeLabel": "Submitted code"
+      "codeLabel": "Submitted code",
+      "compare": "Compare",
+      "pickTwo": "Pick two submissions to compare.",
+      "pick": "Compare submission {{n}}",
+      "diffLabel": "Left: {{a}}. Right: {{b}}."
     },
     "notes": {
       "mode": "Notes view",
@@ -354,7 +369,10 @@
       "overview": "Overview",
       "patterns": "By pattern",
       "topics": "By topic",
-      "history": "History"
+      "history": "History",
+      "katas": "Katas",
+      "plan": "Plan",
+      "mistakes": "Mistakes"
     },
     "learn": {
       "title": "Learn topics viewed",
@@ -452,7 +470,8 @@
       "languages": "Languages and runtimes",
       "learn": "Learn",
       "data": "Data",
-      "about": "About"
+      "about": "About",
+      "packs": "Packs"
     },
     "window": {
       "label": "Window",
@@ -465,7 +484,9 @@
       "placeholder": "Search settings…",
       "none": "No setting matches.",
       "results": "Matching settings"
-    }
+    },
+    "contentLang": "Problems and lessons in",
+    "contentLangHint": "Problems and Learn are written in English and Spanish."
   },
   "languages": {
     "python": "Python",
@@ -511,7 +532,13 @@
     "debug_unsupported": "This language cannot be debugged yet. Debugging is available for Python.",
     "debug_diverged": "This program behaves differently on each run (time, randomness or object identity), so it cannot be replayed step by step.",
     "profile_unavailable": "This problem has no complexity profile.",
-    "shrink_unavailable": "Finding a smaller failing input is not available here (a program problem, or no reference solution in this language)."
+    "shrink_unavailable": "Finding a smaller failing input is not available here (a program problem, or no reference solution in this language).",
+    "locked_in_kata": "This is locked during the kata. It opens again when the kata ends.",
+    "kata_active": "A kata is running. End it first.",
+    "stress_unavailable": "The stress test is not available here (an SQL problem, or a program problem without its generator or the Python runtime).",
+    "pack_refused": "This pack can't be imported.",
+    "locked_in_assignment": "This is locked while the assignment runs. It opens again when the assignment ends.",
+    "assignment_active": "Another assignment is running. Finish it first."
   },
   "judge": {
     "verdict": {
@@ -557,7 +584,8 @@
   "results": {
     "tabs": {
       "testcases": "Testcases",
-      "result": "Result"
+      "result": "Result",
+      "label": "Results sections"
     },
     "phase": {
       "starting": "Starting…",
@@ -850,7 +878,18 @@
         "daily_picks": "Daily problems",
         "lists": "Lists",
         "interviews": "Mock interviews",
-        "settings": "Settings"
+        "settings": "Settings",
+        "kata_sessions": "Kata sessions",
+        "kata_attempts": "Kata attempts",
+        "study_plans": "Study plans",
+        "plan_items": "Study plan items",
+        "mistakes": "Mistake journal entries",
+        "reflections": "Reflections",
+        "snippets": "Snippets",
+        "reading_answers": "Reading exercise answers",
+        "stress_brutes": "Stress test brute forces",
+        "focus_sessions": "Focus sessions",
+        "packs": "Packs"
       }
     },
     "crossLang": {
@@ -968,7 +1007,14 @@
       "changedCount_other": "{{count}} changes"
     },
     "programUnsupported": "Program problems can be debugged in Python and JavaScript/TypeScript.",
-    "sqlUnsupported": "The debugger is not available for SQL problems: a query has no steps to replay."
+    "sqlUnsupported": "The debugger is not available for SQL problems: a query has no steps to replay.",
+    "views": "Debugger views",
+    "autoplay": {
+      "play": "Play: step automatically",
+      "pause": "Pause automatic stepping",
+      "speed": "Playback speed",
+      "times": "{{speed}}×"
+    }
   },
   "complexity": {
     "button": "Complexity",
@@ -2922,7 +2968,8 @@
     },
     "general": {
       "palette": "Command palette",
-      "shortcuts": "This list of shortcuts"
+      "shortcuts": "This list of shortcuts",
+      "searchAll": "Search everything"
     },
     "library": {
       "search": "Search problems",
@@ -2971,5 +3018,550 @@
     },
     "more": "The full list is in CHANGELOG.md (Settings → About).",
     "close": "Got it"
+  },
+  "exercise": {
+    "kind": {
+      "kata": "Kata",
+      "followup": "Follow-up",
+      "fix": "Fix the bug",
+      "print": "What does this print?",
+      "complexity": "Complexity"
+    },
+    "position": "{{index}} of {{total}}",
+    "correct": "Correct",
+    "incorrect": "Not quite",
+    "check": "Check"
+  },
+  "kata": {
+    "title": "Kata",
+    "intro": "Re-solve problems you already solved, from memory and against the clock. The editor starts empty, and hints, notes and your old solutions stay locked until the kata ends. Katas never change your submissions or reviews.",
+    "running": "Kata in progress",
+    "end": "End kata",
+    "summary": "Kata finished: {{solved}} of {{total}} solved",
+    "daily": {
+      "title": "Daily kata",
+      "intro": "Three solved problems, picked for today with a lean towards the ones you haven't touched for a while. About 15 minutes.",
+      "none": "Solve a problem first: a kata re-solves problems you have solved.",
+      "done": "Today's kata is done: {{solved}} of {{total}} solved.",
+      "start": "Start the daily kata"
+    },
+    "sets": {
+      "title": "Pick a set",
+      "intro": "Up to five solved problems from one pattern or one of your lists, the rustiest first. Ten minutes each.",
+      "pattern": "Pattern",
+      "list": "List",
+      "pick": "Choose…",
+      "noLists": "No list with solved problems",
+      "option": "{{name}} ({{count}} solved)",
+      "start": "Start"
+    },
+    "bests": "Personal bests and past katas",
+    "solvedIn_one": "Solved in {{time}}, {{count}} submit",
+    "solvedIn_other": "Solved in {{time}}, {{count}} submits",
+    "tried_one": "Not solved yet, {{count}} submit",
+    "tried_other": "Not solved yet, {{count}} submits",
+    "notYet": "Not started",
+    "best": "Best: {{time}}",
+    "again": "Open again",
+    "open": "Open",
+    "locked": "Locked during the kata: solve it from memory.",
+    "clock": {
+      "label": "Kata time: {{time}} of {{of}}",
+      "overLabel": "Kata time: {{time}}, over the {{of}} budget",
+      "over": "over time"
+    },
+    "next": "Next problem",
+    "skip": "Skip to the next",
+    "back": "Kata overview",
+    "newBest": "Solved in {{time}}: a new personal best!",
+    "fromMemory": "From memory: the editor starts from the starter code.",
+    "rusty": {
+      "title": "Rusty",
+      "none": "Nothing rusty: everything you solved was practised recently.",
+      "score": "{{score}}% rusty",
+      "scoreHelp": "Grows with the time since you last solved it, and with katas on it that failed.",
+      "practise": "Practise in a kata",
+      "never": "not practised since",
+      "days_one": "{{count}} day ago",
+      "days_other": "{{count}} days ago",
+      "setting": "Rusty card on Home"
+    },
+    "streak_one": "Kata streak: {{count}} day",
+    "streak_other": "Kata streak: {{count}} days",
+    "start": "Start a kata",
+    "bestsTitle": "Personal bests",
+    "noBests": "No kata solved yet.",
+    "col": {
+      "problem": "Problem",
+      "best": "Best time",
+      "submits": "Fewest submits",
+      "katas": "Katas solved"
+    },
+    "solvedOf": "{{solved}} of {{total}}",
+    "sessionsTitle": "Recent katas",
+    "noSessions": "No katas yet.",
+    "kind": {
+      "daily": "Daily",
+      "pattern": "Pattern",
+      "list": "List",
+      "custom": "Custom"
+    },
+    "inProgress": "in progress"
+  },
+  "rating": {
+    "overall": "Skill rating",
+    "label": "Skill rating {{rating}}, estimated",
+    "estimated": "est.",
+    "help_one": "Estimated from {{count}} solve: difficulty, submits and time. A guide to what to practise, not a grade.",
+    "help_other": "Estimated from {{count}} solves: difficulty, submits and time. A guide to what to practise, not a grade.",
+    "trend": "Rating trend from {{from}} to {{to}}",
+    "none": "Solve a problem to get a rating."
+  },
+  "plan": {
+    "card": "Study plan",
+    "none": "No study plan yet. Make one from a goal, a number of weeks and the minutes you have a day.",
+    "make": "Make a plan",
+    "nothingToday": "Nothing planned for today.",
+    "setting": "Study plan card on Home",
+    "kind": {
+      "topic": "Learn",
+      "kata": "Daily kata",
+      "review": "Reviews due"
+    },
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "status": {
+      "pending": "To do",
+      "done": "Done",
+      "skipped": "Skipped"
+    },
+    "done": "Done",
+    "skip": "Skip",
+    "later": "Later",
+    "undo": "Undo",
+    "range": "{{from}} to {{to}}",
+    "progress": "{{done}} of {{total}} done",
+    "progressLabel": "Plan progress",
+    "new": "New plan",
+    "archive": "Stop this plan",
+    "leftOver_one": "{{count}} item did not fit in these weeks.",
+    "leftOver_other": "{{count}} items did not fit in these weeks.",
+    "formTitle": "Make a study plan",
+    "formIntro": "Patterns in track order: each pattern's Learn topics first, then its unsolved problems by rank. The last day of each week has a kata and your reviews. A new plan replaces the current one.",
+    "weeks": "How long",
+    "weeksOption_one": "{{count}} week",
+    "weeksOption_other": "{{count}} weeks",
+    "perDay": "Time a day",
+    "goal": "Goal",
+    "allPatterns": "Every pattern, in track order",
+    "create": "Make the plan",
+    "cancel": "Cancel",
+    "ics": {
+      "export": "Export to calendar…",
+      "title": "KataBox study plan",
+      "min": "min",
+      "saved": "Calendar file saved."
+    }
+  },
+  "journal": {
+    "title": "What went wrong",
+    "intro": "KataBox tagged what it could tell from the failure. Change the tags and add a note: they feed \"Your common mistakes\" on Progress.",
+    "tags": "Tags",
+    "auto": "found by KataBox",
+    "note": "Note",
+    "save": "Save tags and note",
+    "saved": "Saved.",
+    "saveError": "Could not save.",
+    "none": "No failed submissions yet. When a Submit fails, its mistakes are collected here.",
+    "failures_one": "Your common mistakes, from {{count}} failed submission",
+    "failures_other": "Your common mistakes, from {{count}} failed submissions",
+    "filter": "Show",
+    "allTags": "Every tag",
+    "tag": {
+      "wa": "Wrong answer",
+      "tle": "Too slow (time limit)",
+      "mle": "Too much memory",
+      "ole": "Too much output",
+      "compile": "Does not compile",
+      "runtime_index": "Index out of range",
+      "runtime_key": "Missing key",
+      "runtime_null": "None / null / undefined",
+      "runtime_zero_division": "Division by zero",
+      "runtime_recursion": "Recursion too deep",
+      "runtime_overflow": "Integer overflow",
+      "runtime_type": "Wrong type or value",
+      "runtime_other": "Other runtime error",
+      "edge_empty": "Empty input",
+      "edge_single": "One element",
+      "edge_max": "Largest input",
+      "edge_negative": "Negative numbers",
+      "edge_zero": "Zero",
+      "edge_duplicates": "Duplicates",
+      "shrunk": "Found by the shrinker",
+      "logic": "Wrong idea"
+    }
+  },
+  "reflection": {
+    "title": "Why does it work?",
+    "why": "In one sentence (optional): it is shown again when you review this problem.",
+    "time": "Time",
+    "space": "Space",
+    "unset": "Not set",
+    "other": "Other",
+    "save": "Save",
+    "saved": "Saved.",
+    "yours": "Your note on why it works:",
+    "timeIs": "time {{c}}",
+    "spaceIs": "space {{c}}"
+  },
+  "search": {
+    "title": "Search everything",
+    "placeholder": "Search problems, Learn topics, snippets, settings and help…",
+    "searching": "Searching…",
+    "snippets": "Snippets",
+    "insert": "insert"
+  },
+  "help": {
+    "title": "Help",
+    "contents": "Help contents"
+  },
+  "snippets": {
+    "title": "Snippets",
+    "intro": "Your own code snippets, per language. In the editor, type /snip to pick one, or insert one from the command palette (Ctrl+K).",
+    "none": "No snippets yet.",
+    "add": "Add a snippet",
+    "edit": "Edit {{name}}",
+    "delete": "Delete {{name}}",
+    "name": "Name",
+    "language": "Language",
+    "tags": "Tags",
+    "tagsHint": "graphs, bfs",
+    "body": "Code",
+    "save": "Save snippet",
+    "cancel": "Cancel"
+  },
+  "followup": {
+    "nav": "Problem and its follow-ups",
+    "base": "Base problem",
+    "n": "Follow-up {{n}}",
+    "locked": "Solve the base problem first.",
+    "of": "A harder follow-up of",
+    "intro": "The statement below says what changes; everything else is as in the base problem."
+  },
+  "fix": {
+    "badge": "Fix",
+    "badgeTitle": "Fix the bug: the editor starts with code that has a bug",
+    "banner": "Fix the bug: the editor starts with code that fails some tests. Find the bug and fix it.",
+    "noBuggy": "Fix the bug: this language has no buggy version, so you start from an empty solution. Python and TypeScript start from the buggy code.",
+    "reset": "Reset to the buggy code",
+    "resetTitle": "Reset to the buggy code?",
+    "resetBody": "Your code in this language is replaced by the original buggy code. Your snapshots in History stay.",
+    "cancel": "Cancel",
+    "kindLabel": "Kind",
+    "kind": {
+      "solve": "Solve",
+      "fix": "Fix the bug"
+    }
+  },
+  "reading": {
+    "heading": "Reading code",
+    "intro": "Short snippets in Python and TypeScript: predict what they print, or how fast they grow.",
+    "title": "Reading exercise",
+    "back": "Back to Learn",
+    "progress": "{{solved}} of {{total}} answered correctly",
+    "items": "Items in this set",
+    "item": "Item {{n}}",
+    "itemSolved": "Item {{n}}, answered correctly",
+    "language": "Language of the code",
+    "codeLabel": "Code in {{language}}",
+    "output": "Output",
+    "typeOutput": "Type the output",
+    "time": "Time",
+    "space": "Extra space",
+    "next": "Next",
+    "setDone": "That was the last item of this set.",
+    "expectedOutput": "It prints:",
+    "expectedComplexity": "Time {{time}}, extra space {{space}}.",
+    "dominantLine": "Line {{line}} dominates the cost.",
+    "practiceHeading": "Reading exercises",
+    "linkTitle": "{{set}}, item {{n}}"
+  },
+  "stress": {
+    "tab": "Stress test",
+    "title": "Stress test",
+    "intro": "Write a slow but obviously correct brute force here. The stress test runs it and your solution on many small inputs, in the sandbox, until they disagree.",
+    "bruteLabel": "Brute force in {{language}}",
+    "start": "Start stress test",
+    "stop": "Stop",
+    "starting": "Generating inputs…",
+    "progress": "Round {{rounds}} of {{max}}: {{tested}} inputs agree so far",
+    "bruteOutput": "Brute force",
+    "yourOutput": "Your solution",
+    "random": "Without the Python runtime the inputs are small random values: they are not checked against the problem's constraints.",
+    "sql": "SQL problems have no stress test.",
+    "stopped": {
+      "found": "Found a disagreement after {{tested}} inputs",
+      "brute_failed": "Your brute force failed on this input",
+      "budget": "No disagreement in {{tested}} inputs ({{rounds}} rounds)",
+      "cancelled": "Stopped after {{tested}} inputs"
+    }
+  },
+  "builders": {
+    "show": "Build visually",
+    "hide": "Hide builder",
+    "viewAs": "View as",
+    "kind": {
+      "tree": "Tree",
+      "rows": "Rows",
+      "grid": "Grid",
+      "graph": "Graph"
+    },
+    "fixJson": "This value isn't valid JSON of the expected shape yet: edit it as JSON above, or clear it to start over.",
+    "row": "{{name}} item {{index}}",
+    "up": "Move item {{index}} up",
+    "down": "Move item {{index}} down",
+    "removeRow": "Remove item {{index}}",
+    "addRow": "Add item",
+    "addRoot": "Add a root node",
+    "node": "Node {{value}}",
+    "nodeValue": "Value of the selected node",
+    "addLeft": "Left child",
+    "addRight": "Right child",
+    "removeNode": "Remove node and its children",
+    "grid": "Grid {{name}}",
+    "cell": "Row {{row}}, column {{col}}: {{value}}",
+    "gridHint": "Click a cell (or press Enter on it) to cycle through: {{chars}}. Arrow keys move between cells.",
+    "gridEmpty": "Type at least one row in the field above to build a grid.",
+    "graphNode": "Node {{node}}: start an edge here",
+    "graphNodeTo": "Node {{node}}: end the edge from {{from}} here",
+    "graphHint": "Click one node, then another, to add an edge between them.",
+    "edges": "Edges",
+    "weight": "Weight of edge {{u}}–{{v}}",
+    "removeEdge": "Remove edge {{u}}–{{v}}",
+    "addNode": "Add node",
+    "check": "Check inputs",
+    "checkOk": "Custom {{index}}: valid",
+    "checkBad": "Custom {{index}}: {{why}}",
+    "checkTypesOnly": "Only the types were checked: the problem's constraints need the Python runtime."
+  },
+  "focus": {
+    "title": "Focus sessions",
+    "start": "Start focus session",
+    "stop": "Stop focus session",
+    "work": "Work (minutes)",
+    "break": "Break (minutes)",
+    "phase": {
+      "work": "Focus",
+      "break": "Break"
+    },
+    "chip": {
+      "work": "Focus: {{time}} left",
+      "break": "Break: {{time}} left"
+    },
+    "toBreak": "Time for a break.",
+    "toWork": "Break over: back to focus.",
+    "none": "No focus sessions yet.",
+    "length": "{{minutes}} min, {{cycles}} work periods",
+    "summary": "{{touched}} problems touched, {{solved}} solved, {{katas}} katas, {{plan_items}} plan items done",
+    "paletteStart": "Start focus session ({{work}} + {{brk}} min)",
+    "paletteStop": "Stop focus session"
+  },
+  "backup": {
+    "title": "Automatic backups",
+    "intro": "KataBox can write an export of your progress to a folder you choose, every few days and when you close the app. A synced folder (OneDrive, Dropbox…) is your choice.",
+    "noFolder": "No folder chosen: backups are off",
+    "choose": "Choose folder…",
+    "change": "Change folder…",
+    "off": "Turn off",
+    "every": "Every (days)",
+    "keep": "Keep (backups)",
+    "onExit": "Also back up when KataBox closes",
+    "now": "Back up now",
+    "last": "Last backup: {{when}}",
+    "never": "No backup yet",
+    "next": "next due {{when}}",
+    "failed": "The last backup failed: {{why}}",
+    "prune": "KataBox deletes only its own katabox-backup-….kbx.json files in that folder, oldest first, beyond the number to keep. It never touches other files."
+  },
+  "packs": {
+    "title": "Problem packs",
+    "intro": "Packs are problem sets anyone can make and share as a .kbpack file. Their code only ever runs in the sandbox, and their text is shown without links or images.",
+    "import": "Import a pack…",
+    "includeInPractice": "Suggest pack problems in the daily problem and Next problem",
+    "none": "No packs installed.",
+    "row": "version {{version}} by {{author}} · {{count}} problems · installed {{date}}",
+    "uninstall": "Uninstall {{name}}",
+    "restartNeeded": "Pack changes take effect when KataBox restarts.",
+    "restart": "Restart now",
+    "previewTitle": "Import “{{name}}”?",
+    "unsigned": "Unsigned pack. Author as stated: {{author}}. KataBox checked the files, but cannot tell who made them.",
+    "id": "Id",
+    "version": "Version",
+    "installedVersion": "installed: {{version}}",
+    "licence": "Licence",
+    "problems": "Problems",
+    "action": {
+      "install": "This installs the pack. Your history on its problems stays even if you remove it later.",
+      "update": "This replaces the installed version with this newer one.",
+      "same": "This exact pack is already installed.",
+      "not_newer": "A pack with this id is installed, and this file is not newer: it can't replace it."
+    },
+    "install": "Install",
+    "update": "Update",
+    "cancel": "Cancel",
+    "badge": "{{pack}}",
+    "badgeTitle": "From the pack “{{pack}}”, not part of KataBox",
+    "sourceLabel": "Source",
+    "source": {
+      "builtin": "Built-in",
+      "packs": "Packs"
+    },
+    "assignment": "Assignment",
+    "showCreate": "Show the problem editor (for making packs)",
+    "openCreate": "Open the problem editor"
+  },
+  "classroom": {
+    "title": "Classroom",
+    "intro": "Assignments from a teacher come as packs (Settings → Packs). Start one when you are ready: its rules apply while it runs. Teachers import their students' results files here. KataBox works offline and without accounts, so this is not cheat-proof.",
+    "mine": "Your assignments",
+    "none": "No assignments. Install a teacher's assignment pack and restart KataBox to see it here.",
+    "state": {
+      "not_started": "Not started",
+      "running": "Running",
+      "finished": "Finished"
+    },
+    "remaining": "{{time}} left",
+    "due": "Due",
+    "languages": "Languages",
+    "timeLimit": "Time limit",
+    "noTimeLimit": "None",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "hints": "Hints",
+    "hintsOn": "Available",
+    "hintsOff": "Locked while it runs",
+    "afterRestart": "available after a restart",
+    "notTried": "Not tried",
+    "submits_one": "{{count}} submit",
+    "submits_other": "{{count}} submits",
+    "startNote": "The rules apply from the moment you start, and only submissions made while it runs count.",
+    "rules": "While it runs, these problems take only {{languages}}.",
+    "rulesNoHints": "While it runs, these problems take only {{languages}}, and their hints, editorial, earlier submissions and History are locked.",
+    "start": "Start",
+    "finish": "Finish now",
+    "export": "Export results",
+    "close": "Close",
+    "results": {
+      "title": "Results: {{title}}",
+      "intro": "This is the file you send to your teacher. It holds exactly what is listed below.",
+      "name": "Your name",
+      "includeCode": "Include my code (the best submission for each problem)",
+      "included": "The file includes:",
+      "who": "Your name: {{name}}",
+      "which": "The assignment: {{title}} (pack {{hash}}…)",
+      "when": "When it ran: {{start}} to {{end}}",
+      "firstAccepted": "first Accepted after {{time}}",
+      "withCode": "with the code",
+      "chain": "A hash chain over everything above, so casual edits show (it is not a signature).",
+      "saved": "Saved.",
+      "save": "Save results…"
+    },
+    "teacher": {
+      "title": "Class results (teacher)",
+      "intro": "Import the results files your students sent you. Each file is checked; a file edited after export is kept and flagged.",
+      "import": "Import results files…",
+      "imported": "Added {{added}}, already imported {{duplicates}}, flagged as edited {{edited}}.",
+      "refused": "{{file}} refused: {{why}}",
+      "none": "No results imported yet.",
+      "csv": "Export CSV…",
+      "caption": "Results for {{title}}",
+      "student": "Student",
+      "file": "File",
+      "unchanged": "Unchanged",
+      "edited": "Edited after export"
+    }
+  },
+  "authoring": {
+    "title": "Create a problem",
+    "drafts": "Your drafts",
+    "newId": "New problem id",
+    "create": "Create draft",
+    "untitled": "Untitled",
+    "quality": "Problems made here go into packs, which need one reference solution. Built-in problems need references in all four languages plus test scripts (docs/problem-authoring.md).",
+    "pick": "Pick a draft or create one. Drafts are saved as you type, in KataBox's own folder.",
+    "save": {
+      "saved": "Saved",
+      "saving": "Saving…",
+      "error": "Not saved"
+    },
+    "check": "Check in sandbox",
+    "export": {
+      "open": "Export as pack…",
+      "title": "Export as pack",
+      "intro": "The pack is checked exactly like an import before the file is kept. Share it like any file.",
+      "id": "Pack id (3-20 lowercase letters and digits)",
+      "name": "Pack name",
+      "author": "Author",
+      "version": "Version",
+      "licence": "Licence (SPDX)",
+      "problems": "Problems in the pack",
+      "done": "Pack saved. SHA-256: {{sha}}",
+      "close": "Close",
+      "save": "Save pack…"
+    },
+    "delete": "Delete draft",
+    "deleteConfirm": "Confirm: delete this draft",
+    "ready": "No issues: ready to check in the sandbox and export.",
+    "issues_one": "{{count}} issue to fix (shown by its field).",
+    "issues_other": "{{count}} issues to fix (shown by their fields).",
+    "passed": "{{passed}} of {{total}} tests passed with the reference.",
+    "basics": "Basics",
+    "signature": "Function signature",
+    "texts": "Statement, hints and editorial",
+    "tests": "Tests",
+    "reference": "Reference solution",
+    "limits": "Checker and limits",
+    "field": {
+      "title": "Title",
+      "title_es": "Title (Spanish)",
+      "difficulty": "Difficulty",
+      "pattern": "Pattern",
+      "rank": "Rank in the pattern (1-10)",
+      "tags": "Tags",
+      "statement": "Statement (Markdown)",
+      "statement_es": "Statement in Spanish (Markdown)",
+      "hints": "Hints",
+      "hints_es": "Hints in Spanish (optional)",
+      "editorial": "Editorial (Markdown)",
+      "editorial_es": "Editorial in Spanish (optional)",
+      "language": "Language",
+      "reference": "Code",
+      "checker": "Checker",
+      "time": "Time limit (ms, Rust base)",
+      "memory": "Memory (MB)",
+      "function": "Function name",
+      "returns": "Returns",
+      "paramName": "Parameter {{n}} name",
+      "paramType": "Parameter {{n}} type"
+    },
+    "tagsHint": "Separated by commas; each tag needs a display name, so prefer existing tags such as array or hash-map.",
+    "typesHint": "Types: int, float, bool, string, T[] (such as int[] or string[]), ListNode, TreeNode.",
+    "removeParam": "Remove parameter {{name}}",
+    "addParam": "Add parameter",
+    "showPreview": "Show preview",
+    "hidePreview": "Hide preview",
+    "hintTier": "{{label}}: tier {{n}}",
+    "publicTests_one": "Public tests ({{count}}): shown as examples",
+    "publicTests_other": "Public tests ({{count}}): shown as examples",
+    "hiddenTests_one": "Hidden tests ({{count}}): used on Submit",
+    "hiddenTests_other": "Hidden tests ({{count}}): used on Submit",
+    "testN": "Test {{n}}",
+    "removeTest": "Remove test {{n}}",
+    "output": "Expected output: {{type}}",
+    "addPublic": "Add a public test",
+    "addHidden": "Add a hidden test",
+    "badJson": "Not valid JSON yet: the last valid value is kept.",
+    "insertStarter": "Insert the starter code",
+    "replaceStarter": "Replace with the starter code"
   }
 }

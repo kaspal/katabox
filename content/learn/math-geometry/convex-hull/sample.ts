@@ -9,13 +9,19 @@ function convexHull(points: number[][]): number[] {
   const lower: number[][] = [];
   const upper: number[][] = [];
   for (const p of pts) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+    while (
+      lower.length >= 2 &&
+      cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0
+    ) {
       lower.pop(); // @step drop
     }
     lower.push(p); // @step keep
   }
   for (const p of [...pts].reverse()) {
-    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+    while (
+      upper.length >= 2 &&
+      cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0
+    ) {
       upper.pop(); // @step drop-upper
     }
     upper.push(p); // @step keep-upper

@@ -1,0 +1,18 @@
+id = "typo-distance--f1"
+parent = "typo-distance"
+title = "Typo Distance: Close Enough?"
+title_es = "Distancia de errata: ¿suficientemente cerca?"
+difficulty = "hard"
+tags = ["string", "dynamic-programming"]
+pattern = "dynamic-programming"
+rank = 9
+
+[signature]
+name = "withinFixes"
+params = [{ name = "typed", type = "string" }, { name = "meant", type = "string" }, { name = "k", type = "int" }]
+returns = "bool"
+
+[judge]
+checker = "exact"
+time_limit_ms = 400 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

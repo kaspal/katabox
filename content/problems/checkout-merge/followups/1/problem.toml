@@ -1,0 +1,18 @@
+id = "checkout-merge--f1"
+parent = "checkout-merge"
+title = "Closing Checkouts: A Fair Sample"
+title_es = "Cajas al cierre: una muestra justa"
+difficulty = "hard"
+tags = ["linked-list", "heap", "sliding-window"]
+pattern = "linked-list"
+rank = 9
+
+[signature]
+name = "fairSample"
+params = [{ name = "lines", type = "ListNode[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

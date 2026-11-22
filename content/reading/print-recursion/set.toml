@@ -1,0 +1,7 @@
+id = "print-recursion"
+order = 4
+kind = "print"
+title = "Print: recursion"
+title_es = "Imprimir: recursión"
+blurb = "Base cases, call order and return values: trace the calls, predict the output"
+blurb_es = "Casos base, orden de las llamadas y valores de retorno: sigue las llamadas y predice la salida"

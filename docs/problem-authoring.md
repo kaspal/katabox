@@ -111,6 +111,15 @@ A **program problem** is solved by a whole program that reads standard input and
 - The complexity profiler works for program problems too (ADR 0024, "Program problems"): gen.py's int branch returns the stdin text for size n, and samples are wall times minus the language's startup. Pick sizes where the reference's work is not dwarfed by the startup if you can; a fast reference is shown as "too fast to tell apart", which is honest but less useful. Skip the profile when the naive solution's class is not in the fit's set (constant, log, linear, n log n, quadratic, exponential), e.g. a cubic naive.
 - The model package is `content/problems/ticket-tally/`.
 
+## Fix-the-bug problems (ADR 0035)
+- `kind = "fix"` in problem.toml; a function problem, never a follow-up.
+- `solutions/buggy.py` and `solutions/buggy.ts` are required, `buggy.php` and `buggy.rs`
+  optional. Each contains the stub's declaration line, like the references.
+- One realistic bug per problem, and the generator must produce inputs that trigger it:
+  `validate --run` judges every buggy file on all tests and fails when one is Accepted.
+- The statement opens with a short story about the failing code and never says where the
+  bug is; the hints narrow it down; the editorial names the line and shows the fix.
+
 ## Time limit (ADR 0017)
 
 `[judge] time_limit_ms` is the **base limit**: CPU time for the whole batch of tests in

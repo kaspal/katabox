@@ -90,6 +90,17 @@ So the Rust cap of 400 ms stops every naive.rs with a margin of at least 2.5×.
 - **Reference speed:** each reference must be Accepted using **at most 50% of its own
   language's CPU cap** (startup included), measured as `Report.cpu_us`. ADR 0016 compared
   the summed wall time of the tests with the single shared limit.
+  - **Start-up noise (2026-11-22, expansion review):** on long runs, a busy machine
+    sometimes added ~170 ms to a single process start-up, so a fast Rust reference (tests
+    1-14 ms) measured 203-218 ms against its 200 ms line. The rule is unchanged: test time
+    plus start-up must fit in 50% of the cap.
+    - When a function problem's reference is over the line, kb-pack re-measures the
+      start-up: three short runs of the same reference on its first test, each run's CPU
+      less the time its harness reports.
+    - The run is then charged its harness-reported test time plus the fastest start-up
+      seen, its own included (`checks::charged_cpu`). The charge is never more than the
+      CPU it used and never less than its test time.
+    - Program and SQL problems are timed per test and are unchanged.
 - **Weak-test guard:** `solutions/naive.rs` is required whenever `solutions/naive.py`
   exists (a static check). Both must be correct on every test they reach, then get TLE
   under their own language's limit.

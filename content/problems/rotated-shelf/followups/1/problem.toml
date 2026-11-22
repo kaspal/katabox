@@ -1,0 +1,18 @@
+id = "rotated-shelf--f1"
+parent = "rotated-shelf"
+title = "Rotated Shelf: Free Numbers"
+title_es = "La estantería girada: números libres"
+difficulty = "hard"
+tags = ["binary-search", "array"]
+pattern = "binary-search"
+rank = 9
+
+[signature]
+name = "freeNumbers"
+params = [{ name = "shelf", type = "int[]" }, { name = "queries", type = "int[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

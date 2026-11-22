@@ -1,5 +1,8 @@
 def select(intervals):
-    order = sorted(range(len(intervals)), key=lambda k: (intervals[k][1], intervals[k][0], k))
+    order = sorted(
+        range(len(intervals)),
+        key=lambda k: (intervals[k][1], intervals[k][0], k),
+    )
     chosen, free_at = [], None
     for k in order:
         start, end = intervals[k]

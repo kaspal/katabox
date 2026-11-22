@@ -9,6 +9,8 @@ import type { JudgeEvent, ProblemView } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ParamBuilder } from "@/workspace/results/builders/Builders";
+import { CheckCustoms } from "@/workspace/results/builders/CheckCustoms";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { isAppError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
@@ -27,7 +29,7 @@ import { RowsTable } from "@/workspace/sql/RowsTable";
 import { NamedInputTables } from "@/workspace/sql/SqlViews";
 import { asRows, parseSqlTables } from "@/workspace/sql/tables";
 
-export type ResultsTab = "testcases" | "result" | "debug";
+export type ResultsTab = "testcases" | "result" | "debug" | "stress";
 
 function usePhaseText() {
   const { t } = useTranslation();
@@ -64,6 +66,7 @@ export function ResultsPane({
   onInstallPython,
   practice = null,
   debugPanel = null,
+  stressPanel = null,
   complexity = null,
 }: {
   problem: ProblemView;
@@ -84,6 +87,8 @@ export function ResultsPane({
   practice?: PracticeOutcome | null;
   /** The Debug tab's content (ADR 0022); no tab when null. */
   debugPanel?: ReactNode;
+  /** The stress lab (expansion M8); no tab when null. */
+  stressPanel?: ReactNode;
   /** The complexity profiler under an Accepted result (ADR 0024). */
   complexity?: ReactNode;
 }) {
@@ -116,7 +121,7 @@ export function ResultsPane({
       data-tour="results"
     >
       <div className="flex items-center gap-3 px-2 pt-2">
-        <TabsList className="h-8">
+        <TabsList className="h-8" aria-label={t("results.tabs.label")}>
           <TabsTrigger value="testcases" className="px-2 text-xs">
             {t("results.tabs.testcases")}
           </TabsTrigger>
@@ -126,6 +131,11 @@ export function ResultsPane({
           {debugPanel && (
             <TabsTrigger value="debug" className="px-2 text-xs">
               {t("debug.tab")}
+            </TabsTrigger>
+          )}
+          {stressPanel && (
+            <TabsTrigger value="stress" className="px-2 text-xs">
+              {t("stress.tab")}
             </TabsTrigger>
           )}
         </TabsList>
@@ -258,6 +268,9 @@ export function ResultsPane({
                 <Plus aria-hidden />
                 {t("results.custom.add")}
               </Button>
+              {!program && customs.length > 0 && (
+                <CheckCustoms problemId={problem.id} signature={signature} customs={customs} disabled={busy} />
+              )}
             </div>
           )}
         </TabsContent>
@@ -290,6 +303,7 @@ export function ResultsPane({
           )}
         </TabsContent>
         {debugPanel && <TabsContent value="debug">{debugPanel}</TabsContent>}
+        {stressPanel && <TabsContent value="stress">{stressPanel}</TabsContent>}
       </div>
     </Tabs>
   );
@@ -403,6 +417,12 @@ function CustomTestCard({
                   {fieldErrorText(t, err)}
                 </p>
               )}
+              <ParamBuilder
+                name={p.name}
+                type={p.type}
+                text={draft.values[p.name] ?? ""}
+                onText={(text) => onChange({ ...draft.values, [p.name]: text })}
+              />
             </div>
           </div>
         );

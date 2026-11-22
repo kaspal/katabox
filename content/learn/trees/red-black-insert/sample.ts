@@ -52,7 +52,11 @@ function insert(h: RbNode | null, value: number): RbNode {
   return h;
 }
 
-function preorder(node: RbNode | null, values: number[], colors: number[]): void {
+function preorder(
+  node: RbNode | null,
+  values: number[],
+  colors: number[],
+): void {
   if (node !== null) {
     values.push(node.value);
     colors.push(node.color === RED ? 1 : 0);

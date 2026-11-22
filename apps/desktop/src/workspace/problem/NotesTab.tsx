@@ -7,6 +7,7 @@ import { ErrorNotice } from "@/components/ErrorNotice";
 import { api } from "@/lib/api";
 import { CodeEditor } from "@/workspace/editor/CodeEditor";
 import { Markdown } from "@/workspace/problem/Markdown";
+import { SavedReflection } from "@/practice/journal";
 
 export const NOTE_SAVE_MS = 500;
 
@@ -49,6 +50,7 @@ export function NotesTab({ problemId }: { problemId: string }) {
   if (q.error) return <ErrorNotice error={q.error} />;
   return (
     <div className="flex h-full min-h-64 flex-col gap-2">
+      <SavedReflection problemId={problemId} />
       <div className="flex items-center justify-between">
         <ToggleGroup
           type="single"

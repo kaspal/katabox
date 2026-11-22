@@ -24,6 +24,17 @@ import type {
   ImportPreview,
   InterviewResult,
   InterviewView,
+  KataAttemptRow,
+  KataStart,
+  KataView,
+  PlanSetup,
+  JournalOverview,
+  SnippetInput,
+  SnippetRow,
+  MistakeView,
+  ReflectionRow,
+  PlanView,
+  RatingsView,
   PracticeOutcome,
   Snapshot,
   SubmissionSummary,
@@ -31,6 +42,28 @@ import type {
   Verdict,
 } from "@/bindings";
 import type { Api, CustomInput } from "@/lib/api";
+import type {
+  ReadingAnswer,
+  ReadingAnswerRow,
+  ReadingLink,
+  ReadingResult,
+  ReadingSetSummary,
+  ReadingSetView,
+  StressEvent,
+  StressResult,
+  BackupStatus,
+  PackPreview,
+  AssignmentView,
+  ClassAssignment,
+  ClassImport,
+  ResultsFile,
+  DraftIssue,
+  ProblemDraft,
+  PackHead,
+  PackRow,
+  FocusCurrent,
+  FocusSessionRow,
+} from "@/bindings";
 import type {
   DebugAction,
   DebugInspect,
@@ -59,6 +92,8 @@ export const PROBLEMS: Row[] = [
     mode: "function",
     tags: ["array", "hash-map"],
     status: "solved",
+    fix: false,
+    pack: null,
   },
   {
     id: "valid-brackets",
@@ -69,6 +104,8 @@ export const PROBLEMS: Row[] = [
     mode: "function",
     tags: ["stack", "string"],
     status: null,
+    fix: false,
+    pack: null,
   },
   {
     id: "longest-window",
@@ -79,6 +116,8 @@ export const PROBLEMS: Row[] = [
     mode: "function",
     tags: ["string"],
     status: "attempted",
+    fix: false,
+    pack: null,
   },
   {
     id: "merge-meetings",
@@ -89,6 +128,8 @@ export const PROBLEMS: Row[] = [
     mode: "function",
     tags: ["array", "sorting"],
     status: null,
+    fix: false,
+    pack: null,
   },
 ];
 
@@ -102,6 +143,8 @@ export const PROGRAM_ROW: Row = {
   mode: "program",
   tags: ["input-parsing"],
   status: null,
+  fix: false,
+  pack: null,
 };
 
 /** An SQL problem (ADR 0031), listed only with `createFakeApi({ withSql: true })`. */
@@ -114,6 +157,8 @@ export const SQL_ROW: Row = {
   mode: "sql",
   tags: ["join", "dates"],
   status: null,
+  fix: false,
+  pack: null,
 };
 
 export const SQL_TABLES = [
@@ -282,6 +327,8 @@ export function createFakeApi(
     lists?: { name: string; items: string[] }[];
     /** Practice modes (ADR 0020). */
     interview?: InterviewView | null;
+    /** A running kata (expansion M1). */
+    kata?: KataView | null;
     interviews?: InterviewResult[];
     /** Accepted solutions: `problem:language` → code. */
     accepted?: Record<string, string>;
@@ -349,7 +396,42 @@ export function createFakeApi(
     /** Overrides what the next Submit reports for practice. */
     nextPractice: null as PracticeOutcome | null,
     /** The options of each Submit. */
-    submitOptions: [] as { today: string; review: boolean; lang: UiLang }[],
+    submitOptions: [] as { today: string; review: boolean; lang: UiLang; kata: number | null }[],
+    kata: (opts.kata ?? null) as KataView | null,
+    plan: null as PlanView | null,
+    planSetups: [] as PlanSetup[],
+    journal: { failures: 0, tags: [] } as JournalOverview,
+    snippets: [] as SnippetRow[],
+    readingAnswers: [] as ReadingAnswerRow[],
+    stressBrutes: new Map<string, string>(),
+    focus: null as FocusCurrent | null,
+    focusSessions: [] as FocusSessionRow[],
+    packs: [] as PackRow[],
+    packPreview: null as PackPreview | null,
+    assignments: [] as AssignmentView[],
+    classResults: [] as ClassAssignment[],
+    classImport: null as ClassImport | null,
+    drafts: new Map<string, ProblemDraft>(),
+    draftIssues: [] as DraftIssue[],
+    exported: [] as { ids: string[]; head: PackHead }[],
+    backup: {
+      folder: null,
+      every_days: 7,
+      keep: 5,
+      on_exit: false,
+      last: null,
+      next_due: null,
+      error: null,
+    } as BackupStatus,
+    stressResult: null as StressResult | null,
+    /** Fields merged into getProblem's view (follow-ups, expansion M5). */
+    problemExtras: {} as Record<string, Partial<ProblemView>>,
+    mistakes: new Map<number, MistakeView>(),
+    reflections: new Map<string, ReflectionRow>(),
+    ratings: {
+      overall: { rating: 1200, events: 0, history: [] },
+      patterns: [],
+    } as RatingsView,
     interview: (opts.interview ?? null) as InterviewView | null,
     interviews: [...(opts.interviews ?? [])] as InterviewResult[],
     accepted: { ...(opts.accepted ?? {}) } as Record<string, string>,
@@ -591,6 +673,12 @@ export function createFakeApi(
         has_validator: id === "two-sum",
         profile: id === "two-sum",
         sql_tables: sql ? SQL_TABLES : null,
+        parent: null,
+        followups: [],
+        fix: false,
+        fix_languages: [],
+        pack: null,
+        ...(state.problemExtras[id] ?? {}),
       };
     }),
     continueItem: vi.fn(async () => opts.continueItem ?? null),
@@ -734,6 +822,430 @@ export function createFakeApi(
       return r;
     }),
     interviews: vi.fn(async () => state.interviews),
+    kataOptions: vi.fn(async (_today: string, lang: UiLang) => {
+      const solved = PROBLEMS.filter((p) => p.status === "solved").map((p) => summary(p.id, lang)!);
+      return {
+        daily: solved.slice(0, 3),
+        daily_session: null,
+        patterns: [...new Set(solved.map((p) => p.pattern))].map((id) => ({
+          id,
+          name: null,
+          solved: solved.filter((p) => p.pattern === id).length,
+        })),
+        lists: [],
+        running: state.kata,
+      };
+    }),
+    startKata: vi.fn(async (start: KataStart, lang: UiLang) => {
+      const solved = PROBLEMS.filter((p) => p.status === "solved").map((p) => summary(p.id, lang)!);
+      const now = Date.now();
+      state.kata = {
+        started_at: now,
+        day: start.today,
+        kind: start.kind,
+        source: start.source,
+        duration_s: 900,
+        ended_at: null,
+        expires_at: now + 7_200_000,
+        problems: solved.slice(0, 3).map((p) => ({
+          id: p.id,
+          title: p.title,
+          difficulty: p.difficulty,
+          pattern: p.pattern,
+          attempt: null,
+          best_time_ms: null,
+        })),
+        solved: 0,
+      };
+      return state.kata;
+    }),
+    kataState: vi.fn(async () => state.kata),
+    kataOpen: vi.fn(async (p: string) => ({
+      session_started_at: state.kata?.started_at ?? 0,
+      problem_id: p,
+      started_at: Date.now(),
+      submits: 0,
+      verdict: null,
+      solved_at: null,
+      time_ms: null,
+      language: null,
+      code: null,
+    })),
+    endKata: vi.fn(async () => {
+      const k = state.kata;
+      if (!k) return null;
+      const ended = {
+        ...k,
+        ended_at: Date.now(),
+        solved: k.problems.filter((p) => p.attempt?.solved_at != null).length,
+      };
+      state.kata = null;
+      return ended;
+    }),
+    kataOverview: vi.fn(async () => ({ bests: [], rusty: [], streak: 0, sessions: [] })),
+    ratings: vi.fn(async () => state.ratings),
+    readingSets: vi.fn(async (lang: "en" | "es"): Promise<ReadingSetSummary[]> => [
+      {
+        id: "print-basics",
+        kind: "print",
+        title: lang === "es" ? "Lo básico de imprimir" : "Print basics",
+        blurb: lang === "es" ? "Bucles y rangos" : "Loops and ranges",
+        items: 2,
+      },
+      { id: "complexity-loops", kind: "complexity", title: "Complexity: loops", blurb: "How fast?", items: 1 },
+    ]),
+    readingSet: vi.fn(async (id: string): Promise<ReadingSetView> => {
+      if (id === "complexity-loops") {
+        return {
+          id,
+          kind: "complexity",
+          title: "Complexity: loops",
+          blurb: "How fast?",
+          items: [
+            {
+              id: "complexity-loops/1",
+              n: 1,
+              prompt: "How do the time and the extra space grow with n?",
+              code_python: "def f(n):\n    for i in range(n):\n        pass\n",
+              code_typescript: "function f(n: number) {\n  for (let i = 0; i < n; i++) {}\n}\n",
+              choices: [],
+            },
+          ],
+        };
+      }
+      return {
+        id: "print-basics",
+        kind: "print",
+        title: "Print basics",
+        blurb: "Loops and ranges",
+        items: [
+          {
+            id: "print-basics/1",
+            n: 1,
+            prompt: "What does this print?",
+            code_python: "total = 0\nfor i in range(1, 5):\n    total += i\nprint(total)\n",
+            code_typescript: "let total = 0;\nfor (let i = 1; i < 5; i++) total += i;\nconsole.log(total);\n",
+            choices: ["10", "15", "4"],
+          },
+          {
+            id: "print-basics/2",
+            n: 2,
+            prompt: "What does this print? Type the output.",
+            code_python: "print(7 // 2)\n",
+            code_typescript: "console.log(Math.floor(7 / 2));\n",
+            choices: [],
+          },
+        ],
+      };
+    }),
+    readingAnswers: vi.fn(async () => [...state.readingAnswers]),
+    readingLinks: vi.fn(async (): Promise<ReadingLink[]> => []),
+    answerReading: vi.fn(async (item: string, answer: ReadingAnswer): Promise<ReadingResult> => {
+      const complexity = item.startsWith("complexity");
+      const expected = item === "print-basics/1" ? "10" : "3";
+      const correct = complexity ? answer.time === "O(n)" && answer.space === "O(1)" : answer.output?.trim() === expected;
+      const prev = state.readingAnswers.find((a) => a.item_id === item);
+      const row = {
+        item_id: item,
+        attempts: (prev?.attempts ?? 0) + 1,
+        correct_at: prev?.correct_at ?? (correct ? 1700000000000 : null),
+        updated_at: 1700000000000,
+      };
+      state.readingAnswers = [...state.readingAnswers.filter((a) => a.item_id !== item), row];
+      return {
+        correct,
+        output: complexity ? null : expected,
+        time: complexity ? "O(n)" : null,
+        space: complexity ? "O(1)" : null,
+        dominant_line: complexity ? 2 : null,
+        explanation: complexity ? "One pass over n." : "The range stops before 5.",
+        attempts: row.attempts,
+      };
+    }),
+    stressTest: vi.fn(
+      async (_p: string, _l: Language, _code: string, _brute: string, onEvent: (e: StressEvent) => void): Promise<StressResult> => {
+        onEvent({ rounds: 1, max_rounds: 40, tested: 16 });
+        return (
+          state.stressResult ?? {
+            stop: "found",
+            source: "generator",
+            rounds: 2,
+            tested: 17,
+            input: { nums: [-1, 4], target: 3 },
+            expected: [0, 1],
+            actual: [0, 0],
+            verdict: "wrong_answer",
+            message: null,
+          }
+        );
+      },
+    ),
+    cancelStress: vi.fn(async () => null),
+    importPackPreview: vi.fn(async () => state.packPreview),
+    importPackApply: vi.fn(async (_token: number): Promise<PackRow> => {
+      const p = state.packPreview!;
+      const row: PackRow = {
+        id: p.id,
+        name: p.name,
+        author: p.author,
+        version: p.version,
+        licence: p.licence,
+        sha256: p.sha256,
+        problems: p.problems,
+        installed_at: 1795334709000,
+        removed_at: null,
+      };
+      state.packs = [...state.packs.filter((x) => x.id !== row.id), row];
+      return row;
+    }),
+    importPackCancel: vi.fn(async () => null),
+    packs: vi.fn(async () => [...state.packs]),
+    uninstallPack: vi.fn(async (id: string) => {
+      state.packs = state.packs.filter((p) => p.id !== id);
+      return null;
+    }),
+    restartApp: vi.fn(async () => undefined),
+    assignments: vi.fn(async () => state.assignments.map((a) => ({ ...a }))),
+    assignment: vi.fn(async (id: string) => {
+      const a = state.assignments.find((x) => x.id === id);
+      if (!a) throw { code: "not_found", message: id };
+      return { ...a };
+    }),
+    startAssignment: vi.fn(async (id: string) => {
+      state.assignments = state.assignments.map((a) =>
+        a.id === id && a.state === "not_started"
+          ? {
+              ...a,
+              state: "running" as const,
+              started_at: Date.now(),
+              ends_at: a.meta.time_limit_min === null ? null : Date.now() + a.meta.time_limit_min * 60_000,
+            }
+          : a,
+      );
+      return state.assignments.find((a) => a.id === id)!;
+    }),
+    finishAssignment: vi.fn(async (id: string) => {
+      state.assignments = state.assignments.map((a) =>
+        a.id === id && a.state === "running"
+          ? { ...a, state: "finished" as const, submitted_at: Date.now(), ends_at: null }
+          : a,
+      );
+      return state.assignments.find((a) => a.id === id)!;
+    }),
+    assignmentResults: vi.fn(async (id: string, student: string, includeCode: boolean): Promise<ResultsFile> => {
+      const a = state.assignments.find((x) => x.id === id)!;
+      if (!student.trim()) throw { code: "invalid_input", message: "your name" };
+      const entries = a.problems.map((p) => ({
+        problem_id: p.id,
+        language: p.best_verdict ? ("python" as const) : null,
+        best_verdict: p.best_verdict,
+        submits: p.submits,
+        first_accepted_s: p.best_verdict === "accepted" ? 125 : null,
+        code: includeCode && p.best_verdict ? "def f(): pass" : null,
+      }));
+      return {
+        format: "katabox-results/v1",
+        app_version: "1.0.0-beta.1",
+        student: student.trim(),
+        assignment: { id: a.id, title: a.meta.title, pack_sha256: a.pack_sha256 },
+        started_at: a.started_at ?? 0,
+        ended_at: a.submitted_at ?? Date.now(),
+        include_code: includeCode,
+        entries,
+        hashes: entries.map(() => "0".repeat(64)),
+        final_hash: "0".repeat(64),
+      };
+    }),
+    saveAssignmentResults: vi.fn(async (id: string, student: string, includeCode: boolean) =>
+      api.assignmentResults(id, student, includeCode),
+    ),
+    importClassResults: vi.fn(async () => state.classImport),
+    classResults: vi.fn(async () => state.classResults),
+    saveClassCsv: vi.fn(async () => true),
+    authoringDrafts: vi.fn(async () =>
+      [...state.drafts.values()].map((d) => ({ id: d.id, title: d.title, updated_at: 1795334709000 })),
+    ),
+    authoringLoad: vi.fn(async (id: string) => {
+      const d = state.drafts.get(id);
+      if (!d) throw { code: "not_found", message: id };
+      return structuredClone(d);
+    }),
+    authoringNew: vi.fn(async (id: string): Promise<ProblemDraft> => {
+      const d: ProblemDraft = {
+        id,
+        title: "",
+        title_es: "",
+        difficulty: "easy",
+        pattern: "arrays-hashing",
+        tags: [],
+        rank: 5,
+        function: "solve",
+        params: [{ name: "nums", ty: "int[]" }],
+        returns: "int",
+        checker: "exact",
+        time_limit_ms: 1000,
+        memory_mb: 256,
+        statement: "",
+        statement_es: "",
+        hints: ["", "", ""],
+        hints_es: ["", "", ""],
+        editorial: "",
+        editorial_es: "",
+        public_tests: [],
+        hidden_tests: [],
+        reference_language: "python",
+        reference: "",
+      };
+      state.drafts.set(id, d);
+      return structuredClone(d);
+    }),
+    authoringSave: vi.fn(async (d: ProblemDraft) => {
+      state.drafts.set(d.id, structuredClone(d));
+      return [...state.draftIssues];
+    }),
+    authoringIssues: vi.fn(async () => [...state.draftIssues]),
+    authoringDelete: vi.fn(async (id: string) => {
+      state.drafts.delete(id);
+      return null;
+    }),
+    authoringCheck: vi.fn(async (): Promise<Report> => makeReport("accepted")),
+    authoringPatterns: vi.fn(async () => ["arrays-hashing", "two-pointers", "graphs"]),
+    authoringStarter: vi.fn(async (d: ProblemDraft) => `def ${d.function}(nums: list[int]) -> int:
+    pass
+`),
+    authoringExport: vi.fn(async (ids: string[], head: PackHead) => {
+      state.exported.push({ ids, head });
+      return "cd".repeat(32);
+    }),
+    focusCurrent: vi.fn(async () => state.focus),
+    focusStart: vi.fn(async (work: number, brk: number) => {
+      state.focus = { started_at: Date.now(), work_min: work, break_min: brk };
+      return state.focus;
+    }),
+    focusStop: vi.fn(async () => {
+      if (!state.focus) return null;
+      const row: FocusSessionRow = {
+        started_at: state.focus.started_at,
+        ended_at: state.focus.started_at + 30 * 60_000,
+        work_min: state.focus.work_min,
+        break_min: state.focus.break_min,
+        cycles: 1,
+        summary: { touched: 2, solved: 1, katas: 0, plan_items: 1 },
+      };
+      state.focusSessions = [row, ...state.focusSessions];
+      state.focus = null;
+      return row;
+    }),
+    focusSessions: vi.fn(async () => [...state.focusSessions]),
+    backupStatus: vi.fn(async () => ({ ...state.backup })),
+    setBackupOptions: vi.fn(async (every: number, keep: number, onExit: boolean) => {
+      state.backup = { ...state.backup, every_days: every, keep, on_exit: onExit };
+      return { ...state.backup };
+    }),
+    backupNow: vi.fn(async () => {
+      state.backup = { ...state.backup, last: 1795334709000, next_due: 1795334709000 + 7 * 86_400_000, error: null };
+      return { ...state.backup };
+    }),
+    chooseBackupFolder: vi.fn(async () => {
+      state.backup = { ...state.backup, folder: "D:/Backups/KataBox" };
+      return { ...state.backup };
+    }),
+    clearBackupFolder: vi.fn(async () => {
+      state.backup = { ...state.backup, folder: null };
+      return { ...state.backup };
+    }),
+    checkCustom: vi.fn(async (_p: string, inputs: CustomInput[]) => ({
+      problems: inputs.map((x) => (Array.isArray(x.nums) && x.nums.length < 2 ? "2 ≤ nums.length ≤ 10⁵" : null)),
+      constraints_checked: true,
+    })),
+    stressBrute: vi.fn(async (p: string, l: Language) => state.stressBrutes.get(`${p}:${l}`) ?? null),
+    saveStressBrute: vi.fn(async (p: string, l: Language, code: string) => {
+      state.stressBrutes.set(`${p}:${l}`, code);
+      return null;
+    }),
+    snippets: vi.fn(async () => [...state.snippets]),
+    saveSnippet: vi.fn(async (s: SnippetInput) => {
+      const uid = s.uid ?? String(state.snippets.length + 1).padStart(16, "0");
+      const row: SnippetRow = {
+        uid,
+        language: s.language,
+        name: s.name.trim(),
+        tags: s.tags,
+        body: s.body,
+        created_at: 1,
+        updated_at: 2,
+      };
+      state.snippets = [...state.snippets.filter((x) => x.uid !== uid), row];
+      return row;
+    }),
+    deleteSnippet: vi.fn(async (uid: string) => {
+      state.snippets = state.snippets.filter((x) => x.uid !== uid);
+      return null;
+    }),
+    searchAll: vi.fn(async (q: string, lang: UiLang) => ({
+      problems: PROBLEMS.filter((p) => p.title[lang].toLowerCase().includes(q.toLowerCase())).map((p) => summary(p.id, lang)!),
+      topics: [],
+      snippets: state.snippets.filter((s) => s.name.toLowerCase().includes(q.toLowerCase())),
+    })),
+    journalOverview: vi.fn(async () => state.journal),
+    submissionMistake: vi.fn(async (id: number) => {
+      const s = submissions.find((x) => x.id === id);
+      if (!s || s.verdict === "accepted") return null;
+      return state.mistakes.get(id) ?? { auto_tags: ["wa"], tags: ["wa"], note: "" };
+    }),
+    setSubmissionMistake: vi.fn(async (id: number, tags: string[], note: string) => {
+      state.mistakes.set(id, { auto_tags: ["wa"], tags, note });
+      return null;
+    }),
+    tagShrunk: vi.fn(async () => null),
+    reflection: vi.fn(async (p: string) => state.reflections.get(p) ?? null),
+    setReflection: vi.fn(async (p: string, why: string, time: string | null, space: string | null) => {
+      state.reflections.set(p, { problem_id: p, why, time_class: time, space_class: space, updated_at: Date.now() });
+      return null;
+    }),
+    planView: vi.fn(async () => (state.plan ? structuredClone(state.plan) : null)),
+    createPlan: vi.fn(async (setup: PlanSetup, lang: UiLang) => {
+      const ids = PROBLEMS.filter((p) => p.status !== "solved").map((p) => p.id);
+      state.plan = {
+        created_at: 1_767_225_600_000,
+        patterns: setup.patterns.length ? setup.patterns : ["arrays-hashing"],
+        weeks: setup.weeks,
+        minutes_per_day: setup.minutes_per_day,
+        start_day: setup.today,
+        end_day: setup.today,
+        items: ids.slice(0, 2).map((id, i) => {
+          const s = summary(id, lang)!;
+          return {
+            position: i,
+            day: setup.today,
+            kind: "problem" as const,
+            reference: id,
+            title: s.title,
+            difficulty: s.difficulty,
+            subject: null,
+            minutes: 20,
+            status: "pending",
+          };
+        }),
+        done: 0,
+        total: 2,
+        left_over: 3,
+      };
+      state.planSetups.push(setup);
+      return state.plan;
+    }),
+    setPlanItem: vi.fn(async (_plan: number, position: number, status: string) => {
+      const it = state.plan?.items.find((i) => i.position === position);
+      if (it) it.status = status;
+      if (state.plan) state.plan.done = state.plan.items.filter((i) => i.status === "done").length;
+      return null;
+    }),
+    reschedulePlanItem: vi.fn(async () => null),
+    archivePlan: vi.fn(async () => {
+      state.plan = null;
+      return null;
+    }),
+    exportPlanIcs: vi.fn(async () => "katabox-plan.ics"),
     acceptedSolution: vi.fn(async (p: string, language: Language) => {
       const code = state.accepted[`${p}:${language}`];
       if (state.interview?.problems.some((x) => x.id === p)) {
@@ -842,7 +1354,27 @@ export function createFakeApi(
       };
       state.nextPractice = null;
       if (practice.review?.outcome === "scheduled") state.reviews.delete(p);
-      return { submission_id: id, report, practice };
+      if (submitOpts.kata !== null) {
+        // A kata Submit stores no submission (expansion M1).
+        submissions.shift();
+        const kp = state.kata?.problems.find((x) => x.id === p);
+        const prev = kp?.attempt ?? null;
+        const attempt: KataAttemptRow = {
+          session_started_at: submitOpts.kata,
+          problem_id: p,
+          started_at: prev?.started_at ?? Date.now() - 95_000,
+          submits: (prev?.submits ?? 0) + 1,
+          verdict: report.verdict,
+          solved_at: prev?.solved_at ?? (accepted ? Date.now() : null),
+          time_ms: prev?.time_ms ?? (accepted ? 95_000 : null),
+          language: prev?.language ?? (accepted ? lang : null),
+          code: prev?.code ?? (accepted ? code : null),
+        };
+        if (kp) kp.attempt = attempt;
+        const kata = { attempt, new_best: accepted && !prev?.solved_at, previous_best_ms: null };
+        return { submission_id: 0, report, practice: { first_solve: false, review: null, daily_solved: false, streak: 0, next: null }, kata };
+      }
+      return { submission_id: id, report, practice, kata: null };
     }),
     listSubmissions: vi.fn(async (p: string) =>
       submissions.filter((s) => s.problem_id === p).map(({ code: _c, report: _r, ...s }) => s),

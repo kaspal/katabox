@@ -5,6 +5,7 @@ title = "Recursion and the call stack"
 title_es = "Recursión y pila de llamadas"
 tags = ["recursion", "divide-and-conquer"]
 problems = ["fast-power", "outfit-picker"]
+reading = ["print-recursion/1", "print-recursion/2", "print-recursion/3", "complexity-recursion/1"]
 presets = ["random", "few-unique"]
 default = [38, 27, 43, 3, 9, 82]
 

@@ -22,5 +22,7 @@ def rabin_karp(text, pattern):
             else:
                 collisions += 1  # @step collision
         if i + m < n:
-            window = ((window - code(text[i]) * high) * BASE + code(text[i + m])) % MOD  # @step roll
+            window = (  # @step roll
+                (window - code(text[i]) * high) * BASE + code(text[i + m])
+            ) % MOD
     return [len(hits), collisions] + hits

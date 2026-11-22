@@ -56,6 +56,7 @@ fn every_sample_matches_its_tracer_and_a_plain_sort() {
             })
             .unwrap_or_default(),
         subject: None,
+        sets: vec![],
     };
     let topics = filter
         .select(&all)

@@ -53,17 +53,21 @@ function TimeLimit({ problem, language }: { problem: ProblemView; language: Lang
 }
 
 /** Tabs hidden in review mode (ADR 0019) or during a mock interview (ADR 0020). */
-export type PaneLocks = { tabs: ProblemTab[]; reason: "review" | "interview" };
+export type PaneLocks = { tabs: ProblemTab[]; reason: "review" | "interview" | "kata" };
 
 function LockedNote({ reason }: { reason: PaneLocks["reason"] }) {
   const { t } = useTranslation();
   return (
     <p
       className="flex items-center gap-2 text-sm text-muted-foreground"
-      data-testid={reason === "review" ? "review-locked" : "interview-locked"}
+      data-testid={`${reason}-locked`}
     >
       <Lock aria-hidden className="size-4" />
-      {reason === "review" ? t("practice.review.locked") : t("practice.interview.locked")}
+      {reason === "review"
+        ? t("practice.review.locked")
+        : reason === "kata"
+          ? t("kata.locked")
+          : t("practice.interview.locked")}
     </p>
   );
 }
@@ -92,7 +96,11 @@ export function ProblemPane({
   return (
     <Tabs defaultValue="description" className="@container flex h-full min-h-0 flex-col gap-0">
       {/* Narrow panes show icons only (with a tooltip and an accessible name); never overflow. */}
-      <TabsList className="mx-2 mt-2 h-8 w-auto max-w-full justify-start" data-testid="problem-tabs">
+      <TabsList
+        aria-label={t("workspace.tabs.label")}
+        className="mx-2 mt-2 h-8 w-auto max-w-full justify-start"
+        data-testid="problem-tabs"
+      >
         {tabs.map((tab) => {
           const Icon = TAB_ICON[tab];
           const label = t(`workspace.tabs.${tab}`);
@@ -122,7 +130,7 @@ export function ProblemPane({
       </TabsList>
       <div className="min-h-0 flex-1 overflow-auto p-4">
         <TabsContent value="description" className="space-y-4">
-          <Markdown text={problem.statement} />
+          <Markdown text={problem.statement} trust={problem.pack ? "pack" : "app"} />
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-t pt-3 text-xs text-muted-foreground">
             <TimeLimit problem={problem} language={currentLanguage} />
             <dt>{t("workspace.limits.memory")}</dt>
@@ -142,13 +150,13 @@ export function ProblemPane({
           {locked("hints") ? note : <HintsTab problem={problem} />}
         </TabsContent>
         <TabsContent value="editorial">
-          {locked("editorial") ? note : <EditorialTab problemId={problem.id} />}
+          {locked("editorial") ? note : <EditorialTab problemId={problem.id} pack={problem.pack !== null} />}
         </TabsContent>
         <TabsContent value="submissions">
           {locked("submissions") ? note : <SubmissionsTab problemId={problem.id} />}
         </TabsContent>
         <TabsContent value="notes" className="h-full">
-          <NotesTab problemId={problem.id} />
+          {locked("notes") ? note : <NotesTab problemId={problem.id} />}
         </TabsContent>
         <TabsContent value="history">
           {locked("history") ? (

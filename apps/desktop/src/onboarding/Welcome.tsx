@@ -20,7 +20,7 @@ type Step = "languages" | "level";
 export function Welcome({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { lang, setLang } = usePrefs();
+  const { lang, uiLang, setUiLang } = usePrefs();
   const { setDone } = useOnboardingDone();
   const [, setPlacement] = usePlacement();
   const [, setTour] = useTourPending();
@@ -71,8 +71,8 @@ export function Welcome({ onClose }: { onClose: () => void }) {
         variant="outline"
         size="sm"
         aria-label={t("language.label")}
-        value={lang}
-        onValueChange={(v) => v && setLang(v as UiLangCode)}
+        value={uiLang}
+        onValueChange={(v) => v && setUiLang(v as UiLangCode)}
       >
         {UI_LANGS.map((l) => (
           <ToggleGroupItem key={l} value={l} lang={l} className="px-3">

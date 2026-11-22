@@ -1,0 +1,18 @@
+id = "same-letters--f1"
+parent = "same-letters"
+title = "Same Letters: Swapping Tiles"
+title_es = "Mismas letras: cambiando fichas"
+difficulty = "medium"
+tags = ["string", "hash-map", "counting"]
+pattern = "strings"
+rank = 7
+
+[signature]
+name = "twinsAfterChanges"
+params = [{ name = "a", type = "string" }, { name = "b", type = "string" }, { name = "positions", type = "int[]" }, { name = "letters", type = "string" }]
+returns = "bool[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

@@ -4,7 +4,9 @@ function eulerPath(n: number, edges: number[][]): number[] {
     adj[u].push([v, k]);
     adj[v].push([u, k]);
   });
-  const odd = adj.map((list, u) => (list.length % 2 === 1 ? u : -1)).filter((u) => u !== -1);
+  const odd = adj
+    .map((list, u) => (list.length % 2 === 1 ? u : -1))
+    .filter((u) => u !== -1);
   if (odd.length !== 0 && odd.length !== 2) return [-1];
   const start = odd.length > 0 ? odd[0] : edges[0][0];
   const used = new Array<boolean>(edges.length).fill(false);

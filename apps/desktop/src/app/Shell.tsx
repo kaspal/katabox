@@ -10,12 +10,14 @@ import { CommandPalette } from "@/app/CommandPalette";
 import { ShortcutsDialog } from "@/app/ShortcutsDialog";
 import { WhatsNewDialog, useWhatsNew } from "@/app/WhatsNew";
 import { onOpenShortcuts, openShortcuts } from "@/app/shortcuts";
+import { SearchEverything, onOpenSearchEverything } from "@/app/SearchEverything";
 import { DEV_NAV, NAV } from "@/app/nav";
 import { useFocusMode } from "@/lib/focus";
 import { useAppInfo, useLanguages } from "@/lib/queries";
 import { Welcome } from "@/onboarding/Welcome";
 import { useOnboardingDone } from "@/onboarding/state";
 import { InterviewTimer } from "@/practice/interview";
+import { FocusTimer } from "@/practice/focus";
 
 /**
  * The welcome flow (features-content M2; it starts with ADR 0015's language install):
@@ -46,6 +48,7 @@ function useFirstRun() {
 export function Shell() {
   const { t } = useTranslation();
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const info = useAppInfo();
   const { focus } = useFocusMode();
@@ -57,7 +60,10 @@ export function Shell() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        setSearchOpen((open) => !open);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setPaletteOpen((open) => !open);
       } else if (e.key === "F1" && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
@@ -67,9 +73,11 @@ export function Shell() {
     };
     window.addEventListener("keydown", onKey);
     const off = onOpenShortcuts(() => setShortcutsOpen(true));
+    const offSearch = onOpenSearchEverything(() => setSearchOpen(true));
     return () => {
       window.removeEventListener("keydown", onKey);
       off();
+      offSearch();
     };
   }, []);
 
@@ -122,6 +130,7 @@ export function Shell() {
         <span className="font-semibold">{t("app.name")}</span>
         <div className="flex items-center gap-3">
           <InterviewTimer />
+          <FocusTimer />
           {info.data?.dev_data && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -174,6 +183,7 @@ export function Shell() {
       </main>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <SearchEverything open={searchOpen} onOpenChange={setSearchOpen} />
       <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       {info.data && (
         <WhatsNewDialog open={whatsNew.show} version={info.data.app_version} onClose={whatsNew.hide} />

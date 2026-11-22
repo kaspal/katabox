@@ -14,7 +14,9 @@
     "progress": "Progreso",
     "settings": "Ajustes",
     "smoke": "Pantalla de prueba (desarrollo)",
-    "interview": "Entrevista"
+    "interview": "Entrevista",
+    "kata": "Kata",
+    "classroom": "Aula"
   },
   "palette": {
     "open": "Paleta de comandos",
@@ -26,7 +28,8 @@
     "language": "Idioma",
     "topics": "Temas de Aprender",
     "topic": "Aprender: {{title}}",
-    "help": "Ayuda"
+    "help": "Ayuda",
+    "insertSnippet": "Insertar fragmento: {{name}}"
   },
   "theme": {
     "label": "Tema",
@@ -37,7 +40,8 @@
   "language": {
     "label": "Idioma",
     "en": "English",
-    "es": "Español"
+    "es": "Español",
+    "pt-BR": "Português (Brasil)"
   },
   "difficulty": {
     "label": "Dificultad",
@@ -190,7 +194,13 @@
       "two-pointers": "Dos punteros",
       "undo-redo": "Deshacer y rehacer",
       "union-find": "Unión-búsqueda",
-      "window-functions": "Funciones de ventana"
+      "window-functions": "Funciones de ventana",
+      "deque": "Cola doble",
+      "range-queries": "Consultas de rango",
+      "stream": "Flujo de datos",
+      "debugging": "Depuración",
+      "recursion": "Recursión",
+      "memoization": "Memoización"
     }
   },
   "common": {
@@ -253,7 +263,8 @@
       "submissions": "Envíos",
       "notes": "Notas",
       "history": "Historial",
-      "schema": "Tablas"
+      "schema": "Tablas",
+      "label": "Secciones del problema"
     },
     "limits": {
       "time": "Tiempo límite",
@@ -278,7 +289,11 @@
       "none": "Aún no hay envíos.",
       "back": "Todos los envíos",
       "code": "Código ({{language}})",
-      "codeLabel": "Código enviado"
+      "codeLabel": "Código enviado",
+      "compare": "Comparar",
+      "pickTwo": "Elige dos envíos para compararlos.",
+      "pick": "Comparar el envío {{n}}",
+      "diffLabel": "Izquierda: {{a}}. Derecha: {{b}}."
     },
     "notes": {
       "mode": "Vista de notas",
@@ -354,7 +369,10 @@
       "overview": "Resumen",
       "patterns": "Por patrón",
       "topics": "Por tema",
-      "history": "Historial"
+      "history": "Historial",
+      "katas": "Katas",
+      "plan": "Plan",
+      "mistakes": "Errores"
     },
     "learn": {
       "title": "Temas de Aprender vistos",
@@ -452,7 +470,8 @@
       "languages": "Lenguajes y entornos de ejecución",
       "learn": "Aprender",
       "data": "Datos",
-      "about": "Acerca de"
+      "about": "Acerca de",
+      "packs": "Paquetes"
     },
     "window": {
       "label": "Ventana",
@@ -465,7 +484,9 @@
       "placeholder": "Buscar en los ajustes…",
       "none": "Ningún ajuste coincide.",
       "results": "Ajustes encontrados"
-    }
+    },
+    "contentLang": "Problemas y lecciones en",
+    "contentLangHint": "Los problemas y Aprender están escritos en inglés y español."
   },
   "languages": {
     "python": "Python",
@@ -511,7 +532,13 @@
     "debug_unsupported": "Este lenguaje todavía no se puede depurar. La depuración está disponible para Python.",
     "debug_diverged": "Este programa se comporta distinto en cada ejecución (hora, azar o identidad de objetos), así que no se puede reproducir paso a paso.",
     "profile_unavailable": "Este problema no tiene perfil de complejidad.",
-    "shrink_unavailable": "Aquí no se puede buscar una entrada más pequeña que falle (es un problema de programa o no hay solución de referencia en este lenguaje)."
+    "shrink_unavailable": "Aquí no se puede buscar una entrada más pequeña que falle (es un problema de programa o no hay solución de referencia en este lenguaje).",
+    "locked_in_kata": "Esto está bloqueado durante la kata. Se abre de nuevo cuando la kata termina.",
+    "kata_active": "Hay una kata en curso. Termínala primero.",
+    "stress_unavailable": "La prueba de estrés no está disponible aquí (un problema SQL, o un problema de programa sin su generador o sin el entorno de Python).",
+    "pack_refused": "Este paquete no se puede importar.",
+    "locked_in_assignment": "Esto está bloqueado mientras la tarea está en curso. Se abre de nuevo cuando la tarea termina.",
+    "assignment_active": "Hay otra tarea en curso. Termínala primero."
   },
   "judge": {
     "verdict": {
@@ -557,7 +584,8 @@
   "results": {
     "tabs": {
       "testcases": "Casos de prueba",
-      "result": "Resultado"
+      "result": "Resultado",
+      "label": "Secciones de resultados"
     },
     "phase": {
       "starting": "Iniciando…",
@@ -850,7 +878,18 @@
         "daily_picks": "Problemas del día",
         "lists": "Listas",
         "interviews": "Entrevistas simuladas",
-        "settings": "Ajustes"
+        "settings": "Ajustes",
+        "kata_sessions": "Sesiones de kata",
+        "kata_attempts": "Intentos de kata",
+        "study_plans": "Planes de estudio",
+        "plan_items": "Tareas de planes de estudio",
+        "mistakes": "Entradas del diario de errores",
+        "reflections": "Reflexiones",
+        "snippets": "Fragmentos",
+        "reading_answers": "Respuestas de ejercicios de lectura",
+        "stress_brutes": "Fuerzas brutas de pruebas de estrés",
+        "focus_sessions": "Sesiones de concentración",
+        "packs": "Paquetes"
       }
     },
     "crossLang": {
@@ -968,7 +1007,14 @@
       "changedCount_other": "{{count}} cambios"
     },
     "programUnsupported": "Los problemas de programa se pueden depurar en Python y JavaScript/TypeScript.",
-    "sqlUnsupported": "El depurador no está disponible en los problemas SQL: una consulta no tiene pasos que reproducir."
+    "sqlUnsupported": "El depurador no está disponible en los problemas SQL: una consulta no tiene pasos que reproducir.",
+    "views": "Vistas del depurador",
+    "autoplay": {
+      "play": "Reproducir: avanzar automáticamente",
+      "pause": "Pausar el avance automático",
+      "speed": "Velocidad de reproducción",
+      "times": "{{speed}}×"
+    }
   },
   "complexity": {
     "button": "Complejidad",
@@ -2922,7 +2968,8 @@
     },
     "general": {
       "palette": "Paleta de comandos",
-      "shortcuts": "Esta lista de combinaciones"
+      "shortcuts": "Esta lista de combinaciones",
+      "searchAll": "Buscar en todo"
     },
     "library": {
       "search": "Buscar problemas",
@@ -2971,5 +3018,550 @@
     },
     "more": "La lista completa está en CHANGELOG.md (Ajustes → Acerca de).",
     "close": "Entendido"
+  },
+  "exercise": {
+    "kind": {
+      "kata": "Kata",
+      "followup": "Continuación",
+      "fix": "Arregla el error",
+      "print": "¿Qué imprime?",
+      "complexity": "Complejidad"
+    },
+    "position": "{{index}} de {{total}}",
+    "correct": "Correcto",
+    "incorrect": "No del todo",
+    "check": "Comprobar"
+  },
+  "kata": {
+    "title": "Kata",
+    "intro": "Vuelve a resolver problemas que ya resolviste, de memoria y contra el reloj. El editor empieza vacío, y las pistas, las notas y tus soluciones anteriores quedan bloqueadas hasta que la kata termina. Las katas nunca cambian tus envíos ni tus repasos.",
+    "running": "Kata en curso",
+    "end": "Terminar la kata",
+    "summary": "Kata terminada: {{solved}} de {{total}} resueltos",
+    "daily": {
+      "title": "Kata del día",
+      "intro": "Tres problemas resueltos, elegidos para hoy con preferencia por los que llevas tiempo sin tocar. Unos 15 minutos.",
+      "none": "Resuelve antes un problema: una kata vuelve a resolver problemas que ya resolviste.",
+      "done": "La kata de hoy está hecha: {{solved}} de {{total}} resueltos.",
+      "start": "Empezar la kata del día"
+    },
+    "sets": {
+      "title": "Elige un conjunto",
+      "intro": "Hasta cinco problemas resueltos de un patrón o de una de tus listas, los más oxidados primero. Diez minutos cada uno.",
+      "pattern": "Patrón",
+      "list": "Lista",
+      "pick": "Elige…",
+      "noLists": "Ninguna lista con problemas resueltos",
+      "option": "{{name}} ({{count}} resueltos)",
+      "start": "Empezar"
+    },
+    "bests": "Récords personales y katas anteriores",
+    "solvedIn_one": "Resuelto en {{time}}, {{count}} envío",
+    "solvedIn_other": "Resuelto en {{time}}, {{count}} envíos",
+    "tried_one": "Sin resolver aún, {{count}} envío",
+    "tried_other": "Sin resolver aún, {{count}} envíos",
+    "notYet": "Sin empezar",
+    "best": "Récord: {{time}}",
+    "again": "Abrir de nuevo",
+    "open": "Abrir",
+    "locked": "Bloqueado durante la kata: resuélvelo de memoria.",
+    "clock": {
+      "label": "Tiempo de kata: {{time}} de {{of}}",
+      "overLabel": "Tiempo de kata: {{time}}, por encima de {{of}}",
+      "over": "fuera de tiempo"
+    },
+    "next": "Siguiente problema",
+    "skip": "Saltar al siguiente",
+    "back": "Resumen de la kata",
+    "newBest": "Resuelto en {{time}}: ¡nuevo récord personal!",
+    "fromMemory": "De memoria: el editor empieza con el código inicial.",
+    "rusty": {
+      "title": "Oxidados",
+      "none": "Nada oxidado: todo lo que resolviste lo practicaste hace poco.",
+      "score": "{{score}} % oxidado",
+      "scoreHelp": "Crece con el tiempo desde que lo resolviste por última vez y con las katas fallidas en él.",
+      "practise": "Practicar en una kata",
+      "never": "sin practicar desde entonces",
+      "days_one": "hace {{count}} día",
+      "days_other": "hace {{count}} días",
+      "setting": "Tarjeta Oxidados en Inicio"
+    },
+    "streak_one": "Racha de katas: {{count}} día",
+    "streak_other": "Racha de katas: {{count}} días",
+    "start": "Empezar una kata",
+    "bestsTitle": "Récords personales",
+    "noBests": "Aún no has resuelto ninguna kata.",
+    "col": {
+      "problem": "Problema",
+      "best": "Mejor tiempo",
+      "submits": "Menos envíos",
+      "katas": "Katas resueltas"
+    },
+    "solvedOf": "{{solved}} de {{total}}",
+    "sessionsTitle": "Katas recientes",
+    "noSessions": "Aún no hay katas.",
+    "kind": {
+      "daily": "Del día",
+      "pattern": "Patrón",
+      "list": "Lista",
+      "custom": "A medida"
+    },
+    "inProgress": "en curso"
+  },
+  "rating": {
+    "overall": "Nivel estimado",
+    "label": "Nivel {{rating}}, estimado",
+    "estimated": "est.",
+    "help_one": "Estimado a partir de {{count}} problema resuelto: dificultad, envíos y tiempo. Una guía para elegir qué practicar, no una nota.",
+    "help_other": "Estimado a partir de {{count}} problemas resueltos: dificultad, envíos y tiempo. Una guía para elegir qué practicar, no una nota.",
+    "trend": "Evolución del nivel de {{from}} a {{to}}",
+    "none": "Resuelve un problema para tener un nivel."
+  },
+  "plan": {
+    "card": "Plan de estudio",
+    "none": "Aún no tienes un plan de estudio. Créalo a partir de un objetivo, un número de semanas y los minutos que tienes al día.",
+    "make": "Crear un plan",
+    "nothingToday": "Nada planificado para hoy.",
+    "setting": "Tarjeta del plan de estudio en Inicio",
+    "kind": {
+      "topic": "Aprender",
+      "kata": "Kata del día",
+      "review": "Repasos pendientes"
+    },
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "status": {
+      "pending": "Por hacer",
+      "done": "Hecho",
+      "skipped": "Omitido"
+    },
+    "done": "Hecho",
+    "skip": "Omitir",
+    "later": "Más tarde",
+    "undo": "Deshacer",
+    "range": "Del {{from}} al {{to}}",
+    "progress": "{{done}} de {{total}} hechos",
+    "progressLabel": "Avance del plan",
+    "new": "Nuevo plan",
+    "archive": "Dejar este plan",
+    "leftOver_one": "{{count}} tarea no cupo en estas semanas.",
+    "leftOver_other": "{{count}} tareas no cupieron en estas semanas.",
+    "formTitle": "Crear un plan de estudio",
+    "formIntro": "Patrones en el orden del recorrido: primero los temas de Aprender de cada patrón y luego sus problemas sin resolver por orden. El último día de cada semana tiene una kata y tus repasos. Un plan nuevo sustituye al actual.",
+    "weeks": "Duración",
+    "weeksOption_one": "{{count}} semana",
+    "weeksOption_other": "{{count}} semanas",
+    "perDay": "Tiempo al día",
+    "goal": "Objetivo",
+    "allPatterns": "Todos los patrones, en orden",
+    "create": "Crear el plan",
+    "cancel": "Cancelar",
+    "ics": {
+      "export": "Exportar al calendario…",
+      "title": "Plan de estudio de KataBox",
+      "min": "min",
+      "saved": "Archivo de calendario guardado."
+    }
+  },
+  "journal": {
+    "title": "Qué salió mal",
+    "intro": "KataBox etiquetó lo que pudo deducir del fallo. Cambia las etiquetas y añade una nota: alimentan «Tus errores habituales» en Progreso.",
+    "tags": "Etiquetas",
+    "auto": "encontrada por KataBox",
+    "note": "Nota",
+    "save": "Guardar etiquetas y nota",
+    "saved": "Guardado.",
+    "saveError": "No se pudo guardar.",
+    "none": "Aún no hay envíos fallidos. Cuando un envío falle, sus errores se reunirán aquí.",
+    "failures_one": "Tus errores habituales, de {{count}} envío fallido",
+    "failures_other": "Tus errores habituales, de {{count}} envíos fallidos",
+    "filter": "Mostrar",
+    "allTags": "Todas las etiquetas",
+    "tag": {
+      "wa": "Respuesta incorrecta",
+      "tle": "Demasiado lento (tiempo límite)",
+      "mle": "Demasiada memoria",
+      "ole": "Demasiada salida",
+      "compile": "No compila",
+      "runtime_index": "Índice fuera de rango",
+      "runtime_key": "Clave inexistente",
+      "runtime_null": "None / null / undefined",
+      "runtime_zero_division": "División entre cero",
+      "runtime_recursion": "Recursión demasiado profunda",
+      "runtime_overflow": "Desbordamiento de enteros",
+      "runtime_type": "Tipo o valor incorrecto",
+      "runtime_other": "Otro error de ejecución",
+      "edge_empty": "Entrada vacía",
+      "edge_single": "Un solo elemento",
+      "edge_max": "Entrada más grande",
+      "edge_negative": "Números negativos",
+      "edge_zero": "Cero",
+      "edge_duplicates": "Duplicados",
+      "shrunk": "Encontrado al buscar una entrada más pequeña",
+      "logic": "Idea equivocada"
+    }
+  },
+  "reflection": {
+    "title": "¿Por qué funciona?",
+    "why": "En una frase (opcional): se vuelve a mostrar cuando repases este problema.",
+    "time": "Tiempo",
+    "space": "Espacio",
+    "unset": "Sin indicar",
+    "other": "Otra",
+    "save": "Guardar",
+    "saved": "Guardado.",
+    "yours": "Tu nota de por qué funciona:",
+    "timeIs": "tiempo {{c}}",
+    "spaceIs": "espacio {{c}}"
+  },
+  "search": {
+    "title": "Buscar en todo",
+    "placeholder": "Busca problemas, temas de Aprender, fragmentos, ajustes y ayuda…",
+    "searching": "Buscando…",
+    "snippets": "Fragmentos",
+    "insert": "insertar"
+  },
+  "help": {
+    "title": "Ayuda",
+    "contents": "Índice de la ayuda"
+  },
+  "snippets": {
+    "title": "Fragmentos de código",
+    "intro": "Tus propios fragmentos de código, por lenguaje. En el editor, escribe /snip para elegir uno, o insértalo desde la paleta de comandos (Ctrl+K).",
+    "none": "Aún no hay fragmentos.",
+    "add": "Añadir un fragmento",
+    "edit": "Editar {{name}}",
+    "delete": "Eliminar {{name}}",
+    "name": "Nombre",
+    "language": "Lenguaje",
+    "tags": "Etiquetas",
+    "tagsHint": "grafos, bfs",
+    "body": "Código",
+    "save": "Guardar fragmento",
+    "cancel": "Cancelar"
+  },
+  "followup": {
+    "nav": "Problema y sus continuaciones",
+    "base": "Problema base",
+    "n": "Continuación {{n}}",
+    "locked": "Resuelve antes el problema base.",
+    "of": "Una continuación más difícil de",
+    "intro": "El enunciado de abajo dice qué cambia; el resto es como en el problema base."
+  },
+  "fix": {
+    "badge": "Corregir",
+    "badgeTitle": "Corrige el error: el editor empieza con código que tiene un error",
+    "banner": "Corrige el error: el editor empieza con código que falla algunas pruebas. Encuentra el error y corrígelo.",
+    "noBuggy": "Corrige el error: este lenguaje no tiene versión con error, así que empiezas desde una solución vacía. Python y TypeScript empiezan con el código con error.",
+    "reset": "Volver al código con error",
+    "resetTitle": "¿Volver al código con error?",
+    "resetBody": "Tu código en este lenguaje se sustituye por el código original con error. Tus instantáneas del Historial se conservan.",
+    "cancel": "Cancelar",
+    "kindLabel": "Tipo",
+    "kind": {
+      "solve": "Resolver",
+      "fix": "Corregir el error"
+    }
+  },
+  "reading": {
+    "heading": "Leer código",
+    "intro": "Fragmentos cortos en Python y TypeScript: predice qué imprimen o cuánto crece su coste.",
+    "title": "Ejercicio de lectura",
+    "back": "Volver a Aprender",
+    "progress": "{{solved}} de {{total}} respondidos correctamente",
+    "items": "Elementos de este conjunto",
+    "item": "Elemento {{n}}",
+    "itemSolved": "Elemento {{n}}, respondido correctamente",
+    "language": "Lenguaje del código",
+    "codeLabel": "Código en {{language}}",
+    "output": "Salida",
+    "typeOutput": "Escribe la salida",
+    "time": "Tiempo",
+    "space": "Espacio extra",
+    "next": "Siguiente",
+    "setDone": "Era el último elemento de este conjunto.",
+    "expectedOutput": "Imprime:",
+    "expectedComplexity": "Tiempo {{time}}, espacio extra {{space}}.",
+    "dominantLine": "La línea {{line}} domina el coste.",
+    "practiceHeading": "Ejercicios de lectura",
+    "linkTitle": "{{set}}, elemento {{n}}"
+  },
+  "stress": {
+    "tab": "Prueba de estrés",
+    "title": "Prueba de estrés",
+    "intro": "Escribe aquí una fuerza bruta lenta pero claramente correcta. La prueba de estrés la ejecuta junto a tu solución sobre muchas entradas pequeñas, en el entorno aislado, hasta que no coincidan.",
+    "bruteLabel": "Fuerza bruta en {{language}}",
+    "start": "Iniciar prueba de estrés",
+    "stop": "Detener",
+    "starting": "Generando entradas…",
+    "progress": "Ronda {{rounds}} de {{max}}: {{tested}} entradas coinciden por ahora",
+    "bruteOutput": "Fuerza bruta",
+    "yourOutput": "Tu solución",
+    "random": "Sin el entorno de Python, las entradas son valores aleatorios pequeños: no se comprueban contra las restricciones del problema.",
+    "sql": "Los problemas SQL no tienen prueba de estrés.",
+    "stopped": {
+      "found": "Hay una diferencia tras {{tested}} entradas",
+      "brute_failed": "Tu fuerza bruta falló con esta entrada",
+      "budget": "Ninguna diferencia en {{tested}} entradas ({{rounds}} rondas)",
+      "cancelled": "Detenida tras {{tested}} entradas"
+    }
+  },
+  "builders": {
+    "show": "Construir visualmente",
+    "hide": "Ocultar constructor",
+    "viewAs": "Ver como",
+    "kind": {
+      "tree": "Árbol",
+      "rows": "Filas",
+      "grid": "Cuadrícula",
+      "graph": "Grafo"
+    },
+    "fixJson": "Este valor aún no es JSON válido con la forma esperada: edítalo como JSON arriba, o bórralo para empezar de nuevo.",
+    "row": "{{name}}, elemento {{index}}",
+    "up": "Subir el elemento {{index}}",
+    "down": "Bajar el elemento {{index}}",
+    "removeRow": "Quitar el elemento {{index}}",
+    "addRow": "Añadir elemento",
+    "addRoot": "Añadir un nodo raíz",
+    "node": "Nodo {{value}}",
+    "nodeValue": "Valor del nodo seleccionado",
+    "addLeft": "Hijo izquierdo",
+    "addRight": "Hijo derecho",
+    "removeNode": "Quitar el nodo y sus hijos",
+    "grid": "Cuadrícula {{name}}",
+    "cell": "Fila {{row}}, columna {{col}}: {{value}}",
+    "gridHint": "Pulsa una celda (o Intro sobre ella) para alternar entre: {{chars}}. Las flechas mueven entre celdas.",
+    "gridEmpty": "Escribe al menos una fila en el campo de arriba para construir una cuadrícula.",
+    "graphNode": "Nodo {{node}}: empezar una arista aquí",
+    "graphNodeTo": "Nodo {{node}}: terminar aquí la arista desde {{from}}",
+    "graphHint": "Pulsa un nodo y luego otro para añadir una arista entre ellos.",
+    "edges": "Aristas",
+    "weight": "Peso de la arista {{u}}–{{v}}",
+    "removeEdge": "Quitar la arista {{u}}–{{v}}",
+    "addNode": "Añadir nodo",
+    "check": "Comprobar entradas",
+    "checkOk": "Personalizada {{index}}: válida",
+    "checkBad": "Personalizada {{index}}: {{why}}",
+    "checkTypesOnly": "Solo se comprobaron los tipos: las restricciones del problema necesitan el entorno de Python."
+  },
+  "focus": {
+    "title": "Sesiones de concentración",
+    "start": "Iniciar sesión de concentración",
+    "stop": "Detener la sesión de concentración",
+    "work": "Trabajo (minutos)",
+    "break": "Descanso (minutos)",
+    "phase": {
+      "work": "Concentración",
+      "break": "Descanso"
+    },
+    "chip": {
+      "work": "Concentración: quedan {{time}}",
+      "break": "Descanso: quedan {{time}}"
+    },
+    "toBreak": "Hora de descansar.",
+    "toWork": "Fin del descanso: de vuelta a la concentración.",
+    "none": "Aún no hay sesiones de concentración.",
+    "length": "{{minutes}} min, {{cycles}} periodos de trabajo",
+    "summary": "{{touched}} problemas tocados, {{solved}} resueltos, {{katas}} katas, {{plan_items}} elementos del plan hechos",
+    "paletteStart": "Iniciar sesión de concentración ({{work}} + {{brk}} min)",
+    "paletteStop": "Detener la sesión de concentración"
+  },
+  "backup": {
+    "title": "Copias de seguridad automáticas",
+    "intro": "KataBox puede escribir una exportación de tu progreso en una carpeta que elijas, cada pocos días y al cerrar la aplicación. Usar una carpeta sincronizada (OneDrive, Dropbox…) es decisión tuya.",
+    "noFolder": "Ninguna carpeta elegida: las copias están desactivadas",
+    "choose": "Elegir carpeta…",
+    "change": "Cambiar carpeta…",
+    "off": "Desactivar",
+    "every": "Cada (días)",
+    "keep": "Conservar (copias)",
+    "onExit": "Hacer también una copia al cerrar KataBox",
+    "now": "Copiar ahora",
+    "last": "Última copia: {{when}}",
+    "never": "Aún no hay copias",
+    "next": "la próxima toca el {{when}}",
+    "failed": "La última copia falló: {{why}}",
+    "prune": "KataBox borra solo sus propios archivos katabox-backup-….kbx.json de esa carpeta, los más antiguos primero, por encima del número a conservar. Nunca toca otros archivos."
+  },
+  "packs": {
+    "title": "Paquetes de problemas",
+    "intro": "Los paquetes son conjuntos de problemas que cualquiera puede crear y compartir como archivo .kbpack. Su código solo se ejecuta en el entorno aislado y su texto se muestra sin enlaces ni imágenes.",
+    "import": "Importar un paquete…",
+    "includeInPractice": "Sugerir problemas de paquetes en el problema del día y en Siguiente problema",
+    "none": "No hay paquetes instalados.",
+    "row": "versión {{version}} de {{author}} · {{count}} problemas · instalado el {{date}}",
+    "uninstall": "Desinstalar {{name}}",
+    "restartNeeded": "Los cambios de paquetes se aplican al reiniciar KataBox.",
+    "restart": "Reiniciar ahora",
+    "previewTitle": "¿Importar «{{name}}»?",
+    "unsigned": "Paquete sin firmar. Autor declarado: {{author}}. KataBox comprobó los archivos, pero no puede saber quién los hizo.",
+    "id": "Id",
+    "version": "Versión",
+    "installedVersion": "instalada: {{version}}",
+    "licence": "Licencia",
+    "problems": "Problemas",
+    "action": {
+      "install": "Esto instala el paquete. Tu historial en sus problemas se conserva aunque lo quites después.",
+      "update": "Esto sustituye la versión instalada por esta, más nueva.",
+      "same": "Este mismo paquete ya está instalado.",
+      "not_newer": "Hay un paquete con este id instalado y este archivo no es más nuevo: no puede sustituirlo."
+    },
+    "install": "Instalar",
+    "update": "Actualizar",
+    "cancel": "Cancelar",
+    "badge": "{{pack}}",
+    "badgeTitle": "Del paquete «{{pack}}», no forma parte de KataBox",
+    "sourceLabel": "Origen",
+    "source": {
+      "builtin": "Incluidos",
+      "packs": "Paquetes"
+    },
+    "assignment": "Tarea",
+    "showCreate": "Mostrar el editor de problemas (para crear paquetes)",
+    "openCreate": "Abrir el editor de problemas"
+  },
+  "classroom": {
+    "title": "Aula",
+    "intro": "Las tareas de un profesor llegan como paquetes (Ajustes → Paquetes). Empieza una cuando estés listo: sus reglas se aplican mientras está en curso. Los profesores importan aquí los archivos de resultados de sus estudiantes. KataBox funciona sin conexión y sin cuentas, así que esto no es a prueba de trampas.",
+    "mine": "Tus tareas",
+    "none": "No hay tareas. Instala el paquete de tarea de un profesor y reinicia KataBox para verla aquí.",
+    "state": {
+      "not_started": "Sin empezar",
+      "running": "En curso",
+      "finished": "Terminada"
+    },
+    "remaining": "Quedan {{time}}",
+    "due": "Fecha de entrega",
+    "languages": "Lenguajes",
+    "timeLimit": "Límite de tiempo",
+    "noTimeLimit": "Ninguno",
+    "minutes_one": "{{count}} minuto",
+    "minutes_other": "{{count}} minutos",
+    "hints": "Pistas",
+    "hintsOn": "Disponibles",
+    "hintsOff": "Bloqueadas mientras está en curso",
+    "afterRestart": "disponible tras reiniciar",
+    "notTried": "Sin intentar",
+    "submits_one": "{{count}} envío",
+    "submits_other": "{{count}} envíos",
+    "startNote": "Las reglas se aplican desde que empiezas, y solo cuentan los envíos hechos mientras está en curso.",
+    "rules": "Mientras está en curso, estos problemas solo aceptan {{languages}}.",
+    "rulesNoHints": "Mientras está en curso, estos problemas solo aceptan {{languages}}, y sus pistas, solución explicada, envíos anteriores e Historial están bloqueados.",
+    "start": "Empezar",
+    "finish": "Terminar ahora",
+    "export": "Exportar resultados",
+    "close": "Cerrar",
+    "results": {
+      "title": "Resultados: {{title}}",
+      "intro": "Este es el archivo que envías a tu profesor. Contiene exactamente lo que aparece abajo.",
+      "name": "Tu nombre",
+      "includeCode": "Incluir mi código (el mejor envío de cada problema)",
+      "included": "El archivo incluye:",
+      "who": "Tu nombre: {{name}}",
+      "which": "La tarea: {{title}} (paquete {{hash}}…)",
+      "when": "Cuándo estuvo en curso: de {{start}} a {{end}}",
+      "firstAccepted": "primer Aceptado a los {{time}}",
+      "withCode": "con el código",
+      "chain": "Una cadena de hashes sobre todo lo anterior, para que se noten las ediciones casuales (no es una firma).",
+      "saved": "Guardado.",
+      "save": "Guardar resultados…"
+    },
+    "teacher": {
+      "title": "Resultados de la clase (profesor)",
+      "intro": "Importa los archivos de resultados que te enviaron tus estudiantes. Cada archivo se comprueba; uno editado tras exportarse se guarda y se marca.",
+      "import": "Importar archivos de resultados…",
+      "imported": "Añadidos {{added}}, ya importados {{duplicates}}, marcados como editados {{edited}}.",
+      "refused": "{{file}} rechazado: {{why}}",
+      "none": "Aún no hay resultados importados.",
+      "csv": "Exportar CSV…",
+      "caption": "Resultados de {{title}}",
+      "student": "Estudiante",
+      "file": "Archivo",
+      "unchanged": "Sin cambios",
+      "edited": "Editado tras exportarse"
+    }
+  },
+  "authoring": {
+    "title": "Crear un problema",
+    "drafts": "Tus borradores",
+    "newId": "Id del nuevo problema",
+    "create": "Crear borrador",
+    "untitled": "Sin título",
+    "quality": "Los problemas creados aquí van en paquetes, que necesitan una solución de referencia. Los problemas integrados necesitan referencias en los cuatro lenguajes y scripts de pruebas (docs/problem-authoring.md).",
+    "pick": "Elige un borrador o crea uno. Los borradores se guardan mientras escribes, en la carpeta propia de KataBox.",
+    "save": {
+      "saved": "Guardado",
+      "saving": "Guardando…",
+      "error": "Sin guardar"
+    },
+    "check": "Comprobar en el entorno aislado",
+    "export": {
+      "open": "Exportar como paquete…",
+      "title": "Exportar como paquete",
+      "intro": "El paquete se comprueba igual que una importación antes de guardar el archivo. Compártelo como cualquier archivo.",
+      "id": "Id del paquete (de 3 a 20 letras minúsculas y dígitos)",
+      "name": "Nombre del paquete",
+      "author": "Autor",
+      "version": "Versión",
+      "licence": "Licencia (SPDX)",
+      "problems": "Problemas del paquete",
+      "done": "Paquete guardado. SHA-256: {{sha}}",
+      "close": "Cerrar",
+      "save": "Guardar paquete…"
+    },
+    "delete": "Borrar borrador",
+    "deleteConfirm": "Confirmar: borrar este borrador",
+    "ready": "Sin problemas: listo para comprobar en el entorno aislado y exportar.",
+    "issues_one": "{{count}} problema por corregir (se muestra en su campo).",
+    "issues_other": "{{count}} problemas por corregir (se muestran en sus campos).",
+    "passed": "{{passed}} de {{total}} pruebas superadas con la referencia.",
+    "basics": "Datos básicos",
+    "signature": "Firma de la función",
+    "texts": "Enunciado, pistas y solución explicada",
+    "tests": "Pruebas",
+    "reference": "Solución de referencia",
+    "limits": "Comprobador y límites",
+    "field": {
+      "title": "Título",
+      "title_es": "Título (español)",
+      "difficulty": "Dificultad",
+      "pattern": "Patrón",
+      "rank": "Posición en el patrón (1-10)",
+      "tags": "Etiquetas",
+      "statement": "Enunciado (Markdown)",
+      "statement_es": "Enunciado en español (Markdown)",
+      "hints": "Pistas",
+      "hints_es": "Pistas en español (opcional)",
+      "editorial": "Solución explicada (Markdown)",
+      "editorial_es": "Solución explicada en español (opcional)",
+      "language": "Lenguaje",
+      "reference": "Código",
+      "checker": "Comprobador",
+      "time": "Límite de tiempo (ms, base de Rust)",
+      "memory": "Memoria (MB)",
+      "function": "Nombre de la función",
+      "returns": "Devuelve",
+      "paramName": "Nombre del parámetro {{n}}",
+      "paramType": "Tipo del parámetro {{n}}"
+    },
+    "tagsHint": "Separadas por comas; cada etiqueta necesita un nombre visible, así que mejor usa etiquetas existentes como array o hash-map.",
+    "typesHint": "Tipos: int, float, bool, string, T[] (como int[] o string[]), ListNode, TreeNode.",
+    "removeParam": "Quitar el parámetro {{name}}",
+    "addParam": "Añadir parámetro",
+    "showPreview": "Mostrar vista previa",
+    "hidePreview": "Ocultar vista previa",
+    "hintTier": "{{label}}: nivel {{n}}",
+    "publicTests_one": "Pruebas públicas ({{count}}): se muestran como ejemplos",
+    "publicTests_other": "Pruebas públicas ({{count}}): se muestran como ejemplos",
+    "hiddenTests_one": "Pruebas ocultas ({{count}}): se usan al Enviar",
+    "hiddenTests_other": "Pruebas ocultas ({{count}}): se usan al Enviar",
+    "testN": "Prueba {{n}}",
+    "removeTest": "Quitar la prueba {{n}}",
+    "output": "Salida esperada: {{type}}",
+    "addPublic": "Añadir una prueba pública",
+    "addHidden": "Añadir una prueba oculta",
+    "badJson": "Aún no es JSON válido: se conserva el último valor válido.",
+    "insertStarter": "Insertar el código inicial",
+    "replaceStarter": "Sustituir por el código inicial"
   }
 }

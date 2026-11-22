@@ -19,14 +19,15 @@ serde_json.workspace = true
 sha2.workspace = true
 specta = { workspace = true, optional = true }
 thiserror.workspace = true
-tokio = { workspace = true, features = ["sync"] }
+tokio = { workspace = true, features = ["sync", "time"] }
+# Packs (expansion M11, ADR 0038): the same checks as built-in content.
+kb-pack.workspace = true
 
 [features]
 # TypeScript bindings for the desktop app (tauri-specta).
-specta = ["dep:specta", "kb-core/specta", "kb-store/specta", "kb-bridge/specta", "kb-toolchain/specta"]
+specta = ["dep:specta", "kb-core/specta", "kb-store/specta", "kb-bridge/specta", "kb-toolchain/specta", "kb-pack/specta"]
 
 [dev-dependencies]
-kb-pack.workspace = true
 tokio = { workspace = true, features = ["macros"] }
 
 [lints]

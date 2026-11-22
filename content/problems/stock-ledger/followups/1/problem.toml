@@ -1,0 +1,18 @@
+id = "stock-ledger--f1"
+parent = "stock-ledger"
+title = "Stock Ledger: Deliveries to a Row"
+title_es = "Libro de existencias: entregas a una fila"
+difficulty = "hard"
+tags = ["range-queries", "fenwick-tree"]
+pattern = "range-queries"
+rank = 9
+
+[signature]
+name = "rowLedger"
+params = [{ name = "stock", type = "int[]" }, { name = "ops", type = "string[]" }, { name = "args", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

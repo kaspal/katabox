@@ -20,6 +20,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isAppError } from "@/lib/errors";
 import { useLearnCatalog, useLearnTopic } from "@/lib/queries";
+import { useReadingLinks } from "@/lib/reading";
 import { useSetting } from "@/lib/settings";
 import { canCompare, comparePartners } from "./engine/compare";
 import { playerKeyAction } from "./engine/keys";
@@ -98,6 +99,7 @@ function TopicView({
 }) {
   const { t } = useTranslation();
   const { topic, problems } = data;
+  const readingLinks = useReadingLinks(topic.id);
   const narrow = useMedia(NARROW);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [tab, setTab] = useState("code");
@@ -280,7 +282,7 @@ function TopicView({
           <CodeTab samples={topic.samples} step={step} def={def} lang={lang} onLang={setLang} />
         </TabsContent>
         <TabsContent value="practice">
-          <PracticeTab quiz={topic.quiz} problems={problems} />
+          <PracticeTab quiz={topic.quiz} problems={problems} reading={readingLinks.data ?? []} />
         </TabsContent>
       </div>
     </Tabs>

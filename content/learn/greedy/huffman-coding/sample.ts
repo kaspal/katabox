@@ -1,6 +1,8 @@
 // The queue keeps (frequency, node) pairs sorted, smallest first.
 function huffman(freqs: number[]): number[] {
-  let queue = freqs.map((f, k) => [f, k]).sort((x, y) => x[0] - y[0] || x[1] - y[1]);
+  let queue = freqs
+    .map((f, k) => [f, k])
+    .sort((x, y) => x[0] - y[0] || x[1] - y[1]);
   const parent = new Map<number, number>();
   let made = freqs.length;
   while (queue.length > 1) {

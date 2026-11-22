@@ -1,0 +1,7 @@
+id = "complexity-recursion"
+order = 7
+kind = "complexity"
+title = "Complexity: recursion"
+title_es = "Complejidad: recursión"
+blurb = "Call trees, halving and memos: count the calls and the stack they leave behind"
+blurb_es = "Árboles de llamadas, mitades y memos: cuenta las llamadas y la pila que dejan"

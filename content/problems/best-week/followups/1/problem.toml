@@ -1,0 +1,18 @@
+id = "best-week--f1"
+parent = "best-week"
+title = "Best Week: Up to k Days, Losses Too"
+title_es = "Mejor semana: hasta k días, con pérdidas"
+difficulty = "hard"
+tags = ["sliding-window", "prefix-sum", "deque"]
+pattern = "sliding-window"
+rank = 9
+
+[signature]
+name = "bestRun"
+params = [{ name = "profits", type = "int[]" }, { name = "k", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

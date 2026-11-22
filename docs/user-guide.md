@@ -171,6 +171,157 @@ shows the limit for the language you picked, e.g. **Time limit (Python)**.
   first-try passes, time used, time and submits per problem). Past interviews are on
   Progress.
 
+## Follow-ups
+Some problems have **follow-ups**: harder siblings that change one thing (many queries
+instead of one, negative values, a huge input, an extra rule). Once you solve the base
+problem, they open from the strip under the problem's title (**Base problem · Follow-up
+1 · Follow-up 2**). A follow-up's statement says what changes; its tests, limits and
+solutions are its own, and it counts as a problem of its own in your history.
+
+## Problem packs
+A pack is a set of problems someone made and shared as a `.kbpack` file. **Settings →
+Packs → Import a pack…** opens one and shows what it is before anything is installed:
+the name, the author *as stated* (packs are not signed), the version, the licence, how
+many problems and the file's SHA-256. KataBox checks every file first and refuses
+anything unsafe or malformed. Pack problems carry the pack's name as a badge, and the
+Library can show built-in or pack problems only. Their text is shown without links or
+images, and their code only ever runs in the sandbox. The daily problem and "next
+problem" leave pack problems out unless you tick the option on the same page. A newer
+version of a pack replaces the installed one; an older one can't. Uninstalling removes
+the pack's files; your history on its problems stays. Changes take effect after a
+restart. To make a pack: `kb-pack pack PROBLEM_DIR... --manifest pack.toml --out
+my.kbpack` (see docs/contributing-content.md).
+
+## Create problems
+To make problems for a pack without writing files by hand, tick **Settings → Packs →
+Show the problem editor** and open it. Create a draft by its id, then fill the form: the
+titles, difficulty and pattern, the function signature, the statement, hints and
+editorial (in English and Spanish, with a preview), the public and hidden tests (with the
+same visual builders as custom tests), and one reference solution (**Insert the starter
+code** gives the exact declaration the judge expects). Drafts are saved as you type, and
+every problem left to fix is shown next to its field. **Check in sandbox** runs your
+reference on every test. **Export as pack…** writes a `.kbpack` and checks it exactly
+like an import before keeping it. Pack problems need one reference; built-in problems
+need all four languages (docs/problem-authoring.md).
+
+## Classroom
+A pack can carry an assignment from a teacher: a title, a due date, problems, the
+languages to use, an optional time limit, and whether hints stay on. Install it like any
+pack, then open **Classroom**. Press **Start** when you are ready: while it runs, its
+problems take only its languages and, with hints off, their hints, editorial, earlier
+submissions and History are locked. It ends when you press **Finish now** or when the
+time limit passes. **Export results** shows exactly what the file will hold (your name,
+the assignment, the times, and per problem the best verdict, the submits, the time to
+the first Accepted and the language; your code only if you tick it) before you save it.
+Teachers import the files they receive under **Class results**, see one row per student,
+and export a CSV. A file edited after export is marked. KataBox is offline and has no
+accounts, so this is not cheat-proof. See docs/classroom.md (also in Spanish and
+Portuguese).
+
+## Focus sessions
+Start a focus session from Progress → Overview or the command palette ("Start focus
+session"). A chip in the top bar shows whether you are working or on a break and how long
+is left; a short notice appears when the phase changes. Work and break lengths are on the
+same card (25 and 5 minutes by default). The session keeps running if you close and reopen
+KataBox. When you stop it, the card lists what you did: problems touched and solved, katas
+and plan items.
+
+## Automatic backups
+Settings → Data → **Automatic backups**: choose a folder and KataBox writes an export of
+your progress there every few days (7 by default) and, if you like, whenever it closes.
+**Back up now** writes one right away. Restore one with **Import**. KataBox keeps the
+newest backups (5 by default) and deletes only its own `katabox-backup-….kbx.json` files
+in that folder, never anything else; a README in the folder says so. Using a synced
+folder (OneDrive, Dropbox…) is your choice.
+
+## Building custom tests
+Under each custom test's value, **Build visually** opens a builder that fits the type: a
+tree you grow by clicking nodes, rows you can add, remove and reorder, a grid whose cells
+you click to change, or a graph where you click two nodes to join them. The JSON field
+above stays in sync and editable. **Check inputs** checks every custom test against the
+problem's constraints (in the sandbox, without running your code).
+
+## Stress test
+When your solution passes the examples but you are not sure about it, open the
+**Stress test** tab under the editor. Write a slow but obviously correct brute force (for
+example, try every pair), then **Start stress test**: KataBox runs both on many small
+inputs in the sandbox until they disagree, and shows that input with both outputs. From
+there you can debug it, add it to your custom tests or shrink it. Your brute force is
+kept for next time. Without the Python runtime the inputs are small random values that
+are not checked against the problem's constraints; program problems need Python. SQL
+problems have no stress test.
+
+## Reading code
+**Learn → Reading code** has short snippets to read, in Python or TypeScript (switch
+above the code):
+- **What does this print?** Pick the output, or type it when there are no choices.
+- **Complexity:** pick how the time and the extra space grow with n. The answer marks
+  the line that dominates the cost.
+Every answer shows the explanation. Your progress is kept per item and travels with an
+export. Some Learn topics link reading items from their Practice tab.
+
+## Fix the bug
+Problems with the **Fix** badge start with code that has a bug. The statement tells the
+story; the code fails some tests, and your job is to find the bug and fix it. Python and
+TypeScript start from the buggy code (some problems in PHP and Rust too); a language
+without a buggy version starts empty, and the banner above the editor says so.
+**Reset to the buggy code** in that banner brings the original code back (your snapshots
+in History stay). The Library's **Kind** filter lists only these problems, or hides them.
+The daily problem and "next problem" never suggest them.
+
+## Kata drills
+**Kata** (in the navigation rail) re-solves problems you have already solved, from memory
+and against the clock:
+- **Daily kata:** three solved problems picked for today, leaning towards the ones you
+  haven't touched for a while. About 15 minutes; the clock shows overtime but never
+  stops you.
+- **Pick a set:** up to five solved problems from one pattern or one of your lists, the
+  rustiest first, ten minutes each.
+- The editor starts from the starter code. Hints, the editorial, your submissions,
+  History and notes are **Locked during the kata** until it ends.
+- A kata never changes your submissions, problem status, reviews or daily problem. Its
+  results are on **Progress → Katas**: your personal bests (fastest time, fewest
+  submits), the kata streak and recent katas.
+- **Rusty** (Home card, and on Progress → Katas) lists solved problems you may have
+  forgotten: the score grows with the time since you last solved one and with failed
+  katas on it. Turn the card off in Settings → Practice.
+
+## Skill rating and study plans
+- **Skill rating:** Progress → Overview shows an overall rating, and By pattern one per
+  pattern with a small trend line. It is **estimated** from the problems you solved
+  (their difficulty, your submits and your time) and guides what the daily problem and
+  "Next problem" suggest: a weaker pattern comes up more often, and easy problems you
+  have outgrown are skipped. It is a guide, not a grade.
+- **Study plan:** Progress → Plan → **Make the plan** from a goal (every pattern, or
+  the ones you pick), a number of weeks and the time you have a day. Each pattern's Learn
+  topics come first, then its unsolved problems; the last day of each week has a kata
+  and your reviews. Mark items **Done**, **Skip** them or move them **Later** (the rest
+  of the plan moves with them). Solved problems and viewed topics are ticked off on
+  their own. Today's items are on the Home card **Study plan** (turn it off in Settings
+  → Practice). **Export to calendar…** saves the plan as an `.ics` file for any
+  calendar app.
+
+## Mistake journal and reflections
+- After a failed **Submit**, KataBox tags what it can tell: wrong answer, too slow, too
+  much memory, the kind of runtime error (index out of range, division by zero, recursion
+  too deep…) and, from the failing input, edge cases such as an empty input, one element,
+  the largest value, negative numbers or duplicates. Open the submission in the
+  **Submissions** tab to change the tags and add a note.
+- **Progress → Mistakes** shows **Your common mistakes**: how often each tag appears,
+  with the latest examples.
+- After **Accepted**, you can write in one sentence **why it works** and pick its time
+  and space complexity. Your note comes back at the top of the **Notes** tab, after a
+  review passes and after you solve the problem in a kata.
+
+## Snippets, comparing submissions and search
+- **Snippets:** Settings → Editor → **Snippets** keeps your own code per language. In
+  the editor, type `/snip` and pick one; or press Ctrl+K and choose **Insert snippet: …**.
+- **Compare submissions:** in the **Submissions** tab, **Compare** and tick two: they
+  are shown side by side.
+- **Search everything** (Ctrl+Shift+P, or from the command palette) finds problems,
+  Learn topics, your snippets, settings and sections of this guide. **Help** (from the
+  palette) shows this guide inside the app.
+
 ## Debugger and visualizer
 - **Languages:** Python and JavaScript/TypeScript, for function and program problems.
   Not PHP, Rust or SQL yet.
@@ -184,6 +335,9 @@ shows the limit for the language you picked, e.g. **Time limit (Python)**.
 - **Toolbar:** **Continue** (F5), **Step over** (F10), **Step into** (F11), **Step out**
   (Shift+F11), **Step back** (Shift+F10), **Restart** (Ctrl+Shift+F5), **Stop
   debugging** (Shift+F5).
+- **Auto-play:** the play button next to the toolbar steps into the next line on its
+  own, at 0.5×, 1× or 2× (about one step a second at 1×), so the Visualize tab plays
+  like an animation. It pauses when you press it again or when the run ends.
 - **Panels:** **Variables** (Locals / Globals, expandable), **Watch**, **Call stack**
   and **Debug console** (evaluate in the selected frame; it never changes the program).
 - **Visualize tab:** draws the variables you choose at each step: arrays with pointer
@@ -235,7 +389,7 @@ answer, Runtime error, Time limit or Memory limit exceeded:
 ## Export and import
 **Settings → Data:**
 - **Export…** writes your progress to one file (`.kbx.json`, format
-  `katabox-export/v1`): problem statuses, submissions, History snapshots, notes,
+  `katabox-export/v2`; files from v1 still import): problem statuses, submissions, History snapshots, notes,
   drafts, unlocked hints, opened problems, reviews, daily problems, lists, mock
   interviews, settings, and your Learn progress (viewed topics, Continue position).
 - Not exported: this computer's speed factor, its install id and sandbox folder.
@@ -248,8 +402,10 @@ Settings has one section per topic, listed on the left (or as tabs above, in a n
 window). **Search settings** finds a setting by its name.
 
 - **Appearance:**
-  - **Theme** (System, Light, Dark), **Language** (English, Español), **Contrast**
-    (Normal, High), **Motion** (Follow the system, Reduce);
+  - **Theme** (System, Light, Dark), **Language** (English, Español, Português
+    (Brasil)), **Contrast** (Normal, High), **Motion** (Follow the system, Reduce);
+  - with the Portuguese interface, **Problems and lessons in** picks English or Spanish
+    for problems and Learn, which are written in those two languages (English by default);
   - **Reset window size and position**. KataBox reopens where you left it, at the same
     size, and maximised if it was. If that screen is gone, it opens centred on the main
     screen.
@@ -275,6 +431,7 @@ command palette, or use the keyboard button in the top bar.
 | Where | Keys | Action |
 | --- | --- | --- |
 | Anywhere | Ctrl+K | Command palette |
+| Anywhere | Ctrl+Shift+P | Search everything |
 | Library | `/` | Search problems |
 | Library | ↑ / ↓, PageUp / PageDown, Home / End, Enter | Move through the list, open a problem |
 | Library → Lists | Alt+↑ / Alt+↓ | Move a list row |

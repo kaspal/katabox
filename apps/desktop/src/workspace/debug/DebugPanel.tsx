@@ -19,6 +19,7 @@ import {
 import type { DebugAction, StopInfo, VarInfo } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AutoPlay } from "./AutoPlay";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ErrorNotice } from "@/components/ErrorNotice";
@@ -95,6 +96,7 @@ export function DebugToolbar({ dbg }: { dbg: Debugger }) {
       <ToolButton label={t("debug.actions.stop")} keys={DEBUG_KEYS.stop} onClick={() => void dbg.stop()}>
         <Square aria-hidden />
       </ToolButton>
+      <AutoPlay dbg={dbg} />
       {dbg.busy && <Loader2 aria-label={t("debug.replaying")} className="ml-1 size-4 animate-spin text-muted-foreground" />}
     </div>
   );
@@ -370,7 +372,7 @@ export function DebugPanel({
       </div>
       {dbg.error !== null && <ErrorNotice error={dbg.error} />}
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-        <TabsList aria-label={t("debug.toolbar")}>
+        <TabsList aria-label={t("debug.views")}>
           <TabsTrigger value="variables">{t("debug.visualize.variablesTab")}</TabsTrigger>
           <TabsTrigger value="visualize" data-testid="visualize-tab">
             {t("debug.visualize.tab")}

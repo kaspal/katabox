@@ -29,8 +29,18 @@ CREATE TABLE problems (
     -- ([{"name", "columns": [{"name", "type", "primary_key", "not_null", "references"}]}])
     schema_sql    TEXT,
     sql_schema    TEXT,
+    -- A follow-up's base problem (expansion M5, ADR 0035); NULL for every other problem.
+    -- Follow-ups are left out of the problem list, daily and next problem.
+    parent_id     TEXT REFERENCES problems (id),
+    -- 'solve' (write a solution) or 'fix' (repair the buggy starter code; expansion M6)
+    kind          TEXT NOT NULL DEFAULT 'solve' CHECK (kind IN ('solve', 'fix')),
+    -- gen.py, for the stress lab's inputs (expansion M8); run only in the sandbox
+    generator     TEXT,
+    -- the pack a problem came from (expansion M11); NULL for built-in content
+    pack_id       TEXT,
     CHECK ((mode = 'sql') = (schema_sql IS NOT NULL AND sql_schema IS NOT NULL))
 ) WITHOUT ROWID;
+CREATE INDEX problems_by_parent ON problems (parent_id);
 
 CREATE TABLE problem_tags (
     problem_id TEXT NOT NULL REFERENCES problems (id),
@@ -65,6 +75,14 @@ CREATE TABLE tests (
     input      BLOB NOT NULL,
     output     BLOB NOT NULL,
     PRIMARY KEY (problem_id, kind, idx)
+) WITHOUT ROWID;
+
+-- A fix-the-bug problem's buggy starter code per language (expansion M6).
+CREATE TABLE starters (
+    problem_id TEXT NOT NULL REFERENCES problems (id),
+    language   TEXT NOT NULL,
+    code       TEXT NOT NULL,
+    PRIMARY KEY (problem_id, language)
 ) WITHOUT ROWID;
 
 CREATE TABLE reference_solutions (
@@ -159,6 +177,34 @@ CREATE TABLE learn_paths (
     blurb_en TEXT NOT NULL,
     blurb_es TEXT NOT NULL,
     topics   TEXT NOT NULL  -- JSON array of topic ids, in study order
+) WITHOUT ROWID;
+
+-- Reading exercises (expansion M7): sets of snippets to read, each item's answer as JSON.
+CREATE TABLE reading_sets (
+    id       TEXT PRIMARY KEY,
+    ord      INTEGER NOT NULL,
+    kind     TEXT NOT NULL CHECK (kind IN ('print', 'complexity')),
+    title_en TEXT NOT NULL,
+    title_es TEXT NOT NULL,
+    blurb_en TEXT NOT NULL,
+    blurb_es TEXT NOT NULL
+) WITHOUT ROWID;
+
+CREATE TABLE reading_items (
+    set_id  TEXT NOT NULL REFERENCES reading_sets (id),
+    n       INTEGER NOT NULL,
+    code_py TEXT NOT NULL,
+    code_ts TEXT NOT NULL,
+    data    TEXT NOT NULL,  -- JSON: prompts, explanations and the answer
+    PRIMARY KEY (set_id, n)
+) WITHOUT ROWID;
+
+-- A Learn topic's Practice tab links reading items (`<set>/<n>`), in order.
+CREATE TABLE reading_links (
+    topic_id TEXT NOT NULL REFERENCES learn_topics (id),
+    item_id  TEXT NOT NULL,
+    ord      INTEGER NOT NULL,
+    PRIMARY KEY (topic_id, item_id)
 ) WITHOUT ROWID;
 
 CREATE VIRTUAL TABLE learn_fts USING fts5 (

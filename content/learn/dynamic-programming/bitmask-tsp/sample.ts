@@ -2,7 +2,9 @@ const INF = 1e6;
 
 function tsp(n: number, dist: number[][]): number[] {
   const full = 1 << n;
-  const best = Array.from({ length: full }, () => new Array<number>(n).fill(INF));
+  const best = Array.from({ length: full }, () =>
+    new Array<number>(n).fill(INF),
+  );
   best[1][0] = 0;
   for (let mask = 1; mask < full; mask += 2) {
     for (let last = 0; last < n; last++) {
@@ -18,6 +20,8 @@ function tsp(n: number, dist: number[][]): number[] {
     }
   }
   let answer = INF;
-  for (let last = 1; last < n; last++) answer = Math.min(answer, best[full - 1][last] + dist[last][0]);
+  for (let last = 1; last < n; last++) {
+    answer = Math.min(answer, best[full - 1][last] + dist[last][0]);
+  }
   return [answer];
 }

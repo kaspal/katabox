@@ -1,0 +1,18 @@
+id = "club-merges--f2"
+parent = "club-merges"
+title = "Club Merges: Second Thoughts"
+title_es = "Fusiones de clubes: marcha atrás"
+difficulty = "hard"
+tags = ["union-find", "stack", "design"]
+pattern = "union-find"
+rank = 9
+
+[signature]
+name = "clubsWithUndo"
+params = [{ name = "n", type = "int" }, { name = "ops", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

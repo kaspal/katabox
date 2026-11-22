@@ -1,0 +1,18 @@
+id = "exact-baskets"
+title = "Exact Baskets"
+title_es = "Cestas exactas"
+difficulty = "hard"
+tags = ["backtracking", "recursion", "debugging"]
+pattern = "backtracking"
+rank = 10
+kind = "fix"
+
+[signature]
+name = "exactBaskets"
+params = [{ name = "weights", type = "int[]" }, { name = "k", type = "int" }, { name = "target", type = "int" }]
+returns = "int[][]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

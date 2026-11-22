@@ -1,0 +1,18 @@
+id = "bracket-checker"
+title = "Bracket Checker"
+title_es = "Comprobador de corchetes"
+difficulty = "easy"
+tags = ["stack", "string", "debugging"]
+pattern = "stack"
+rank = 3
+kind = "fix"
+
+[signature]
+name = "bracketsOk"
+params = [{ name = "code", type = "string" }]
+returns = "bool"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

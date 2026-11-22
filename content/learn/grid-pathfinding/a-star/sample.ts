@@ -8,10 +8,14 @@ function cost(cell: number): number {
 function aStar(grid: number[][], start: number[], goal: number[]): number[] {
   const rows = grid.length;
   const cols = grid[0].length;
-  const h = (r: number, c: number) => Math.abs(r - goal[0]) + Math.abs(c - goal[1]);
-  const g: (number | null)[][] = Array.from({ length: rows }, () => new Array(cols).fill(null));
+  const h = (r: number, c: number) =>
+    Math.abs(r - goal[0]) + Math.abs(c - goal[1]);
+  const g: (number | null)[][] = Array.from({ length: rows }, () =>
+    new Array(cols).fill(null),
+  );
   g[start[0]][start[1]] = 0;
-  const queue = [[h(start[0], start[1]), h(start[0], start[1]), start[0], start[1]]];
+  const first = h(start[0], start[1]);
+  const queue = [[first, first, start[0], start[1]]];
   while (queue.length > 0) {
     const [f, hr, r, c] = queue.shift()!; // @step pop
     if (f - hr > g[r][c]!) {
@@ -28,7 +32,9 @@ function aStar(grid: number[][], start: number[], goal: number[]): number[] {
         if (g[nr][nc] === null || ng < g[nr][nc]!) {
           g[nr][nc] = ng; // @step relax
           queue.push([ng + h(nr, nc), h(nr, nc), nr, nc]);
-          queue.sort((x, y) => x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || x[3] - y[3]);
+          queue.sort(
+            (x, y) => x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || x[3] - y[3],
+          );
         }
       }
     }

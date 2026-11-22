@@ -1,0 +1,18 @@
+id = "mileage-log--f1"
+parent = "mileage-log"
+title = "Mileage Log: Long Days"
+title_es = "Registro de kilómetros: días largos"
+difficulty = "hard"
+tags = ["fenwick-tree", "sorting", "array"]
+pattern = "range-queries"
+rank = 9
+
+[signature]
+name = "longDays"
+params = [{ name = "miles", type = "int[]" }, { name = "trips", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

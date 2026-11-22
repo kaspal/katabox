@@ -31,13 +31,17 @@ import { MiddleEllipsis } from "@/components/MiddleEllipsis";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { UI_LANGS, type UiLangCode } from "@/i18n";
+import { CONTENT_LANGS, UI_LANGS, isContentLang, type ContentLangCode, type UiLangCode } from "@/i18n";
 import { CONTRASTS, MOTIONS, THEMES, usePrefs, type ContrastPref, type MotionPref, type ThemePref } from "@/lib/prefs";
 import { api } from "@/lib/api";
 import { useOnboardingDone } from "@/onboarding/state";
 import { copyText, diagnosticsText, recentErrors } from "@/lib/diagnostics";
 import { CHANGELOG_URL, DOCS_URL } from "@/lib/links";
 import { openShortcuts } from "@/app/shortcuts";
+import { BackupSection } from "@/practice/backups";
+import { PacksSection } from "@/practice/packs";
+import { SETTINGS_SEARCH_INDEX } from "@/lib/settingsIndex";
+import { SnippetsPanel } from "@/practice/snippets";
 import { queryKeys, useAppInfo, useCalibration } from "@/lib/queries";
 import { usePracticePrefs } from "@/lib/practice";
 import {
@@ -350,6 +354,8 @@ function PracticeSection() {
       <dl className="space-y-3">
         <OnOffRow label={t("practice.settings.daily")} value={prefs.daily} set={prefs.setDaily} />
         <OnOffRow label={t("practice.settings.review")} value={prefs.review} set={prefs.setReview} />
+        <OnOffRow label={t("plan.setting")} value={prefs.plan} set={prefs.setPlan} />
+        <OnOffRow label={t("kata.rusty.setting")} value={prefs.rusty} set={prefs.setRusty} />
         <Row label={t("welcome.again.label")}>
           <Button
             variant="outline"
@@ -497,38 +503,6 @@ function ResetWindowRow() {
   );
 }
 
-/** What "Search settings" finds: each section's row labels (i18n keys). */
-const SEARCH_INDEX: [SettingsSection, string[]][] = [
-  [
-    "appearance",
-    ["theme.label", "language.label", "settings.contrast", "settings.motion", "settings.window.label", "settings.window.reset"],
-  ],
-  [
-    "editor",
-    ["settings.keymap", "settings.ligatures", "settings.fontSize", "settings.tabWidth", "settings.editorTheme", "settings.preview"],
-  ],
-  ["practice", ["practice.settings.daily", "practice.settings.review", "welcome.again.label"]],
-  ["languages", ["settings.sections.languages", "settings.calibration.title", "settings.calibration.recalibrate"]],
-  ["learn", ["practice.settings.learnReview", "settings.learnSpeed"]],
-  ["data", ["practice.data.export", "practice.data.import"]],
-  [
-    "about",
-    [
-      "settings.version",
-      "settings.contentPack",
-      "settings.licenses.label",
-      "settings.userSchema",
-      "settings.dataFolder",
-      "settings.sandboxRoot",
-      "settings.notices",
-      "settings.docs",
-      "settings.changelog",
-      "shortcuts.title",
-      "settings.diagnostics.label",
-    ],
-  ],
-];
-
 /** Finds a setting by its label (accents and punctuation ignored) and opens its section. */
 function SettingsSearch({ onPick }: { onPick: (section: SettingsSection) => void }) {
   const { t } = useTranslation();
@@ -537,7 +511,7 @@ function SettingsSearch({ onPick }: { onPick: (section: SettingsSection) => void
     const q = normalizeForSearch(query);
     if (q === "") return [];
     const label = t as unknown as (key: string) => string;
-    return SEARCH_INDEX.flatMap(([section, keys]) =>
+    return SETTINGS_SEARCH_INDEX.flatMap(([section, keys]) =>
       keys
         .map((k) => label(k))
         .filter((text) => normalizeForSearch(text).includes(q))
@@ -591,7 +565,7 @@ function SettingsSearch({ onPick }: { onPick: (section: SettingsSection) => void
 
 export function Settings() {
   const { t } = useTranslation();
-  const { theme, lang, contrast, motion, setTheme, setLang, setContrast, setMotion } = usePrefs();
+  const { theme, lang, uiLang, contrast, motion, setTheme, setUiLang, setContentLang, setContrast, setMotion } = usePrefs();
   const info = useAppInfo();
   const editor = useEditorPrefs();
   const navigate = useNavigate({ from: "/settings" });
@@ -629,7 +603,7 @@ export function Settings() {
               <TabsTrigger
                 key={id}
                 value={id}
-                className={wide ? "justify-start px-3 py-1.5" : "flex-none px-3"}
+                className={wide ? "h-auto justify-start px-3 py-1.5 text-left whitespace-normal" : "flex-none px-3"}
                 data-testid={`settings-section-${id}`}
               >
                 {t(`settings.sections.${id}`)}
@@ -668,8 +642,8 @@ export function Settings() {
                     variant="outline"
                     size="sm"
                     aria-label={t("language.label")}
-                    value={lang}
-                    onValueChange={(v) => v && setLang(v as UiLangCode)}
+                    value={uiLang}
+                    onValueChange={(v) => v && setUiLang(v as UiLangCode)}
                   >
                     {UI_LANGS.map((l) => (
                       <ToggleGroupItem key={l} value={l} lang={l} className="px-3">
@@ -678,6 +652,26 @@ export function Settings() {
                     ))}
                   </ToggleGroup>
                 </Row>
+                {!isContentLang(uiLang) && (
+                  <Row label={t("settings.contentLang")}>
+                    <p className="mb-1.5 break-normal text-muted-foreground">{t("settings.contentLangHint")}</p>
+                    <ToggleGroup
+                      type="single"
+                      variant="outline"
+                      size="sm"
+                      aria-label={t("settings.contentLang")}
+                      value={lang}
+                      onValueChange={(v) => v && setContentLang(v as ContentLangCode)}
+                      data-testid="content-lang"
+                    >
+                      {CONTENT_LANGS.map((l) => (
+                        <ToggleGroupItem key={l} value={l} lang={l} className="px-3">
+                          {t(`language.${l}`)}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </Row>
+                )}
                 <Row label={t("settings.contrast")}>
                   <ToggleGroup
                     type="single"
@@ -801,6 +795,9 @@ export function Settings() {
                 </Suspense>
               </div>
             </Section>
+            <Section title={t("snippets.title")}>
+              <SnippetsPanel />
+            </Section>
           </TabsContent>
 
           <TabsContent value="practice">
@@ -818,8 +815,17 @@ export function Settings() {
             <LearnSection />
           </TabsContent>
 
-          <TabsContent value="data">
+          <TabsContent value="data" className="space-y-4">
             <DataSection />
+            <Section title={t("backup.title")}>
+              <BackupSection />
+            </Section>
+          </TabsContent>
+
+          <TabsContent value="packs">
+            <Section title={t("packs.title")}>
+              <PacksSection />
+            </Section>
           </TabsContent>
 
           <TabsContent value="about">

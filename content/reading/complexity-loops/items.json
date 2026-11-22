@@ -1,0 +1,102 @@
+[
+  {
+    "n": 1,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The inner loop runs i times for each i, so 0 + 1 + … + (n − 1) = n(n − 1)/2 steps: O(n²). Only two counters are kept: O(1) space.",
+    "explain_es": "El bucle interior se ejecuta i veces por cada i, así que 0 + 1 + … + (n − 1) = n(n − 1)/2 pasos: O(n²). Solo se guardan dos contadores: espacio O(1).",
+    "time": "O(n²)",
+    "space": "O(1)",
+    "dominant": {"python": 4, "typescript": 4}
+  },
+  {
+    "n": 2,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Each pass halves n, so the loop runs about log₂ n times: O(log n). Constant extra space.",
+    "explain_es": "Cada vuelta divide n entre dos, así que el bucle se ejecuta unas log₂ n veces: O(log n). Espacio extra constante.",
+    "time": "O(log n)",
+    "space": "O(1)",
+    "dominant": {"python": 3, "typescript": 3}
+  },
+  {
+    "n": 3,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The loop jumps 3 at a time, so it runs about n/3 times. A constant factor does not change the class: O(n). Only total and i are kept: O(1) space.",
+    "explain_es": "El bucle avanza de 3 en 3, así que se ejecuta unas n/3 veces. Un factor constante no cambia la clase: O(n). Solo se guardan total e i: espacio O(1).",
+    "time": "O(n)",
+    "space": "O(1)",
+    "dominant": {"python": 3, "typescript": 3}
+  },
+  {
+    "n": 4,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The inner loop visits every pair i < j once: (n − 1) + (n − 2) + … + 1 = n(n − 1)/2 checks, whatever the if decides: O(n²). Three integers of extra space: O(1).",
+    "explain_es": "El bucle interior visita cada par i < j una vez: (n − 1) + (n − 2) + … + 1 = n(n − 1)/2 comprobaciones, decida lo que decida el if: O(n²). Tres enteros de espacio extra: O(1).",
+    "time": "O(n²)",
+    "space": "O(1)",
+    "dominant": {"python": 4, "typescript": 4}
+  },
+  {
+    "n": 5,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "power triples on every pass, so after k passes it is 3ᵏ and the loop stops once 3ᵏ > n: about log₃ n passes. The base of the logarithm is only a constant factor: O(log n). Constant extra space.",
+    "explain_es": "power se triplica en cada vuelta, así que tras k vueltas vale 3ᵏ y el bucle para cuando 3ᵏ > n: unas log₃ n vueltas. La base del logaritmo es solo un factor constante: O(log n). Espacio extra constante.",
+    "time": "O(log n)",
+    "space": "O(1)",
+    "dominant": {"python": 4, "typescript": 4}
+  },
+  {
+    "n": 6,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "Two pointers start at both ends and every pass moves at least one of them toward the other, so the gap of n − 1 closes in at most n − 1 passes: O(n). Only the two pointers and two counters are stored: O(1).",
+    "explain_es": "Dos punteros empiezan en los extremos y cada vuelta mueve al menos uno hacia el otro, así que el hueco de n − 1 se cierra en como mucho n − 1 vueltas: O(n). Solo se guardan los dos punteros y dos contadores: O(1).",
+    "time": "O(n)",
+    "space": "O(1)",
+    "dominant": {"python": 5, "typescript": 6}
+  },
+  {
+    "n": 7,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "width halves on each pass of the outer loop, so it runs about log₂ n times, and each pass runs the inner loop over the full n (not over width): n · log n steps, O(n log n). Constant extra space.",
+    "explain_es": "width se divide entre dos en cada vuelta del bucle exterior, así que se ejecuta unas log₂ n veces, y cada vuelta recorre el bucle interior entero hasta n (no hasta width): n · log n pasos, O(n log n). Espacio extra constante.",
+    "time": "O(n log n)",
+    "space": "O(1)",
+    "dominant": {"python": 5, "typescript": 5}
+  },
+  {
+    "n": 8,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The loops run one after the other, not one inside the other, so their steps add up: n + 2n = 3n, O(n). The second loop, with 2n passes, does most of the work. Constant extra space.",
+    "explain_es": "Los bucles se ejecutan uno detrás de otro, no uno dentro de otro, así que sus pasos se suman: n + 2n = 3n, O(n). El segundo bucle, con 2n vueltas, hace la mayor parte del trabajo. Espacio extra constante.",
+    "time": "O(n)",
+    "space": "O(1)",
+    "dominant": {"python": 7, "typescript": 9}
+  },
+  {
+    "n": 9,
+    "prompt": "The loop returns early. How do the time and the extra space grow with n?",
+    "prompt_es": "El bucle sale antes de tiempo. ¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The return fires once 2i ≥ n, that is halfway through: about n/2 passes. Stopping halfway still leaves a number of steps proportional to n: O(n). Constant extra space.",
+    "explain_es": "El return salta cuando 2i ≥ n, es decir, a mitad de camino: unas n/2 vueltas. Parar a la mitad sigue dejando un número de pasos proporcional a n: O(n). Espacio extra constante.",
+    "time": "O(n)",
+    "space": "O(1)",
+    "dominant": {"python": 2, "typescript": 2}
+  },
+  {
+    "n": 10,
+    "prompt": "How do the time and the extra space grow with n?",
+    "prompt_es": "¿Cómo crecen el tiempo y el espacio extra con n?",
+    "explain": "The loop always runs exactly 100 times, however big n is; n only changes the values, not the number of steps: O(1). Constant extra space.",
+    "explain_es": "El bucle siempre se ejecuta exactamente 100 veces, por grande que sea n; n solo cambia los valores, no el número de pasos: O(1). Espacio extra constante.",
+    "time": "O(1)",
+    "space": "O(1)",
+    "dominant": {"python": 3, "typescript": 3}
+  }
+]

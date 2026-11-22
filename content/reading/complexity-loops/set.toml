@@ -1,0 +1,7 @@
+id = "complexity-loops"
+order = 6
+kind = "complexity"
+title = "Complexity: loops"
+title_es = "Complejidad: bucles"
+blurb = "Nested loops, halving and two pointers: how fast does the work grow?"
+blurb_es = "Bucles anidados, mitades y dos punteros: ¿cuánto crece el trabajo?"

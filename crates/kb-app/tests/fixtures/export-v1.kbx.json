@@ -1,0 +1,27 @@
+{
+  "format": "katabox-export/v1",
+  "exported_at": 1763200000000,
+  "app_version": "1.0.0-beta.1",
+  "data": {
+    "statuses": [
+      {"problem_id": "two-sum", "status": "solved", "first_solved_at": 1763100000000, "updated_at": 1763100000000},
+      {"problem_id": "nested-brackets", "status": "attempted", "first_solved_at": null, "updated_at": 1763100100000}
+    ],
+    "submissions": [
+      {"problem_id": "two-sum", "language": "python", "code": "def twoSum(nums, target):\n    seen = {}\n", "verdict": "accepted", "time_us": 1500, "memory_kb": 9000, "report": {"verdict": "accepted", "tests": [], "total_tests": 3, "first_failure": null, "compile_output": null, "time_us": 1500, "memory_kb": 9000, "compile": null}, "created_at": 1763100000000},
+      {"problem_id": "nested-brackets", "language": "php", "code": "<?php // wip", "verdict": "time_limit_exceeded", "time_us": 900000, "memory_kb": 12000, "report": {"verdict": "time_limit_exceeded", "tests": [], "total_tests": 3, "first_failure": null, "compile_output": null, "time_us": 900000, "memory_kb": 12000, "compile": null}, "created_at": 1763100100000}
+    ],
+    "snapshots": [
+      {"problem_id": "two-sum", "language": "python", "code": "def twoSum(nums, target):\n    seen = {}\n", "source": "submit", "verdict": "accepted", "created_at": 1763100000000}
+    ],
+    "notes": [{"problem_id": "two-sum", "body": "use a map", "updated_at": 1763100200000}],
+    "drafts": [{"problem_id": "nested-brackets", "language": "php", "code": "<?php // wip", "updated_at": 1763100300000}],
+    "hint_unlocks": [{"problem_id": "nested-brackets", "tier": 1, "unlocked_at": 1763100400000}],
+    "opens": [{"problem_id": "two-sum", "first_opened_at": 1763099000000, "last_opened_at": 1763100000000}],
+    "reviews": [{"problem_id": "two-sum", "due_on": "2026-11-18", "interval_days": 3, "passes": 0, "lapsed": false, "created_at": 1763100000000}],
+    "daily_picks": [{"day": "2026-11-14", "problem_id": "two-sum", "solved_at": 1763100000000}],
+    "lists": [{"name": "Warm-up", "created_at": 1763100500000, "items": ["two-sum", "retired-one"]}],
+    "interviews": [{"started_at": 1763100600000, "duration_s": 1800, "problem_ids": ["budget-pair", "two-sum"], "languages": ["python"], "mix": "easy+medium", "ended_at": 1763102400000, "results": null}],
+    "settings": [{"key": "editor.keymap", "value": "vim", "updated_at": 1763100700000}]
+  }
+}

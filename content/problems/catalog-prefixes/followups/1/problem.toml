@@ -1,0 +1,18 @@
+id = "catalog-prefixes--f1"
+parent = "catalog-prefixes"
+title = "Catalogue Prefixes: A Changing Catalogue"
+title_es = "Prefijos del catálogo: un catálogo que cambia"
+difficulty = "medium"
+tags = ["trie", "string", "design"]
+pattern = "tries"
+rank = 7
+
+[signature]
+name = "liveCounts"
+params = [{ name = "ops", type = "string[]" }, { name = "words", type = "string[]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

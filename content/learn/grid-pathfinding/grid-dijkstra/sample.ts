@@ -4,12 +4,18 @@ function cost(cell: number): number {
   return cell >= 2 ? cell : 1;
 }
 
-// TypeScript has no built-in priority queue: this one keeps (distance, row, column)
-// entries sorted, smallest first, which is enough for a small grid.
-function gridDijkstra(grid: number[][], start: number[], goal: number[]): number[] {
+// TypeScript has no built-in priority queue: this one keeps (distance, row,
+// column) entries sorted, smallest first, which is enough for a small grid.
+function gridDijkstra(
+  grid: number[][],
+  start: number[],
+  goal: number[],
+): number[] {
   const rows = grid.length;
   const cols = grid[0].length;
-  const dist: (number | null)[][] = Array.from({ length: rows }, () => new Array(cols).fill(null));
+  const dist: (number | null)[][] = Array.from({ length: rows }, () =>
+    new Array(cols).fill(null),
+  );
   dist[start[0]][start[1]] = 0;
   const queue = [[0, start[0], start[1]]];
   while (queue.length > 0) {

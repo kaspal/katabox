@@ -1,10 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { History, RotateCcw } from "lucide-react";
-import { EditorState } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
-import { MergeView } from "@codemirror/merge";
 import type { Language, Snapshot } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,8 +10,7 @@ import { VerdictBadge } from "@/components/Verdict";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/time";
-import { baseExtensions, themeExtension } from "@/workspace/editor/setup";
-import { loadLanguageExtension } from "@/workspace/editor/languages";
+import { DiffView } from "@/workspace/problem/DiffView";
 
 /** Snapshots with verdict badges; compare any two (or one with the current code); restore. */
 export function HistoryTab({
@@ -114,35 +110,4 @@ export function HistoryTab({
       )}
     </div>
   );
-}
-
-function DiffView({ a, b, language }: { a: string; b: string; language: Language }) {
-  const host = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!host.current) return;
-    let view: MergeView | null = null;
-    let live = true;
-    const parent = host.current;
-    void loadLanguageExtension(language).then((lang) => {
-      if (!live) return;
-      const ext = [
-        baseExtensions,
-        lang,
-        themeExtension(13),
-        EditorView.editable.of(false),
-        EditorState.readOnly.of(true),
-      ];
-      view = new MergeView({
-        a: { doc: a, extensions: ext },
-        b: { doc: b, extensions: ext },
-        parent,
-        collapseUnchanged: { margin: 3, minSize: 6 },
-      });
-    });
-    return () => {
-      live = false;
-      view?.destroy();
-    };
-  }, [a, b, language]);
-  return <div ref={host} className="max-h-96 overflow-auto rounded-md border" data-testid="history-diff" />;
 }

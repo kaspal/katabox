@@ -7,13 +7,19 @@ mod window_state;
 
 use std::path::{Path, PathBuf};
 
+use kb_app::comforts::{SearchResults, SnippetInput};
 use kb_app::debug::{DebugAction, DebugInspect, DebugStart, DebugView};
 use kb_app::interview::{InterviewResult, InterviewSetup, InterviewView};
+use kb_app::journal::{JournalOverview, MistakeView};
+use kb_app::kata::{KataOptions, KataOverview, KataStart, KataView};
+use kb_app::plan_app::{PlanIcsLabels, PlanSetup, PlanView};
 use kb_app::practice::{
     DailyProblem, ListView, PatternProgress, ReviewItem, ReviewState, ReviewSummary,
     SolvedBreakdown,
 };
 use kb_app::profile::ProfileView;
+use kb_app::rating::RatingsView;
+use kb_app::reading::{ReadingAnswer, ReadingResult};
 use kb_app::transfer::{ImportPreview, ImportResult, TransferCounts};
 use kb_app::{
     App, AppError, AppErrorCode, AppInfo, AppPaths, ContinueItem, CustomInput, EditorialState,
@@ -22,10 +28,15 @@ use kb_app::{
 use kb_app::{LanguageCount, LearnTopicView};
 use kb_core::debug::EvalResult;
 use kb_core::{JudgeEvent, Language, Report};
+use kb_store::journal::ReflectionRow;
+use kb_store::kata::KataAttemptRow;
+use kb_store::reading_answers::ReadingAnswerRow;
+use kb_store::snippets::SnippetRow;
 use kb_store::{AcceptedSolution, ActivityRow, LearnPath, LearnSubject, LearnTopicSummary};
 use kb_store::{
     Draft, ProblemFilter, ProblemSummary, ProblemView, Snapshot, SubmissionSummary, UiLang,
 };
+use kb_store::{ReadingLink, ReadingSetSummary, ReadingSetView};
 use serde_json::Value;
 use tauri::ipc::Channel;
 use tauri::path::BaseDirectory;
@@ -254,6 +265,68 @@ async fn shrink(
 async fn cancel_shrink(state: State<'_, AppState>) -> Res<()> {
     state.app()?.cancel_shrink();
     Ok(())
+}
+
+/// Check custom inputs against the signature and validate.py (expansion M9).
+#[tauri::command]
+#[specta::specta]
+async fn check_custom(
+    state: State<'_, AppState>,
+    problem: String,
+    inputs: Vec<CustomInput>,
+) -> Res<kb_app::CustomCheck> {
+    state.app()?.check_custom(&problem, inputs).await
+}
+
+/// The stress lab (expansion M8): `code` against `brute` on generated inputs.
+#[tauri::command]
+#[specta::specta]
+async fn stress_test(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+    code: String,
+    brute: String,
+    on_event: Channel<kb_app::stress::StressEvent>,
+) -> Res<kb_app::stress::StressResult> {
+    let send = move |e| {
+        let _ = on_event.send(e);
+    };
+    state
+        .app()?
+        .stress(&problem, language, &code, &brute, send)
+        .await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn cancel_stress(state: State<'_, AppState>) -> Res<()> {
+    state.app()?.cancel_stress();
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn stress_brute(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+) -> Res<Option<String>> {
+    state.app()?.stress_brute(&problem, language).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn save_stress_brute(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+    code: String,
+) -> Res<()> {
+    state
+        .app()?
+        .save_stress_brute(&problem, language, &code)
+        .await
 }
 
 /// Every test; the submission is recorded. Progress goes to `on_event`.
@@ -564,6 +637,256 @@ async fn interviews(state: State<'_, AppState>, lang: UiLang) -> Res<Vec<Intervi
     state.app()?.interviews(lang).await
 }
 
+// --- Reading exercises (expansion M7, ADR 0035) --------------------------------------
+
+#[tauri::command]
+#[specta::specta]
+async fn reading_sets(state: State<'_, AppState>, ui_lang: UiLang) -> Res<Vec<ReadingSetSummary>> {
+    state.app()?.reading_sets(ui_lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn reading_set(
+    state: State<'_, AppState>,
+    id: String,
+    ui_lang: UiLang,
+) -> Res<ReadingSetView> {
+    state.app()?.reading_set(&id, ui_lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn reading_answers(state: State<'_, AppState>) -> Res<Vec<ReadingAnswerRow>> {
+    state.app()?.reading_answers().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn reading_links(
+    state: State<'_, AppState>,
+    topic: String,
+    ui_lang: UiLang,
+) -> Res<Vec<ReadingLink>> {
+    state.app()?.reading_links(&topic, ui_lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn answer_reading(
+    state: State<'_, AppState>,
+    item: String,
+    answer: ReadingAnswer,
+    ui_lang: UiLang,
+) -> Res<ReadingResult> {
+    state.app()?.answer_reading(&item, answer, ui_lang).await
+}
+
+// --- Snippets and search (expansion M4, ADR 0034) ------------------------------------
+
+#[tauri::command]
+#[specta::specta]
+async fn snippets(state: State<'_, AppState>) -> Res<Vec<SnippetRow>> {
+    state.app()?.snippets().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn save_snippet(state: State<'_, AppState>, snippet: SnippetInput) -> Res<SnippetRow> {
+    state.app()?.save_snippet(&snippet).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn delete_snippet(state: State<'_, AppState>, uid: String) -> Res<()> {
+    state.app()?.delete_snippet(&uid).await
+}
+
+/// "Search everything": problems, Learn topics and snippets.
+#[tauri::command]
+#[specta::specta]
+async fn search_all(state: State<'_, AppState>, query: String, lang: UiLang) -> Res<SearchResults> {
+    state.app()?.search_all(&query, lang).await
+}
+
+// --- Mistake journal and reflections (expansion M3, ADR 0034) ------------------------
+
+/// Progress → Mistakes: counts per tag with the latest examples.
+#[tauri::command]
+#[specta::specta]
+async fn journal_overview(state: State<'_, AppState>, lang: UiLang) -> Res<JournalOverview> {
+    state.app()?.journal_overview(lang).await
+}
+
+/// A failed submission's tags and note (`None` for an Accepted one).
+#[tauri::command]
+#[specta::specta]
+async fn submission_mistake(
+    state: State<'_, AppState>,
+    submission: i64,
+) -> Res<Option<MistakeView>> {
+    state.app()?.submission_mistake(submission).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn set_submission_mistake(
+    state: State<'_, AppState>,
+    submission: i64,
+    tags: Vec<String>,
+    note: String,
+) -> Res<()> {
+    state
+        .app()?
+        .set_submission_mistake(submission, &tags, &note)
+        .await
+}
+
+/// The shrinker found a smaller failing input for this submission's failure.
+#[tauri::command]
+#[specta::specta]
+async fn tag_shrunk(state: State<'_, AppState>, submission: i64) -> Res<()> {
+    state.app()?.tag_shrunk(submission).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn reflection(state: State<'_, AppState>, problem: String) -> Res<Option<ReflectionRow>> {
+    state.app()?.reflection(&problem).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn set_reflection(
+    state: State<'_, AppState>,
+    problem: String,
+    why: String,
+    time_class: Option<String>,
+    space_class: Option<String>,
+) -> Res<()> {
+    state
+        .app()?
+        .set_reflection(
+            &problem,
+            &why,
+            time_class.as_deref(),
+            space_class.as_deref(),
+        )
+        .await
+}
+
+// --- Skill rating and study plans (expansion M2, ADR 0033) ---------------------------
+
+/// Ratings per pattern and overall (replayed from the history; estimated).
+#[tauri::command]
+#[specta::specta]
+async fn ratings(state: State<'_, AppState>) -> Res<RatingsView> {
+    state.app()?.ratings().await
+}
+
+/// The active study plan, if any.
+#[tauri::command]
+#[specta::specta]
+async fn plan_view(state: State<'_, AppState>, lang: UiLang) -> Res<Option<PlanView>> {
+    state.app()?.plan_view(lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn create_plan(state: State<'_, AppState>, setup: PlanSetup, lang: UiLang) -> Res<PlanView> {
+    state.app()?.create_plan(&setup, lang).await
+}
+
+/// Mark a plan item `pending`, `done` or `skipped`.
+#[tauri::command]
+#[specta::specta]
+async fn set_plan_item(
+    state: State<'_, AppState>,
+    plan: i64,
+    position: u32,
+    status: String,
+) -> Res<()> {
+    state.app()?.set_plan_item(plan, position, &status).await
+}
+
+/// Move a plan item (and the pending items after it) one day later.
+#[tauri::command]
+#[specta::specta]
+async fn reschedule_plan_item(state: State<'_, AppState>, plan: i64, position: u32) -> Res<()> {
+    state.app()?.reschedule_plan_item(plan, position).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn archive_plan(state: State<'_, AppState>, plan: i64) -> Res<()> {
+    state.app()?.archive_plan(plan).await
+}
+
+/// Progress → Plan → Export to calendar: a Save dialog, then the plan as an `.ics`
+/// file. `None` when cancelled, else the file name.
+#[tauri::command]
+#[specta::specta]
+async fn export_plan_ics(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    labels: PlanIcsLabels,
+    lang: UiLang,
+) -> Res<Option<String>> {
+    let kb = state.app()?;
+    let name = format!("katabox-plan-{}.ics", chrono_free_today());
+    let Some(path) = pick_file(app, "Calendar", &["ics"], Some(name)).await? else {
+        return Ok(None);
+    };
+    kb.export_plan_ics(&path, &labels, lang).await?;
+    Ok(path.file_name().map(|n| n.to_string_lossy().into_owned()))
+}
+
+// --- Kata drills (expansion M1, ADR 0033) ---------------------------------------------
+
+/// Today's daily kata, the patterns and lists a kata can start from, and the running one.
+#[tauri::command]
+#[specta::specta]
+async fn kata_options(state: State<'_, AppState>, today: String, lang: UiLang) -> Res<KataOptions> {
+    state.app()?.kata_options(&today, lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn start_kata(state: State<'_, AppState>, start: KataStart, lang: UiLang) -> Res<KataView> {
+    state.app()?.start_kata(&start, lang).await
+}
+
+/// The running kata, if any (ended first once it expired).
+#[tauri::command]
+#[specta::specta]
+async fn kata_state(state: State<'_, AppState>, lang: UiLang) -> Res<Option<KataView>> {
+    state.app()?.kata_state(lang).await
+}
+
+/// The workspace opened `problem` in the running kata: its clock starts (once).
+#[tauri::command]
+#[specta::specta]
+async fn kata_open(state: State<'_, AppState>, problem: String) -> Res<KataAttemptRow> {
+    state.app()?.kata_open(&problem).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn end_kata(state: State<'_, AppState>, lang: UiLang) -> Res<Option<KataView>> {
+    state.app()?.end_kata(lang).await
+}
+
+/// Personal bests, the rusty list, the kata streak and the latest sessions.
+#[tauri::command]
+#[specta::specta]
+async fn kata_overview(
+    state: State<'_, AppState>,
+    today: String,
+    lang: UiLang,
+) -> Res<KataOverview> {
+    state.app()?.kata_overview(&today, lang).await
+}
+
 #[tauri::command]
 #[specta::specta]
 async fn accepted_solution(
@@ -588,19 +911,25 @@ async fn solved_by_language(state: State<'_, AppState>) -> Res<Vec<LanguageCount
 
 /// A file path from a native dialog, opened on a blocking thread (`None`: cancelled).
 async fn pick_path(app: tauri::AppHandle, save: bool) -> Res<Option<PathBuf>> {
+    let name = save.then(|| format!("katabox-progress-{}.kbx.json", chrono_free_today()));
+    pick_file(app, "KataBox progress", &["json"], name).await
+}
+
+/// A native Open dialog (`save_as: None`) or Save dialog (`Some(default name)`) with one
+/// filter, on a blocking thread (`None`: cancelled). The webview has no dialog
+/// permission: dialogs are opened here only.
+async fn pick_file(
+    app: tauri::AppHandle,
+    filter: &'static str,
+    extensions: &'static [&'static str],
+    save_as: Option<String>,
+) -> Res<Option<PathBuf>> {
     use tauri_plugin_dialog::DialogExt;
     let picked = tauri::async_runtime::spawn_blocking(move || {
-        let dialog = app
-            .dialog()
-            .file()
-            .add_filter("KataBox progress", &["json"]);
-        if save {
-            let day = chrono_free_today();
-            dialog
-                .set_file_name(format!("katabox-progress-{day}.kbx.json"))
-                .blocking_save_file()
-        } else {
-            dialog.blocking_pick_file()
+        let dialog = app.dialog().file().add_filter(filter, extensions);
+        match save_as {
+            Some(name) => dialog.set_file_name(name).blocking_save_file(),
+            None => dialog.blocking_pick_file(),
         }
     })
     .await
@@ -611,6 +940,369 @@ async fn pick_path(app: tauri::AppHandle, save: bool) -> Res<Option<PathBuf>> {
                 .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))
         })
         .transpose()
+}
+
+// --- Problem packs (expansion M11, ADR 0038) ----------------------------------------
+
+/// Settings → Packs → Import: a `.kbpack` from a native Open dialog, opened and checked
+/// (nothing is installed yet). `None` when cancelled.
+#[tauri::command]
+#[specta::specta]
+async fn import_pack_preview(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Res<Option<kb_app::packs::PackPreview>> {
+    let Some(file) = pick_file(app, "KataBox pack", &["kbpack"], None).await? else {
+        return Ok(None);
+    };
+    Ok(Some(state.app()?.import_pack_preview(&file).await?))
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn import_pack_apply(
+    state: State<'_, AppState>,
+    token: u64,
+) -> Res<kb_store::packs::PackRow> {
+    state.app()?.import_pack_apply(token).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn import_pack_cancel(state: State<'_, AppState>, token: u64) -> Res<()> {
+    state.app()?.import_pack_cancel(token);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn packs(state: State<'_, AppState>) -> Res<Vec<kb_store::packs::PackRow>> {
+    state.app()?.packs().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn uninstall_pack(state: State<'_, AppState>, id: String) -> Res<()> {
+    state.app()?.uninstall_pack(&id).await
+}
+
+/// Packs take effect on the next start: restart the app now.
+#[tauri::command]
+#[specta::specta]
+fn restart_app(app: tauri::AppHandle) {
+    app.restart();
+}
+
+// --- Classroom mode (expansion M12, ADR 0039) ----------------------------------------
+
+#[tauri::command]
+#[specta::specta]
+async fn assignments(
+    state: State<'_, AppState>,
+    lang: UiLang,
+) -> Res<Vec<kb_app::classroom::AssignmentView>> {
+    state.app()?.assignments(lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn assignment(
+    state: State<'_, AppState>,
+    id: String,
+    lang: UiLang,
+) -> Res<kb_app::classroom::AssignmentView> {
+    state.app()?.assignment(&id, lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn start_assignment(
+    state: State<'_, AppState>,
+    id: String,
+    lang: UiLang,
+) -> Res<kb_app::classroom::AssignmentView> {
+    state.app()?.start_assignment(&id, lang).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn finish_assignment(
+    state: State<'_, AppState>,
+    id: String,
+    lang: UiLang,
+) -> Res<kb_app::classroom::AssignmentView> {
+    state.app()?.finish_assignment(&id, lang).await
+}
+
+/// The results file exactly as it would be saved (shown before saving).
+#[tauri::command]
+#[specta::specta]
+async fn assignment_results(
+    state: State<'_, AppState>,
+    id: String,
+    student: String,
+    include_code: bool,
+) -> Res<kb_app::classroom::ResultsFile> {
+    state
+        .app()?
+        .assignment_results(&id, &student, include_code)
+        .await
+}
+
+/// A Save dialog, then the results file. `None` when cancelled.
+#[tauri::command]
+#[specta::specta]
+async fn save_assignment_results(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    id: String,
+    student: String,
+    include_code: bool,
+) -> Res<Option<kb_app::classroom::ResultsFile>> {
+    let kb = state.app()?;
+    // Check first, so a bad name fails before the dialog opens.
+    kb.assignment_results(&id, &student, include_code).await?;
+    let name = format!("katabox-results-{id}-{}.json", chrono_free_today());
+    let Some(path) = pick_file(app, "KataBox results", &["json"], Some(name)).await? else {
+        return Ok(None);
+    };
+    kb.save_assignment_results(&id, &student, include_code, &path)
+        .await
+        .map(Some)
+}
+
+/// Teacher: results files from a native Open dialog (several at once). `None` when
+/// cancelled.
+#[tauri::command]
+#[specta::specta]
+async fn import_class_results(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Res<Option<kb_app::classroom::ClassImport>> {
+    use tauri_plugin_dialog::DialogExt;
+    let kb = state.app()?;
+    let picked = tauri::async_runtime::spawn_blocking(move || {
+        app.dialog()
+            .file()
+            .add_filter("KataBox results", &["json"])
+            .blocking_pick_files()
+    })
+    .await
+    .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))?;
+    let Some(files) = picked else {
+        return Ok(None);
+    };
+    let paths = files
+        .into_iter()
+        .map(|p| {
+            p.into_path()
+                .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))
+        })
+        .collect::<Res<Vec<PathBuf>>>()?;
+    kb.import_class_results(&paths).await.map(Some)
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn class_results(state: State<'_, AppState>) -> Res<Vec<kb_app::classroom::ClassAssignment>> {
+    state.app()?.class_results().await
+}
+
+/// A Save dialog, then one assignment's CSV. `false` when cancelled.
+#[tauri::command]
+#[specta::specta]
+async fn save_class_csv(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    assignment: String,
+) -> Res<bool> {
+    let kb = state.app()?;
+    let name = format!("katabox-class-{assignment}.csv");
+    let Some(path) = pick_file(app, "CSV", &["csv"], Some(name)).await? else {
+        return Ok(false);
+    };
+    kb.save_class_csv(&assignment, &path).await?;
+    Ok(true)
+}
+
+// --- In-app problem editor (expansion M13, ADR 0040) ----------------------------------
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_drafts(state: State<'_, AppState>) -> Res<Vec<kb_app::authoring::DraftSummary>> {
+    state.app()?.authoring_drafts().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_load(
+    state: State<'_, AppState>,
+    id: String,
+) -> Res<kb_app::authoring::ProblemDraft> {
+    state.app()?.authoring_load(&id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_new(
+    state: State<'_, AppState>,
+    id: String,
+) -> Res<kb_app::authoring::ProblemDraft> {
+    state.app()?.authoring_new(&id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_save(
+    state: State<'_, AppState>,
+    draft: kb_app::authoring::ProblemDraft,
+) -> Res<Vec<kb_app::authoring::DraftIssue>> {
+    state.app()?.authoring_save(&draft).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_issues(
+    state: State<'_, AppState>,
+    id: String,
+) -> Res<Vec<kb_app::authoring::DraftIssue>> {
+    state.app()?.authoring_issues(&id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_delete(state: State<'_, AppState>, id: String) -> Res<()> {
+    state.app()?.authoring_delete(&id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_check(state: State<'_, AppState>, id: String) -> Res<Report> {
+    state.app()?.authoring_check(&id).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_starter(
+    state: State<'_, AppState>,
+    draft: kb_app::authoring::ProblemDraft,
+) -> Res<String> {
+    state.app()?.authoring_starter(&draft)
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn authoring_patterns(state: State<'_, AppState>) -> Res<Vec<String>> {
+    Ok(state.app()?.authoring_patterns())
+}
+
+/// A Save dialog, then the drafts as one pack (opened again with the import checks).
+/// `None` when cancelled; otherwise the pack's SHA-256.
+#[tauri::command]
+#[specta::specta]
+async fn authoring_export(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    ids: Vec<String>,
+    head: kb_app::authoring::PackHead,
+) -> Res<Option<String>> {
+    let kb = state.app()?;
+    if !kb_app::authoring::valid_pack_id(&head.id) {
+        return Err(AppError::new(
+            AppErrorCode::InvalidInput,
+            "pack id: 3-20 lowercase letters and digits, starting with a letter",
+        ));
+    }
+    let name = format!("{}.kbpack", head.id);
+    let Some(path) = pick_file(app, "KataBox pack", &["kbpack"], Some(name)).await? else {
+        return Ok(None);
+    };
+    kb.authoring_export(&ids, &head, &path).await.map(Some)
+}
+
+// --- Focus sessions and backups (expansion M10, ADR 0037) ----------------------------
+
+#[tauri::command]
+#[specta::specta]
+async fn focus_current(state: State<'_, AppState>) -> Res<Option<kb_app::focus::FocusCurrent>> {
+    state.app()?.focus_current().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn focus_start(
+    state: State<'_, AppState>,
+    work_min: u32,
+    break_min: u32,
+) -> Res<kb_app::focus::FocusCurrent> {
+    state.app()?.focus_start(work_min, break_min).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn focus_stop(state: State<'_, AppState>) -> Res<Option<kb_store::focus::FocusSessionRow>> {
+    state.app()?.focus_stop().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn focus_sessions(state: State<'_, AppState>) -> Res<Vec<kb_store::focus::FocusSessionRow>> {
+    state.app()?.focus_sessions().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn backup_status(state: State<'_, AppState>) -> Res<kb_app::backup::BackupStatus> {
+    state.app()?.backup_status().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn set_backup_options(
+    state: State<'_, AppState>,
+    every_days: u32,
+    keep: u32,
+    on_exit: bool,
+) -> Res<kb_app::backup::BackupStatus> {
+    state
+        .app()?
+        .set_backup_options(every_days, keep, on_exit)
+        .await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn backup_now(state: State<'_, AppState>) -> Res<kb_app::backup::BackupStatus> {
+    state.app()?.backup_now().await
+}
+
+/// Settings → Data: choose the backup folder in a native dialog (opened here; the webview
+/// has no dialog permission). `None` (cancelled) leaves it unchanged.
+#[tauri::command]
+#[specta::specta]
+async fn choose_backup_folder(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Res<Option<kb_app::backup::BackupStatus>> {
+    use tauri_plugin_dialog::DialogExt;
+    let picked =
+        tauri::async_runtime::spawn_blocking(move || app.dialog().file().blocking_pick_folder())
+            .await
+            .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))?;
+    let Some(folder) = picked else {
+        return Ok(None);
+    };
+    let folder = folder
+        .into_path()
+        .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))?;
+    Ok(Some(state.app()?.set_backup_folder(Some(&folder)).await?))
+}
+
+/// Turn backups off (the files already written stay).
+#[tauri::command]
+#[specta::specta]
+async fn clear_backup_folder(state: State<'_, AppState>) -> Res<kb_app::backup::BackupStatus> {
+    state.app()?.set_backup_folder(None).await
 }
 
 /// Today's UTC date for the default file name (the name is only a suggestion).
@@ -885,6 +1577,73 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         interview_active,
         end_interview,
         interviews,
+        check_custom,
+        stress_test,
+        cancel_stress,
+        stress_brute,
+        save_stress_brute,
+        import_pack_preview,
+        import_pack_apply,
+        import_pack_cancel,
+        packs,
+        uninstall_pack,
+        restart_app,
+        assignments,
+        assignment,
+        start_assignment,
+        finish_assignment,
+        assignment_results,
+        save_assignment_results,
+        import_class_results,
+        class_results,
+        save_class_csv,
+        authoring_drafts,
+        authoring_load,
+        authoring_new,
+        authoring_save,
+        authoring_issues,
+        authoring_delete,
+        authoring_check,
+        authoring_patterns,
+        authoring_starter,
+        authoring_export,
+        focus_current,
+        focus_start,
+        focus_stop,
+        focus_sessions,
+        backup_status,
+        set_backup_options,
+        backup_now,
+        choose_backup_folder,
+        clear_backup_folder,
+        reading_sets,
+        reading_set,
+        reading_answers,
+        reading_links,
+        answer_reading,
+        snippets,
+        save_snippet,
+        delete_snippet,
+        search_all,
+        journal_overview,
+        submission_mistake,
+        set_submission_mistake,
+        tag_shrunk,
+        reflection,
+        set_reflection,
+        ratings,
+        plan_view,
+        create_plan,
+        set_plan_item,
+        reschedule_plan_item,
+        archive_plan,
+        export_plan_ics,
+        kata_options,
+        start_kata,
+        kata_state,
+        kata_open,
+        end_kata,
+        kata_overview,
         accepted_solution,
         solved_languages,
         solved_by_language,
@@ -1019,7 +1778,16 @@ pub fn run_app() {
             if let Err(e) = &state {
                 eprintln!("KataBox could not start: {e}");
             }
+            // A backup when one is due (expansion M10), in the background.
             app.manage(AppState(state));
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                if let Some(s) = handle.try_state::<AppState>()
+                    && let Ok(a) = s.app()
+                {
+                    a.backup_if_due(false).await;
+                }
+            });
             // The main window starts hidden: place it where it was, then show it.
             app.manage(window_state::Saved::default());
             if let Some(window) = app.get_webview_window("main") {
@@ -1037,6 +1805,9 @@ pub fn run_app() {
                 && let Ok(app) = state.app()
             {
                 tauri::async_runtime::block_on(app.lsp_shutdown());
+                // The exit backup, when that option is on (expansion M10); at most 5 s so
+                // closing never hangs.
+                tauri::async_runtime::block_on(app.backup_on_exit());
             }
         });
 }

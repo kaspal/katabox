@@ -1,0 +1,72 @@
+[
+  {
+    "n": 1,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "b = a does not copy the list: both names point to the same list. Appending through b therefore changes what a sees too.",
+    "explain_es": "b = a no copia la lista: los dos nombres apuntan a la misma lista. Por eso, añadir a través de b también cambia lo que ve a.",
+    "answer": "4\n1 2 3 4",
+    "choices": ["4\n1 2 3 4", "3\n1 2 3", "3\n1 2 3 4"]
+  },
+  {
+    "n": 2,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "a[:] and list(a) (the spread [...a] and Array.from(a) in TypeScript) each build a new list. Changing b or c leaves a untouched, and c ends with 4 items.",
+    "explain_es": "a[:] y list(a) (el spread [...a] y Array.from(a) en TypeScript) crean cada uno una lista nueva. Cambiar b o c no toca a, y c termina con 4 elementos.",
+    "answer": "1 2 3\n10 2 3\n4",
+    "choices": ["1 2 3\n10 2 3\n4", "10 2 3\n10 2 3\n4", "10 2 3 99\n10 2 3 99\n4", "1 2 3\n10 2 3\n3"]
+  },
+  {
+    "n": 3,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "The outer list holds the same row twice: [[0] * 3] * 2 in Python and fill() in TypeScript repeat one reference, not copies. Setting grid[0][1] changes that single row, so both lines show the 5.",
+    "explain_es": "La lista exterior contiene la misma fila dos veces: [[0] * 3] * 2 en Python y fill() en TypeScript repiten una referencia, no copias. Cambiar grid[0][1] modifica esa única fila, así que las dos líneas muestran el 5.",
+    "answer": "0 5 0\n0 5 0",
+    "choices": ["0 5 0\n0 5 0", "0 5 0\n0 0 0", "0 0 0\n0 5 0"]
+  },
+  {
+    "n": 4,
+    "prompt": "What does this print? Type the output, one line per print.",
+    "prompt_es": "¿Qué imprime? Escribe la salida, una línea por cada impresión.",
+    "explain": "Here each row is built separately, so the rows are independent. row = grid[0] is an alias for the first row, so row[0] = 1 changes grid[0], while the 7 lands only in grid[1].",
+    "explain_es": "Aquí cada fila se crea por separado, así que las filas son independientes. row = grid[0] es un alias de la primera fila, así que row[0] = 1 cambia grid[0], mientras que el 7 queda solo en grid[1].",
+    "answer": "1 0 0\n0 0 7"
+  },
+  {
+    "n": 5,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "add_item mutates the list it was given, so the caller sees \"x\". replace only points its own parameter at a new list (xs = [\"new\"]); the caller's list is not touched by that or by the append that follows.",
+    "explain_es": "add_item modifica la lista que recibe, así que quien llama ve la \"x\". replace solo hace que su propio parámetro apunte a una lista nueva (xs = [\"new\"]); la lista de quien llama no cambia ni con eso ni con el append que sigue.",
+    "answer": "a x\n2",
+    "choices": ["a x\n2", "new y\n2", "a x y\n3", "a\n1"]
+  },
+  {
+    "n": 6,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "backup is the same dictionary as settings, so it sees size 14. current is a copy (dict(settings), or { ...settings } in TypeScript): changing its theme does not reach settings, and it keeps the old size 12.",
+    "explain_es": "backup es el mismo diccionario que settings, así que ve size 14. current es una copia (dict(settings), o { ...settings } en TypeScript): cambiar su theme no llega a settings, y conserva el size antiguo, 12.",
+    "answer": "14\ndark\n12",
+    "choices": ["14\ndark\n12", "12\ndark\n12", "14\nlight\n14", "14\ndark\n14"]
+  },
+  {
+    "n": 7,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "dict(team) and { ...team } are shallow copies: the new dictionary gets its own \"name\", but \"members\" still points to the same list. Renaming the clone leaves team alone, while appending \"eva\" grows the shared list to 3.",
+    "explain_es": "dict(team) y { ...team } son copias superficiales: el diccionario nuevo tiene su propio \"name\", pero \"members\" sigue apuntando a la misma lista. Renombrar la copia no afecta a team, pero añadir \"eva\" hace crecer la lista compartida hasta 3.",
+    "answer": "A\n3",
+    "choices": ["A\n3", "A\n2", "B\n3", "B\n2"]
+  },
+  {
+    "n": 8,
+    "prompt": "What does this print? Type the output, one line per print.",
+    "prompt_es": "¿Qué imprime? Escribe la salida, una línea por cada impresión.",
+    "explain": "Python's a += [2] extends the list in place, like push, so b sees the 2. a = a + [3] (a = [...a, 3]) builds a new list and points only a at it, so the 3 and the later 4 never reach b.",
+    "explain_es": "En Python, a += [2] amplía la lista en su sitio, como push, así que b ve el 2. a = a + [3] (a = [...a, 3]) crea una lista nueva y solo a apunta a ella, así que el 3 y el 4 posterior nunca llegan a b.",
+    "answer": "1 2 3 4\n1 2"
+  }
+]

@@ -8,6 +8,7 @@ import { decideWhatsNew, LAST_VERSION_KEY } from "@/app/WhatsNew";
 import { SHORTCUTS } from "@/app/shortcuts";
 import en from "@/i18n/locales/en.json";
 import es from "@/i18n/locales/es.json";
+import ptBR from "@/i18n/locales/pt-BR.json";
 
 vi.mock("@/lib/api", async () => (await import("@/test/mockApi")).apiModule);
 
@@ -87,7 +88,7 @@ describe("Keyboard shortcuts", () => {
     type Tree = { [k: string]: string | Tree };
     const label = (locale: Tree, path: string[]) =>
       path.reduce<string | Tree | undefined>((node, k) => (typeof node === "object" ? node[k] : undefined), locale);
-    for (const locale of [en, es] as unknown as Tree[]) {
+    for (const locale of [en, es, ptBR] as unknown as Tree[]) {
       for (const group of SHORTCUTS) {
         expect(typeof label(locale, ["shortcuts", "group", group.id])).toBe("string");
         for (const row of group.rows) {

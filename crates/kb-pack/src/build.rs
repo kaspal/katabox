@@ -54,8 +54,18 @@ pub(crate) fn block_on<F: std::future::Future>(f: F) -> F::Output {
         .block_on(f)
 }
 
+/// [`read_package`] for a pack's problem (expansion M11).
+pub(crate) fn read_package_for_pack(dir: &Path) -> Result<PackProblem, String> {
+    read_package_with(dir, true)
+}
+
 /// Read one (already validated) problem folder.
 fn read_package(dir: &Path) -> Result<PackProblem, String> {
+    read_package_with(dir, false)
+}
+
+/// `pack`: a pack problem may have fewer reference solutions than the judge languages.
+fn read_package_with(dir: &Path, pack: bool) -> Result<PackProblem, String> {
     let at = |e: String| format!("{}: {e}", dir.display());
     let meta = read_problem_toml(dir).map_err(at)?;
     let read =
@@ -100,7 +110,14 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         }
         None => {
             for lang in kb_judge::languages::SUPPORTED {
-                solutions.push((lang, read(&format!("solutions/ref.{}", lang.extension()))?));
+                let file = format!("solutions/ref.{}", lang.extension());
+                if pack {
+                    if let Some(code) = read_opt(&file)? {
+                        solutions.push((lang, code));
+                    }
+                } else {
+                    solutions.push((lang, read(&file)?));
+                }
             }
             None
         }
@@ -137,6 +154,28 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         // The app runs it on custom test inputs (ADR 0016).
         validator: fs::read_to_string(dir.join("validate.py")).ok(),
         sql,
+        parent: meta.parent,
+        // Set for pack problems (expansion M11).
+        pack: None,
+        // The stress lab (expansion M8) generates inputs with gen.py.
+        generator: fs::read_to_string(dir.join("gen.py")).ok(),
+        // Fix the bug (expansion M6): the buggy code becomes the starter.
+        fix: match meta.kind.as_deref() {
+            Some("fix") => Some(
+                kb_judge::languages::SUPPORTED
+                    .into_iter()
+                    .filter_map(|lang| {
+                        fs::read_to_string(
+                            dir.join("solutions")
+                                .join(format!("buggy.{}", lang.extension())),
+                        )
+                        .ok()
+                        .map(|code| (lang, code))
+                    })
+                    .collect(),
+            ),
+            _ => None,
+        },
     })
 }
 

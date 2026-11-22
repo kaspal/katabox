@@ -117,6 +117,42 @@ This writes `content/learn/sorting/gnome-sort/` (the subject must already be in
    `cargo run -p kb-pack -- validate --learn --run --topics gnome-sort` runs both samples
    on every case and compares them with the tracer.
 
+## A reading exercise, step by step
+1. Pick a set under `content/reading/` (or add one: `set.toml` with id, order, kind
+   `print` or `complexity`, titles and blurbs in English and Spanish).
+2. Write `<n>.py` and `<n>.ts` (at most 30 lines, standard library, no input) and add the
+   item to `items.json`: prompts and explanations in both languages, then the answer.
+   - Print items: `answer` (or `answer_py` + `answer_ts` when the versions differ on
+     purpose) and, usually, 3-4 `choices`.
+   - Complexity items: a top-level `f(n)`, `time`, `space` and `dominant` (the costly
+     line in each file). Write loops out: builtins such as `sorted` or `in` count as one
+     line, and the check counts executed lines.
+3. `cargo run -p kb-pack -- validate --learn --run --sets <set>` runs every answer in the
+   sandbox (ADR 0035).
+4. Optionally link the item from a topic: `reading = ["<set>/<n>"]` in its `topic.toml`.
+
+## A problem pack
+Packs carry problems outside the bundled catalogue (ADR 0038). Write a `pack.toml`:
+
+```toml
+id = "graphs101"            # 3-20 lowercase letters and digits
+name = "Graph drills"
+author = "Your name"
+version = "1.0.0"
+licence = "CC-BY-SA-4.0"
+min_app = "1.0.0-beta.1"
+```
+
+then `cargo run -p kb-pack -- pack content/problems/a content/problems/b --manifest
+pack.toml --out graphs101.kbpack`. Each folder is validated like built-in content
+(run `validate --run --problems a,b` first for the sandbox checks); the pack lists every
+file's SHA-256. Packs hold problems only (no Learn topics yet). Add
+`--assignment assignment.toml` to make an assignment for classroom mode (ADR 0039,
+docs/classroom.md); a pack that is only an assignment of built-in problems needs no
+problem folders. A pack problem needs one reference solution (built-in problems need all
+four); the in-app editor (Settings → Packs → Show the problem editor) writes such
+packages from a form (ADR 0040).
+
 ## Before the pull request
 
 - `cargo run -p kb-pack -- validate` (structure) and the sandbox check above pass.

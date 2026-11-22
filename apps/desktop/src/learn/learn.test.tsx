@@ -19,13 +19,13 @@ async function openQuickSort(path = "/learn/sorting/quick-sort") {
 describe("Learn navigation and home", () => {
   useFakeApi();
 
-  it("puts Learn in the rail between Library and Interview", async () => {
+  it("puts Learn in the rail between Library and Kata", async () => {
     renderApp("/");
     const nav = await screen.findByRole("navigation", { name: "Main navigation" });
     const names = within(nav)
       .getAllByRole("link")
       .map((l) => l.getAttribute("aria-label"));
-    expect(names.slice(0, 4)).toEqual(["Home", "Library", "Learn", "Interview"]);
+    expect(names.slice(0, 5)).toEqual(["Home", "Library", "Learn", "Kata", "Interview"]);
   });
 
   it("shows every subject; ones with no topics say Coming soon and are not links", async () => {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { CircleCheck, CircleX } from "lucide-react";
-import type { ProblemSummary, QuizQuestion } from "@/bindings";
+import type { ProblemSummary, QuizQuestion, ReadingLink } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { DifficultyLabel, StatusIcon, usePatternLabel } from "@/components/Semantic";
 import { cn } from "@/lib/utils";
@@ -65,7 +65,16 @@ function Question({ q, n, total }: { q: QuizQuestion; n: number; total: number }
   );
 }
 
-export function PracticeTab({ quiz, problems }: { quiz: QuizQuestion[]; problems: ProblemSummary[] }) {
+export function PracticeTab({
+  quiz,
+  problems,
+  reading = [],
+}: {
+  quiz: QuizQuestion[];
+  problems: ProblemSummary[];
+  /** Reading exercises linked to this topic (expansion M7). */
+  reading?: ReadingLink[];
+}) {
   const { t } = useTranslation();
   const patternLabel = usePatternLabel();
   return (
@@ -96,6 +105,26 @@ export function PracticeTab({ quiz, problems }: { quiz: QuizQuestion[]; problems
           </li>
         ))}
       </ul>
+      {reading.length > 0 && (
+        <>
+          <h2 className="mt-2 font-semibold">{t("reading.practiceHeading")}</h2>
+          <ul className="flex flex-col gap-2" data-testid="linked-reading">
+            {reading.map((r) => (
+              <li key={r.id}>
+                <Link
+                  to="/learn/reading/$set"
+                  params={{ set: r.set }}
+                  search={{ item: r.n }}
+                  className="flex items-center justify-between gap-2 rounded-lg border p-3 hover:bg-accent"
+                >
+                  <span className="font-medium">{t("reading.linkTitle", { set: r.set_title, n: r.n })}</span>
+                  <span className="text-xs text-muted-foreground">{t(`exercise.kind.${r.kind}`)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }

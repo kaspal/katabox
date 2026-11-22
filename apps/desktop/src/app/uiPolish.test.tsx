@@ -95,7 +95,7 @@ describe("Progress tabs", () => {
     const { user, history } = renderApp("/progress");
     const list = await screen.findByRole("tablist", { name: "Progress sections" });
     const tabs = within(list).getAllByRole("tab");
-    expect(tabs.map((t) => t.textContent)).toEqual(["Overview", "By pattern", "By topic", "History"]);
+    expect(tabs.map((t) => t.textContent)).toEqual(["Overview", "By pattern", "By topic", "Plan", "Katas", "Mistakes", "History"]);
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
     expect(await screen.findByTestId("heatmap")).toBeInTheDocument();
     expect(screen.queryByTestId("pattern-map")).toBeNull();
@@ -161,6 +161,7 @@ describe("Settings sections", () => {
       "Languages and runtimes",
       "Learn",
       "Data",
+      "Packs",
       "About",
     ]);
     expect(screen.getByRole("heading", { name: "Appearance" })).toBeInTheDocument();
@@ -173,7 +174,7 @@ describe("Settings sections", () => {
     expect(history.location.search).toContain("section=editor");
     expect(fake().api.setSetting).toHaveBeenCalledWith("settings.section", "editor");
 
-    await user.click(tabs[6]);
+    await user.click(tabs[7]);
     expect(await screen.findByRole("heading", { name: "About" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Editor" })).toBeNull();
   });

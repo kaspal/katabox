@@ -1,6 +1,12 @@
-function build(n: number, directed: number, edges: number[][]): [number[][], number[][]] {
+function build(
+  n: number,
+  directed: number,
+  edges: number[][],
+): [number[][], number[][]] {
   const adj: number[][] = Array.from({ length: n }, () => []);
-  const matrix: number[][] = Array.from({ length: n }, () => new Array<number>(n).fill(0));
+  const matrix: number[][] = Array.from({ length: n }, () =>
+    new Array<number>(n).fill(0),
+  );
   for (const [u, v, w] of edges) {
     adj[u].push(v); // @step list
     matrix[u][v] = w; // @step matrix

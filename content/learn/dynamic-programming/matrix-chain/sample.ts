@@ -6,7 +6,8 @@ function matrixChain(dims: number[]): number[] {
       const j = i + span - 1;
       cost[i][j] = 1e9;
       for (let k = i; k < j; k++) {
-        const total = cost[i][k] + cost[k + 1][j] + dims[i] * dims[k + 1] * dims[j + 1];
+        const total =
+          cost[i][k] + cost[k + 1][j] + dims[i] * dims[k + 1] * dims[j + 1];
         if (total < cost[i][j]) {
           cost[i][j] = total; // @step split
         }

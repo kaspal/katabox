@@ -1,0 +1,18 @@
+id = "family-generations--f1"
+parent = "family-generations"
+title = "Family Generations: How Far Apart"
+title_es = "Generaciones: a qué distancia"
+difficulty = "hard"
+tags = ["tree", "binary-lifting"]
+pattern = "trees"
+rank = 9
+
+[signature]
+name = "kinshipDistances"
+params = [{ name = "parent", type = "int[]" }, { name = "pairs", type = "int[][]" }]
+returns = "int[]"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

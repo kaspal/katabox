@@ -11,6 +11,7 @@ import { useLearnCatalog, useLearnPaths, useLearnSearch } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { useLastTopic, useViewed } from "./engine/progress";
 import { subjectIcon } from "./icons";
+import { ReadingSection } from "./reading/ReadingSection";
 
 /** Chip tints, by name (decorative; the subject name is always shown). */
 const TINTS: Record<string, string> = {
@@ -238,6 +239,8 @@ export function LearnHome() {
           ))}
         </div>
       </section>
+
+      <ReadingSection />
     </div>
   );
 }

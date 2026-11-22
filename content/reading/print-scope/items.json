@@ -1,0 +1,74 @@
+[
+  {
+    "n": 1,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "Every call to make_counter creates a fresh count, and the returned function keeps its own one; nonlocal lets step change that count instead of making a new local variable. a counts 1, 2 on its count, while b starts again from 0 and prints 1.",
+    "explain_es": "Cada llamada a make_counter crea un count nuevo, y la función devuelta conserva el suyo; nonlocal permite que step cambie ese count en lugar de crear una variable local nueva. a cuenta 1, 2 sobre su count, mientras que b empieza otra vez desde 0 e imprime 1.",
+    "answer": "1\n2\n1",
+    "choices": ["1\n2\n1", "1\n2\n3", "1\n1\n1", "0\n1\n0"]
+  },
+  {
+    "n": 2,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "The x assigned inside show is a new local variable that shadows the outer one, so show prints \"inner\". The outer x is never touched and still holds \"outer\".",
+    "explain_es": "La x que se asigna dentro de show es una variable local nueva que oculta a la exterior, así que show imprime \"inner\". La x exterior no se toca y sigue valiendo \"outer\".",
+    "answer": "inner\nouter",
+    "choices": ["inner\nouter", "inner\ninner", "outer\nouter", "outer\ninner"]
+  },
+  {
+    "n": 3,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "reset only creates a local count (in Python any assignment inside a function makes the name local; in TypeScript the inner let declares a new variable), so the outer count stays 10. bump changes the outer one (global count in Python, the outer let in TypeScript) and it becomes 11.",
+    "explain_es": "reset solo crea un count local (en Python cualquier asignación dentro de una función hace local el nombre; en TypeScript el let interior declara una variable nueva), así que el count exterior sigue en 10. bump cambia el exterior (global count en Python, el let exterior en TypeScript) y pasa a 11.",
+    "answer": "11",
+    "choices": ["11", "1", "10", "0"]
+  },
+  {
+    "n": 4,
+    "prompt": "What does this print? Type the output, one line per print.",
+    "prompt_es": "¿Qué imprime? Escribe la salida, una línea por cada impresión.",
+    "explain": "The versions differ on purpose. Python's lambdas all look up the same variable i when they are called, after the loop has left it at 2, so they print 2 2 2. In TypeScript, let in a for loop creates a new i for every iteration, so each arrow function keeps its own value: 0 1 2.",
+    "explain_es": "Las versiones difieren a propósito. Las lambdas de Python buscan todas la misma variable i cuando se llaman, después de que el bucle la dejó en 2, así que imprimen 2 2 2. En TypeScript, let en un bucle for crea una i nueva en cada vuelta, así que cada función flecha conserva su propio valor: 0 1 2.",
+    "answer_py": "2 2 2",
+    "answer_ts": "0 1 2"
+  },
+  {
+    "n": 5,
+    "prompt": "What does this print? Type the output, one line per print.",
+    "prompt_es": "¿Qué imprime? Escribe la salida, una línea por cada impresión.",
+    "explain": "The versions differ on purpose. Python evaluates bag=[] once, when def runs, so every call without a bag shares that one list: it grows to 1, 2 and then 3 (the call with its own [] is separate and gives 1). TypeScript evaluates the default = [] on every call, so each call starts with an empty array and every length is 1.",
+    "explain_es": "Las versiones difieren a propósito. Python evalúa bag=[] una sola vez, cuando se ejecuta def, así que todas las llamadas sin bag comparten esa misma lista: crece a 1, 2 y luego 3 (la llamada con su propio [] es aparte y da 1). TypeScript evalúa el valor por defecto = [] en cada llamada, así que cada una empieza con un arreglo vacío y todas las longitudes son 1.",
+    "answer_py": "1\n2\n1\n3",
+    "answer_ts": "1\n1\n1\n1"
+  },
+  {
+    "n": 6,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "A closure captures the variable msg, not the value it had when say was defined. msg = \"bye\" runs before say is ever called, so the call reads \"bye\".",
+    "explain_es": "Un closure captura la variable msg, no el valor que tenía cuando se definió say. msg = \"bye\" se ejecuta antes de llamar a say, así que la llamada lee \"bye\".",
+    "answer": "bye",
+    "choices": ["bye", "hi", "hi\nbye"]
+  },
+  {
+    "n": 7,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "inc and get were created by the same call to make_pair, so they share one n. The two inc() calls add 10 each, and get reads the same variable: 20.",
+    "explain_es": "inc y get se crearon en la misma llamada a make_pair, así que comparten una sola n. Las dos llamadas a inc() suman 10 cada una, y get lee la misma variable: 20.",
+    "answer": "20",
+    "choices": ["20", "0", "10"]
+  },
+  {
+    "n": 8,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "acc keeps its own total: 10 + 5 = 15, then acc(1) prints 16. other has a separate total starting at 0 and prints 2, and acc(0) still sees its 16 untouched.",
+    "explain_es": "acc conserva su propio total: 10 + 5 = 15, y luego acc(1) imprime 16. other tiene un total aparte que empieza en 0 e imprime 2, y acc(0) sigue viendo su 16 intacto.",
+    "answer": "16\n2\n16",
+    "choices": ["16\n2\n16", "16\n2\n18", "6\n2\n6", "16\n18\n18"]
+  }
+]

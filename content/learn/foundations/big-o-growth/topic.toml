@@ -5,6 +5,7 @@ title = "Big-O growth curves"
 title_es = "Curvas de crecimiento Big-O"
 tags = ["growth-rates"]
 problems = []
+reading = ["complexity-loops/1", "complexity-loops/2", "complexity-loops/7", "complexity-loops/10"]
 presets = ["random"]
 default = [10]
 

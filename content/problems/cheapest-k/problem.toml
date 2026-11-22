@@ -1,0 +1,18 @@
+id = "cheapest-k"
+title = "Cheapest K"
+title_es = "Los k más baratos"
+difficulty = "medium"
+tags = ["heap", "debugging"]
+pattern = "heap"
+rank = 6
+kind = "fix"
+
+[signature]
+name = "cheapestK"
+params = [{ name = "prices", type = "int[]" }, { name = "k", type = "int" }]
+returns = "int"
+
+[judge]
+checker = "exact"
+time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+memory_mb = 256

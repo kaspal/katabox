@@ -609,6 +609,614 @@ async interviews(lang: UiLang) : Promise<Result<InterviewResult[], AppError>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Check custom inputs against the signature and validate.py (expansion M9).
+ */
+async checkCustom(problem: string, inputs: (Partial<{ [key in string]: JsonValue }>)[]) : Promise<Result<CustomCheck, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("check_custom", { problem, inputs }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The stress lab (expansion M8): `code` against `brute` on generated inputs.
+ */
+async stressTest(problem: string, language: Language, code: string, brute: string, onEvent: TAURI_CHANNEL<StressEvent>) : Promise<Result<StressResult, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("stress_test", { problem, language, code, brute, onEvent }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async cancelStress() : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("cancel_stress") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async stressBrute(problem: string, language: Language) : Promise<Result<string | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("stress_brute", { problem, language }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async saveStressBrute(problem: string, language: Language, code: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_stress_brute", { problem, language, code }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Settings → Packs → Import: a `.kbpack` from a native Open dialog, opened and checked
+ * (nothing is installed yet). `None` when cancelled.
+ */
+async importPackPreview() : Promise<Result<PackPreview | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_pack_preview") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async importPackApply(token: number) : Promise<Result<PackRow, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_pack_apply", { token }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async importPackCancel(token: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_pack_cancel", { token }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async packs() : Promise<Result<PackRow[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("packs") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async uninstallPack(id: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("uninstall_pack", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Packs take effect on the next start: restart the app now.
+ */
+async restartApp() : Promise<void> {
+    await TAURI_INVOKE("restart_app");
+},
+async assignments(lang: UiLang) : Promise<Result<AssignmentView[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("assignments", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async assignment(id: string, lang: UiLang) : Promise<Result<AssignmentView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("assignment", { id, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async startAssignment(id: string, lang: UiLang) : Promise<Result<AssignmentView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("start_assignment", { id, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async finishAssignment(id: string, lang: UiLang) : Promise<Result<AssignmentView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("finish_assignment", { id, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The results file exactly as it would be saved (shown before saving).
+ */
+async assignmentResults(id: string, student: string, includeCode: boolean) : Promise<Result<ResultsFile, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("assignment_results", { id, student, includeCode }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * A Save dialog, then the results file. `None` when cancelled.
+ */
+async saveAssignmentResults(id: string, student: string, includeCode: boolean) : Promise<Result<ResultsFile | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_assignment_results", { id, student, includeCode }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Teacher: results files from a native Open dialog (several at once). `None` when
+ * cancelled.
+ */
+async importClassResults() : Promise<Result<ClassImport | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_class_results") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async classResults() : Promise<Result<ClassAssignment[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("class_results") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * A Save dialog, then one assignment's CSV. `false` when cancelled.
+ */
+async saveClassCsv(assignment: string) : Promise<Result<boolean, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_class_csv", { assignment }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringDrafts() : Promise<Result<DraftSummary[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_drafts") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringLoad(id: string) : Promise<Result<ProblemDraft, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_load", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringNew(id: string) : Promise<Result<ProblemDraft, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_new", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringSave(draft: ProblemDraft) : Promise<Result<DraftIssue[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_save", { draft }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringIssues(id: string) : Promise<Result<DraftIssue[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_issues", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringDelete(id: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_delete", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringCheck(id: string) : Promise<Result<Report, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_check", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringPatterns() : Promise<Result<string[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_patterns") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async authoringStarter(draft: ProblemDraft) : Promise<Result<string, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_starter", { draft }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * A Save dialog, then the drafts as one pack (opened again with the import checks).
+ * `None` when cancelled; otherwise the pack's SHA-256.
+ */
+async authoringExport(ids: string[], head: PackHead) : Promise<Result<string | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("authoring_export", { ids, head }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async focusCurrent() : Promise<Result<FocusCurrent | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("focus_current") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async focusStart(workMin: number, breakMin: number) : Promise<Result<FocusCurrent, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("focus_start", { workMin, breakMin }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async focusStop() : Promise<Result<FocusSessionRow | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("focus_stop") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async focusSessions() : Promise<Result<FocusSessionRow[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("focus_sessions") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async backupStatus() : Promise<Result<BackupStatus, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("backup_status") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setBackupOptions(everyDays: number, keep: number, onExit: boolean) : Promise<Result<BackupStatus, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_backup_options", { everyDays, keep, onExit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async backupNow() : Promise<Result<BackupStatus, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("backup_now") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Settings → Data: choose the backup folder in a native dialog (opened here; the webview
+ * has no dialog permission). `None` (cancelled) leaves it unchanged.
+ */
+async chooseBackupFolder() : Promise<Result<BackupStatus | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("choose_backup_folder") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Turn backups off (the files already written stay).
+ */
+async clearBackupFolder() : Promise<Result<BackupStatus, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("clear_backup_folder") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async readingSets(uiLang: UiLang) : Promise<Result<ReadingSetSummary[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reading_sets", { uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async readingSet(id: string, uiLang: UiLang) : Promise<Result<ReadingSetView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reading_set", { id, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async readingAnswers() : Promise<Result<ReadingAnswerRow[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reading_answers") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async readingLinks(topic: string, uiLang: UiLang) : Promise<Result<ReadingLink[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reading_links", { topic, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async answerReading(item: string, answer: ReadingAnswer, uiLang: UiLang) : Promise<Result<ReadingResult, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("answer_reading", { item, answer, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async snippets() : Promise<Result<SnippetRow[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("snippets") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async saveSnippet(snippet: SnippetInput) : Promise<Result<SnippetRow, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_snippet", { snippet }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteSnippet(uid: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_snippet", { uid }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * "Search everything": problems, Learn topics and snippets.
+ */
+async searchAll(query: string, lang: UiLang) : Promise<Result<SearchResults, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_all", { query, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Progress → Mistakes: counts per tag with the latest examples.
+ */
+async journalOverview(lang: UiLang) : Promise<Result<JournalOverview, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("journal_overview", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * A failed submission's tags and note (`None` for an Accepted one).
+ */
+async submissionMistake(submission: number) : Promise<Result<MistakeView | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("submission_mistake", { submission }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setSubmissionMistake(submission: number, tags: string[], note: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_submission_mistake", { submission, tags, note }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The shrinker found a smaller failing input for this submission's failure.
+ */
+async tagShrunk(submission: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("tag_shrunk", { submission }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async reflection(problem: string) : Promise<Result<ReflectionRow | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reflection", { problem }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setReflection(problem: string, why: string, timeClass: string | null, spaceClass: string | null) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_reflection", { problem, why, timeClass, spaceClass }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Ratings per pattern and overall (replayed from the history; estimated).
+ */
+async ratings() : Promise<Result<RatingsView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("ratings") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The active study plan, if any.
+ */
+async planView(lang: UiLang) : Promise<Result<PlanView | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("plan_view", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async createPlan(setup: PlanSetup, lang: UiLang) : Promise<Result<PlanView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_plan", { setup, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Mark a plan item `pending`, `done` or `skipped`.
+ */
+async setPlanItem(plan: number, position: number, status: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_plan_item", { plan, position, status }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Move a plan item (and the pending items after it) one day later.
+ */
+async reschedulePlanItem(plan: number, position: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reschedule_plan_item", { plan, position }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async archivePlan(plan: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("archive_plan", { plan }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Progress → Plan → Export to calendar: a Save dialog, then the plan as an `.ics`
+ * file. `None` when cancelled, else the file name.
+ */
+async exportPlanIcs(labels: PlanIcsLabels, lang: UiLang) : Promise<Result<string | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("export_plan_ics", { labels, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Today's daily kata, the patterns and lists a kata can start from, and the running one.
+ */
+async kataOptions(today: string, lang: UiLang) : Promise<Result<KataOptions, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kata_options", { today, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async startKata(start: KataStart, lang: UiLang) : Promise<Result<KataView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("start_kata", { start, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The running kata, if any (ended first once it expired).
+ */
+async kataState(lang: UiLang) : Promise<Result<KataView | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kata_state", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The workspace opened `problem` in the running kata: its clock starts (once).
+ */
+async kataOpen(problem: string) : Promise<Result<KataAttemptRow, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kata_open", { problem }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async endKata(lang: UiLang) : Promise<Result<KataView | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("end_kata", { lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Personal bests, the rusty list, the kata streak and the latest sessions.
+ */
+async kataOverview(today: string, lang: UiLang) : Promise<Result<KataOverview, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kata_overview", { today, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async acceptedSolution(problem: string, language: Language) : Promise<Result<AcceptedSolution | null, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("accepted_solution", { problem, language }) };
@@ -948,6 +1556,15 @@ export type AppErrorCode =
  */
 "interview_active" | 
 /**
+ * Locked while a kata runs: hints, editorial, submissions, History, notes
+ * (expansion M1).
+ */
+"locked_in_kata" | 
+/**
+ * A kata is already running (expansion M1).
+ */
+"kata_active" | 
+/**
  * Fewer than two unsolved problems the user has never opened.
  */
 "not_enough_problems" | 
@@ -971,6 +1588,25 @@ export type AppErrorCode =
  * The failing-test shrinker does not work here (a program problem, no reference).
  */
 "shrink_unavailable" | 
+/**
+ * The stress lab does not work here (an SQL problem, or a program problem without
+ * gen.py or the Python runtime; expansion M8).
+ */
+"stress_unavailable" | 
+/**
+ * A pack failed a check, is already installed, or is not newer (expansion M11); the
+ * message lists why.
+ */
+"pack_refused" | 
+/**
+ * Locked while an assignment without hints runs (expansion M12): hints, editorial,
+ * history and solutions of its problems.
+ */
+"locked_in_assignment" | 
+/**
+ * Another assignment is already running (expansion M12).
+ */
+"assignment_active" | 
 /**
  * Anything else, including the app failing to start.
  */
@@ -997,6 +1633,59 @@ language_servers: LanguageServerInfo[];
  */
 platform: string }
 /**
+ * `assignment.toml`, checked by kb-pack (problem ids already resolved to full ids).
+ */
+export type AssignmentMeta = { title: string; 
+/**
+ * `YYYY-MM-DD`.
+ */
+due: string; 
+/**
+ * Full problem ids: `<pack>--<id>` for the pack's own problems, or built-in ids.
+ */
+problems: string[]; 
+/**
+ * The languages allowed on those problems while the assignment runs (SQL problems
+ * always take SQL).
+ */
+languages: Language[]; 
+/**
+ * A wall-clock limit from the start, in minutes.
+ */
+time_limit_min: number | null; 
+/**
+ * Whether hints and the editorial stay available.
+ */
+hints: boolean }
+/**
+ * One problem of an assignment, with what happened while it ran.
+ */
+export type AssignmentProblem = { id: string; 
+/**
+ * `None` when the problem is not in this app's content (yet: a pack applies after a
+ * restart).
+ */
+summary: ProblemSummary | null; best_verdict: Verdict | null; submits: number }
+export type AssignmentState = "not_started" | "running" | "finished"
+export type AssignmentView = { id: string; meta: AssignmentMeta; pack_sha256: string; state: AssignmentState; imported_at: number; started_at: number | null; submitted_at: number | null; 
+/**
+ * When the time limit ends it (running with a limit only).
+ */
+ends_at: number | null; problems: AssignmentProblem[] }
+export type BackupStatus = { folder: string | null; every_days: number; keep: number; on_exit: boolean; 
+/**
+ * UTC ms of the last backup.
+ */
+last: number | null; 
+/**
+ * UTC ms when the next one is due (with a folder).
+ */
+next_due: number | null; 
+/**
+ * Why the last attempt failed, if it did.
+ */
+error: string | null }
+/**
  * What Settings shows about the calibration.
  */
 export type CalibrationInfo = { 
@@ -1020,6 +1709,35 @@ measured_us: number; reference_us: number;
  * When it was measured (Unix seconds).
  */
 measured_at: number }
+export type ClassAssignment = { id: string; title: string; problems: string[]; students: ClassStudent[] }
+/**
+ * What an import of results files did.
+ */
+export type ClassImport = { added: number; 
+/**
+ * Files imported before (same bytes).
+ */
+duplicates: number; 
+/**
+ * Files kept but whose chain does not match.
+ */
+edited: number; 
+/**
+ * `(file name, why)` for files refused.
+ */
+refused: ([string, string])[] }
+/**
+ * One student's row in the class summary.
+ */
+export type ClassStudent = { student: string; 
+/**
+ * `false` when the file's hash chain does not match: edited after export.
+ */
+chain_ok: boolean; imported_at: number; 
+/**
+ * Per problem of [`ClassAssignment::problems`], in order.
+ */
+cells: (ResultsEntry | null)[] }
 /**
  * What the compile step did.
  */
@@ -1078,6 +1796,18 @@ export type ContinueItem = { problem_id: string;
  * Title in the requested UI language (English fallback).
  */
 title: string; language: Language; updated_at: number }
+/**
+ * What "Check" found for each custom input (expansion M9).
+ */
+export type CustomCheck = { 
+/**
+ * Per input: `None` when it is valid, else why not.
+ */
+problems: (string | null)[]; 
+/**
+ * The problem's validate.py ran (it needs the Python runtime).
+ */
+constraints_checked: boolean }
 /**
  * The daily problem on Home.
  */
@@ -1222,6 +1952,28 @@ export type Difficulty = "easy" | "medium" | "hard"
 export type DifficultyCount = { difficulty: Difficulty; solved: number; total: number }
 export type Draft = { code: string; updated_at: number }
 /**
+ * One problem with the draft, tied to the form field it belongs to.
+ */
+export type DraftIssue = { 
+/**
+ * A form field (`title`, `signature`, `public_tests`, …) or `general`.
+ */
+field: string; message: string }
+export type DraftParam = { name: string; 
+/**
+ * A judge type such as `int[]` or `TreeNode`.
+ */
+ty: string }
+/**
+ * One draft in the editor's list.
+ */
+export type DraftSummary = { id: string; title: string; 
+/**
+ * UTC milliseconds of the last save.
+ */
+updated_at: number }
+export type DraftTest = { input: Partial<{ [key in string]: JsonValue }>; output: JsonValue }
+/**
  * Why the editorial is unlocked.
  */
 export type EditorialReason = 
@@ -1299,6 +2051,40 @@ export type Failure = { kind: TestKind; index: number; verdict: Verdict; input: 
  * A program problem's stderr (ADR 0028).
  */
 stderr?: string | null }
+export type FocusCurrent = { 
+/**
+ * UTC ms.
+ */
+started_at: number; work_min: number; break_min: number }
+export type FocusSessionRow = { started_at: number; ended_at: number; work_min: number; break_min: number; cycles: number; summary: FocusSummary }
+/**
+ * What happened during a session.
+ */
+export type FocusSummary = { 
+/**
+ * Problems opened or submitted.
+ */
+touched: number; 
+/**
+ * Problems with an Accepted submission.
+ */
+solved: number; 
+/**
+ * Kata attempts solved.
+ */
+katas: number; 
+/**
+ * Study plan items marked done.
+ */
+plan_items: number }
+/**
+ * A follow-up as listed on its base problem's page (expansion M5).
+ */
+export type FollowupRef = { id: string; title: string; difficulty: Difficulty; 
+/**
+ * Unlocked once the base is solved (filled by the app; false as read).
+ */
+unlocked: boolean }
 /**
  * What Import found in a file, before merging.
  */
@@ -1348,6 +2134,15 @@ export type InterviewView = { id: number;
  * UTC milliseconds.
  */
 started_at: number; ends_at: number; duration_s: number; remaining_s: number; mix: string; languages: Language[]; problems: ProblemSummary[] }
+export type JournalOverview = { 
+/**
+ * Failed submissions in the journal.
+ */
+failures: number; 
+/**
+ * Tags by count (then display order); only tags in use.
+ */
+tags: MistakeTagCount[] }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
 /**
  * Progress of one judge run, sent to the UI as it happens. The sandbox returns output
@@ -1370,6 +2165,99 @@ export type JudgeEvent =
  * The run is over.
  */
 { event: "finished"; verdict: Verdict }
+/**
+ * One problem tried in a kata session (also an export row).
+ */
+export type KataAttemptRow = { session_started_at: number; problem_id: string; started_at: number; submits: number; verdict: Verdict | null; solved_at: number | null; time_ms: number | null; language: Language | null; code: string | null }
+/**
+ * A problem's personal bests over all kata attempts.
+ */
+export type KataBest = { problem_id: string; title: string; difficulty: Difficulty; 
+/**
+ * The fastest time from opening to Accepted.
+ */
+best_time_ms: number | null; 
+/**
+ * The fewest submits needed to reach Accepted.
+ */
+fewest_submits: number | null; 
+/**
+ * Kata attempts on this problem (solved or not).
+ */
+attempts: number; solved: number }
+export type KataKind = "daily" | "pattern" | "list" | "custom"
+export type KataOptions = { 
+/**
+ * Today's daily kata (empty before the first solve).
+ */
+daily: ProblemSummary[]; 
+/**
+ * Today's daily kata session, once started.
+ */
+daily_session: KataView | null; patterns: KataSource[]; lists: KataSource[]; 
+/**
+ * The running session, if any.
+ */
+running: KataView | null }
+/**
+ * What a kata Submit did.
+ */
+export type KataOutcome = { attempt: KataAttemptRow; 
+/**
+ * This Submit solved the problem faster than every earlier kata.
+ */
+new_best: boolean; 
+/**
+ * The best time before this Submit, if any.
+ */
+previous_best_ms: number | null }
+export type KataOverview = { bests: KataBest[]; 
+/**
+ * The rustiest solved problems (score ≥ 50), rustiest first, at most 10.
+ */
+rusty: RustyProblem[]; streak: number; 
+/**
+ * The latest sessions, newest first (at most 30).
+ */
+sessions: KataSessionSummary[] }
+export type KataProblem = { id: string; title: string; difficulty: Difficulty; pattern: string; attempt: KataAttemptRow | null; best_time_ms: number | null }
+export type KataSessionSummary = { started_at: number; day: string; kind: KataKind; source: string | null; total: number; solved: number; ended: boolean }
+/**
+ * A pattern or list a kata can be started from, with its solved problems.
+ */
+export type KataSource = { 
+/**
+ * The pattern id, or the list id as text.
+ */
+id: string; 
+/**
+ * The list name (patterns are named by the UI).
+ */
+name: string | null; solved: number }
+/**
+ * What to start a kata from.
+ */
+export type KataStart = { kind: KataKind; 
+/**
+ * The pattern id or the list id (as text), for those kinds.
+ */
+source: string | null; 
+/**
+ * The problems of a custom kata.
+ */
+problems: string[]; 
+/**
+ * The user's local date, `YYYY-MM-DD`.
+ */
+today: string }
+/**
+ * A session as the UI shows it.
+ */
+export type KataView = { started_at: number; day: string; kind: KataKind; source: string | null; duration_s: number; ended_at: number | null; 
+/**
+ * When the session stops counting as running (UTC ms).
+ */
+expires_at: number; problems: KataProblem[]; solved: number }
 /**
  * Languages supported by the judge. Adding one means a `languages/<id>/` folder
  * (language.toml + harness template) and a variant here.
@@ -1631,10 +2519,55 @@ export type MessageCode =
  * The harness said it finished but some tests have no result.
  */
 "incomplete_results"
+export type MistakeExample = { problem_id: string; title: string; language: string; submitted_at: number; note: string }
+export type MistakeTagCount = { tag: string; count: number; 
+/**
+ * The latest few, newest first.
+ */
+examples: MistakeExample[] }
+export type MistakeView = { auto_tags: string[]; tags: string[]; note: string }
 /**
  * How the traced call ended.
  */
 export type OutcomeStatus = "ok" | "error" | "memory"
+export type PackAction = "install" | 
+/**
+ * A newer version of an installed pack.
+ */
+"update" | 
+/**
+ * The same file is already installed: nothing to do.
+ */
+"same" | 
+/**
+ * Not newer than the installed version (with different content): refused (A3).
+ */
+"not_newer"
+/**
+ * What a pack made from drafts says about itself (its manifest).
+ */
+export type PackHead = { id: string; name: string; author: string; version: string; licence: string }
+/**
+ * What a pack would do, shown before importing (T13: unsigned, author as stated).
+ */
+export type PackPreview = { 
+/**
+ * Pass back to `import_pack_apply` / `import_pack_cancel`.
+ */
+token: number; id: string; name: string; author: string; version: string; licence: string; 
+/**
+ * SHA-256 of the `.kbpack` file.
+ */
+sha256: string; problems: number; 
+/**
+ * The installed version of the same pack, if any.
+ */
+installed: string | null; action: PackAction; 
+/**
+ * The title of the assignment it carries (classroom mode, expansion M12).
+ */
+assignment: string | null }
+export type PackRow = { id: string; name: string; author: string; version: string; licence: string; sha256: string; problems: number; installed_at: number; removed_at: number | null }
 /**
  * One card of the pattern map.
  */
@@ -1643,10 +2576,23 @@ export type PatternProgress = { pattern: string; solved: number; total: number;
  * The lowest-ranked unsolved problem of the pattern.
  */
 next: ProblemSummary | null }
+export type PatternRating = { pattern: string; rating: RatingView }
 /**
  * The Learn topics for one practice pattern, in Learn's own order.
  */
 export type PatternTopics = { pattern: string; topics: LearnTopicSummary[] }
+/**
+ * The words the calendar file uses, in the UI language (the UI sends them).
+ */
+export type PlanIcsLabels = { title: string; review: string; kata: string; 
+/**
+ * Put before a topic's title, e.g. "Learn: ".
+ */
+topic: string; 
+/**
+ * After the minutes, e.g. "min".
+ */
+minutes: string }
 /**
  * One component of an install plan.
  */
@@ -1655,6 +2601,36 @@ export type PlanItem = { component: string;
  * Bytes still to download (shared artifacts counted once, on first use).
  */
 download_bytes: number; installed_bytes: number }
+export type PlanItemKind = "problem" | "topic" | "review" | "kata"
+/**
+ * One item as the UI shows it.
+ */
+export type PlanItemView = { position: number; day: string; kind: PlanItemKind; reference: string | null; 
+/**
+ * The problem or topic title in the UI language (none for reviews and katas).
+ */
+title: string | null; difficulty: Difficulty | null; 
+/**
+ * For topics: the subject (the topic page's route needs it).
+ */
+subject: string | null; minutes: number; 
+/**
+ * `pending`, `done` or `skipped`.
+ */
+status: string }
+/**
+ * What to plan: the patterns (empty: every pattern in track order), how long, how much.
+ */
+export type PlanSetup = { patterns: string[]; weeks: number; minutes_per_day: number; 
+/**
+ * The user's local date, `YYYY-MM-DD`: the plan starts today.
+ */
+today: string }
+export type PlanView = { created_at: number; patterns: string[]; weeks: number; minutes_per_day: number; start_day: string; end_day: string; items: PlanItemView[]; done: number; total: number; 
+/**
+ * Topics and problems that did not fit when the plan was made.
+ */
+left_over: number }
 /**
  * What a Submit did beyond the verdict.
  */
@@ -1679,6 +2655,14 @@ next: ProblemSummary | null }
  * Prints made while the step `step` ran (or before the first step).
  */
 export type PrintChunk = { step: number; text: string }
+/**
+ * Everything the editor's form holds.
+ */
+export type ProblemDraft = { id: string; title: string; title_es: string; difficulty: Difficulty; pattern: string; tags: string[]; rank: number; function: string; params: DraftParam[]; returns: string; checker: string; time_limit_ms: number; memory_mb: number; statement: string; statement_es: string; 
+/**
+ * Up to three tiers, from a nudge to almost the answer.
+ */
+hints: string[]; hints_es: string[]; editorial: string; editorial_es: string; public_tests: DraftTest[]; hidden_tests: DraftTest[]; reference_language: Language; reference: string }
 /**
  * Which problems to list. Every field is optional; `None` means "any".
  */
@@ -1731,7 +2715,15 @@ export type ProblemSummary = { id: string; title: string; difficulty: Difficulty
 /**
  * Filled by [`crate::Store::list_problems`]; `None` from [`ContentDb`] alone.
  */
-status: ProblemStatus | null }
+status: ProblemStatus | null; 
+/**
+ * A fix-the-bug problem (expansion M6).
+ */
+fix: boolean; 
+/**
+ * The pack it came from (expansion M11); `None` for built-in content.
+ */
+pack: string | null }
 /**
  * Everything the problem page shows, in one UI language with English fallback.
  */
@@ -1775,7 +2767,27 @@ time_scale: number;
  * An SQL problem's tables (ADR 0031): `[{"name", "columns": [{"name", "type",
  * "primary_key", "not_null", "references"}]}]`, for the schema panel and completion.
  */
-sql_tables: JsonValue | null }
+sql_tables: JsonValue | null; 
+/**
+ * A follow-up's base problem (expansion M5).
+ */
+parent: string | null; 
+/**
+ * This problem's follow-ups, in order (empty for most problems).
+ */
+followups: FollowupRef[]; 
+/**
+ * A fix-the-bug problem (expansion M6): the editor starts from buggy code.
+ */
+fix: boolean; 
+/**
+ * The languages that have buggy starter code (fix-the-bug problems).
+ */
+fix_languages: Language[]; 
+/**
+ * The pack it came from (expansion M11): its text is shown as untrusted.
+ */
+pack: string | null }
 /**
  * One measured size: the median of the repetitions, with every sample.
  */
@@ -1862,10 +2874,84 @@ reference_fast: boolean }
  */
 export type PublicTest = { index: number; input: Partial<{ [key in string]: JsonValue }>; output: JsonValue }
 export type QuizQuestion = { prompt: string; options: string[]; answer: number; explain: string }
+export type RatingPoint = { at: number; rating: number }
+export type RatingView = { 
+/**
+ * Rounded to a whole number.
+ */
+rating: number; events: number; 
+/**
+ * At most the last 30 points, oldest first.
+ */
+history: RatingPoint[] }
+export type RatingsView = { overall: RatingView; 
+/**
+ * Patterns with at least one event.
+ */
+patterns: PatternRating[] }
+/**
+ * What the user answered: an output (print items), or time and space (complexity items).
+ */
+export type ReadingAnswer = { 
+/**
+ * The version the user read: `python` or `typescript`.
+ */
+language: Language; output: string | null; time: string | null; space: string | null }
+export type ReadingAnswerRow = { 
+/**
+ * `<set>/<n>`.
+ */
+item_id: string; attempts: number; correct_at: number | null; updated_at: number }
+/**
+ * An item as the UI shows it before answering: never the answer.
+ */
+export type ReadingItemView = { 
+/**
+ * `<set>/<n>`.
+ */
+id: string; n: number; prompt: string; code_python: string; code_typescript: string; 
+/**
+ * Print items with choices; empty means the output is typed.
+ */
+choices: string[] }
+export type ReadingKind = 
+/**
+ * What does this print?
+ */
+"print" | 
+/**
+ * What is its time and space complexity?
+ */
+"complexity"
+/**
+ * A reading item linked from a Learn topic's Practice tab.
+ */
+export type ReadingLink = { id: string; set: string; n: number; kind: ReadingKind; set_title: string }
+/**
+ * The verdict, with everything the feedback shows.
+ */
+export type ReadingResult = { correct: boolean; 
+/**
+ * Print items: the exact output of the version read.
+ */
+output: string | null; time: string | null; space: string | null; 
+/**
+ * Complexity items: the line that dominates the cost in the version read (1-based).
+ */
+dominant_line: number | null; explanation: string; attempts: number }
+/**
+ * A set in the list, in one UI language.
+ */
+export type ReadingSetSummary = { id: string; kind: ReadingKind; title: string; blurb: string; items: number }
+export type ReadingSetView = { id: string; kind: ReadingKind; title: string; blurb: string; items: ReadingItemView[] }
 /**
  * The reference solution's time at one size, at this machine's time scale.
  */
 export type ReferencePoint = { n: number; us: number }
+/**
+ * A reflection after Accepted (also an export row).
+ */
+export type ReflectionRow = { problem_id: string; why: string; time_class: string | null; space_class: string | null; updated_at: number }
 export type Report = { verdict: Verdict; 
 /**
  * Tests that ran, in order. When the batch stopped early (time limit, crash) the
@@ -1894,6 +2980,40 @@ memory_kb: number;
  * The compile step, for compiled languages.
  */
 compile: CompileInfo | null }
+export type ResultsAssignment = { id: string; title: string; pack_sha256: string }
+/**
+ * One problem in a results file. Its canonical JSON (this field order) is what the hash
+ * chain covers.
+ */
+export type ResultsEntry = { problem_id: string; 
+/**
+ * The language of the best submission.
+ */
+language: Language | null; 
+/**
+ * Accepted if any submission was, else the last one's verdict.
+ */
+best_verdict: Verdict | null; submits: number; 
+/**
+ * Seconds from the start to the first Accepted.
+ */
+first_accepted_s: number | null; 
+/**
+ * The best submission's code, only when the student chose to include it.
+ */
+code: string | null }
+/**
+ * `katabox-results/v1`.
+ */
+export type ResultsFile = { format: string; app_version: string; student: string; assignment: ResultsAssignment; started_at: number; ended_at: number; include_code: boolean; entries: ResultsEntry[]; 
+/**
+ * `hashes[i]` covers the header and entries `0..=i`.
+ */
+hashes: string[]; 
+/**
+ * The last hash (the header's own hash when there are no entries).
+ */
+final_hash: string }
 /**
  * A due review on Home.
  */
@@ -1970,6 +3090,16 @@ export type RuntimeDiag = { language: Language; installed: boolean;
  * The pinned runtime, e.g. `python-3.14` (the toolchain folder's name, no path).
  */
 version: string | null; language_server: boolean }
+export type RustyProblem = { problem_id: string; title: string; difficulty: Difficulty; pattern: string; 
+/**
+ * 0-100 (the rusty score as a percentage).
+ */
+rusty: number; 
+/**
+ * Days since the last success (`None`: never practised since solving).
+ */
+days: number | null }
+export type SearchResults = { problems: ProblemSummary[]; topics: LearnTopicSummary[]; snippets: SnippetRow[] }
 /**
  * Progress, after each round.
  */
@@ -2021,6 +3151,22 @@ export type SnapshotSource = "run" | "submit" |
  */
 "restore"
 /**
+ * A snippet to save: a new one (`uid` none) or an edit.
+ */
+export type SnippetInput = { uid: string | null; language: Language; name: string; tags: string[]; body: string }
+/**
+ * One snippet (also an export row).
+ */
+export type SnippetRow = { 
+/**
+ * 16 hex characters, random.
+ */
+uid: string; 
+/**
+ * The language id (`python`, `typescript`, …).
+ */
+language: string; name: string; tags: string[]; body: string; created_at: number; updated_at: number }
+/**
  * Progress → solved by difficulty and by topic (tag).
  */
 export type SolvedBreakdown = { 
@@ -2053,6 +3199,56 @@ frame: number; locals: VarInfo[]; globals: VarInfo[]; expanded: Expansion[]; eva
  * The visualizer's structured snapshot, when it was asked for (ADR 0027).
  */
 snapshot?: DebugSnapshot | null }
+/**
+ * Progress, after each round.
+ */
+export type StressEvent = { rounds: number; max_rounds: number; tested: number }
+export type StressResult = { stop: StressStop; source: StressSource; rounds: number; 
+/**
+ * Inputs both programs ran on.
+ */
+tested: number; 
+/**
+ * Found / BruteFailed: the input.
+ */
+input: Partial<{ [key in string]: JsonValue }> | null; 
+/**
+ * Found: the brute force's output.
+ */
+expected: JsonValue | null; 
+/**
+ * Found: the solution's output, when it returned one; BruteFailed: the brute's.
+ */
+actual: JsonValue | null; verdict: Verdict | null; message: Message | null }
+/**
+ * Where the inputs come from.
+ */
+export type StressSource = 
+/**
+ * The problem's gen.py, checked by its validate.py.
+ */
+"generator" | 
+/**
+ * Small random values from the signature, not checked against the constraints.
+ */
+"random"
+export type StressStop = 
+/**
+ * The solution and the brute force disagree on `input`.
+ */
+"found" | 
+/**
+ * The brute force itself failed (error, time limit, does not compile) on `input`.
+ */
+"brute_failed" | 
+/**
+ * No disagreement within the round and time budget.
+ */
+"budget" | 
+/**
+ * The user pressed Stop.
+ */
+"cancelled"
 export type SubmissionSummary = { id: number; problem_id: string; language: Language; verdict: Verdict; time_us: number; memory_kb: number; created_at: number }
 /**
  * A submission as the UI sees it: hidden tests redacted.
@@ -2073,7 +3269,12 @@ review: boolean;
 /**
  * Language of the suggested next problem's title.
  */
-lang: UiLang }
+lang: UiLang; 
+/**
+ * Submitted in the running kata that started at this time (UTC ms): recorded as a
+ * kata attempt only (expansion M1).
+ */
+kata: number | null }
 /**
  * The result of Submit: the stored submission's id and its (redacted) report.
  */
@@ -2081,7 +3282,12 @@ export type SubmitResult = { submission_id: number; report: Report;
 /**
  * Reviews, the daily problem, the streak and what to solve next (ADR 0019).
  */
-practice: PracticeOutcome }
+practice: PracticeOutcome; 
+/**
+ * A kata Submit (expansion M1): the attempt, and whether it beat the best time.
+ * Such a Submit stores no submission (`submission_id` is 0).
+ */
+kata: KataOutcome | null }
 export type TAURI_CHANNEL<TSend> = null
 export type TagCount = { tag: string; solved: number; total: number }
 /**
@@ -2131,7 +3337,7 @@ export type TopicReview = { topic: LearnTopicSummary; problem: ProblemSummary }
 /**
  * How many records of each kind a file holds.
  */
-export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number }
+export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number; mistakes: number; reflections: number; snippets: number; reading_answers: number; stress_brutes: number; focus_sessions: number }
 /**
  * Why a trace stopped before the program ended.
  */
