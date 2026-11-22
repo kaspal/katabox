@@ -6,6 +6,7 @@ pub mod checks;
 pub mod learn;
 pub mod pack;
 pub mod profile;
+pub mod reading;
 pub mod scaffold;
 mod validate;
 

@@ -175,6 +175,34 @@ CREATE TABLE learn_paths (
     topics   TEXT NOT NULL  -- JSON array of topic ids, in study order
 ) WITHOUT ROWID;
 
+-- Reading exercises (expansion M7): sets of snippets to read, each item's answer as JSON.
+CREATE TABLE reading_sets (
+    id       TEXT PRIMARY KEY,
+    ord      INTEGER NOT NULL,
+    kind     TEXT NOT NULL CHECK (kind IN ('print', 'complexity')),
+    title_en TEXT NOT NULL,
+    title_es TEXT NOT NULL,
+    blurb_en TEXT NOT NULL,
+    blurb_es TEXT NOT NULL
+) WITHOUT ROWID;
+
+CREATE TABLE reading_items (
+    set_id  TEXT NOT NULL REFERENCES reading_sets (id),
+    n       INTEGER NOT NULL,
+    code_py TEXT NOT NULL,
+    code_ts TEXT NOT NULL,
+    data    TEXT NOT NULL,  -- JSON: prompts, explanations and the answer
+    PRIMARY KEY (set_id, n)
+) WITHOUT ROWID;
+
+-- A Learn topic's Practice tab links reading items (`<set>/<n>`), in order.
+CREATE TABLE reading_links (
+    topic_id TEXT NOT NULL REFERENCES learn_topics (id),
+    item_id  TEXT NOT NULL,
+    ord      INTEGER NOT NULL,
+    PRIMARY KEY (topic_id, item_id)
+) WITHOUT ROWID;
+
 CREATE VIRTUAL TABLE learn_fts USING fts5 (
     topic_id UNINDEXED,
     lang UNINDEXED,

@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 8); // migrations 0001-0008
+    assert_eq!(info.user_schema_version, 9); // migrations 0001-0009
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -687,8 +687,12 @@ async fn a_brand_new_user_starts_at_fundamentals() {
         .await
         .unwrap();
     app.forget_ratings(); // the store call above bypasses Submit
-    // No SQL problem opened yet: SQL is never suggested (ADR 0031).
-    let all = hide_unopened_sql(app.all_problems(UiLang::En).await.unwrap(), "");
+    // No SQL problem opened yet: SQL is never suggested (ADR 0031); fix-the-bug problems
+    // never are (expansion M6).
+    let all = hide_unopened_sql(
+        crate::practice::without_fix(app.all_problems(UiLang::En).await.unwrap()),
+        "",
+    );
     assert!(all.iter().all(|p| p.mode != kb_core::ProblemMode::Sql));
     let next = app
         .next_problem("two-sum", UiLang::En)
@@ -712,6 +716,7 @@ async fn a_brand_new_user_starts_at_fundamentals() {
     let expected = daily_pick_rated(&all, tomorrow.parse().unwrap(), &install, &ratings).unwrap();
     assert_eq!(daily.problem.id, expected.id);
     assert_ne!(daily.problem.mode, kb_core::ProblemMode::Sql);
+    assert!(!daily.problem.fix);
     app.close().await;
 }
 
@@ -2017,4 +2022,83 @@ async fn snippets_and_search_everything() {
     assert!(a.snippets().await.unwrap().is_empty());
     a.close().await;
     b.close().await;
+}
+
+/// Reading exercises (expansion M7): the bundled sets, the answer check, progress and the
+/// export round trip.
+#[tokio::test]
+async fn reading_answers_are_checked_counted_and_exported() {
+    use crate::reading::ReadingAnswer;
+    let a = app("reading").await;
+    let sets = a.reading_sets(UiLang::En).await.unwrap();
+    assert_eq!(sets.len(), 8);
+    assert_eq!(sets.iter().map(|s| s.items).sum::<u32>(), 70);
+    let set = a.reading_set("print-basics", UiLang::En).await.unwrap();
+    assert_eq!(set.items[0].choices, ["10", "15", "4"]);
+    let print = |output: &str| ReadingAnswer {
+        language: Language::Python,
+        output: Some(output.into()),
+        time: None,
+        space: None,
+    };
+    let wrong = a
+        .answer_reading("print-basics/1", print("15"), UiLang::Es)
+        .await
+        .unwrap();
+    assert!(!wrong.correct);
+    assert_eq!(wrong.output.as_deref(), Some("10"));
+    assert!(wrong.explanation.contains("rango"));
+    let right = a
+        .answer_reading("print-basics/1", print("10\n"), UiLang::En)
+        .await
+        .unwrap();
+    assert!(right.correct && right.attempts == 2);
+    let complexity = a
+        .answer_reading(
+            "complexity-loops/2",
+            ReadingAnswer {
+                language: Language::TypeScript,
+                output: None,
+                time: Some("O(log n)".into()),
+                space: Some("O(1)".into()),
+            },
+            UiLang::En,
+        )
+        .await
+        .unwrap();
+    assert!(complexity.correct);
+    assert_eq!(complexity.dominant_line, Some(3));
+    // Only Python and TypeScript versions exist; unknown items are not found.
+    let mut rust = print("10");
+    rust.language = Language::Rust;
+    assert!(
+        a.answer_reading("print-basics/1", rust, UiLang::En)
+            .await
+            .is_err()
+    );
+    assert!(
+        a.answer_reading("print-basics/99", print("10"), UiLang::En)
+            .await
+            .is_err()
+    );
+    // Topic links come from topic.toml.
+    let links = a.reading_links("big-o-growth", UiLang::En).await.unwrap();
+    assert_eq!(
+        links.first().map(|l| l.id.as_str()),
+        Some("complexity-loops/1")
+    );
+
+    // Export, then import into a fresh app: the answers come back.
+    let file = crate::testutil::temp_dir("reading-export").join("x.kbx.json");
+    a.export_to(&file).await.unwrap();
+    let b = app("reading-import").await;
+    let preview = b.import_preview_from(&file).await.unwrap();
+    assert_eq!(preview.counts.reading_answers, 2);
+    b.import_apply(preview.id).await.unwrap();
+    let rows = b.reading_answers().await.unwrap();
+    assert_eq!(rows.len(), 2);
+    assert!(
+        rows.iter()
+            .any(|r| r.item_id == "print-basics/1" && r.attempts == 2 && r.correct_at.is_some())
+    );
 }

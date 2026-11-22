@@ -5,6 +5,7 @@ title = "Binary search"
 title_es = "Búsqueda binaria"
 tags = ["binary-search", "sorted-input"]
 problems = ["rotated-shelf", "seat-map-lookup", "highest-peak"]
+reading = ["complexity-structures/3"]
 presets = ["random", "few-unique"]
 default = [55, 3, 9, 10, 21, 27, 38, 43, 55, 64, 82]
 

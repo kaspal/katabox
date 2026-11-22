@@ -1,6 +1,6 @@
 //! KataBox problem packs.
 //!
-//! `kb-pack validate [DIR] [--run [--problems ID,ID | --from FILE]] [--learn [--topics ID,ID] [--subject ID]] [--root ROOT]` —
+//! `kb-pack validate [DIR] [--run [--problems ID,ID | --from FILE]] [--learn [--topics ID,ID] [--subject ID] [--sets ID,ID]] [--root ROOT]` —
 //! checks every problem folder under DIR and the Learn topics in content/learn (ADR 0029;
 //! `--learn`: only the topics; `--topics` / `--subject` limit the sandbox runs to those
 //! topics, and an unknown id is an error; `--problems` / `--from` (one id per line) limit
@@ -47,7 +47,7 @@ use kb_pack::{BuildOptions, build, run_references, validate_all, validate_learn_
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run [--problems ID,ID | --from FILE]] [--learn [--topics ID,ID] [--subject ID]] [--root ROOT]\n  \
+const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run [--problems ID,ID | --from FILE]] [--learn [--topics ID,ID] [--subject ID] [--sets ID,ID]] [--root ROOT]\n  \
                      kb-pack generate PROBLEM_DIR [--size max|small] --seeds 1,2 [--from N] [--root ROOT]\n  \
                      kb-pack profile PROBLEM_DIR [--root ROOT]\n  \
                      kb-pack profile --inputs [DIR] [--root ROOT]
@@ -201,6 +201,17 @@ fn validate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
                 Some(v) => filter.subject = Some(v),
                 None => return usage("--subject needs a value"),
             },
+            "--sets" => match args.next() {
+                Some(v) => {
+                    filter.sets = v
+                        .split(',')
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                        .map(str::to_string)
+                        .collect()
+                }
+                None => return usage("--sets needs a value"),
+            },
             "--root" => match args.next() {
                 Some(r) => run_root = Some(r.into()),
                 None => return usage("--root needs a value"),
@@ -210,8 +221,10 @@ fn validate_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
         }
     }
     let root = run_root.unwrap_or_else(|| "target/katabox".into());
-    if (!filter.topics.is_empty() || filter.subject.is_some()) && !learn_only {
-        return usage("--topics and --subject need --learn");
+    if (!filter.topics.is_empty() || filter.subject.is_some() || !filter.sets.is_empty())
+        && !learn_only
+    {
+        return usage("--topics, --subject and --sets need --learn");
     }
     if !only.is_empty() && (learn_only || !run) {
         return usage("--problems and --from need --run (and not --learn)");

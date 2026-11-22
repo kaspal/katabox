@@ -108,6 +108,16 @@ const learnTopicRoute = createRoute({
   path: "/learn/$subject/$topic",
   component: lazyRouteComponent(() => import("@/learn/TopicPage"), "TopicPage"),
 });
+/** A reading set (expansion M7): `item` is the 1-based item to open. */
+export type ReadingSearch = { item?: number };
+const readingSetRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/learn/reading/$set",
+  validateSearch: (s: Record<string, unknown>): ReadingSearch => ({
+    item: typeof s.item === "number" && Number.isInteger(s.item) && s.item > 0 ? s.item : undefined,
+  }),
+  component: lazyRouteComponent(() => import("@/learn/reading/ReadingSetPage"), "ReadingSetPage"),
+});
 const interviewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/interview",
@@ -168,6 +178,7 @@ const routeTree = rootRoute.addChildren([
   libraryRoute,
   problemRoute,
   learnRoute,
+  readingSetRoute,
   learnTopicRoute,
   kataRoute,
   helpRoute,

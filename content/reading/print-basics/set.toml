@@ -1,0 +1,7 @@
+id = "print-basics"
+order = 1
+kind = "print"
+title = "Print basics"
+title_es = "Lo básico de imprimir"
+blurb = "Loops, indexing and ranges: read the code, predict the output"
+blurb_es = "Bucles, índices y rangos: lee el código y predice la salida"

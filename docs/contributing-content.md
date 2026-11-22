@@ -117,6 +117,20 @@ This writes `content/learn/sorting/gnome-sort/` (the subject must already be in
    `cargo run -p kb-pack -- validate --learn --run --topics gnome-sort` runs both samples
    on every case and compares them with the tracer.
 
+## A reading exercise, step by step
+1. Pick a set under `content/reading/` (or add one: `set.toml` with id, order, kind
+   `print` or `complexity`, titles and blurbs in English and Spanish).
+2. Write `<n>.py` and `<n>.ts` (at most 30 lines, standard library, no input) and add the
+   item to `items.json`: prompts and explanations in both languages, then the answer.
+   - Print items: `answer` (or `answer_py` + `answer_ts` when the versions differ on
+     purpose) and, usually, 3-4 `choices`.
+   - Complexity items: a top-level `f(n)`, `time`, `space` and `dominant` (the costly
+     line in each file). Write loops out: builtins such as `sorted` or `in` count as one
+     line, and the check counts executed lines.
+3. `cargo run -p kb-pack -- validate --learn --run --sets <set>` runs every answer in the
+   sandbox (ADR 0035).
+4. Optionally link the item from a topic: `reading = ["<set>/<n>"]` in its `topic.toml`.
+
 ## Before the pull request
 
 - `cargo run -p kb-pack -- validate` (structure) and the sandbox check above pass.

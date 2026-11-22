@@ -874,7 +874,8 @@
         "plan_items": "Tareas de planes de estudio",
         "mistakes": "Entradas del diario de errores",
         "reflections": "Reflexiones",
-        "snippets": "Fragmentos"
+        "snippets": "Fragmentos",
+        "reading_answers": "Respuestas de ejercicios de lectura"
       }
     },
     "crossLang": {
@@ -3240,5 +3241,28 @@
       "solve": "Resolver",
       "fix": "Corregir el error"
     }
+  },
+  "reading": {
+    "heading": "Leer código",
+    "intro": "Fragmentos cortos en Python y TypeScript: predice qué imprimen o cuánto crece su coste.",
+    "title": "Ejercicio de lectura",
+    "back": "Volver a Aprender",
+    "progress": "{{solved}} de {{total}} respondidos correctamente",
+    "items": "Elementos de este conjunto",
+    "item": "Elemento {{n}}",
+    "itemSolved": "Elemento {{n}}, respondido correctamente",
+    "language": "Lenguaje del código",
+    "codeLabel": "Código en {{language}}",
+    "output": "Salida",
+    "typeOutput": "Escribe la salida",
+    "time": "Tiempo",
+    "space": "Espacio extra",
+    "next": "Siguiente",
+    "setDone": "Era el último elemento de este conjunto.",
+    "expectedOutput": "Imprime:",
+    "expectedComplexity": "Tiempo {{time}}, espacio extra {{space}}.",
+    "dominantLine": "La línea {{line}} domina el coste.",
+    "practiceHeading": "Ejercicios de lectura",
+    "linkTitle": "{{set}}, elemento {{n}}"
   }
 }

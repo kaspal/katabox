@@ -1,0 +1,7 @@
+id = "print-scope"
+order = 5
+kind = "print"
+title = "Print: scope"
+title_es = "Imprimir: ámbito"
+blurb = "Closures, shadowing and captured variables: find which variable each name means"
+blurb_es = "Closures, sombreado y variables capturadas: descubre a qué variable se refiere cada nombre"

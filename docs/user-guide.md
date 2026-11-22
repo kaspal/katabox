@@ -178,6 +178,15 @@ problem, they open from the strip under the problem's title (**Base problem · F
 1 · Follow-up 2**). A follow-up's statement says what changes; its tests, limits and
 solutions are its own, and it counts as a problem of its own in your history.
 
+## Reading code
+**Learn → Reading code** has short snippets to read, in Python or TypeScript (switch
+above the code):
+- **What does this print?** Pick the output, or type it when there are no choices.
+- **Complexity:** pick how the time and the extra space grow with n. The answer marks
+  the line that dominates the cost.
+Every answer shows the explanation. Your progress is kept per item and travels with an
+export. Some Learn topics link reading items from their Practice tab.
+
 ## Fix the bug
 Problems with the **Fix** badge start with code that has a bug. The statement tells the
 story; the code fails some tests, and your job is to find the bug and fix it. Python and

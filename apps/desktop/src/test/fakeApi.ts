@@ -43,6 +43,14 @@ import type {
 } from "@/bindings";
 import type { Api, CustomInput } from "@/lib/api";
 import type {
+  ReadingAnswer,
+  ReadingAnswerRow,
+  ReadingLink,
+  ReadingResult,
+  ReadingSetSummary,
+  ReadingSetView,
+} from "@/bindings";
+import type {
   DebugAction,
   DebugInspect,
   DebugSnapshot,
@@ -374,6 +382,7 @@ export function createFakeApi(
     planSetups: [] as PlanSetup[],
     journal: { failures: 0, tags: [] } as JournalOverview,
     snippets: [] as SnippetRow[],
+    readingAnswers: [] as ReadingAnswerRow[],
     /** Fields merged into getProblem's view (follow-ups, expansion M5). */
     problemExtras: {} as Record<string, Partial<ProblemView>>,
     mistakes: new Map<number, MistakeView>(),
@@ -833,6 +842,84 @@ export function createFakeApi(
     }),
     kataOverview: vi.fn(async () => ({ bests: [], rusty: [], streak: 0, sessions: [] })),
     ratings: vi.fn(async () => state.ratings),
+    readingSets: vi.fn(async (lang: "en" | "es"): Promise<ReadingSetSummary[]> => [
+      {
+        id: "print-basics",
+        kind: "print",
+        title: lang === "es" ? "Lo básico de imprimir" : "Print basics",
+        blurb: lang === "es" ? "Bucles y rangos" : "Loops and ranges",
+        items: 2,
+      },
+      { id: "complexity-loops", kind: "complexity", title: "Complexity: loops", blurb: "How fast?", items: 1 },
+    ]),
+    readingSet: vi.fn(async (id: string): Promise<ReadingSetView> => {
+      if (id === "complexity-loops") {
+        return {
+          id,
+          kind: "complexity",
+          title: "Complexity: loops",
+          blurb: "How fast?",
+          items: [
+            {
+              id: "complexity-loops/1",
+              n: 1,
+              prompt: "How do the time and the extra space grow with n?",
+              code_python: "def f(n):\n    for i in range(n):\n        pass\n",
+              code_typescript: "function f(n: number) {\n  for (let i = 0; i < n; i++) {}\n}\n",
+              choices: [],
+            },
+          ],
+        };
+      }
+      return {
+        id: "print-basics",
+        kind: "print",
+        title: "Print basics",
+        blurb: "Loops and ranges",
+        items: [
+          {
+            id: "print-basics/1",
+            n: 1,
+            prompt: "What does this print?",
+            code_python: "total = 0\nfor i in range(1, 5):\n    total += i\nprint(total)\n",
+            code_typescript: "let total = 0;\nfor (let i = 1; i < 5; i++) total += i;\nconsole.log(total);\n",
+            choices: ["10", "15", "4"],
+          },
+          {
+            id: "print-basics/2",
+            n: 2,
+            prompt: "What does this print? Type the output.",
+            code_python: "print(7 // 2)\n",
+            code_typescript: "console.log(Math.floor(7 / 2));\n",
+            choices: [],
+          },
+        ],
+      };
+    }),
+    readingAnswers: vi.fn(async () => [...state.readingAnswers]),
+    readingLinks: vi.fn(async (): Promise<ReadingLink[]> => []),
+    answerReading: vi.fn(async (item: string, answer: ReadingAnswer): Promise<ReadingResult> => {
+      const complexity = item.startsWith("complexity");
+      const expected = item === "print-basics/1" ? "10" : "3";
+      const correct = complexity ? answer.time === "O(n)" && answer.space === "O(1)" : answer.output?.trim() === expected;
+      const prev = state.readingAnswers.find((a) => a.item_id === item);
+      const row = {
+        item_id: item,
+        attempts: (prev?.attempts ?? 0) + 1,
+        correct_at: prev?.correct_at ?? (correct ? 1700000000000 : null),
+        updated_at: 1700000000000,
+      };
+      state.readingAnswers = [...state.readingAnswers.filter((a) => a.item_id !== item), row];
+      return {
+        correct,
+        output: complexity ? null : expected,
+        time: complexity ? "O(n)" : null,
+        space: complexity ? "O(1)" : null,
+        dominant_line: complexity ? 2 : null,
+        explanation: complexity ? "One pass over n." : "The range stops before 5.",
+        attempts: row.attempts,
+      };
+    }),
     snippets: vi.fn(async () => [...state.snippets]),
     saveSnippet: vi.fn(async (s: SnippetInput) => {
       const uid = s.uid ?? String(state.snippets.length + 1).padStart(16, "0");

@@ -1,0 +1,72 @@
+[
+  {
+    "n": 1,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "A slice includes its start and stops before its end: positions 1, 2 and 3 of \"keyboard\" are \"eyb\". An empty start means 0, and -3 starts three characters from the end, giving \"ard\".",
+    "explain_es": "Un recorte incluye el inicio y se detiene antes del final: las posiciones 1, 2 y 3 de \"keyboard\" son \"eyb\". Un inicio vacío equivale a 0, y -3 empieza tres caracteres antes del final, lo que da \"ard\".",
+    "answer": "eyb\nkey\nard",
+    "choices": ["eyb\nkey\nard", "eybo\nkeyb\nard", "eyb\nkey\nrd", "key\nkey\nard"]
+  },
+  {
+    "n": 2,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "split(\",\") keeps the empty text between the two commas, so there are 4 parts: \"red\", \"green\", \"\" and \"blue\". Joining them with \"-\" puts the empty part back as a double dash.",
+    "explain_es": "split(\",\") conserva el texto vacío entre las dos comas, así que hay 4 partes: \"red\", \"green\", \"\" y \"blue\". Al unirlas con \"-\", la parte vacía vuelve como un guion doble.",
+    "answer": "4\nred-green--blue",
+    "choices": ["4\nred-green--blue", "3\nred-green-blue", "4\nred-green-blue"]
+  },
+  {
+    "n": 3,
+    "prompt": "What does this print? Type the output, one line per print.",
+    "prompt_es": "¿Qué imprime? Escribe la salida, una línea por cada impresión.",
+    "explain": "Multiplying a string in Python (repeat in TypeScript) glues copies together: \"ab\" three times is \"ababab\". The repetition happens before the + \"|\", and \"xyz\" four times has 12 characters.",
+    "explain_es": "Multiplicar una cadena en Python (repeat en TypeScript) pega copias seguidas: \"ab\" tres veces es \"ababab\". La repetición ocurre antes del + \"|\", y \"xyz\" cuatro veces tiene 12 caracteres.",
+    "answer": "ababab\n-----|\n12"
+  },
+  {
+    "n": 4,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "Inside the braces of an f-string or a template literal the code is evaluated: score * 2 becomes 14 and name.upper() (toUpperCase() in TypeScript) becomes \"ADA\".",
+    "explain_es": "Dentro de las llaves de un f-string o de una plantilla literal se evalúa el código: score * 2 se convierte en 14 y name.upper() (toUpperCase() en TypeScript) en \"ADA\".",
+    "answer": "Ada has 14 points\nADA!",
+    "choices": ["Ada has 14 points\nADA!", "Ada has score * 2 points\nADA!", "Ada has 77 points\nADA!", "Ada has 14 points\nAda!"]
+  },
+  {
+    "n": 5,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "lower and upper change every letter. The last line upper-cases only the first character and lower-cases the rest, including the W of \"World\".",
+    "explain_es": "lower y upper cambian todas las letras. La última línea pasa a mayúscula solo el primer carácter y a minúscula el resto, incluida la W de \"World\".",
+    "answer": "hello world\nHELLO WORLD\nHello world",
+    "choices": ["hello world\nHELLO WORLD\nHello world", "hello world\nHELLO WORLD\nHello World", "hello world\nHELLO WORLD\nhELLo World"]
+  },
+  {
+    "n": 6,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "Strings compare character by character by code, and every uppercase letter comes before every lowercase one, so \"Apple\" sorts first. \"10\" < \"9\" compares the first characters \"1\" and \"9\", so it is true even though 10 > 9 as numbers.",
+    "explain_es": "Las cadenas se comparan carácter a carácter por su código, y toda mayúscula va antes que cualquier minúscula, así que \"Apple\" queda primero. \"10\" < \"9\" compara los primeros caracteres \"1\" y \"9\", así que es verdadero aunque 10 > 9 como números.",
+    "answer": "Apple apple fig pear\nyes",
+    "choices": ["Apple apple fig pear\nyes", "apple Apple fig pear\nno", "Apple apple fig pear\nno", "apple Apple fig pear\nyes"]
+  },
+  {
+    "n": 7,
+    "prompt": "What does this print? Type the output, one line per print.",
+    "prompt_es": "¿Qué imprime? Escribe la salida, una línea por cada impresión.",
+    "explain": "Odd numbers are added at the end and even numbers at the front: \"1\", \"21\", \"213\", \"4213\", \"42135\". Only the final string is printed, after the loop.",
+    "explain_es": "Los impares se añaden al final y los pares al principio: \"1\", \"21\", \"213\", \"4213\", \"42135\". Solo se imprime la cadena final, después del bucle.",
+    "answer": "42135"
+  },
+  {
+    "n": 8,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "words[1] is the second word, \"quick\", and reversing it gives \"kciuq\". The last line takes the first letter of each word and joins them with spaces.",
+    "explain_es": "words[1] es la segunda palabra, \"quick\", y al invertirla queda \"kciuq\". La última línea toma la primera letra de cada palabra y las une con espacios.",
+    "answer": "kciuq\nt q b f",
+    "choices": ["kciuq\nt q b f", "eht\nt q b f", "kciuq\ntqbf", "quick\nt q b f"]
+  }
+]

@@ -13,6 +13,7 @@ use sqlx::{Row, SqliteConnection};
 use crate::journal::{MistakeRow, ReflectionRow};
 use crate::kata::{KATA_MAX_MS, KataAttemptRow, KataSessionRow};
 use crate::plans::{PlanItemRow, PlanRow};
+use crate::reading_answers::ReadingAnswerRow;
 use crate::snippets::SnippetRow;
 use crate::user::{code_hash, parse_language, parse_status, parse_verdict, verdict_code};
 use crate::{ProblemStatus, Result, SnapshotSource, UserDb};
@@ -173,6 +174,9 @@ pub struct ExportData {
     /// The snippet library (expansion M4).
     #[serde(default)]
     pub snippets: Vec<SnippetRow>,
+    /// Answers to reading exercises (expansion M7).
+    #[serde(default)]
+    pub reading_answers: Vec<ReadingAnswerRow>,
 }
 
 impl ExportData {
@@ -185,6 +189,7 @@ impl ExportData {
             && self.mistakes.is_empty()
             && self.reflections.is_empty()
             && self.snippets.is_empty()
+            && self.reading_answers.is_empty()
     }
 }
 
@@ -344,6 +349,7 @@ impl UserDb {
         d.mistakes = self.mistakes().await?;
         d.reflections = self.reflections().await?;
         d.snippets = self.snippets().await?;
+        d.reading_answers = self.reading_answers().await?;
         for r in sqlx::query("SELECT * FROM settings ORDER BY key")
             .fetch_all(p)
             .await?
@@ -899,6 +905,33 @@ impl UserDb {
             .await?
             .rows_affected();
             stats.entry("snippets").or_default().count(n, existed);
+        }
+
+        for a in &d.reading_answers {
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM reading_answers WHERE item_id = ?",
+                &[&a.item_id],
+            )
+            .await?;
+            let n = sqlx::query(
+                "INSERT INTO reading_answers (item_id, attempts, correct_at, updated_at)
+                 VALUES (?, ?, ?, ?)
+                 ON CONFLICT (item_id) DO UPDATE SET attempts = excluded.attempts,
+                   correct_at = excluded.correct_at, updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > reading_answers.updated_at",
+            )
+            .bind(&a.item_id)
+            .bind(a.attempts)
+            .bind(a.correct_at)
+            .bind(a.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats
+                .entry("reading_answers")
+                .or_default()
+                .count(n, existed);
         }
 
         for r in &d.settings {

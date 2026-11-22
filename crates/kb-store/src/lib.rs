@@ -24,6 +24,8 @@ mod migration_tests;
 pub mod modes;
 pub mod plans;
 pub mod practice;
+pub mod reading;
+pub mod reading_answers;
 pub mod snippets;
 pub mod transfer;
 pub mod user;
@@ -42,6 +44,10 @@ pub use learn::{
 };
 pub use modes::{AcceptedSolution, SessionRow, SubmitFact};
 pub use practice::{ActivityRow, DailyPick, INSTALL_ID_SETTING, ListRow, ReviewRow};
+pub use reading::{
+    DominantLine, PackReadingItem, PackReadingSet, ReadingItemData, ReadingItemView, ReadingKind,
+    ReadingLink, ReadingSetSummary, ReadingSetView,
+};
 pub use transfer::ExportData;
 pub use user::{
     BACKUPS_KEPT, Draft, DraftRef, ProblemStatus, SNAPSHOT_CAP, Snapshot, SnapshotSource,

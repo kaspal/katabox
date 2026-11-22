@@ -609,6 +609,46 @@ async interviews(lang: UiLang) : Promise<Result<InterviewResult[], AppError>> {
     else return { status: "error", error: e  as any };
 }
 },
+async readingSets(uiLang: UiLang) : Promise<Result<ReadingSetSummary[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reading_sets", { uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async readingSet(id: string, uiLang: UiLang) : Promise<Result<ReadingSetView, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reading_set", { id, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async readingAnswers() : Promise<Result<ReadingAnswerRow[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reading_answers") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async readingLinks(topic: string, uiLang: UiLang) : Promise<Result<ReadingLink[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reading_links", { topic, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async answerReading(item: string, answer: ReadingAnswer, uiLang: UiLang) : Promise<Result<ReadingResult, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("answer_reading", { item, answer, uiLang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async snippets() : Promise<Result<SnippetRow[], AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("snippets") };
@@ -2291,6 +2331,61 @@ export type RatingsView = { overall: RatingView;
  */
 patterns: PatternRating[] }
 /**
+ * What the user answered: an output (print items), or time and space (complexity items).
+ */
+export type ReadingAnswer = { 
+/**
+ * The version the user read: `python` or `typescript`.
+ */
+language: Language; output: string | null; time: string | null; space: string | null }
+export type ReadingAnswerRow = { 
+/**
+ * `<set>/<n>`.
+ */
+item_id: string; attempts: number; correct_at: number | null; updated_at: number }
+/**
+ * An item as the UI shows it before answering: never the answer.
+ */
+export type ReadingItemView = { 
+/**
+ * `<set>/<n>`.
+ */
+id: string; n: number; prompt: string; code_python: string; code_typescript: string; 
+/**
+ * Print items with choices; empty means the output is typed.
+ */
+choices: string[] }
+export type ReadingKind = 
+/**
+ * What does this print?
+ */
+"print" | 
+/**
+ * What is its time and space complexity?
+ */
+"complexity"
+/**
+ * A reading item linked from a Learn topic's Practice tab.
+ */
+export type ReadingLink = { id: string; set: string; n: number; kind: ReadingKind; set_title: string }
+/**
+ * The verdict, with everything the feedback shows.
+ */
+export type ReadingResult = { correct: boolean; 
+/**
+ * Print items: the exact output of the version read.
+ */
+output: string | null; time: string | null; space: string | null; 
+/**
+ * Complexity items: the line that dominates the cost in the version read (1-based).
+ */
+dominant_line: number | null; explanation: string; attempts: number }
+/**
+ * A set in the list, in one UI language.
+ */
+export type ReadingSetSummary = { id: string; kind: ReadingKind; title: string; blurb: string; items: number }
+export type ReadingSetView = { id: string; kind: ReadingKind; title: string; blurb: string; items: ReadingItemView[] }
+/**
  * The reference solution's time at one size, at this machine's time scale.
  */
 export type ReferencePoint = { n: number; us: number }
@@ -2599,7 +2694,7 @@ export type TopicReview = { topic: LearnTopicSummary; problem: ProblemSummary }
 /**
  * How many records of each kind a file holds.
  */
-export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number; mistakes: number; reflections: number; snippets: number }
+export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number; mistakes: number; reflections: number; snippets: number; reading_answers: number }
 /**
  * Why a trace stopped before the program ended.
  */

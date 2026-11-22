@@ -85,6 +85,7 @@ pub struct TransferCounts {
     pub mistakes: u32,
     pub reflections: u32,
     pub snippets: u32,
+    pub reading_answers: u32,
 }
 
 fn counts(d: &ExportData) -> TransferCounts {
@@ -109,6 +110,7 @@ fn counts(d: &ExportData) -> TransferCounts {
         mistakes: n(d.mistakes.len()),
         reflections: n(d.reflections.len()),
         snippets: n(d.snippets.len()),
+        reading_answers: n(d.reading_answers.len()),
     }
 }
 
@@ -207,6 +209,7 @@ fn validate(f: &ExportFile) -> Result<()> {
         d.mistakes.len(),
         d.reflections.len(),
         d.snippets.len(),
+        d.reading_answers.len(),
     ];
     if sizes.iter().any(|n| *n > MAX_ROWS) {
         return Err(invalid(format!("more than {MAX_ROWS} records of one kind")));
@@ -427,6 +430,25 @@ fn validate(f: &ExportFile) -> Result<()> {
             || crate::comforts::check_snippet(&s.name, &s.tags, &s.body).is_err()
         {
             return Err(invalid(format!("{p}: bad snippet")));
+        }
+    }
+    for (i, a) in d.reading_answers.iter().enumerate() {
+        let p = format!("reading_answers[{i}]");
+        check_time(&p, a.updated_at)?;
+        if let Some(t) = a.correct_at {
+            check_time(&p, t)?;
+        }
+        let id_ok = a.item_id.split_once('/').is_some_and(|(set, n)| {
+            !set.is_empty()
+                && set.len() <= 64
+                && set
+                    .bytes()
+                    .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+                && n.parse::<u32>().is_ok_and(|n| (1..=9999).contains(&n))
+                && !n.starts_with('0')
+        });
+        if !id_ok || !(1..=1_000_000).contains(&a.attempts) {
+            return Err(invalid(format!("{p}: bad reading answer")));
         }
     }
     Ok(())

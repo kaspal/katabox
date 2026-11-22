@@ -17,7 +17,7 @@ use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 10;
+pub const CONTENT_SCHEMA_VERSION: i64 = 11;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -274,7 +274,7 @@ pub struct JudgeData {
 /// Read-only handle to content.db.
 #[derive(Debug, Clone)]
 pub struct ContentDb {
-    pool: SqlitePool,
+    pub(crate) pool: SqlitePool,
 }
 
 impl ContentDb {
@@ -767,6 +767,7 @@ async fn write_pack(
         insert_problem(&mut tx, p).await?;
     }
     insert_learn(&mut tx, learn).await?;
+    crate::reading::insert_reading(&mut tx, &learn.reading, &learn.reading_links).await?;
     tx.commit().await?;
     sqlx::raw_sql("VACUUM").execute(&mut conn).await?;
     conn.close().await?;
@@ -1290,7 +1291,7 @@ pub(crate) mod tests {
                 .await
                 .unwrap();
         assert_eq!(kinds, ["blob/blob"]);
-        assert_eq!(CONTENT_SCHEMA_VERSION, 10);
+        assert_eq!(CONTENT_SCHEMA_VERSION, 11);
         // Profile data round-trips (ADR 0024); gap-b has none.
         let mut want = packed.profile.clone().unwrap();
         want.reference.sort_by_key(|(l, _)| l.id());

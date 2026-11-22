@@ -5,6 +5,7 @@ title = "Monotonic stack"
 title_es = "Pila monótona"
 tags = ["monotonic-stack"]
 problems = ["warmer-ahead", "billboard"]
+reading = ["complexity-structures/4"]
 presets = ["random", "reversed", "nearly-sorted", "few-unique"]
 default = [38, 27, 43, 3, 9, 82, 10, 55, 21, 64]
 

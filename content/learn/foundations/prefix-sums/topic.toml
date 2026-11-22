@@ -5,6 +5,7 @@ title = "Prefix sums"
 title_es = "Sumas prefijas"
 tags = ["prefix-sum", "precomputation"]
 problems = ["rainfall-totals", "mileage-log", "balance-point"]
+reading = ["complexity-structures/6"]
 presets = ["random", "few-unique"]
 default = [3, -2, 7, 4, 1, 6, -5, 8]
 

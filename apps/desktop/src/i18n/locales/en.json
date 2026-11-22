@@ -874,7 +874,8 @@
         "plan_items": "Study plan items",
         "mistakes": "Mistake journal entries",
         "reflections": "Reflections",
-        "snippets": "Snippets"
+        "snippets": "Snippets",
+        "reading_answers": "Reading exercise answers"
       }
     },
     "crossLang": {
@@ -3240,5 +3241,28 @@
       "solve": "Solve",
       "fix": "Fix the bug"
     }
+  },
+  "reading": {
+    "heading": "Reading code",
+    "intro": "Short snippets in Python and TypeScript: predict what they print, or how fast they grow.",
+    "title": "Reading exercise",
+    "back": "Back to Learn",
+    "progress": "{{solved}} of {{total}} answered correctly",
+    "items": "Items in this set",
+    "item": "Item {{n}}",
+    "itemSolved": "Item {{n}}, answered correctly",
+    "language": "Language of the code",
+    "codeLabel": "Code in {{language}}",
+    "output": "Output",
+    "typeOutput": "Type the output",
+    "time": "Time",
+    "space": "Extra space",
+    "next": "Next",
+    "setDone": "That was the last item of this set.",
+    "expectedOutput": "It prints:",
+    "expectedComplexity": "Time {{time}}, extra space {{space}}.",
+    "dominantLine": "Line {{line}} dominates the cost.",
+    "practiceHeading": "Reading exercises",
+    "linkTitle": "{{set}}, item {{n}}"
   }
 }

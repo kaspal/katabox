@@ -1,0 +1,7 @@
+id = "print-strings"
+order = 2
+kind = "print"
+title = "Print: strings"
+title_es = "Imprimir: cadenas"
+blurb = "Slicing, joining, splitting and formatting: read the code, predict the output"
+blurb_es = "Recortar, unir, dividir y dar formato: lee el código y predice la salida"

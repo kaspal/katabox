@@ -25,6 +25,7 @@ pub mod plan_app;
 pub mod practice;
 pub mod profile;
 pub mod rating;
+pub mod reading;
 mod root;
 pub mod shrink;
 pub mod transfer;

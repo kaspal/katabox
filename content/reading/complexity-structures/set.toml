@@ -1,0 +1,7 @@
+id = "complexity-structures"
+order = 8
+kind = "complexity"
+title = "Complexity: data structures"
+title_es = "Complejidad: estructuras de datos"
+blurb = "Sets, searches, stacks, heaps and grids: what does each operation cost inside a loop?"
+blurb_es = "Conjuntos, búsquedas, pilas, montículos y cuadrículas: ¿cuánto cuesta cada operación dentro de un bucle?"

@@ -19,6 +19,10 @@ All notable changes to KataBox are recorded in this file. The format follows
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
 
+- **Reading code:** 70 short exercises in Python and TypeScript on Learn home: "what does
+  this print?" (loops, strings, references, recursion, scope) and complexity (loops,
+  recursion, data structures). Every answer is checked by running the code when the app
+  is built; progress travels with an export.
 - **Fix the bug:** 24 new problems that start with buggy code (an off-by-one, a memo key,
   Dijkstra finalising too early, recursion too deep…). A **Fix** badge, a Library
   **Kind** filter and **Reset to the buggy code**; the daily problem and next problem

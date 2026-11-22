@@ -5,6 +5,12 @@ import { Channel } from "@tauri-apps/api/core";
 import { recordError } from "@/lib/diagnostics";
 import {
   commands,
+  type ReadingAnswer,
+  type ReadingAnswerRow,
+  type ReadingLink,
+  type ReadingResult,
+  type ReadingSetSummary,
+  type ReadingSetView,
   type AppError,
   type AppInfo,
   type Diagnostics,
@@ -212,6 +218,14 @@ export const api = {
   interviewActive: (lang: UiLang): Promise<InterviewView | null> => call(commands.interviewActive(lang)),
 
   // Snippets and search (expansion M4, ADR 0034)
+  // Reading exercises (expansion M7, ADR 0035)
+  readingSets: (lang: UiLang): Promise<ReadingSetSummary[]> => call(commands.readingSets(lang)),
+  readingSet: (id: string, lang: UiLang): Promise<ReadingSetView> => call(commands.readingSet(id, lang)),
+  readingAnswers: (): Promise<ReadingAnswerRow[]> => call(commands.readingAnswers()),
+  readingLinks: (topic: string, lang: UiLang): Promise<ReadingLink[]> =>
+    call(commands.readingLinks(topic, lang)),
+  answerReading: (item: string, answer: ReadingAnswer, lang: UiLang): Promise<ReadingResult> =>
+    call(commands.answerReading(item, answer, lang)),
   snippets: (): Promise<SnippetRow[]> => call(commands.snippets()),
   saveSnippet: (snippet: SnippetInput): Promise<SnippetRow> => call(commands.saveSnippet(snippet)),
   deleteSnippet: (uid: string): Promise<null> => call(commands.deleteSnippet(uid)),

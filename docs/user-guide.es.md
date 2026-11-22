@@ -191,6 +191,16 @@ Cuando resuelves el problema base, se abren desde la franja bajo el título
 dice qué cambia; sus pruebas, límites y soluciones son propios, y cuenta como un problema
 más en tu historial.
 
+## Leer código
+**Aprender → Leer código** tiene fragmentos cortos para leer, en Python o TypeScript
+(selector sobre el código):
+- **¿Qué imprime?** Elige la salida, o escríbela cuando no hay opciones.
+- **Complejidad:** elige cómo crecen el tiempo y el espacio extra con n. La respuesta
+  marca la línea que domina el coste.
+Cada respuesta muestra la explicación. Tu progreso se guarda por elemento y viaja con la
+exportación. Algunos temas de Aprender enlazan ejercicios de lectura desde su pestaña
+Práctica.
+
 ## Corregir el error
 Los problemas con la insignia **Corregir** empiezan con código que tiene un error. El
 enunciado cuenta la historia; el código falla algunas pruebas y tu tarea es encontrar el

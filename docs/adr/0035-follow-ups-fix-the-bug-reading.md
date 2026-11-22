@@ -97,3 +97,38 @@ money in floats, Dijkstra finalising on push, linking nodes instead of roots,
 `bisect_right` in a strict LIS, a choice never undone, and recursion too deep for a
 5·10⁴ chain (A2: buggy only in Python and TypeScript; no tree is deeper than 1000, the
 chain is a parent array).
+
+## Decision: reading exercises (M7)
+**Where:** `content/reading/<set>/` holds `set.toml` (id, order, kind `print` or
+`complexity`, titles and blurbs EN/ES), `items.json` and each item's code as `<n>.py`
+and `<n>.ts`. The plan called them "a new Learn subject"; they live in their own tree
+instead, so the tracer-topic rules (samples, cases, tracers) don't apply to them, and the
+app shows them as a **Reading code** section on Learn home. A topic's `topic.toml` may
+list `reading = ["<set>/<n>", …]`; those items appear on its Practice tab.
+
+**Items:**
+- **Print:** `answer` (the exact output) or `answer_py` + `answer_ts` when the two
+  versions differ on purpose (then the answer is typed); optional `choices` (3-4,
+  including the answer). Outputs compare line by line, ignoring trailing spaces and
+  trailing blank lines.
+- **Complexity:** `time` (O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ): the classes the
+  profiler's fit tells apart), `space` (O(1), O(log n), O(n), O(n²)) and `dominant`, the
+  costly line in each version.
+
+**Verification** (`kb-pack validate --learn --run`, `--sets a,b` to scope):
+- Print items run as programs through the ordinary judge path, in both languages, and
+  must print exactly the answer.
+- Complexity items: the Python version's `f(n)` runs under `sys.settrace` at five sizes;
+  the count of executed lines is deterministic, and `kb_judge::complexity::estimate` must
+  name the stated class. Builtins written in C count as one line, so items write their
+  loops out. The TypeScript version must run. The dominant line must be a loop or a call
+  of a function defined in the snippet, in both versions (structure check). Space answers
+  are checked by review (the explanation justifies them).
+
+**Data:** content.db 11 (`reading_sets`, `reading_items` with the answer as JSON,
+`reading_links`); user.db 0009 `reading_answers(item_id, attempts, correct_at,
+updated_at)`, exported (newer `updated_at` wins on import).
+
+**App:** kb-app checks answers (`answer_reading`), so the UI never receives an answer
+before the user has answered; the result reveals the output or the classes, the dominant
+line and the explanation. The player is an ExerciseShell with a Python/TypeScript switch.

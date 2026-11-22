@@ -1,0 +1,72 @@
+[
+  {
+    "n": 1,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "The print runs before the recursive call, so each number appears on the way down: 3, then 2, then 1. The call with 0 hits the base case and returns without printing.",
+    "explain_es": "El print se ejecuta antes de la llamada recursiva, así que cada número aparece al bajar: 3, luego 2, luego 1. La llamada con 0 llega al caso base y vuelve sin imprimir.",
+    "answer": "3\n2\n1",
+    "choices": ["3\n2\n1", "1\n2\n3", "3\n2\n1\n0"]
+  },
+  {
+    "n": 2,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "Here the recursive call comes first, so up(3) waits for up(2), which waits for up(1). The prints happen on the way back up: 1, 2, 3.",
+    "explain_es": "Aquí la llamada recursiva va primero, así que up(3) espera a up(2), que espera a up(1). Los prints ocurren al volver: 1, 2, 3.",
+    "answer": "1\n2\n3",
+    "choices": ["1\n2\n3", "3\n2\n1", "0\n1\n2\n3"]
+  },
+  {
+    "n": 3,
+    "prompt": "What does this print? Type the output, one line per print.",
+    "prompt_es": "¿Qué imprime? Escribe la salida, una línea por cada impresión.",
+    "explain": "Each call prints \"in\" before recursing and \"out\" after it returns. The calls nest like brackets: in 2, in 1, the base case, then out 1 and out 2 in reverse order.",
+    "explain_es": "Cada llamada imprime \"in\" antes de la recursión y \"out\" cuando esta vuelve. Las llamadas se anidan como paréntesis: in 2, in 1, el caso base, y después out 1 y out 2 en orden inverso.",
+    "answer": "in 2\nin 1\nbase\nout 1\nout 2"
+  },
+  {
+    "n": 4,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "Work from the base case up: f(1) = 1, f(2) = 2 + 2 * 1 = 4, f(3) = 3 + 2 * 4 = 11. Each return value is combined by the caller in the line n + 2 * f(n - 1).",
+    "explain_es": "Calcula desde el caso base hacia arriba: f(1) = 1, f(2) = 2 + 2 * 1 = 4, f(3) = 3 + 2 * 4 = 11. Quien llama combina cada valor devuelto en la línea n + 2 * f(n - 1).",
+    "answer": "11",
+    "choices": ["11", "9", "7", "13"]
+  },
+  {
+    "n": 5,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "tree(n) records n between two copies of tree(n - 1). tree(1) gives 1, tree(2) gives 1 2 1, and tree(3) wraps 3 between two copies of that: 1 2 1 3 1 2 1.",
+    "explain_es": "tree(n) guarda n entre dos copias de tree(n - 1). tree(1) da 1, tree(2) da 1 2 1, y tree(3) pone el 3 entre dos copias de eso: 1 2 1 3 1 2 1.",
+    "answer": "1 2 1 3 1 2 1",
+    "choices": ["1 2 1 3 1 2 1", "3 2 1 1 2 1 1", "1 1 2 1 1 2 3", "1 2 3 2 1"]
+  },
+  {
+    "n": 6,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "Each call appends the last digit (n % 10) to acc and drops it from n, so the digits come out reversed: 305 becomes \"503\". For 40 the 0 is appended first, giving \"04\"; acc is a string, so the leading zero stays.",
+    "explain_es": "Cada llamada añade el último dígito (n % 10) a acc y lo quita de n, así que los dígitos salen al revés: 305 se convierte en \"503\". Con 40 se añade primero el 0 y queda \"04\"; acc es una cadena, así que el cero inicial se conserva.",
+    "answer": "503\n04",
+    "choices": ["503\n04", "305\n40", "503\n4", "53\n4"]
+  },
+  {
+    "n": 7,
+    "prompt": "What does this print?",
+    "prompt_es": "¿Qué imprime?",
+    "explain": "ping and pong call each other, lowering n by 1 at every hop, and whichever function receives 0 answers with its own name. From ping, an odd n ends in pong (ping(3) → pong(2) → ping(1) → pong(0)) and an even n ends back in ping.",
+    "explain_es": "ping y pong se llaman entre sí, bajando n en 1 en cada salto, y la función que recibe 0 responde con su propio nombre. Desde ping, un n impar termina en pong (ping(3) → pong(2) → ping(1) → pong(0)) y un n par vuelve a ping.",
+    "answer": "pong\nping",
+    "choices": ["pong\nping", "ping\npong", "pong\npong", "ping\nping"]
+  },
+  {
+    "n": 8,
+    "prompt": "What does this print? Type the output, one line per print.",
+    "prompt_es": "¿Qué imprime? Escribe la salida, una línea por cada impresión.",
+    "explain": "rev reverses the rest of the string and puts the first character at the end: rev(\"abc\") = rev(\"bc\") + \"a\" = \"cb\" + \"a\". total adds the first element to the total of the rest: 4 + 5 + 6 + 0 = 15.",
+    "explain_es": "rev invierte el resto de la cadena y pone el primer carácter al final: rev(\"abc\") = rev(\"bc\") + \"a\" = \"cb\" + \"a\". total suma el primer elemento al total del resto: 4 + 5 + 6 + 0 = 15.",
+    "answer": "cba\n15"
+  }
+]

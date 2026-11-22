@@ -93,6 +93,9 @@ struct TopicToml {
     /// `sorting` subject, false elsewhere; quickselect, a sorting topic, sets false.
     #[serde(default)]
     sorts: Option<bool>,
+    /// Reading exercises on this topic's Practice tab (`<set>/<n>`; expansion M7).
+    #[serde(default)]
+    reading: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -136,12 +139,16 @@ pub struct TopicDir {
     pub cases: Vec<Case>,
     /// The samples print the sorted input (topic.toml `sorts`, or the subject's default).
     pub sorts: bool,
+    /// Linked reading items (`<set>/<n>`).
+    pub reading: Vec<String>,
 }
 
 /// Everything under `content/learn`, read and checked. `Err` lists every problem found.
 pub struct Learn {
     pub pack: LearnPack,
     pub topics: Vec<TopicDir>,
+    /// Reading sets from `content/reading` (expansion M7).
+    pub reading: Vec<crate::reading::SetDir>,
 }
 
 fn kebab(s: &str) -> bool {
@@ -159,6 +166,7 @@ pub fn read_learn(learn: &Path, problems: &Path) -> Result<Learn, Vec<String>> {
         return Ok(Learn {
             pack: LearnPack::default(),
             topics: Vec::new(),
+            reading: Vec::new(),
         });
     }
     let subjects = match fs::read_to_string(learn.join("subjects.toml"))
@@ -333,11 +341,43 @@ pub fn read_learn(learn: &Path, problems: &Path) -> Result<Learn, Vec<String>> {
         }
     }
 
+    // Reading exercises (expansion M7) and the topics' links to them.
+    let reading = match crate::reading::read_reading(&crate::reading::reading_dir_for(problems)) {
+        Ok(r) => r,
+        Err(es) => {
+            errors.extend(es);
+            Vec::new()
+        }
+    };
+    let items: BTreeSet<String> = reading
+        .iter()
+        .flat_map(|s| {
+            s.set
+                .items
+                .iter()
+                .map(move |i| format!("{}/{}", s.set.id, i.data.n))
+        })
+        .collect();
+    for t in &topics {
+        for r in &t.reading {
+            if items.contains(r) {
+                pack.reading_links.push((t.topic.id.clone(), r.clone()));
+            } else {
+                errors.push(format!("{}: unknown reading item {r}", t.topic.id));
+            }
+        }
+    }
+
     if !errors.is_empty() {
         return Err(errors);
     }
     pack.topics = topics.iter().map(|t| t.topic.clone()).collect();
-    Ok(Learn { pack, topics })
+    pack.reading = reading.iter().map(|s| s.set.clone()).collect();
+    Ok(Learn {
+        pack,
+        topics,
+        reading,
+    })
 }
 
 /// `apps/desktop/src/learn/tracers` in the repository holding `learn`, if present.
@@ -594,6 +634,7 @@ fn read_topic(dir: &Path, subject: &str, problems: &Path) -> Result<TopicDir, Ve
         calls: t.sample,
         cases,
         sorts,
+        reading: t.reading,
     })
 }
 
@@ -620,10 +661,19 @@ pub fn validate_learn(learn: &Path, problems: &Path) -> usize {
                     t.topic.quiz.len()
                 );
             }
+            for s in &l.reading {
+                println!(
+                    "ok    reading {} ({} items, {})",
+                    s.set.id,
+                    s.set.items.len(),
+                    s.set.kind.as_str()
+                );
+            }
             println!(
-                "\n{} subject(s), {} topic(s), 0 failed",
+                "\n{} subject(s), {} topic(s), {} reading set(s), 0 failed",
                 l.pack.subjects.len(),
-                l.topics.len()
+                l.topics.len(),
+                l.reading.len()
             );
             0
         }
@@ -720,6 +770,8 @@ pub fn run_sample(t: &TopicDir, language: Language, env: &JudgeEnv) -> Result<()
 pub struct TopicFilter {
     pub topics: Vec<String>,
     pub subject: Option<String>,
+    /// Reading sets to run (`--sets a,b`; expansion M7).
+    pub sets: Vec<String>,
 }
 
 impl TopicFilter {
@@ -751,8 +803,8 @@ impl TopicFilter {
 /// `validate --run` for topics: every sample in every language, for the topics `filter`
 /// selects. Returns the failures.
 pub fn run_samples(learn: &Path, problems: &Path, env: &JudgeEnv, filter: &TopicFilter) -> usize {
-    let all = match read_learn(learn, problems) {
-        Ok(l) => l.topics,
+    let (all, all_reading) = match read_learn(learn, problems) {
+        Ok(l) => (l.topics, l.reading),
         Err(_) => return 1, // validate already printed why
     };
     let topics = match filter.select(&all) {
@@ -763,6 +815,35 @@ pub fn run_samples(learn: &Path, problems: &Path, env: &JudgeEnv, filter: &Topic
         }
     };
     let mut failed = 0;
+    // Reading sets (expansion M7): with `--sets`, only those; with `--topics` or
+    // `--subject` alone, none.
+    let sets: Vec<&crate::reading::SetDir> = all_reading
+        .iter()
+        .filter(|s| {
+            if filter.sets.is_empty() {
+                filter.topics.is_empty() && filter.subject.is_none()
+            } else {
+                filter.sets.contains(&s.set.id)
+            }
+        })
+        .collect();
+    if let Some(unknown) = filter
+        .sets
+        .iter()
+        .find(|id| !all_reading.iter().any(|s| &s.set.id == *id))
+    {
+        println!("FAIL  unknown reading set {unknown}");
+        return 1;
+    }
+    for s in sets {
+        failed += crate::reading::run_set(s, env);
+    }
+    let topics = if !filter.sets.is_empty() && filter.topics.is_empty() && filter.subject.is_none()
+    {
+        Vec::new()
+    } else {
+        topics
+    };
     for t in topics {
         for l in SAMPLE_LANGUAGES {
             match run_sample(t, l, env) {
@@ -1049,12 +1130,14 @@ mod tests {
         let two = TopicFilter {
             topics: vec!["quick-sort".into(), "bubble-sort".into()],
             subject: None,
+            sets: vec![],
         };
         // Folder order, not the order given.
         assert_eq!(ids(&two), ["bubble-sort", "quick-sort"]);
         let sorting = TopicFilter {
             topics: vec![],
             subject: Some("sorting".into()),
+            sets: vec![],
         };
         let in_sorting = ids(&sorting);
         assert!(in_sorting.contains(&"quick-sort".to_string()));
@@ -1069,6 +1152,7 @@ mod tests {
         let typo = TopicFilter {
             topics: vec!["bubble-sort".into(), "bubble-srot".into()],
             subject: None,
+            sets: vec![],
         };
         assert_eq!(
             typo.select(&learn.topics).unwrap_err(),
@@ -1077,6 +1161,7 @@ mod tests {
         let nothing = TopicFilter {
             topics: vec![],
             subject: Some("astrology".into()),
+            sets: vec![],
         };
         assert!(nothing.select(&learn.topics).is_err());
     }
