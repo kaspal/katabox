@@ -6,7 +6,11 @@ def manacher(text):
     for i in range(n):
         if i < right:
             radius[i] = min(right - i, radius[2 * center - i])  # @step mirror
-        while i - radius[i] - 1 >= 0 and i + radius[i] + 1 < n and s[i - radius[i] - 1] == s[i + radius[i] + 1]:
+        while (
+            i - radius[i] - 1 >= 0
+            and i + radius[i] + 1 < n
+            and s[i - radius[i] - 1] == s[i + radius[i] + 1]
+        ):
             radius[i] += 1  # @step grow
         if i + radius[i] > right:
             center, right = i, i + radius[i]

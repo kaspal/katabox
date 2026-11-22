@@ -263,7 +263,8 @@
       "submissions": "Submissions",
       "notes": "Notes",
       "history": "History",
-      "schema": "Tables"
+      "schema": "Tables",
+      "label": "Problem sections"
     },
     "limits": {
       "time": "Time limit",
@@ -583,7 +584,8 @@
   "results": {
     "tabs": {
       "testcases": "Testcases",
-      "result": "Result"
+      "result": "Result",
+      "label": "Results sections"
     },
     "phase": {
       "starting": "Starting…",
@@ -1005,7 +1007,14 @@
       "changedCount_other": "{{count}} changes"
     },
     "programUnsupported": "Program problems can be debugged in Python and JavaScript/TypeScript.",
-    "sqlUnsupported": "The debugger is not available for SQL problems: a query has no steps to replay."
+    "sqlUnsupported": "The debugger is not available for SQL problems: a query has no steps to replay.",
+    "views": "Debugger views",
+    "autoplay": {
+      "play": "Play: step automatically",
+      "pause": "Pause automatic stepping",
+      "speed": "Playback speed",
+      "times": "{{speed}}×"
+    }
   },
   "complexity": {
     "button": "Complexity",

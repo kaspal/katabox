@@ -19,7 +19,9 @@ function maxFlow(n: number, edges: number[][]): number[] {
     }
     if (parent[sink] === -1) return [total];
     let push = 999;
-    for (let v = sink; v !== source; v = parent[v]) push = Math.min(push, cap[parent[v]][v]);
+    for (let v = sink; v !== source; v = parent[v]) {
+      push = Math.min(push, cap[parent[v]][v]);
+    }
     for (let v = sink; v !== source; v = parent[v]) {
       cap[parent[v]][v] -= push; // @step augment
       cap[v][parent[v]] += push;

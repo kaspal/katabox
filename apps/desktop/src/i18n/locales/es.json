@@ -263,7 +263,8 @@
       "submissions": "Envíos",
       "notes": "Notas",
       "history": "Historial",
-      "schema": "Tablas"
+      "schema": "Tablas",
+      "label": "Secciones del problema"
     },
     "limits": {
       "time": "Tiempo límite",
@@ -583,7 +584,8 @@
   "results": {
     "tabs": {
       "testcases": "Casos de prueba",
-      "result": "Resultado"
+      "result": "Resultado",
+      "label": "Secciones de resultados"
     },
     "phase": {
       "starting": "Iniciando…",
@@ -1005,7 +1007,14 @@
       "changedCount_other": "{{count}} cambios"
     },
     "programUnsupported": "Los problemas de programa se pueden depurar en Python y JavaScript/TypeScript.",
-    "sqlUnsupported": "El depurador no está disponible en los problemas SQL: una consulta no tiene pasos que reproducir."
+    "sqlUnsupported": "El depurador no está disponible en los problemas SQL: una consulta no tiene pasos que reproducir.",
+    "views": "Vistas del depurador",
+    "autoplay": {
+      "play": "Reproducir: avanzar automáticamente",
+      "pause": "Pausar el avance automático",
+      "speed": "Velocidad de reproducción",
+      "times": "{{speed}}×"
+    }
   },
   "complexity": {
     "button": "Complejidad",

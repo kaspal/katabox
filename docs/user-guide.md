@@ -335,6 +335,9 @@ and against the clock:
 - **Toolbar:** **Continue** (F5), **Step over** (F10), **Step into** (F11), **Step out**
   (Shift+F11), **Step back** (Shift+F10), **Restart** (Ctrl+Shift+F5), **Stop
   debugging** (Shift+F5).
+- **Auto-play:** the play button next to the toolbar steps into the next line on its
+  own, at 0.5×, 1× or 2× (about one step a second at 1×), so the Visualize tab plays
+  like an animation. It pauses when you press it again or when the run ends.
 - **Panels:** **Variables** (Locals / Globals, expandable), **Watch**, **Call stack**
   and **Debug console** (evaluate in the selected frame; it never changes the program).
 - **Visualize tab:** draws the variables you choose at each step: arrays with pointer

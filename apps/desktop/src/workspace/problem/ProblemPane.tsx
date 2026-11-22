@@ -96,7 +96,11 @@ export function ProblemPane({
   return (
     <Tabs defaultValue="description" className="@container flex h-full min-h-0 flex-col gap-0">
       {/* Narrow panes show icons only (with a tooltip and an accessible name); never overflow. */}
-      <TabsList className="mx-2 mt-2 h-8 w-auto max-w-full justify-start" data-testid="problem-tabs">
+      <TabsList
+        aria-label={t("workspace.tabs.label")}
+        className="mx-2 mt-2 h-8 w-auto max-w-full justify-start"
+        data-testid="problem-tabs"
+      >
         {tabs.map((tab) => {
           const Icon = TAB_ICON[tab];
           const label = t(`workspace.tabs.${tab}`);

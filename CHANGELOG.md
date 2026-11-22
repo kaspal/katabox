@@ -24,6 +24,10 @@ All notable changes to KataBox are recorded in this file. The format follows
   text) and pack code only runs in the sandbox. Packs are marked everywhere, stay out of
   daily and next problem unless you opt in, update only to newer versions, and uninstall
   cleanly. `kb-pack pack` makes them.
+- **Debugger auto-play:** step automatically at 0.5×, 1× or 2×, so the Visualize tab
+  plays like an animation.
+- **Polish:** the workspace's tab lists have accessible names; Learn code samples no
+  longer have lines over 80 columns.
 - **Portuguese (Brazil) interface:** every screen in Português (Brasil), chosen in
   Settings → Appearance, the command palette or the welcome screen. Problems and Learn
   stay in English or Spanish (your choice, English by default).

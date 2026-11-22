@@ -19,5 +19,8 @@ def check_with_sqlite(rows, out):
     db = sqlite3.connect(":memory:")
     db.execute("CREATE TABLE t (g INTEGER, v INTEGER)")
     db.executemany("INSERT INTO t VALUES (?, ?)", rows)
-    result = db.execute("SELECT g, COUNT(*), SUM(v) FROM t GROUP BY g ORDER BY g").fetchall()
-    assert [x for row in result for x in row] == out, "SQLite groups differently"
+    result = db.execute(
+        "SELECT g, COUNT(*), SUM(v) FROM t GROUP BY g ORDER BY g"
+    ).fetchall()
+    got = [x for row in result for x in row]
+    assert got == out, "SQLite groups differently"

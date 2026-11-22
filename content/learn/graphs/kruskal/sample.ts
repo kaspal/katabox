@@ -9,7 +9,9 @@ function kruskal(n: number, edges: number[][]): number[] {
   };
   let total = 0;
   const used: number[] = [];
-  const order = [...edges].sort((a, b) => a[2] - b[2] || a[0] - b[0] || a[1] - b[1]);
+  const order = [...edges].sort(
+    (a, b) => a[2] - b[2] || a[0] - b[0] || a[1] - b[1],
+  );
   for (const [u, v, w] of order) {
     const ru = find(u);
     const rv = find(v); // @step consider

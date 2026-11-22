@@ -8,7 +8,11 @@ function manacher(text: string): number[] {
     if (i < right) {
       radius[i] = Math.min(right - i, radius[2 * center - i]); // @step mirror
     }
-    while (i - radius[i] - 1 >= 0 && i + radius[i] + 1 < n && s[i - radius[i] - 1] === s[i + radius[i] + 1]) {
+    while (
+      i - radius[i] - 1 >= 0 &&
+      i + radius[i] + 1 < n &&
+      s[i - radius[i] - 1] === s[i + radius[i] + 1]
+    ) {
       radius[i]++; // @step grow
     }
     if (i + radius[i] > right) {

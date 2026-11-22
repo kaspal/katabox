@@ -3,7 +3,9 @@ def solve_queens(n):
 
     def safe(c):
         r = len(cols)
-        return all(c != cc and abs(c - cc) != r - rr for rr, cc in enumerate(cols))
+        return all(
+            c != cc and abs(c - cc) != r - rr for rr, cc in enumerate(cols)
+        )
 
     def place():
         if len(cols) == n:

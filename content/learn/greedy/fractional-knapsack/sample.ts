@@ -3,7 +3,11 @@ function gcd(a: number, b: number): number {
 }
 
 function fractional(capacity: number, items: number[][]): number[] {
-  const order = items.map((_, k) => k).sort((x, y) => items[y][1] / items[y][0] - items[x][1] / items[x][0] || x - y);
+  const order = items
+    .map((_, k) => k)
+    .sort(
+      (x, y) => items[y][1] / items[y][0] - items[x][1] / items[x][0] || x - y,
+    );
   let whole = 0;
   let room = capacity;
   for (const k of order) {

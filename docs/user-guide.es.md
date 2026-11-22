@@ -362,6 +362,10 @@ memoria y contra el reloj:
 - **Barra:** **Continuar** (F5), **Paso a paso por encima** (F10), **Paso a paso por
   instrucciones** (F11), **Paso a paso para salir** (Mayús+F11), **Paso atrás**
   (Mayús+F10), **Reiniciar** (Ctrl+Mayús+F5), **Detener la depuración** (Mayús+F5).
+- **Reproducción automática:** el botón de reproducir junto a la barra avanza a la
+  siguiente línea solo, a 0,5×, 1× o 2× (un paso por segundo a 1×), así la pestaña
+  Visualizar se ve como una animación. Se pausa al pulsarlo otra vez o cuando la
+  ejecución termina.
 - **Paneles:** **Variables** (Locales / Globales, desplegables), **Inspección**, **Pila
   de llamadas** y **Consola de depuración** (evalúa en el marco seleccionado; nunca
   cambia el programa).

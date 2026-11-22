@@ -1,5 +1,5 @@
-// TypeScript has no built-in priority queue: this one keeps (weight, node, from)
-// triples sorted, smallest first, which is enough for a dozen nodes.
+// TypeScript has no built-in priority queue: this one keeps (weight, node,
+// from) triples sorted, smallest first, which is enough for a dozen nodes.
 function prim(n: number, adj: number[][][]): number[] {
   const inTree = new Array<boolean>(n).fill(false);
   const order: number[] = [];

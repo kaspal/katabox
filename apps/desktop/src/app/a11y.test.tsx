@@ -40,8 +40,8 @@ describe("accessibility pass", () => {
     expect(screen.getByTestId("skip-link")).toHaveAttribute("href", "#main");
     expect(unnamed(document.body), `unnamed controls on ${path}`).toEqual([]);
     // Progress tabs and Settings sections: a named tablist, and the selected tab controls a
-    // panel labelled by it. (The workspace's tablists predate this check.)
-    if (!/^\/(progress|settings)/.test(path)) return;
+    // panel labelled by it; the workspace's tablists too (expansion M15).
+    if (!/^\/(progress|settings|problems)/.test(path)) return;
     for (const list of document.querySelectorAll('[role="tablist"]')) {
       if (list.closest("[hidden], [aria-hidden='true']")) continue;
       const named = list.getAttribute("aria-label") || list.closest("nav[aria-label]");

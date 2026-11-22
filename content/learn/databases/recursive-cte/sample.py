@@ -25,7 +25,8 @@ def check_with_sqlite(bosses, depth):
     """SQLite runs the same WITH RECURSIVE query; its depths must be ours."""
     db = sqlite3.connect(":memory:")
     db.execute("CREATE TABLE emp (id INTEGER PRIMARY KEY, boss INTEGER)")
-    db.executemany("INSERT INTO emp VALUES (?, ?)", [(i, None if b == -1 else b) for i, b in enumerate(bosses)])
+    rows = [(i, None if b == -1 else b) for i, b in enumerate(bosses)]
+    db.executemany("INSERT INTO emp VALUES (?, ?)", rows)
     result = db.execute(
         """WITH RECURSIVE chain(id, depth) AS (
              SELECT id, 0 FROM emp WHERE boss IS NULL

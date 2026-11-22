@@ -1,5 +1,5 @@
-// TypeScript has no built-in priority queue: this one keeps (distance, node) pairs
-// sorted, smallest first, which is enough for a dozen nodes.
+// TypeScript has no built-in priority queue: this one keeps (distance, node)
+// pairs sorted, smallest first, which is enough for a dozen nodes.
 function dijkstra(n: number, adj: number[][][], source: number): number[] {
   const dist: (number | null)[] = new Array(n).fill(null);
   dist[source] = 0;

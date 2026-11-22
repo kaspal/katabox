@@ -1,4 +1,10 @@
-function hanoi(n: number, source: number, target: number, spare: number, moves: number[][]): void {
+function hanoi(
+  n: number,
+  source: number,
+  target: number,
+  spare: number,
+  moves: number[][],
+): void {
   if (n === 0) return; // @step check
   hanoi(n - 1, source, spare, target, moves);
   moves.push([source, target]); // @step move

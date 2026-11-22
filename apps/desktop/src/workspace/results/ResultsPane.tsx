@@ -121,7 +121,7 @@ export function ResultsPane({
       data-tour="results"
     >
       <div className="flex items-center gap-3 px-2 pt-2">
-        <TabsList className="h-8">
+        <TabsList className="h-8" aria-label={t("results.tabs.label")}>
           <TabsTrigger value="testcases" className="px-2 text-xs">
             {t("results.tabs.testcases")}
           </TabsTrigger>

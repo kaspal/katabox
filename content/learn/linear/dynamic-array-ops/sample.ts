@@ -4,7 +4,8 @@ class DynArray {
 
   insert(i: number, value: number): void {
     if (this.size === this.data.length) {
-      this.data = [...this.data, ...new Array<number>(this.data.length).fill(0)]; // @step grow
+      const room = new Array<number>(this.data.length).fill(0);
+      this.data = [...this.data, ...room]; // @step grow
     }
     for (let k = this.size; k > i; k--) {
       this.data[k] = this.data[k - 1]; // @step shift-right

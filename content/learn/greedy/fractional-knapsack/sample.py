@@ -2,7 +2,9 @@ from math import gcd
 
 
 def fractional(capacity, items):
-    order = sorted(range(len(items)), key=lambda k: (-items[k][1] / items[k][0], k))
+    order = sorted(
+        range(len(items)), key=lambda k: (-items[k][1] / items[k][0], k)
+    )
     whole, room = 0, capacity
     for k in order:
         weight, value = items[k]

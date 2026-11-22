@@ -1,5 +1,12 @@
 function select(intervals: number[][]): number[] {
-  const order = intervals.map((_, k) => k).sort((x, y) => intervals[x][1] - intervals[y][1] || intervals[x][0] - intervals[y][0] || x - y);
+  const order = intervals
+    .map((_, k) => k)
+    .sort(
+      (x, y) =>
+        intervals[x][1] - intervals[y][1] ||
+        intervals[x][0] - intervals[y][0] ||
+        x - y,
+    );
   const chosen: number[] = [];
   let freeAt: number | null = null;
   for (const k of order) {

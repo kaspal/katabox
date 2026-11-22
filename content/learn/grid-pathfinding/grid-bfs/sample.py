@@ -14,7 +14,8 @@ def grid_bfs(grid, start, goal):
             return [dist[r][c]]  # @step goal
         for dr, dc in DIRS:
             nr, nc = r + dr, c + dc
-            if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] != 1 and dist[nr][nc] == -1:
+            inside = 0 <= nr < rows and 0 <= nc < cols
+            if inside and grid[nr][nc] != 1 and dist[nr][nc] == -1:
                 dist[nr][nc] = dist[r][c] + 1  # @step discover
                 queue.append((nr, nc))
     return [-1]

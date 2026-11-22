@@ -9,7 +9,8 @@ def suffix_array(text):
         order.sort(key=key)  # @step sort
         new = [0] * n
         for j in range(1, n):
-            new[order[j]] = new[order[j - 1]] + (key(order[j]) != key(order[j - 1]))
+            changed = key(order[j]) != key(order[j - 1])
+            new[order[j]] = new[order[j - 1]] + changed
         rank = new
         if rank[order[-1]] == n - 1:
             return order

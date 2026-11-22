@@ -22,7 +22,8 @@ def greedy_best_first(grid, start, goal):
             return [paid[r][c]]  # @step goal
         for dr, dc in DIRS:
             nr, nc = r + dr, c + dc
-            if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] != 1 and paid[nr][nc] is None:
+            inside = 0 <= nr < rows and 0 <= nc < cols
+            if inside and grid[nr][nc] != 1 and paid[nr][nc] is None:
                 paid[nr][nc] = paid[r][c] + cost(grid[nr][nc])  # @step discover
                 heapq.heappush(heap, (h(nr, nc), nr, nc))
     return [-1]

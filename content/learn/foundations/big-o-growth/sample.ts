@@ -48,5 +48,12 @@ function exponential(n: number): number {
 }
 
 function countSteps(n: number): number[] {
-  return [constant(n), logarithmic(n), linear(n), linearithmic(n), quadratic(n), exponential(n)];
+  return [
+    constant(n),
+    logarithmic(n),
+    linear(n),
+    linearithmic(n),
+    quadratic(n),
+    exponential(n),
+  ];
 }

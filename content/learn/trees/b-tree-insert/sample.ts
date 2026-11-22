@@ -27,8 +27,14 @@ function insert(node: BNode, key: number): [BNode, number, BNode] | null {
   }
   if (node.keys.length > MAX_KEYS) {
     const mid = Math.floor(node.keys.length / 2);
-    const left = new BNode(node.keys.slice(0, mid), node.children.slice(0, mid + 1));
-    const right = new BNode(node.keys.slice(mid + 1), node.children.slice(mid + 1));
+    const left = new BNode(
+      node.keys.slice(0, mid),
+      node.children.slice(0, mid + 1),
+    );
+    const right = new BNode(
+      node.keys.slice(mid + 1),
+      node.children.slice(mid + 1),
+    );
     return [left, node.keys[mid], right]; // @step split
   }
   return null;
