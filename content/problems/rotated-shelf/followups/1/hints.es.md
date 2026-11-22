@@ -1,11 +1,11 @@
-Con muchas etiquetas, el trabajo que haces una vez por estantería importa menos que el
-que haces por etiqueta. ¿Hay algo de la estantería que valga la pena encontrar una sola
-vez?
+Subir desde 1 saltándose los números de la estantería responde a una pregunta, pero con
+10⁵ preguntas sobre 10⁵ carpetas es demasiado lento. Olvida el giro un momento: en una
+estantería ordenada, ¿cuántos números por debajo de la carpeta `i`-ésima están libres?
 ---
-Encuentra dónde empieza el orden original: la posición del número más pequeño. Comparar
-el número del centro con el último te dice en qué mitad está.
+En la estantería ordenada `s`, la carpeta `i`-ésima (desde 0) tiene `i` números ocupados
+por debajo, así que hay `s[i] − (i + 1)` números libres por debajo de `s[i]`. Esa cuenta
+nunca baja al crecer `i`, así que se puede buscar con búsqueda binaria.
 ---
-Cuando sepas el inicio `s`, la estantería leída desde `s` hasta el final y luego desde 0
-hasta `s − 1` está totalmente ordenada. Haz una búsqueda binaria de cada etiqueta en esa
-vista ordenada y convierte un índice encontrado `k` en posición de la estantería con
-`(k + s) mod n`.
+Encuentra el punto de giro con la búsqueda del problema base (u ordena una copia). Para cada
+`k`, busca con búsqueda binaria el primer `i` con `s[i] − (i + 1) ≥ k`; la respuesta es
+`k + i` (`i = n` cuando ninguna carpeta tiene tantos números libres por debajo).

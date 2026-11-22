@@ -1,3 +1,3 @@
-def fleet_totals(miles: list[list[int]], queries: list[list[int]]) -> list[int]:
-    # Obviously correct: add up every cell of every rectangle.
-    return [sum(miles[v][d] for v in range(v1, v2 + 1) for d in range(d1, d2 + 1)) for v1, d1, v2, d2 in queries]
+def long_days(miles: list[int], trips: list[list[int]]) -> list[int]:
+    # Obviously correct: count day by day.
+    return [sum(1 for d in range(a, b + 1) if miles[d] >= x) for a, b, x in trips]

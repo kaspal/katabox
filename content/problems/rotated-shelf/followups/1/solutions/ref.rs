@@ -1,33 +1,29 @@
-pub fn find_labels(shelf: Vec<i64>, labels: Vec<i64>) -> Vec<i64> {
+pub fn free_numbers(shelf: Vec<i64>, queries: Vec<i64>) -> Vec<i64> {
     let n = shelf.len();
     let (mut lo, mut hi) = (0usize, n - 1);
     while lo < hi {
-        let m = (lo + hi) / 2;
-        if shelf[m] > shelf[hi] {
-            lo = m + 1;
+        let mid = (lo + hi) / 2;
+        if shelf[mid] > shelf[hi] {
+            lo = mid + 1;
         } else {
-            hi = m;
+            hi = mid;
         }
     }
-    let start = lo;
-    let at = |k: usize| shelf[(k + start) % n];
-    labels
+    let p = lo;
+    let free_below = |i: usize| shelf[(p + i) % n] - (i as i64 + 1);
+    queries
         .iter()
-        .map(|&x| {
+        .map(|&k| {
             let (mut a, mut b) = (0usize, n);
             while a < b {
-                let m = (a + b) / 2;
-                if at(m) < x {
-                    a = m + 1;
+                let mid = (a + b) / 2;
+                if free_below(mid) >= k {
+                    b = mid;
                 } else {
-                    b = m;
+                    a = mid + 1;
                 }
             }
-            if a < n && at(a) == x {
-                ((a + start) % n) as i64
-            } else {
-                -1
-            }
+            k + a as i64
         })
         .collect()
 }

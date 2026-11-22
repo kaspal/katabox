@@ -1,13 +1,20 @@
 ## Idea
 
-Extend the base problem's prefix sums to a grid. Build `P` with one extra row and column of
-zeros, where `P[r][c]` is the total of all cells in rows `0..r−1` and columns `0..c−1`.
-Each entry is its cell plus the block above plus the block to the left, minus the corner
-block that both of those counted. A rectangle `[v1, d1, v2, d2]` is then the big block
-`P[v2+1][d2+1]`, minus the strip above it `P[v1][d2+1]`, minus the strip to its left
-`P[v2+1][d1]`, plus `P[v1][d1]`, which was subtracted twice (inclusion-exclusion).
+Answer the questions **offline**, in an order that suits us. Sort the questions by `x`
+from largest to smallest, and the days by kilometres from largest to smallest. Keep a
+Fenwick tree over the day positions, all zeros at first.
+
+For each question in that order, first add 1 at the position of every day not yet added
+whose kilometres are at least `x` (a pointer moves along the sorted days, so each day is
+added once). Now the tree holds a 1 exactly at the long days for this threshold, and the
+answer is the sum over positions `a` to `b`: two prefix sums. Write it at the question's
+original index.
+
+Because the kilometres are at most 1000, another route works too: split the days into
+blocks of about √n and keep, per block, a count for each kilometre value. That is also far
+faster than counting day by day.
 
 ## Complexity
 
-O(V · D) time to build the table for `V` vans and `D` days, then O(1) per question;
-O(V · D) extra memory. A total is at most 10⁵ · 1000 = 10⁸, well within a 32-bit integer.
+O((n + q) log n) time with the sorting and the Fenwick tree, O(n + q) extra memory. The
+day-by-day count is O(n · q), up to 10¹⁰ steps.

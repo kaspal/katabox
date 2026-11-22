@@ -1,10 +1,13 @@
-Sumar cada celda de cada rectángulo puede costar 10⁵ celdas por pregunta, 10¹⁰ en total.
-En el problema base, las sumas prefijas respondían cada viaje en O(1). ¿Funciona la misma
-idea en dos dimensiones?
+Las sumas prefijas del problema base cuentan todos los días, pero aquí cada pregunta tiene
+su propio umbral `x`. Contar día a día son hasta 10⁵ pasos por pregunta. ¿Y si todas las
+preguntas tuvieran el mismo `x`?
 ---
-Sea `P[r][c]` el total del rectángulo que va desde la esquina superior izquierda hasta la
-fila `r` y la columna `c`, sin incluirlas. Cualquier rectángulo se puede formar con cuatro
-de esas esquinas.
+Con un solo umbral, marca los días largos con 1 y los demás con 0, y las sumas prefijas
+responden a cualquier rango. Umbrales distintos solo significan que las marcas cambian. Si
+respondes las preguntas de la `x` más grande a la más pequeña, cada día solo pasa de 0 a 1,
+una vez.
 ---
-Rellena `P` con `P[r+1][c+1] = miles[r][c] + P[r][c+1] + P[r+1][c] − P[r][c]`. Una
-pregunta es entonces `P[v2+1][d2+1] − P[v1][d2+1] − P[v2+1][d1] + P[v1][d1]`.
+Ordena los días por kilómetros y las preguntas por `x`, las dos cosas de mayor a menor.
+Recorre las preguntas activando primero en un árbol de Fenwick (un 1 en su posición) todo
+día con al menos `x` km, y responde con dos sumas prefijas: `sum(b) − sum(a − 1)`. Guarda
+cada respuesta en el índice original de su pregunta.

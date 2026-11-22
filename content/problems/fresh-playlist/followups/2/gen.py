@@ -1,21 +1,23 @@
-"""Random play logs for fresh-playlist--f2."""
+"""Random play logs and requests for fresh-playlist--f2."""
 import random
-
-def _plays(rng, size):
-    if size == "example":
-        n, songs = 8, 4
-    elif size == "max":
-        n, songs = 100_000, rng.choice([3, 1000, 10**9])
-    else:
-        n, songs = rng.randint(1, 12), rng.choice([2, 4, 20])
-    return [rng.randint(1, songs) for _ in range(n)]
 
 
 def generate(seed, size):
     rng = random.Random(seed)
-    plays = _plays(rng, size)
-    k = rng.choice([1, 2, 3, max(1, len(set(plays)) // 2), 10**5])
-    return {"plays": plays, "k": min(k, 10**5)}
+    if size == "max":
+        n, q, songs = 100_000, 15_000, rng.choice([300, 20_000])
+    elif size == "example":
+        n, q, songs = 7, 3, 4
+    else:
+        n, q, songs = rng.randint(1, 10), rng.randint(1, 6), rng.choice([2, 4, 30])
+    plays = [rng.randint(1, songs) for _ in range(n)]
+    requests = []
+    for _ in range(q):
+        a, b = rng.randrange(n), rng.randrange(n)
+        if size == "max" and rng.random() < 0.7:
+            a, b = rng.randrange(n // 10), rng.randrange(n - n // 10, n)
+        requests.append([min(a, b), max(a, b)])
+    return {"plays": plays, "requests": requests}
 
 
 if __name__ == "__main__":

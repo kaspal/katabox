@@ -1,15 +1,15 @@
 id = "mileage-log--f1"
 parent = "mileage-log"
-title = "Mileage Log: The Whole Fleet"
-title_es = "Registro de kilómetros: toda la flota"
-difficulty = "medium"
-tags = ["matrix", "prefix-sum"]
+title = "Mileage Log: Long Days"
+title_es = "Registro de kilómetros: días largos"
+difficulty = "hard"
+tags = ["fenwick-tree", "sorting", "array"]
 pattern = "range-queries"
-rank = 7
+rank = 9
 
 [signature]
-name = "fleetTotals"
-params = [{ name = "miles", type = "int[][]" }, { name = "queries", type = "int[][]" }]
+name = "longDays"
+params = [{ name = "miles", type = "int[]" }, { name = "trips", type = "int[][]" }]
 returns = "int[]"
 
 [judge]

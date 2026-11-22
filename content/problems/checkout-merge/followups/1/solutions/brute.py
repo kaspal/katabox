@@ -1,3 +1,5 @@
+import heapq
+
 # Provided by KataBox: the judge builds the input lists with this class.
 class ListNode:
     def __init__(self, val: int = 0, next: ListNode | None = None):
@@ -5,14 +7,22 @@ class ListNode:
         self.next = next
 
 
-def merge_distinct(lines: list[ListNode | None]) -> ListNode | None:
-    # Obviously correct: every ticket number once, in order.
-    tickets = set()
+def fair_sample(lines: list[ListNode | None]) -> list[int]:
+    # Obviously correct for small inputs: try every pair of ticket values as [lo, hi].
+    tickets = []
     for node in lines:
+        values = []
         while node is not None:
-            tickets.add(node.val)
+            values.append(node.val)
             node = node.next
-    head = None
-    for t in sorted(tickets, reverse=True):
-        head = ListNode(t, head)
-    return head
+        tickets.append(values)
+    candidates = sorted({v for values in tickets for v in values})
+    best = None
+    for lo in candidates:
+        for hi in candidates:
+            if hi < lo:
+                continue
+            if all(any(lo <= v <= hi for v in values) for values in tickets):
+                if best is None or (hi - lo, lo) < (best[1] - best[0], best[0]):
+                    best = [lo, hi]
+    return best

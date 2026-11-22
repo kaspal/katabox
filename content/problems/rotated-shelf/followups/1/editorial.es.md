@@ -1,15 +1,19 @@
 ## Idea
 
-Podrías repetir la búsqueda O(log n) del problema base para cada etiqueta, pero es más
-sencillo deshacer el cambio una sola vez. Busca con búsqueda binaria el número más
-pequeño: si `shelf[mid]` es mayor que el último número, el inicio está a la derecha de
-`mid`; si no, está en `mid` o a su izquierda. Con el inicio `s`, el índice `k` de la lista
-ordenada está en la posición `(k + s) mod n` de la estantería, así que una búsqueda
-binaria normal sobre ese array ordenado virtual (o sobre una copia rotada) responde cada
-etiqueta; devuelve `-1` si el número encontrado no es la etiqueta.
+Primero deshaz el giro sin mover nada: la carpeta más pequeña está donde la estantería
+"baja", y la búsqueda binaria del problema base la encuentra. Compara `shelf[mid]` con
+`shelf[hi]`; si es mayor, la bajada está a la derecha de `mid`. Llama `p` a ese índice;
+entonces `s(i) = shelf[(p + i) mod n]` lee la estantería en orden.
+
+Por debajo de `s(i)` hay `s(i) − 1` números positivos, y exactamente `i` de ellos están en
+la estantería, así que `free(i) = s(i) − (i + 1)` están libres. `free` nunca baja (dos
+carpetas seguidas difieren al menos en 1). Para una pregunta `k`, busca con búsqueda
+binaria el primer `i` con `free(i) ≥ k`. El `k`-ésimo número libre está por debajo de
+`s(i)` y por encima de `s(i − 1)`, con exactamente `i` carpetas por debajo, así que es
+`k + i`. Si ningún `i` sirve, las `n` carpetas están por debajo y la respuesta es `k + n`.
 
 ## Complejidad
 
-O(n + q log n) en tiempo con una copia ordenada, u O(log n + q log n) con la vista
-virtual; O(n) u O(1) de memoria extra además de la salida, donde `q` es el número de
-etiquetas.
+O(log n) para el punto de giro y O(log n) por pregunta: O(n + q log n) de tiempo con la
+entrada, O(1) de memoria extra aparte de la salida. Un conjunto hash de la estantería no
+ayuda aquí: las preguntas son sobre números que *no* están en la estantería.

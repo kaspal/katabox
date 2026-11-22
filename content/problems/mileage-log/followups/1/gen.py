@@ -1,24 +1,24 @@
-"""Random fleet logs for mileage-log--f1."""
+"""Random logs and long-day questions for mileage-log--f1."""
 import random
 
 
 def generate(seed, size):
     rng = random.Random(seed)
-    if size == "example":
-        rows, cols, q = 2, 4, 3
-    elif size == "max":
-        rows = rng.choice([1, 100, 1000])
-        cols, q = 50_000 // rows, 50_000
+    if size == "max":
+        # Even seeds: small values, which keep the test compact (ADR 0018).
+        n, q, top = 100_000, 12_000, 1000 if seed % 2 else 3
+    elif size == "example":
+        n, q, top = rng.randint(4, 7), 3, 40
     else:
-        rows, cols, q = rng.randint(1, 4), rng.randint(1, 5), rng.randint(1, 5)
-    top = 99 if size == "max" else (1000 if size != "example" else 20)
-    miles = [[rng.randint(0, top) for _ in range(cols)] for _ in range(rows)]
-    queries = []
+        n, q, top = rng.randint(1, 10), rng.randint(1, 6), rng.choice([3, 15, 1000])
+    miles = [rng.randint(0, top) for _ in range(n)]
+    trips = []
     for _ in range(q):
-        v1, v2 = sorted(rng.randrange(rows) for _ in range(2))
-        d1, d2 = sorted(rng.randrange(cols) for _ in range(2))
-        queries.append([v1, d1, v2, d2])
-    return {"miles": miles, "queries": queries}
+        a = rng.randrange(n)
+        b = rng.randrange(n) if size != "max" else rng.randint(max(a, n // 2), n - 1)
+        a, b = min(a, b), max(a, b)
+        trips.append([a, b, rng.randint(0, min(1000, top + 1))])
+    return {"miles": miles, "trips": trips}
 
 
 if __name__ == "__main__":

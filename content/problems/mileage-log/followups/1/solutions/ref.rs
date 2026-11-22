@@ -1,16 +1,31 @@
-pub fn fleet_totals(miles: Vec<Vec<i64>>, queries: Vec<Vec<i64>>) -> Vec<i64> {
-    let (rows, cols) = (miles.len(), miles[0].len());
-    let mut p = vec![vec![0i64; cols + 1]; rows + 1];
-    for r in 0..rows {
-        for c in 0..cols {
-            p[r + 1][c + 1] = miles[r][c] + p[r][c + 1] + p[r + 1][c] - p[r][c];
+pub fn long_days(miles: Vec<i64>, trips: Vec<Vec<i64>>) -> Vec<i64> {
+    let n = miles.len();
+    let mut tree = vec![0i64; n + 1];
+    let mut days: Vec<usize> = (0..n).collect();
+    days.sort_by(|&x, &y| miles[y].cmp(&miles[x]));
+    let mut order: Vec<usize> = (0..trips.len()).collect();
+    order.sort_by(|&x, &y| trips[y][2].cmp(&trips[x][2]));
+    let prefix = |tree: &Vec<i64>, mut i: usize| {
+        let mut s = 0;
+        while i > 0 {
+            s += tree[i];
+            i &= i - 1;
         }
+        s
+    };
+    let mut out = vec![0i64; trips.len()];
+    let mut p = 0;
+    for j in order {
+        let (a, b, x) = (trips[j][0] as usize, trips[j][1] as usize, trips[j][2]);
+        while p < n && miles[days[p]] >= x {
+            let mut i = days[p] + 1;
+            while i <= n {
+                tree[i] += 1;
+                i += i & i.wrapping_neg();
+            }
+            p += 1;
+        }
+        out[j] = prefix(&tree, b + 1) - prefix(&tree, a);
     }
-    queries
-        .iter()
-        .map(|q| {
-            let (v1, d1, v2, d2) = (q[0] as usize, q[1] as usize, q[2] as usize, q[3] as usize);
-            p[v2 + 1][d2 + 1] - p[v1][d2 + 1] - p[v2 + 1][d1] + p[v1][d1]
-        })
-        .collect()
+    out
 }

@@ -1,30 +1,30 @@
 <?php
-function findLabels(array $shelf, array $labels): array {
+function freeNumbers(array $shelf, array $queries): array {
     $n = count($shelf);
     $lo = 0;
     $hi = $n - 1;
     while ($lo < $hi) {
-        $m = intdiv($lo + $hi, 2);
-        if ($shelf[$m] > $shelf[$hi]) {
-            $lo = $m + 1;
+        $mid = intdiv($lo + $hi, 2);
+        if ($shelf[$mid] > $shelf[$hi]) {
+            $lo = $mid + 1;
         } else {
-            $hi = $m;
+            $hi = $mid;
         }
     }
-    $start = $lo;
+    $p = $lo;
     $out = [];
-    foreach ($labels as $x) {
+    foreach ($queries as $k) {
         $a = 0;
         $b = $n;
         while ($a < $b) {
-            $m = intdiv($a + $b, 2);
-            if ($shelf[($m + $start) % $n] < $x) {
-                $a = $m + 1;
+            $mid = intdiv($a + $b, 2);
+            if ($shelf[($p + $mid) % $n] - ($mid + 1) >= $k) {
+                $b = $mid;
             } else {
-                $b = $m;
+                $a = $mid + 1;
             }
         }
-        $out[] = ($a < $n && $shelf[($a + $start) % $n] === $x) ? ($a + $start) % $n : -1;
+        $out[] = $k + $a;
     }
     return $out;
 }

@@ -1,41 +1,40 @@
-This time the supermarket wants **one ticket of each number** in the merged line. As
-before, each line in `lines` is a linked list of ticket numbers, from the front of the
-line to the back, already in non-decreasing order, and the same number may appear in
-several lines or several times in one line.
+The checkout lines are the same: each line in `lines` is a linked list of ticket numbers,
+from the front of the line to the back, in non-decreasing order. This time every line has
+at least one customer.
 
-Merge every line into a single line in **strictly increasing** order, keeping each ticket
-number exactly once, and return it. Lines may be empty; if there are no customers at all,
-return an empty line.
+Before closing, the manager wants a **fair sample** for a survey: a range of ticket
+numbers `[lo, hi]` that contains at least one customer's ticket from **every** line. Return
+the narrowest such range as `[lo, hi]`: the smallest `hi − lo`, and among ranges of that
+width, the one with the smallest `lo`.
 
-Lists are written as their values in order, so `[2, 5, 9]` is the list 2 → 5 → 9, and
-`[]` is the empty list.
+Lists are written as their values in order, so `[2, 5, 9]` is the list 2 → 5 → 9.
 
 ### Example 1
 
 ```
-lines = [[1, 4, 4, 9], [2, 4, 9], [1, 3]]
-Output: [1, 2, 3, 4, 9]
+lines = [[3, 8, 20], [5, 9, 14], [1, 10, 25]]
+Output: [8, 10]
 ```
 
-Ticket 4 appears three times and 1 and 9 twice each; each is kept once.
+Tickets 8, 9 and 10 come from the three lines; no narrower range reaches all three.
 
 ### Example 2
 
 ```
-lines = [[2, 2], [1, 2, 7, 7, 8], [1]]
-Output: [1, 2, 7, 8]
+lines = [[2, 2, 7], [7]]
+Output: [7, 7]
 ```
 
 ### Example 3
 
 ```
-lines = [[2, 5, 6], [4, 7], [1, 3, 9]]
-Output: [1, 2, 3, 4, 5, 6, 7, 9]
+lines = [[6, 9]]
+Output: [6, 6]
 ```
 
 ### Constraints
 
-- 0 ≤ lines.length ≤ 10⁴
-- 0 ≤ total number of customers ≤ 10⁵
+- 1 ≤ lines.length ≤ 10⁴
+- 1 ≤ total number of customers ≤ 10⁵, and every line has at least one
 - 1 ≤ ticket number ≤ 10⁶
 - Each line is in non-decreasing order.

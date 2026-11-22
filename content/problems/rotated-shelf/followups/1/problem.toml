@@ -1,15 +1,15 @@
 id = "rotated-shelf--f1"
 parent = "rotated-shelf"
-title = "Rotated Shelf: Many Labels"
-title_es = "Estante rotado: muchas etiquetas"
-difficulty = "medium"
-tags = ["array", "binary-search"]
+title = "Rotated Shelf: Free Numbers"
+title_es = "La estantería girada: números libres"
+difficulty = "hard"
+tags = ["binary-search", "array"]
 pattern = "binary-search"
-rank = 8
+rank = 9
 
 [signature]
-name = "findLabels"
-params = [{ name = "shelf", type = "int[]" }, { name = "labels", type = "int[]" }]
+name = "freeNumbers"
+params = [{ name = "shelf", type = "int[]" }, { name = "queries", type = "int[]" }]
 returns = "int[]"
 
 [judge]

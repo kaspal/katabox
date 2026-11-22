@@ -34,6 +34,10 @@ pub const STRESS_SEEDS: u64 = 500;
 /// A reference may use at most this share of its language's CPU budget (percent).
 pub const SPEED_SHARE: u64 = 50;
 
+/// Short runs that re-measure a function problem's start-up when its reference looks
+/// over budget (see [`charged_cpu`]).
+const STARTUP_PROBES: usize = 3;
+
 /// Base limit for the brute, stress and generate runs (500 small tests, or a few max
 /// ones, in one run). Python, the slowest language, gets 10× this.
 const RELAXED_BASE_MS: u32 = 6_000;
@@ -176,6 +180,31 @@ fn judge_timed(
     ))
 }
 
+/// The CPU a function problem's reference run is charged against its budget. The run is
+/// one process: the tests the harness timed (`tests_us`) plus the process start-up. The
+/// budget keeps ADR 0017's cap, start-up allowance included, and the rule is unchanged:
+/// test time plus start-up must fit. Only the start-up's measurement noise is removed.
+/// On a busy machine a single start-up can take ~170 ms more than usual, so the start-up
+/// counted is the fastest of the run's own (`cpu_us − tests_us`) and the re-measured
+/// `probes` (start-ups of short runs of the same reference). The result is never more
+/// than the CPU the run used and never less than its test time.
+pub(crate) fn charged_cpu(cpu_us: u64, tests_us: u64, probes: &[u64]) -> u64 {
+    let own = cpu_us.saturating_sub(tests_us);
+    let startup = probes.iter().copied().fold(own, u64::min);
+    (tests_us + startup).min(cpu_us).max(tests_us)
+}
+
+/// Re-measure a function problem's start-up: the reference on its first test only,
+/// [`STARTUP_PROBES`] times; each run's CPU less the time its harness reports.
+fn startup_probes(problem: &Problem, lang: Language, source: &str, env: &JudgeEnv) -> Vec<u64> {
+    let first = &problem.tests[..problem.tests.len().min(1)];
+    (0..STARTUP_PROBES)
+        .filter_map(|_| kb_judge::judge(problem, first, lang, source, env).ok())
+        .filter(|r| r.verdict.is_accepted())
+        .map(|r| r.cpu_us.saturating_sub(r.time_us))
+        .collect()
+}
+
 /// Run every sandbox check on one problem folder.
 pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
     let id = crate::validate::problem_id_of(dir);
@@ -240,7 +269,19 @@ pub fn check_problem(dir: &Path, env: &JudgeEnv) -> Vec<Finding> {
                 continue;
             }
         };
-        match judge_timed(&problem, lang, &src, env) {
+        let run = judge_timed(&problem, lang, &src, env).map(|mut r| {
+            // A function problem over budget: re-measure the start-up before judging
+            // (charged_cpu). Program and SQL problems are timed per test already.
+            if r.verdict.is_accepted()
+                && problem.mode == kb_core::ProblemMode::Function
+                && r.cpu_us > budget_us
+            {
+                let probes = startup_probes(&problem, lang, &src, env);
+                r.cpu_us = charged_cpu(r.cpu_us, r.time_us, &probes);
+            }
+            r
+        });
+        match run {
             Ok(r) if r.verdict.is_accepted() && limited_cpu(&problem, &r) <= budget_us => {
                 add(
                     Check::Reference(lang),
@@ -893,6 +934,29 @@ pub fn print_findings(findings: &[Finding]) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn charged_cpu_removes_start_up_noise_only() {
+        // The noise the review saw: 218 ms of CPU, 10 ms of tests; start-ups re-measured
+        // at about 30 ms. Charged: the tests plus the fastest start-up.
+        assert_eq!(
+            charged_cpu(218_000, 10_000, &[31_000, 28_000, 30_000]),
+            38_000
+        );
+        // No probes (the run was within budget): the run's own CPU, unchanged.
+        assert_eq!(charged_cpu(46_000, 12_000, &[]), 46_000);
+        // Probes slower than the run's own start-up never raise the charge.
+        assert_eq!(charged_cpu(46_000, 12_000, &[90_000]), 46_000);
+        // A really slow reference stays slow: its test time alone is over any budget.
+        assert_eq!(charged_cpu(260_000, 230_000, &[30_000]), 260_000);
+        // Never less than the tests, even if a probe reports 0 start-up.
+        assert_eq!(charged_cpu(218_000, 10_000, &[0]), 10_000);
+        // Same rule, same budget: a run whose tests plus a normal start-up exceed 50% of
+        // Rust's 400 ms cap still fails.
+        let budget = 400_000 * SPEED_SHARE / 100;
+        assert!(charged_cpu(240_000, 190_000, &[30_000]) > budget);
+        assert!(charged_cpu(218_000, 10_000, &[30_000]) <= budget);
+    }
 
     #[test]
     fn naive_margin_probe_and_messages() {

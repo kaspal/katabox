@@ -1,18 +1,18 @@
 id = "fresh-playlist--f2"
 parent = "fresh-playlist"
-title = "Fresh Playlist: A Short Rotation"
-title_es = "Lista fresca: una rotación corta"
-difficulty = "medium"
-tags = ["sliding-window", "hash-map"]
+title = "Fresh Playlist: Fewest Blocks"
+title_es = "Lista sin repeticiones: los menos bloques"
+difficulty = "hard"
+tags = ["sliding-window", "hash-map", "binary-lifting", "greedy"]
 pattern = "sliding-window"
-rank = 8
+rank = 9
 
 [signature]
-name = "longestRotation"
-params = [{ name = "plays", type = "int[]" }, { name = "k", type = "int" }]
-returns = "int"
+name = "fewestBlocks"
+params = [{ name = "plays", type = "int[]" }, { name = "requests", type = "int[][]" }]
+returns = "int[]"
 
 [judge]
 checker = "exact"
-time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+time_limit_ms = 400 # base (Rust); other languages scale it (ADR 0017)
 memory_mb = 256

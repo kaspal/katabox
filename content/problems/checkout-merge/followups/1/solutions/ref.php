@@ -7,23 +7,27 @@ class ListNode
     }
 }
 
-function mergeDistinct(array $lines): ?ListNode {
-    $tickets = [];
-    foreach ($lines as $node) {
-        while ($node !== null) {
-            $tickets[] = $node->val;
-            $node = $node->next;
-        }
+function fairSample(array $lines): array {
+    $heap = new SplPriorityQueue();
+    $heap->setExtractFlags(SplPriorityQueue::EXTR_DATA);
+    $largest = 0;
+    foreach ($lines as $i => $node) {
+        // SplPriorityQueue is a max-heap: negate to pop the smallest ticket first.
+        $heap->insert([$node, $i], [-$node->val, -$i]);
+        $largest = max($largest, $node->val);
     }
-    sort($tickets);
-    $dummy = new ListNode();
-    $tail = $dummy;
-    foreach ($tickets as $i => $t) {
-        if ($i > 0 && $t === $tickets[$i - 1]) {
-            continue;
+    $best = null;
+    while (true) {
+        [$node, $i] = $heap->extract();
+        $low = $node->val;
+        if ($best === null || $largest - $low < $best[1] - $best[0]) {
+            $best = [$low, $largest];
         }
-        $tail->next = new ListNode($t);
-        $tail = $tail->next;
+        if ($node->next === null) {
+            return $best;
+        }
+        $node = $node->next;
+        $largest = max($largest, $node->val);
+        $heap->insert([$node, $i], [-$node->val, -$i]);
     }
-    return $dummy->next;
 }

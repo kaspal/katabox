@@ -1,21 +1,44 @@
-use std::collections::HashMap;
-
-pub fn longest_rotation(plays: Vec<i64>, k: i64) -> i64 {
-    let k = k as usize;
-    let mut count: HashMap<i64, i64> = HashMap::new();
-    let (mut best, mut start) = (0usize, 0usize);
-    for (end, &song) in plays.iter().enumerate() {
-        *count.entry(song).or_insert(0) += 1;
-        while count.len() > k {
-            let s = plays[start];
-            let c = count.get_mut(&s).unwrap();
-            *c -= 1;
-            if *c == 0 {
-                count.remove(&s);
+pub fn fewest_blocks(plays: Vec<i64>, requests: Vec<Vec<i64>>) -> Vec<i64> {
+    use std::collections::HashMap;
+    let n = plays.len();
+    let mut start = vec![0usize; n];
+    let mut last: HashMap<i64, usize> = HashMap::new();
+    let mut left = 0usize;
+    for (r, &song) in plays.iter().enumerate() {
+        if let Some(&p) = last.get(&song) {
+            if p >= left {
+                left = p + 1;
             }
-            start += 1;
         }
-        best = best.max(end - start + 1);
+        last.insert(song, r);
+        start[r] = left;
     }
-    best as i64
+    let mut next = vec![n; n + 1];
+    let mut r = 0usize;
+    for i in 0..n {
+        while r < n && start[r] <= i {
+            r += 1;
+        }
+        next[i] = r;
+    }
+    let mut jump: Vec<Vec<usize>> = vec![next];
+    while (1usize << jump.len()) <= n {
+        let prev = jump.last().unwrap();
+        let row: Vec<usize> = (0..=n).map(|i| prev[prev[i]]).collect();
+        jump.push(row);
+    }
+    requests
+        .iter()
+        .map(|q| {
+            let (a, b) = (q[0] as usize, q[1] as usize);
+            let (mut pos, mut blocks) = (a, 1i64);
+            for k in (0..jump.len()).rev() {
+                if jump[k][pos] <= b {
+                    pos = jump[k][pos];
+                    blocks += 1i64 << k;
+                }
+            }
+            blocks
+        })
+        .collect()
 }

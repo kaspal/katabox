@@ -50,6 +50,18 @@ practice formats have more:
 **Content:** 40 follow-ups on 30 base problems.
 - Each idea is enforceable by tests and limits (no "O(1) memory" follow-ups).
 - Each was checked against the base so it doesn't repeat it.
+- **Review replacements (2026-11-22):** a reading review found two duplicates of other
+  problems and four near-copies of their base. They were replaced by variants checked
+  against the whole catalogue, each harder than its base and enforced by its max tests:
+
+  | Follow-up | Was | Now |
+  | --- | --- | --- |
+  | mileage-log--f1 | rectangle sums (= orchard-plots) | days in a range driving at least `x` km: offline + Fenwick tree |
+  | fresh-playlist--f1 | limit 2 instead of 1 | the longest fresh stretch inside each request: window + binary search + sparse table |
+  | fresh-playlist--f2 | at most k distinct (= k-letter-stretch) | the fewest fresh blocks per request: greedy + binary lifting |
+  | checkout-merge--f1 | merge without duplicates | the narrowest ticket range covering every line: heap over the fronts |
+  | fewest-hops--f1 | distances to every station | the number of fewest-hop routes, mod 1 000 003 |
+  | rotated-shelf--f1 | many labels (a hash map was enough) | the k-th free catalogue number: rotation point + binary search on free counts |
 - JS-safe numbers (A1): `path-tiles--f1` caps n at 10¹⁵ and uses the prime 1 000 003, so
   every product stays below 2⁵³.
 

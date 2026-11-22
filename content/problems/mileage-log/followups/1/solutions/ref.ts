@@ -1,8 +1,25 @@
-export function fleetTotals(miles: number[][], queries: number[][]): number[] {
-  const rows = miles.length;
-  const cols = miles[0].length;
-  const p: number[][] = Array.from({ length: rows + 1 }, () => new Array<number>(cols + 1).fill(0));
-  for (let r = 0; r < rows; r++)
-    for (let c = 0; c < cols; c++) p[r + 1][c + 1] = miles[r][c] + p[r][c + 1] + p[r + 1][c] - p[r][c];
-  return queries.map(([v1, d1, v2, d2]) => p[v2 + 1][d2 + 1] - p[v1][d2 + 1] - p[v2 + 1][d1] + p[v1][d1]);
+export function longDays(miles: number[], trips: number[][]): number[] {
+  const n = miles.length;
+  const tree = new Array<number>(n + 1).fill(0);
+  const add = (i: number) => {
+    for (i += 1; i <= n; i += i & -i) tree[i] += 1;
+  };
+  const prefix = (i: number) => {
+    let s = 0;
+    for (; i > 0; i -= i & -i) s += tree[i];
+    return s;
+  };
+  const days = miles.map((_, d) => d).sort((x, y) => miles[y] - miles[x]);
+  const order = trips.map((_, j) => j).sort((x, y) => trips[y][2] - trips[x][2]);
+  const out = new Array<number>(trips.length).fill(0);
+  let p = 0;
+  for (const j of order) {
+    const [a, b, x] = trips[j];
+    while (p < n && miles[days[p]] >= x) {
+      add(days[p]);
+      p++;
+    }
+    out[j] = prefix(b + 1) - prefix(a);
+  }
+  return out;
 }

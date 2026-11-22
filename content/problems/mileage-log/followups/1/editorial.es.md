@@ -1,15 +1,20 @@
 ## Idea
 
-Extiende las sumas prefijas del problema base a una cuadrícula. Construye `P` con una fila
-y una columna extra de ceros, donde `P[r][c]` es el total de todas las celdas de las filas
-`0..r−1` y las columnas `0..c−1`. Cada entrada es su celda más el bloque de arriba más el
-bloque de la izquierda, menos el bloque de la esquina, que ambos contaron. Un rectángulo
-`[v1, d1, v2, d2]` es entonces el bloque grande `P[v2+1][d2+1]`, menos la franja de arriba
-`P[v1][d2+1]`, menos la franja de la izquierda `P[v2+1][d1]`, más `P[v1][d1]`, que se restó
-dos veces (inclusión-exclusión).
+Responde las preguntas **fuera de línea**, en el orden que nos conviene. Ordena las
+preguntas por `x` de mayor a menor, y los días por kilómetros de mayor a menor. Guarda un
+árbol de Fenwick sobre las posiciones de los días, todo a cero al principio.
+
+Para cada pregunta en ese orden, suma primero 1 en la posición de cada día aún no añadido
+cuyos kilómetros lleguen al menos a `x` (un puntero avanza por los días ordenados, así que
+cada día se añade una vez). Ahora el árbol tiene un 1 justo en los días largos de este
+umbral, y la respuesta es la suma de las posiciones `a` a `b`: dos sumas prefijas.
+Escríbela en el índice original de la pregunta.
+
+Como los kilómetros no pasan de 1000, también vale otro camino: dividir los días en
+bloques de unos √n y guardar, por bloque, una cuenta para cada valor de kilómetros. También
+es muchísimo más rápido que contar día a día.
 
 ## Complejidad
 
-O(V · D) en tiempo para construir la tabla con `V` furgonetas y `D` días, y luego O(1) por
-pregunta; O(V · D) de memoria extra. Un total es como mucho 10⁵ · 1000 = 10⁸, que cabe de
-sobra en un entero de 32 bits.
+O((n + q) log n) de tiempo con la ordenación y el árbol de Fenwick, O(n + q) de memoria
+extra. Contar día a día es O(n · q), hasta 10¹⁰ pasos.

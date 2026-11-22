@@ -1,16 +1,16 @@
 id = "fewest-hops--f1"
 parent = "fewest-hops"
-title = "Fewest Hops: To Every Station"
-title_es = "Menos saltos: a cada estación"
+title = "Fewest Hops: Counting Routes"
+title_es = "Menos saltos: contar las rutas"
 difficulty = "medium"
-tags = ["graph", "bfs"]
+tags = ["graph", "bfs", "shortest-path", "counting"]
 pattern = "graphs"
-rank = 7
+rank = 6
 
 [signature]
-name = "hopsToAll"
+name = "countRoutes"
 params = [{ name = "n", type = "int" }, { name = "links", type = "int[][]" }]
-returns = "int[]"
+returns = "int"
 
 [judge]
 checker = "exact"

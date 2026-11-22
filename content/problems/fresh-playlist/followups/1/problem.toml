@@ -1,18 +1,18 @@
 id = "fresh-playlist--f1"
 parent = "fresh-playlist"
-title = "Fresh Playlist: An Encore Allowed"
-title_es = "Lista fresca: se permite un bis"
-difficulty = "medium"
-tags = ["sliding-window", "hash-map"]
+title = "Fresh Playlist: On Request"
+title_es = "Lista sin repeticiones: a petición"
+difficulty = "hard"
+tags = ["sliding-window", "hash-map", "sparse-table", "binary-search"]
 pattern = "sliding-window"
-rank = 7
+rank = 8
 
 [signature]
-name = "freshWithEncores"
-params = [{ name = "plays", type = "int[]" }]
-returns = "int"
+name = "freshInRange"
+params = [{ name = "plays", type = "int[]" }, { name = "requests", type = "int[][]" }]
+returns = "int[]"
 
 [judge]
 checker = "exact"
-time_limit_ms = 300 # base (Rust); other languages scale it (ADR 0017)
+time_limit_ms = 400 # base (Rust); other languages scale it (ADR 0017)
 memory_mb = 256

@@ -1,20 +1,24 @@
-"""Random inputs for rotated-shelf--f1 (many labels)."""
+"""Random rotated shelves and free-number questions for rotated-shelf--f1."""
 import random
 
 
 def generate(seed, size):
     rng = random.Random(seed)
-    if size == "example":
-        n, q, top = rng.randint(4, 7), 3, 60
-    elif size == "max":
-        n, q, top = 60_000, 60_000, 10**6
+    if size == "max":
+        n, q, step, kmax = 100_000, 20_000, rng.choice([2, 4]), rng.choice([400_000, 10**9])
+    elif size == "example":
+        n, q, step, kmax = rng.randint(3, 6), rng.randint(2, 4), 3, 12
     else:
-        n, q, top = rng.randint(1, 10), rng.randint(1, 6), rng.choice([20, 10**9])
-    values = sorted(rng.sample(range(top + 1), n))
-    k = rng.randrange(n)
-    shelf = values[k:] + values[:k]
-    labels = [rng.choice(shelf) if rng.random() < 0.6 else rng.randint(0, top) for _ in range(q)]
-    return {"shelf": shelf, "labels": labels}
+        n, q, step, kmax = rng.randint(1, 10), rng.randint(1, 6), rng.choice([1, 2, 4]), 25
+    x = rng.randint(1, 3 * step)
+    sorted_shelf = []
+    for _ in range(n):
+        sorted_shelf.append(x)
+        x += rng.randint(1, step)
+    cut = rng.randrange(n)
+    shelf = sorted_shelf[cut:] + sorted_shelf[:cut]
+    queries = [rng.randint(1, kmax) for _ in range(q)]
+    return {"shelf": shelf, "queries": queries}
 
 
 if __name__ == "__main__":

@@ -1,11 +1,12 @@
-Repetir la búsqueda del problema base una vez por estación costaría O(n · (n + links)):
-demasiado lento para 10⁵ estaciones. ¿No había aprendido ya la búsqueda base más de lo que
-devolvía?
+Enumerar todas las rutas y quedarse con las más cortas explota: una red de unas pocas
+decenas de estaciones ya puede tener millones de rutas más cortas. ¿Cómo es una ruta más
+corta a una estación justo antes de su último salto?
 ---
-Una búsqueda en anchura desde la estación `0` llega a las estaciones en orden de
-distancia, y encuentra el menor número de saltos a cada estación que visita, no solo a
-`n − 1`.
+Una ruta más corta a la estación `v`, a distancia `d`, es una ruta más corta a algún vecino
+`u` a distancia `d − 1`, más el salto `u → v`. Así que el número de rutas a `v` es la suma
+de los números de rutas a esos vecinos.
 ---
-Haz una sola búsqueda en anchura desde la estación `0` por los dos sentidos de cada
-enlace, y sigue hasta vaciar la cola en lugar de parar antes. Anota la distancia de cada
-estación la primera vez que la ves; las estaciones que nunca ves se quedan con `-1`.
+Haz el recorrido en anchura del problema base desde la estación `0` con un arreglo `ways`
+(`ways[0] = 1`). Cuando encuentres un vecino por primera vez, fija su distancia y copia
+`ways[u]`; cuando lo vuelvas a encontrar a la misma distancia `d[u] + 1`, suma `ways[u]`.
+Reduce módulo 1 000 003.

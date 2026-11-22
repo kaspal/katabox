@@ -1,9 +1,12 @@
-Running the base problem's search once per station would cost O(n · (n + links)): far
-too slow for 10⁵ stations. Did the base search already learn more than it returned?
+Listing every route and keeping the shortest ones explodes: a mesh of a few dozen
+stations can already have millions of fewest routes. What does a fewest route to a
+station look like just before its last hop?
 ---
-A breadth-first search from station `0` reaches the stations in order of their distance,
-and it finds the fewest hops to every station it visits, not only to `n − 1`.
+A fewest route to station `v` at distance `d` is a fewest route to some neighbour `u` at
+distance `d − 1`, plus the hop `u → v`. So the number of routes to `v` is the sum of the
+numbers of routes to those neighbours.
 ---
-Run one breadth-first search from station `0` over both directions of every link, and
-keep going until the queue is empty instead of stopping early. Record each station's
-distance the first time you see it; stations never seen keep `-1`.
+Run the base problem's breadth-first search from station `0` with a `ways` array
+(`ways[0] = 1`). When a neighbour is found for the first time, set its distance and copy
+`ways[u]`; when it is found again at the same distance `d[u] + 1`, add `ways[u]`. Reduce
+modulo 1 000 003.

@@ -1,9 +1,11 @@
-With many labels, the work you do once per shelf matters less than the work you do per
-label. Is there something about the shelf worth finding just once?
+Walking up from 1 and skipping the shelf's numbers answers one question, but with 10⁵
+questions over 10⁵ folders it is far too slow. Forget the rotation for a moment: on a
+sorted shelf, how many numbers below the `i`-th folder are free?
 ---
-Find where the original order starts: the position of the smallest number. Comparing
-the middle number with the last one tells you which half it is in.
+On the sorted shelf `s`, the `i`-th folder (from 0) has `i` taken numbers below it, so
+`s[i] − (i + 1)` numbers below `s[i]` are free. That count never decreases as `i` grows,
+so you can binary search it.
 ---
-Once you know the start `s`, the shelf read from `s` to the end and then from 0 to
-`s − 1` is fully sorted. Binary search each label in that sorted view, and turn a found
-index `k` back into a shelf position with `(k + s) mod n`.
+Find the rotation point with the base problem's search (or sort a copy). For each `k`,
+binary search the first `i` with `s[i] − (i + 1) ≥ k`; the answer is `k + i` (`i = n` when
+no folder has that many free numbers below it).

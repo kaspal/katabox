@@ -1,1 +1,1 @@
-{"input":{"miles":[[369]],"queries":[[0,0,0,0]]},"output":[369]}
+{"input":{"miles":[2],"trips":[[0,0,2]]},"output":[1]}

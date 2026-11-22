@@ -1,37 +1,30 @@
-This time the accountant looks after the **whole fleet**. `miles[v][d]` is how many
-kilometres van `v` drove on day `d` (vans and days count from 0, and every van has an
-entry for every day). Each question `[v1, d1, v2, d2]` asks for the total kilometres of
-vans `v1` to `v2` over days `d1` to `d2`, all four bounds included: a rectangle of the
-grid.
+The van's log is the same: `miles[i]` kilometres on day `i` (days count from 0). This
+time the accountant checks the drivers' rest rules and asks about **long days**: each
+question `[a, b, x]` asks how many days from `a` to `b` (both included) the van drove **at
+least** `x` kilometres.
 
-Return the total of each question, in the order asked.
+Return the answer to each question, in the order asked.
 
 ### Example 1
 
 ```
-miles = [[10, 0, 5], [7, 3, 2]], queries = [[0, 0, 1, 2], [1, 1, 1, 2], [0, 2, 1, 2]]
-Output: [27, 5, 7]
+miles = [5, 12, 0, 30, 7], trips = [[0, 4, 7], [1, 3, 13], [2, 2, 0]]
+Output: [3, 1, 1]
 ```
 
-The last question covers day 2 of both vans: 5 + 2 = 7.
+Days 1, 3 and 4 drove at least 7 km; among days 1 to 3 only day 3 reached 13 km; day 2
+drove 0 km, which is at least 0.
 
 ### Example 2
 
 ```
-miles = [[4, 18, 2, 8], [3, 15, 14, 15]], queries = [[0, 0, 1, 3], [0, 0, 1, 3], [1, 0, 1, 1]]
-Output: [79, 79, 18]
-```
-
-### Example 3
-
-```
-miles = [[1, 2, 2, 11], [5, 9, 8, 19]], queries = [[0, 1, 0, 3], [1, 2, 1, 3], [0, 2, 0, 3]]
-Output: [15, 27, 13]
+miles = [100, 100, 100], trips = [[0, 2, 100], [0, 2, 101], [1, 1, 50]]
+Output: [3, 0, 1]
 ```
 
 ### Constraints
 
-- 1 ≤ vans, days and vans × days ≤ 10⁵ (every van has the same number of days)
-- 0 ≤ miles[v][d] ≤ 1000
-- 1 ≤ queries.length ≤ 10⁵
-- 0 ≤ v1 ≤ v2 < vans and 0 ≤ d1 ≤ d2 < days for each question [v1, d1, v2, d2]
+- 1 ≤ miles.length ≤ 10⁵
+- 0 ≤ miles[i] ≤ 1000
+- 1 ≤ trips.length ≤ 10⁵
+- `trips[j] = [a, b, x]` with 0 ≤ a ≤ b < miles.length and 0 ≤ x ≤ 1000
