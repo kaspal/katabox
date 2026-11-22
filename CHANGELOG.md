@@ -24,6 +24,9 @@ All notable changes to KataBox are recorded in this file. The format follows
   text) and pack code only runs in the sandbox. Packs are marked everywhere, stay out of
   daily and next problem unless you opt in, update only to newer versions, and uninstall
   cleanly. `kb-pack pack` makes them.
+- **Portuguese (Brazil) interface:** every screen in Português (Brasil), chosen in
+  Settings → Appearance, the command palette or the welcome screen. Problems and Learn
+  stay in English or Spanish (your choice, English by default).
 - **Problem editor:** make pack problems in a form (Settings → Packs → Show the problem
   editor): signature with the starter code, statement, hints and editorial in English
   and Spanish with a preview, tests with the visual builders, one reference. Drafts save

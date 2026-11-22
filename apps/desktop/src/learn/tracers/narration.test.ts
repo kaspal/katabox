@@ -1,11 +1,12 @@
 // Narration rendering (ADR 0029): every step of every topic, on every preset and the
-// random cases, rendered in English and Spanish with the app's real i18next instance.
+// random cases, rendered in English, Spanish and Portuguese with the app's real i18next instance.
 // Key parity can't catch a param that i18next reads as an option (`replace` blanks every
 // placeholder, `count` picks a plural form), so this renders the text and inspects it.
 import { describe, expect, it } from "vitest";
 import i18n, { initI18n } from "@/i18n";
 import en from "@/i18n/locales/en.json";
 import es from "@/i18n/locales/es.json";
+import ptBR from "@/i18n/locales/pt-BR.json";
 import { caseInputs } from "../engine/cases";
 import { Recorder } from "../engine/recorder";
 import { RESERVED_NARRATION_PARAMS, type NarrationParams, type TracerDef } from "../engine/types";
@@ -13,7 +14,7 @@ import { TRACERS } from ".";
 
 initI18n("en");
 
-const LOCALES = { en, es } as const;
+const LOCALES = { en, es, "pt-BR": ptBR } as const;
 /** Fragments an empty interpolation leaves behind, unless the template has them itself. */
 const EMPTY_SIGNS = ["()", '""', "= .", "  ", " ,", " ."];
 
@@ -30,7 +31,7 @@ function problems(def: TracerDef): string[] {
   for (const c of caseInputs(def)) {
     for (const step of def.trace(c.input)) {
       const { key, params = {} } = step.narration;
-      for (const lang of ["en", "es"] as const) {
+      for (const lang of ["en", "es", "pt-BR"] as const) {
         const tpl = template(lang, key);
         const t = i18n.getFixedT(lang);
         const text = t(`learn.narration.${key}` as "learn.title", params as never) as unknown as string;
@@ -53,7 +54,7 @@ function problems(def: TracerDef): string[] {
   return out;
 }
 
-describe("narration renders in both languages", () => {
+describe("narration renders in every UI language", () => {
   it.each(Object.values(TRACERS))("$id", (def) => {
     expect(problems(def)).toEqual([]);
   });

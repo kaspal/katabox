@@ -51,6 +51,3 @@ pessoa pode recalculá-la. Use-o para praticar e dar retorno, não para notas de
 2. A tabela mostra uma linha por aluno e uma coluna por problema.
 3. **Exportar CSV…** grava uma linha por aluno e problema. Células que poderiam começar
    uma fórmula de planilha recebem um `'` na frente.
-
-> A interface em português chega numa etapa seguinte; até lá, os nomes dos botões aparecem
-> em inglês ou espanhol, conforme o idioma escolhido.

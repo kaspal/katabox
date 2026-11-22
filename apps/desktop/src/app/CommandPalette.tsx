@@ -37,7 +37,7 @@ export function CommandPalette({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { theme, lang, setTheme, setLang } = usePrefs();
+  const { theme, uiLang, setTheme, setUiLang } = usePrefs();
   const problems = useProblems();
   const learn = useLearnCatalog();
   const tagLabel = useTagLabel();
@@ -179,8 +179,8 @@ export function CommandPalette({
             <CommandItem
               key={l}
               value={`language ${t("palette.language")}: ${t(`language.${l}`)}`}
-              onSelect={() => run(() => setLang(l))}
-              data-checked={lang === l}
+              onSelect={() => run(() => setUiLang(l))}
+              data-checked={uiLang === l}
             >
               <Languages aria-hidden />
               {t("palette.language")}: {t(`language.${l}`)}

@@ -67,3 +67,36 @@ The terms the Learn topics (ADR 0029) use, so theory, quizzes, narration and UI 
 | prefix sums | sumas prefijas | |
 | pivot | pivote | |
 | convex hull | envolvente convexa | |
+
+## Português (Brasil) (expansion M14)
+
+The Portuguese UI (ADR 0040) uses these terms; problems and Learn text stay in English
+and Spanish. Code identifiers stay in English inside code spans.
+
+| English | Português (Brasil) | Notes |
+| --- | --- | --- |
+| problem, statement, hint | problema, enunciado, dica | |
+| editorial | solução explicada | |
+| Run, Submit, submission | Executar, Enviar, envio | |
+| test (public / hidden / custom) | teste (público / oculto / personalizado) | |
+| verdict, Accepted, Wrong answer | veredito, Aceito, Resposta errada | |
+| sandbox | ambiente isolado | |
+| pattern, tag | padrão, etiqueta | |
+| topic, subject, learning path | tópico, matéria, trilha de aprendizagem | |
+| step (of the animation) | passo | Play = Reproduzir |
+| array | vetor | "lista" for a Python list used as such |
+| string, key, loop, pointer | string, chave, laço, ponteiro | |
+| recursion, call stack | recursão, pilha de chamadas | |
+| stack, queue, deque | pilha, fila, deque (fila de duas pontas) | |
+| linked list, hash table | lista ligada, tabela hash | |
+| heap, priority queue | heap, fila de prioridade | "heap de mínimo / de máximo" |
+| binary search tree | árvore binária de busca | |
+| graph, node, edge, vertex | grafo, nó, aresta, vértice | |
+| sorting, stable | ordenação, estável | |
+| dynamic programming, memoization | programação dinâmica, memoização | |
+| greedy, backtracking | guloso, backtracking | |
+| two pointers, sliding window | dois ponteiros, janela deslizante | |
+| prefix sums, binary search | somas de prefixo, busca binária | |
+| convex hull | envoltória convexa | |
+| mock interview, kata, streak | entrevista simulada, kata, sequência | |
+| pack, assignment, student, teacher | pacote, tarefa, aluno, professor | |

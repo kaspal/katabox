@@ -43,6 +43,9 @@ fn importable_setting(key: &str) -> bool {
         // The running focus session stays on this machine (expansion M10).
         && key != crate::focus::CURRENT
         || key == "ui_lang"
+        // The content language when the UI is in a language content doesn't come in
+        // (expansion M14).
+        || key == "content_lang"
         || key == "theme"
         || LEARN_SETTINGS.contains(&key)
         || UI_SETTINGS.contains(&key)
@@ -614,6 +617,7 @@ mod tests {
             "workspace.layout",
             "practice.daily",
             "ui_lang",
+            "content_lang",
             "theme",
             "learn.viewed",
             "learn.last",

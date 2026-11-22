@@ -1,6 +1,6 @@
 # 40. The in-app problem editor and the Portuguese UI
 
-Date: 2026-11-22 · Status: proposed (expansion M13; the pt-BR part follows in M14)
+Date: 2026-11-22 · Status: proposed (expansion M13 editor, M14 Portuguese UI)
 
 ## Context
 Making a pack (ADR 0038) meant writing a problem package by hand: `problem.toml`, two
@@ -55,3 +55,28 @@ complexity profiles: those stay hand-written packages (docs/problem-authoring.md
   a built-in id, an exported pack that the import previews), `authoring_windows` (Check
   in sandbox: Accepted for a right TypeScript reference, Wrong Answer for a wrong Python
   one), Vitest for the flow and the a11y pass.
+
+## Decision: the Portuguese (Brazil) UI (M14)
+- `i18n/locales/pt-BR.json` holds every key; `UI_LANGS` is `en`, `es`, `pt-BR`. The OS
+  language picks it at first start (`pt-*` → pt-BR); Settings → Appearance, the command
+  palette and the welcome screen offer "Português (Brasil)". `Intl` formatting already
+  follows `i18n.language`, so dates, numbers and relative times are Brazilian.
+- **UI language vs content language (★):** problems, Learn theory, quizzes and reading
+  exercises exist in English and Spanish only. The UI language (`ui_lang`) drives i18n;
+  the content language is what every backend command takes. It equals the UI language
+  when content exists in it, else the `content_lang` setting (English by default), shown
+  in Settings → Appearance only then. In the UI, `usePrefs().lang` is the content
+  language (so the backend calls are unchanged) and `uiLang` the UI language. The Rust
+  `UiLang` type stays `en | es` and keeps meaning the content language: nothing in the
+  backend depends on the UI language (errors and judge messages are codes the UI
+  translates), so the plan's `UiLang::PtBr` was not needed. `content_lang` travels with
+  an export like `ui_lang`.
+- Learn narration is UI text (tracers emit i18n keys), so it is Portuguese; the theory
+  and samples next to it stay in the content language. The in-app user guide (Help) is
+  English or Spanish (no Portuguese guide yet; `docs/classroom.pt-BR.md` exists).
+- **Translation:** made in six parts with a fixed terminology (`docs/learn-glossary.md`,
+  pt-BR section) and checked by script and tests: same keys, no empty value, the same
+  `{{placeholders}}` and `$t()` references as English (a new check that also covers
+  Spanish), every narration step of every tracer rendered in pt-BR, tags and shortcut
+  labels named. A native speaker's review is a maintainer step.
+

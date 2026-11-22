@@ -31,7 +31,7 @@ import { MiddleEllipsis } from "@/components/MiddleEllipsis";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { UI_LANGS, type UiLangCode } from "@/i18n";
+import { CONTENT_LANGS, UI_LANGS, isContentLang, type ContentLangCode, type UiLangCode } from "@/i18n";
 import { CONTRASTS, MOTIONS, THEMES, usePrefs, type ContrastPref, type MotionPref, type ThemePref } from "@/lib/prefs";
 import { api } from "@/lib/api";
 import { useOnboardingDone } from "@/onboarding/state";
@@ -565,7 +565,7 @@ function SettingsSearch({ onPick }: { onPick: (section: SettingsSection) => void
 
 export function Settings() {
   const { t } = useTranslation();
-  const { theme, lang, contrast, motion, setTheme, setLang, setContrast, setMotion } = usePrefs();
+  const { theme, lang, uiLang, contrast, motion, setTheme, setUiLang, setContentLang, setContrast, setMotion } = usePrefs();
   const info = useAppInfo();
   const editor = useEditorPrefs();
   const navigate = useNavigate({ from: "/settings" });
@@ -603,7 +603,7 @@ export function Settings() {
               <TabsTrigger
                 key={id}
                 value={id}
-                className={wide ? "justify-start px-3 py-1.5" : "flex-none px-3"}
+                className={wide ? "h-auto justify-start px-3 py-1.5 text-left whitespace-normal" : "flex-none px-3"}
                 data-testid={`settings-section-${id}`}
               >
                 {t(`settings.sections.${id}`)}
@@ -642,8 +642,8 @@ export function Settings() {
                     variant="outline"
                     size="sm"
                     aria-label={t("language.label")}
-                    value={lang}
-                    onValueChange={(v) => v && setLang(v as UiLangCode)}
+                    value={uiLang}
+                    onValueChange={(v) => v && setUiLang(v as UiLangCode)}
                   >
                     {UI_LANGS.map((l) => (
                       <ToggleGroupItem key={l} value={l} lang={l} className="px-3">
@@ -652,6 +652,26 @@ export function Settings() {
                     ))}
                   </ToggleGroup>
                 </Row>
+                {!isContentLang(uiLang) && (
+                  <Row label={t("settings.contentLang")}>
+                    <p className="mb-1.5 break-normal text-muted-foreground">{t("settings.contentLangHint")}</p>
+                    <ToggleGroup
+                      type="single"
+                      variant="outline"
+                      size="sm"
+                      aria-label={t("settings.contentLang")}
+                      value={lang}
+                      onValueChange={(v) => v && setContentLang(v as ContentLangCode)}
+                      data-testid="content-lang"
+                    >
+                      {CONTENT_LANGS.map((l) => (
+                        <ToggleGroupItem key={l} value={l} lang={l} className="px-3">
+                          {t(`language.${l}`)}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </Row>
+                )}
                 <Row label={t("settings.contrast")}>
                   <ToggleGroup
                     type="single"

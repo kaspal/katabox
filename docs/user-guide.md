@@ -399,8 +399,10 @@ Settings has one section per topic, listed on the left (or as tabs above, in a n
 window). **Search settings** finds a setting by its name.
 
 - **Appearance:**
-  - **Theme** (System, Light, Dark), **Language** (English, Español), **Contrast**
-    (Normal, High), **Motion** (Follow the system, Reduce);
+  - **Theme** (System, Light, Dark), **Language** (English, Español, Português
+    (Brasil)), **Contrast** (Normal, High), **Motion** (Follow the system, Reduce);
+  - with the Portuguese interface, **Problems and lessons in** picks English or Spanish
+    for problems and Learn, which are written in those two languages (English by default);
   - **Reset window size and position**. KataBox reopens where you left it, at the same
     size, and maximised if it was. If that screen is gone, it opens centred on the main
     screen.

@@ -40,7 +40,8 @@
   "language": {
     "label": "Language",
     "en": "English",
-    "es": "Español"
+    "es": "Español",
+    "pt-BR": "Português (Brasil)"
   },
   "difficulty": {
     "label": "Difficulty",
@@ -482,7 +483,9 @@
       "placeholder": "Search settings…",
       "none": "No setting matches.",
       "results": "Matching settings"
-    }
+    },
+    "contentLang": "Problems and lessons in",
+    "contentLangHint": "Problems and Learn are written in English and Spanish."
   },
   "languages": {
     "python": "Python",

@@ -6,7 +6,7 @@ import type { SettingsSection } from "@/lib/pageTabs";
 export const SETTINGS_SEARCH_INDEX: [SettingsSection, string[]][] = [
   [
     "appearance",
-    ["theme.label", "language.label", "settings.contrast", "settings.motion", "settings.window.label", "settings.window.reset"],
+    ["theme.label", "language.label", "settings.contentLang", "settings.contrast", "settings.motion", "settings.window.label", "settings.window.reset"],
   ],
   [
     "editor",
@@ -16,7 +16,7 @@ export const SETTINGS_SEARCH_INDEX: [SettingsSection, string[]][] = [
   ["languages", ["settings.sections.languages", "settings.calibration.title", "settings.calibration.recalibrate"]],
   ["learn", ["practice.settings.learnReview", "settings.learnSpeed"]],
   ["data", ["practice.data.export", "practice.data.import", "backup.title"]],
-  ["packs", ["packs.title", "packs.import", "packs.includeInPractice"]],
+  ["packs", ["packs.title", "packs.import", "packs.includeInPractice", "packs.showCreate"]],
   [
     "about",
     [

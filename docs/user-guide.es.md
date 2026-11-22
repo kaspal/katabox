@@ -436,8 +436,11 @@ Los ajustes tienen una sección por tema, a la izquierda (o en pestañas arriba,
 ventana es estrecha). **Buscar en los ajustes** encuentra un ajuste por su nombre.
 
 - **Apariencia:**
-  - **Tema** (Sistema, Claro, Oscuro), **Idioma** (English, Español), **Contraste**
-    (Normal, Alto), **Movimiento** (Seguir al sistema, Reducir);
+  - **Tema** (Sistema, Claro, Oscuro), **Idioma** (English, Español, Português
+    (Brasil)), **Contraste** (Normal, Alto), **Movimiento** (Seguir al sistema, Reducir);
+  - con la interfaz en portugués, **Problemas y lecciones en** elige inglés o español
+    para los problemas y Aprender, que están escritos en esos dos idiomas (inglés por
+    defecto);
   - **Restablecer el tamaño y la posición de la ventana**. KataBox se vuelve a abrir
     donde lo dejaste, con el mismo tamaño y maximizado si lo estaba. Si esa pantalla ya
     no está, se abre centrado en la pantalla principal.

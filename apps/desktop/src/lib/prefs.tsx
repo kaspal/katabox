@@ -2,7 +2,15 @@
 // source of truth; localStorage only mirrors them so the first paint is in the right
 // theme and language before the backend answers.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { initI18n, isUiLang, detectUiLang, type UiLangCode } from "@/i18n";
+import {
+  contentLangFor,
+  detectUiLang,
+  initI18n,
+  isContentLang,
+  isUiLang,
+  type ContentLangCode,
+  type UiLangCode,
+} from "@/i18n";
 import { api } from "@/lib/api";
 
 export const THEMES = ["system", "light", "dark"] as const;
@@ -10,8 +18,12 @@ export type ThemePref = (typeof THEMES)[number];
 
 export const SETTING_THEME = "theme";
 export const SETTING_UI_LANG = "ui_lang";
+/** The content language chosen while the UI is in a language content isn't written in
+ * (expansion M14). */
+export const SETTING_CONTENT_LANG = "content_lang";
 const MIRROR_THEME = "katabox.theme";
 const MIRROR_LANG = "katabox.ui_lang";
+const MIRROR_CONTENT = "katabox.content_lang";
 
 /** High contrast: stronger text, borders and focus rings (`.hc` tokens, ≥ 7:1 text). */
 export const CONTRASTS = ["normal", "high"] as const;
@@ -72,7 +84,14 @@ export function applyTheme(pref: ThemePref) {
   document.documentElement.classList.toggle("dark", resolveTheme(pref) === "dark");
 }
 
-type Initial = { theme: ThemePref; lang: UiLangCode; contrast?: ContrastPref; motion?: MotionPref };
+/** `lang` is the UI language here. */
+type Initial = {
+  theme: ThemePref;
+  lang: UiLangCode;
+  contrast?: ContrastPref;
+  motion?: MotionPref;
+  contentLang?: ContentLangCode | null;
+};
 
 /** First-paint values, before user.db answers. */
 export function initialPrefs(): Required<Initial> {
@@ -80,21 +99,29 @@ export function initialPrefs(): Required<Initial> {
   const lang = readMirror(MIRROR_LANG);
   const contrast = readMirror(MIRROR_CONTRAST);
   const motion = readMirror(MIRROR_MOTION);
+  const content = readMirror(MIRROR_CONTENT);
   return {
     theme: isTheme(theme) ? theme : "system",
     lang: isUiLang(lang) ? lang : detectUiLang(),
     contrast: isContrast(contrast) ? contrast : "normal",
     motion: isMotion(motion) ? motion : "system",
+    contentLang: isContentLang(content) ? content : null,
   };
 }
 
 type Prefs = {
   theme: ThemePref;
-  lang: UiLangCode;
+  /** The content language (problems, Learn): what the backend's commands take. */
+  lang: ContentLangCode;
+  /** The UI language (i18n). */
+  uiLang: UiLangCode;
+  /** The content language chosen for a UI language content isn't written in. */
+  contentChoice: ContentLangCode | null;
   contrast: ContrastPref;
   motion: MotionPref;
   setTheme: (t: ThemePref) => void;
-  setLang: (l: UiLangCode) => void;
+  setUiLang: (l: UiLangCode) => void;
+  setContentLang: (l: ContentLangCode) => void;
   setContrast: (c: ContrastPref) => void;
   setMotion: (m: MotionPref) => void;
 };
@@ -109,7 +136,8 @@ export function PrefsProvider({
   initial?: Initial;
 }) {
   const [theme, setThemeState] = useState<ThemePref>(initial.theme);
-  const [lang, setLangState] = useState<UiLangCode>(initial.lang);
+  const [uiLang, setUiLangState] = useState<UiLangCode>(initial.lang);
+  const [contentChoice, setContentChoice] = useState<ContentLangCode | null>(initial.contentLang ?? null);
   const [contrast, setContrastState] = useState<ContrastPref>(initial.contrast ?? "normal");
   const [motion, setMotionState] = useState<MotionPref>(initial.motion ?? "system");
 
@@ -126,8 +154,8 @@ export function PrefsProvider({
   }, [theme]);
 
   useEffect(() => {
-    initI18n(lang);
-  }, [lang]);
+    initI18n(uiLang);
+  }, [uiLang]);
 
   // user.db wins over the first-paint mirror.
   useEffect(() => {
@@ -137,8 +165,9 @@ export function PrefsProvider({
       api.getSetting(SETTING_UI_LANG),
       api.getSetting(SETTING_CONTRAST),
       api.getSetting(SETTING_MOTION),
+      api.getSetting(SETTING_CONTENT_LANG),
     ])
-      .then(([t, l, c, m]) => {
+      .then(([t, l, c, m, cl]) => {
         if (!live) return;
         if (isContrast(c)) {
           setContrastState(c);
@@ -153,8 +182,12 @@ export function PrefsProvider({
           writeMirror(MIRROR_THEME, t);
         }
         if (isUiLang(l)) {
-          setLangState(l);
+          setUiLangState(l);
           writeMirror(MIRROR_LANG, l);
+        }
+        if (isContentLang(cl)) {
+          setContentChoice(cl);
+          writeMirror(MIRROR_CONTENT, cl);
         }
       })
       .catch(() => {
@@ -171,10 +204,16 @@ export function PrefsProvider({
     void api.setSetting(SETTING_THEME, t).catch(() => {});
   }, []);
 
-  const setLang = useCallback((l: UiLangCode) => {
-    setLangState(l);
+  const setUiLang = useCallback((l: UiLangCode) => {
+    setUiLangState(l);
     writeMirror(MIRROR_LANG, l);
     void api.setSetting(SETTING_UI_LANG, l).catch(() => {});
+  }, []);
+
+  const setContentLang = useCallback((l: ContentLangCode) => {
+    setContentChoice(l);
+    writeMirror(MIRROR_CONTENT, l);
+    void api.setSetting(SETTING_CONTENT_LANG, l).catch(() => {});
   }, []);
 
   const setContrast = useCallback((c: ContrastPref) => {
@@ -189,9 +228,22 @@ export function PrefsProvider({
     void api.setSetting(SETTING_MOTION, m).catch(() => {});
   }, []);
 
+  const lang = contentLangFor(uiLang, contentChoice);
   const value = useMemo(
-    () => ({ theme, lang, contrast, motion, setTheme, setLang, setContrast, setMotion }),
-    [theme, lang, contrast, motion, setTheme, setLang, setContrast, setMotion],
+    () => ({
+      theme,
+      lang,
+      uiLang,
+      contentChoice,
+      contrast,
+      motion,
+      setTheme,
+      setUiLang,
+      setContentLang,
+      setContrast,
+      setMotion,
+    }),
+    [theme, lang, uiLang, contentChoice, contrast, motion, setTheme, setUiLang, setContentLang, setContrast, setMotion],
   );
   return <PrefsContext.Provider value={value}>{children}</PrefsContext.Provider>;
 }
