@@ -29,7 +29,36 @@ export function usePracticePrefs() {
   });
   const [rusty, setRusty] = useSetting<boolean>("practice.rusty", true, parseBool, { mirror: true });
   const [plan, setPlan] = useSetting<boolean>("practice.plan", true, parseBool, { mirror: true });
-  return { review, setReview, daily, setDaily, learnReview, setLearnReview, rusty, setRusty, plan, setPlan };
+  // The Home's path (ADR 0041): null picks the first path with progress, else start-here.
+  const [homePath, setHomePath] = useSetting<string | null>("practice.homePath", null, parsePathId);
+  return {
+    review,
+    setReview,
+    daily,
+    setDaily,
+    learnReview,
+    setLearnReview,
+    rusty,
+    setRusty,
+    plan,
+    setPlan,
+    homePath,
+    setHomePath,
+  };
+}
+
+const parsePathId = (v: JsonValue | null): string | null | undefined =>
+  v === null ? null : typeof v === "string" && /^[a-z0-9-]{1,64}$/.test(v) ? v : undefined;
+
+/** The startup animation (ADR 0041): read by the Rust shell at start, machine-only. */
+export const SPLASH_MODES = ["firstRunAfterUpdate", "always", "never"] as const;
+export type SplashMode = (typeof SPLASH_MODES)[number];
+export const SPLASH_KEY = "app.splash";
+const parseSplash = (v: JsonValue | null): SplashMode | undefined =>
+  typeof v === "string" && (SPLASH_MODES as readonly string[]).includes(v) ? (v as SplashMode) : undefined;
+
+export function useSplashPref() {
+  return useSetting<SplashMode>(SPLASH_KEY, "firstRunAfterUpdate", parseSplash);
 }
 
 export function useDailyProblem(enabled = true) {

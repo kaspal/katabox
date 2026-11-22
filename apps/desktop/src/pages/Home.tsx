@@ -1,93 +1,85 @@
-import { Link } from "@tanstack/react-router";
+// Home (ADR 0041): today's session, this week, the solved rings, the learning path, what
+// to watch next and the "keep it fresh" cards. A fluid layout: the Today row stacks below
+// about 1100 px and Watch next drops to two columns, then one.
 import { useTranslation } from "react-i18next";
-import { ArrowRight, CheckCircle2, PlayCircle } from "lucide-react";
-import type { Difficulty } from "@/bindings";
-import { Page } from "@/components/Page";
-import { ErrorNotice } from "@/components/ErrorNotice";
-import { DifficultyLabel } from "@/components/Semantic";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { usePracticePrefs } from "@/lib/practice";
-import { useContinue, useProblems } from "@/lib/queries";
-import { DailyCard, HomeCard as Card, ReviewCard, TopicReviewCard } from "@/practice/HomeCards";
+import { useProblems } from "@/lib/queries";
+import { ReviewCard } from "@/practice/HomeCards";
+import { PathCard } from "@/practice/home/PathTrack";
+import { useHomePath } from "@/practice/home/path";
+import { useSession } from "@/practice/home/session";
+import { SessionCard, SolvedCard, WeekCard } from "@/practice/home/TodayRow";
+import { WatchNext } from "@/practice/home/WatchNext";
 import { RustyCard } from "@/practice/kata";
 import { PlanCard } from "@/practice/plan";
-import { relativeTime } from "@/lib/time";
 
 export { relativeTime } from "@/lib/time";
 
+/** "morning" before 12:00, "afternoon" before 18:00, else "evening". */
+export function greetingFor(hour: number): "morning" | "afternoon" | "evening" {
+  return hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+}
+
 export function Home() {
   const { t, i18n } = useTranslation();
-  const cont = useContinue();
-  const problems = useProblems();
   const practice = usePracticePrefs();
-
-  const counts = (["easy", "medium", "hard"] as Difficulty[]).map((d) => {
-    const all = (problems.data ?? []).filter((p) => p.difficulty === d);
-    return { d, total: all.length, solved: all.filter((p) => p.status === "solved").length };
-  });
+  const home = useHomePath();
+  const s = useSession(home.progress);
+  const problems = useProblems();
+  const now = new Date();
+  const date = new Intl.DateTimeFormat(i18n.language, { weekday: "long", month: "long", day: "numeric" }).format(now);
+  const minutes = s.session?.totalMinutes ?? 0;
+  const brandNew = problems.data !== undefined && !problems.data.some((p) => p.status === "solved");
+  const fresh = [
+    practice.review && <ReviewCard key="review" compact />,
+    practice.plan && <PlanCard key="plan" compact />,
+    practice.rusty && <RustyCard key="rusty" compact />,
+  ].filter(Boolean);
 
   return (
-    <Page title={t("home.title")}>
-      <div className="grid max-w-4xl gap-4 md:grid-cols-2">
-        <Card title={t("home.continue")} icon={<PlayCircle aria-hidden className="size-4" />}>
-          {cont.isPending ? (
-            <Skeleton className="h-12 w-full" />
-          ) : cont.error ? (
-            <ErrorNotice error={cont.error} onRetry={() => void cont.refetch()} />
-          ) : cont.data ? (
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-base font-medium">{cont.data.title}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t("home.continueEdited", {
-                    language: t(`languages.${cont.data.language}`),
-                    when: relativeTime(cont.data.updated_at, i18n.language),
-                  })}
-                </p>
-              </div>
-              <Button asChild>
-                <Link to="/problems/$problemId" params={{ problemId: cont.data.problem_id }}>
-                  {t("home.continueOpen")}
-                  <ArrowRight aria-hidden />
-                </Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-muted-foreground">{t("home.noDraft")}</p>
-              <Button asChild variant="outline">
-                <Link to="/library">{t("home.browse")}</Link>
-              </Button>
-            </div>
-          )}
-        </Card>
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-6 px-6 pb-11 pt-8 lg:px-12">
+      {/* The page's title for assistive tech; the greeting below is the visible heading. */}
+      <h1 className="sr-only">{t("home.title")}</h1>
+      <header>
+        <div className="min-w-0">
+          <p className="text-[13px] tracking-[0.02em] text-muted-foreground" data-testid="home-date">
+            {date}
+          </p>
+          <h2 className="mb-1 mt-1.5 text-[32px] font-bold leading-tight tracking-[-0.02em]" data-testid="home-greeting">
+            {t(`home.greeting.${greetingFor(now.getHours())}`)}{" "}
+            {s.session && s.session.items.length > 0 && !s.session.firstOpen
+              ? t("home.allSet")
+              : minutes > 0
+                ? t("home.ready", { minutes })
+                : null}
+          </h2>
+          <p className="text-[15px] text-muted-foreground">{t(brandNew ? "home.subtitleNew" : "home.subtitle")}</p>
+        </div>
+      </header>
 
-        <Card title={t("home.solved")} icon={<CheckCircle2 aria-hidden className="size-4" />}>
-          {problems.isPending ? (
-            <Skeleton className="h-12 w-full" />
-          ) : problems.error ? (
-            <ErrorNotice error={problems.error} />
-          ) : (
-            <ul className="grid grid-cols-3 gap-3">
-              {counts.map(({ d, solved, total }) => (
-                <li key={d} className="rounded-md border p-3">
-                  <DifficultyLabel difficulty={d} className="text-xs" />
-                  <p className="mt-1 text-lg font-semibold tabular-nums" data-testid={`solved-${d}`}>
-                    {t("home.solvedOf", { solved, total })}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+      <section
+        aria-label={t("home.session.label")}
+        className="grid gap-5 min-[68.75rem]:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]"
+      >
+        <SessionCard session={s.session} isPending={s.isPending} error={s.error} onRetry={s.refetch} />
+        <div className="flex flex-col gap-5">
+          <WeekCard />
+          <SolvedCard />
+        </div>
+      </section>
 
-        {practice.daily && <DailyCard />}
-        {practice.review && <ReviewCard />}
-        {practice.learnReview && <TopicReviewCard />}
-        {practice.plan && <PlanCard />}
-        {practice.rusty && <RustyCard />}
-      </div>
-    </Page>
+      <PathCard home={home} />
+
+      <WatchNext
+        path={home.progress}
+        exclude={(s.session?.items ?? []).flatMap((i) => (i.topicId ? [i.topicId] : []))}
+      />
+
+      {fresh.length > 0 && (
+        <section aria-label={t("home.fresh.title")} className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]" data-testid="keep-fresh">
+          {fresh}
+        </section>
+      )}
+    </div>
   );
 }

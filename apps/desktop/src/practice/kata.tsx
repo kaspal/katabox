@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDuration, useKataOverview } from "@/lib/kata";
 import { cn } from "@/lib/utils";
-import { HomeCard } from "@/practice/HomeCards";
+import { CompactCard, HomeCard } from "@/practice/HomeCards";
 import { SavedReflection } from "@/practice/journal";
 
 /** Milliseconds since `since`, ticking every second from the wall clock. */
@@ -108,11 +108,31 @@ export function KataBar({
 }
 
 /** Home: the rustiest solved problems, each a kata away. */
-export function RustyCard() {
+export function RustyCard({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation();
   const overview = useKataOverview();
   const patternLabel = usePatternLabel();
   const rusty = overview.data?.rusty.slice(0, 5) ?? [];
+  if (compact) {
+    const count = overview.data?.rusty.length ?? 0;
+    return (
+      <CompactCard
+        title={t("kata.rusty.title")}
+        icon={<Hourglass aria-hidden className="size-5" />}
+        testId="rusty-card"
+        busy={overview.isPending}
+        error={overview.error}
+        line={count === 0 ? t("home.fresh.rustyNone") : t("home.fresh.rustySome", { count })}
+        action={
+          count > 0 && (
+            <Button asChild size="sm" variant="outline">
+              <Link to="/kata">{t("home.fresh.rustyOpen")}</Link>
+            </Button>
+          )
+        }
+      />
+    );
+  }
   return (
     <HomeCard title={t("kata.rusty.title")} icon={<Hourglass aria-hidden className="size-4" />} testId="rusty-card">
       {overview.isPending ? (

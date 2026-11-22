@@ -1,163 +1,56 @@
 #!/usr/bin/env node
-// Branded NSIS installer artwork (ADR 0021), drawn from the app icon
+// Branded NSIS installer artwork (ADR 0021, 0041), drawn from the app icon
 // apps/desktop/src-tauri/icons/katabox.svg. Writes 24-bit BMPs (what NSIS needs) into
 // apps/desktop/src-tauri/windows/, which are committed:
-//   sidebar.bmp  164 × 314  welcome and finish pages (installer and uninstaller)
-//   header.bmp   150 × 57   the header of the other pages (installer and uninstaller)
-// No dependencies: the icon is a rounded rectangle plus straight-edged paths, so this
-// script rasterizes those shapes itself, with 4 × 4 supersampling.
+//   sidebar.bmp  164 × 314  welcome and finish pages: the icon's indigo gradient down the
+//                           whole strip, with the cube (braces and chevron) near the top
+//   header.bmp   150 × 57   the other pages: the full icon at the right of a white header
+// No dependencies: scripts/lib/svg-raster.mjs rasterises the icon's rect, paths (curves
+// flattened), gradient and transforms, with 4 × 4 supersampling.
 //
 // Usage: node scripts/gen-installer-art.mjs   (pnpm installer-art; from the repo root)
 import fs from "node:fs";
 import path from "node:path";
+import { bmp, parseSvg, render } from "./lib/svg-raster.mjs";
 
 const ROOT = process.cwd();
 const SVG = path.join(ROOT, "apps/desktop/src-tauri/icons/katabox.svg");
 const OUT = path.join(ROOT, "apps/desktop/src-tauri/windows");
 
-// --- Parse the icon ------------------------------------------------------------------
-const svg = fs.readFileSync(SVG, "utf8").replace(/<!--[\s\S]*?-->/g, "");
-const attr = (tag, name) => tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1];
-const rectTag = svg.match(/<rect\b[^>]*>/)[0];
-const rect = {
-  x: +attr(rectTag, "x"),
-  y: +attr(rectTag, "y"),
-  w: +attr(rectTag, "width"),
-  h: +attr(rectTag, "height"),
-  r: +attr(rectTag, "rx"),
-  fill: attr(rectTag, "fill"),
-};
-const groupTag = svg.match(/<g\b[^>]*>/)[0];
-const stroke = { color: attr(groupTag, "stroke"), width: +attr(groupTag, "stroke-width") };
-const faces = [...svg.matchAll(/<path\b[^>]*>/g)].map(([tag]) => ({
-  fill: attr(tag, "fill"),
-  // "M x y L x y ... Z": straight segments only.
-  points: attr(tag, "d")
-    .replace(/[MLZ]/g, " ")
-    .trim()
-    .split(/\s+/)
-    .map(Number)
-    .reduce((acc, v, i, all) => (i % 2 ? acc : [...acc, [v, all[i + 1]]]), []),
-}));
-// The cube's bounding box (the faces), to place it on its own.
-const xs = faces.flatMap((f) => f.points.map((p) => p[0]));
-const ys = faces.flatMap((f) => f.points.map((p) => p[1]));
-const cube = { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+const icon = parseSvg(fs.readFileSync(SVG, "utf8"));
+// The first shape is the rounded tile; the rest is the cube and its marks.
+const [tile, ...mark] = icon.shapes;
+const cube = { viewBox: icon.viewBox, shapes: mark };
 
-const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+// The tile's gradient colours at its top and bottom (sampled, so they follow the SVG).
+const top = tile.fill.color(128, 0);
+const bottom = tile.fill.color(128, 256);
 
-// --- Geometry ----------------------------------------------------------------------
-function inPolygon(px, py, pts) {
-  let inside = false;
-  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-    const [xi, yi] = pts[i];
-    const [xj, yj] = pts[j];
-    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
-
-function distToSegment(px, py, [ax, ay], [bx, by]) {
-  const dx = bx - ax;
-  const dy = by - ay;
-  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
-  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
-}
-
-function inRoundedRect(px, py, { x, y, w, h, r }) {
-  if (px < x || py < y || px > x + w || py > y + h) return false;
-  const cx = Math.max(x + r, Math.min(px, x + w - r));
-  const cy = Math.max(y + r, Math.min(py, y + h - r));
-  return Math.hypot(px - cx, py - cy) <= r;
-}
-
-/** The icon's color at icon coordinates (x, y), or null where it is transparent. */
-function iconColor(x, y, withBackground) {
-  let color = withBackground && inRoundedRect(x, y, rect) ? rgb(rect.fill) : null;
-  for (const f of faces) {
-    if (inPolygon(x, y, f.points)) color = rgb(f.fill);
-    // The stroke (round joins) is drawn over the face, like SVG paints it.
-    const pts = f.points;
-    for (let i = 0; i < pts.length; i++) {
-      if (distToSegment(x, y, pts[i], pts[(i + 1) % pts.length]) <= stroke.width / 2) {
-        color = rgb(stroke.color);
-        break;
-      }
-    }
-  }
-  return color;
-}
-
-// --- Images ------------------------------------------------------------------------
-/**
- * Draw a width × height image: `background`, then the icon mapped from the icon-space
- * box `src` ({x0, y0, x1, y1}) into the image-space box `dst`, 4 × 4 samples per pixel.
- */
-function render(width, height, background, src, dst, withBackground) {
-  const px = new Uint8Array(width * height * 3);
-  const scale = Math.min((dst.x1 - dst.x0) / (src.x1 - src.x0), (dst.y1 - dst.y0) / (src.y1 - src.y0));
-  const ox = dst.x0 + ((dst.x1 - dst.x0) - (src.x1 - src.x0) * scale) / 2;
-  const oy = dst.y0 + ((dst.y1 - dst.y0) - (src.y1 - src.y0) * scale) / 2;
-  const S = 4;
+/** RGBA over an RGB background chosen per pixel. */
+function composite(image, background) {
+  const { width, height, px } = image;
+  const out = new Uint8Array(width * height * 3);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const sum = [0, 0, 0];
-      for (let sy = 0; sy < S; sy++) {
-        for (let sx = 0; sx < S; sx++) {
-          const ix = src.x0 + (x + (sx + 0.5) / S - ox) / scale;
-          const iy = src.y0 + (y + (sy + 0.5) / S - oy) / scale;
-          const c = iconColor(ix, iy, withBackground) ?? background;
-          for (let k = 0; k < 3; k++) sum[k] += c[k];
-        }
-      }
-      for (let k = 0; k < 3; k++) px[(y * width + x) * 3 + k] = Math.round(sum[k] / (S * S));
+      const i = y * width + x;
+      const a = px[i * 4 + 3] / 255;
+      const bg = background(x, y);
+      for (let k = 0; k < 3; k++) out[i * 3 + k] = Math.round(bg[k] * (1 - a) + px[i * 4 + k] * a);
     }
   }
-  return { width, height, px };
+  return { width, height, px: out };
 }
 
-/** A 24-bit, bottom-up Windows BMP. */
-function bmp({ width, height, px }) {
-  const row = Math.ceil((width * 3) / 4) * 4;
-  const size = 54 + row * height;
-  const b = Buffer.alloc(size);
-  b.write("BM", 0);
-  b.writeUInt32LE(size, 2);
-  b.writeUInt32LE(54, 10);
-  b.writeUInt32LE(40, 14);
-  b.writeInt32LE(width, 18);
-  b.writeInt32LE(height, 22);
-  b.writeUInt16LE(1, 26);
-  b.writeUInt16LE(24, 28);
-  b.writeUInt32LE(row * height, 34);
-  b.writeInt32LE(2835, 38); // 72 dpi
-  b.writeInt32LE(2835, 42);
-  for (let y = 0; y < height; y++) {
-    const at = 54 + (height - 1 - y) * row;
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 3;
-      b[at + x * 3] = px[i + 2]; // B
-      b[at + x * 3 + 1] = px[i + 1]; // G
-      b[at + x * 3 + 2] = px[i]; // R
-    }
-  }
-  return b;
-}
+const lerp = (a, b, t) => a.map((c, k) => c + (b[k] - c) * t);
+// The cube's own box in icon space (faces span x 50-206, y 40-218).
+const cubeBox = { x0: 44, y0: 34, x1: 212, y1: 224 };
 
-const brand = rgb(rect.fill);
-const white = [255, 255, 255];
 const outputs = {
-  // The cube on the brand colour, in the upper part of the tall welcome-page strip.
-  "sidebar.bmp": render(164, 314, brand, cube, { x0: 22, y0: 40, x1: 142, y1: 180 }, false),
-  // The full icon (rounded square and cube) at the right of a white header.
-  "header.bmp": render(
-    150,
-    57,
-    white,
-    { x0: rect.x, y0: rect.y, x1: rect.x + rect.w, y1: rect.y + rect.h },
-    { x0: 99, y0: 6, x1: 144, y1: 51 },
-    true,
+  // The gradient approximated per row, from the tile's top colour to its bottom colour.
+  "sidebar.bmp": composite(render(cube, 164, 314, { src: cubeBox, dst: { x0: 24, y0: 36, x1: 140, y1: 168 } }), (_, y) =>
+    lerp(top, bottom, y / 313),
   ),
+  "header.bmp": composite(render(icon, 150, 57, { dst: { x0: 99, y0: 6, x1: 144, y1: 51 } }), () => [255, 255, 255]),
 };
 fs.mkdirSync(OUT, { recursive: true });
 for (const [name, image] of Object.entries(outputs)) {

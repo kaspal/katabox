@@ -2,8 +2,9 @@
 //! `kb_app::window` decides. No plugin and no capability: the bounds go through the
 //! ordinary settings store (`window.bounds`, physical pixels, never exported).
 //!
-//! - On start the window is hidden (`visible: false` in tauri.conf.json); [`restore`]
-//!   places it, maximises it if it was, then shows it.
+//! - On start the window is hidden (`visible: false` in tauri.conf.json); [`place`]
+//!   places it and maximises it if it was; [`show`] shows it when the UI is ready (the
+//!   splash handover, ADR 0041).
 //! - Moves and resizes are saved 500 ms after the last one, by one saver thread; closing
 //!   saves at once. Minimised bounds are never saved.
 
@@ -100,9 +101,8 @@ fn app_of(window: &WebviewWindow) -> Option<tauri::State<'_, AppState>> {
     window.try_state::<AppState>()
 }
 
-/// Place the hidden main window from the saved bounds, then show it. Always shows the
-/// window, whatever fails.
-pub fn restore(window: &WebviewWindow) {
+/// Place the hidden main window from the saved bounds (it stays hidden; see [`show`]).
+pub fn place(window: &WebviewWindow) {
     let saved = app_of(window)
         .and_then(|s| {
             s.app()
@@ -117,6 +117,10 @@ pub fn restore(window: &WebviewWindow) {
     if let Some(s) = window.try_state::<Saved>() {
         *s.0.lock().unwrap_or_else(|e| e.into_inner()) = saved;
     }
+}
+
+/// Show the placed main window and focus it (the splash handover, ADR 0041).
+pub fn show(window: &WebviewWindow) {
     let _ = window.show();
     let _ = window.set_focus();
 }

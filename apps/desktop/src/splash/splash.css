@@ -1,0 +1,398 @@
+/* The startup splash (ADR 0041), as approved in Splash.dc.html: 640 × 400, about 2.6 s.
+   Colours come from the design tokens (the page is always dark: <html class="dark">).
+   .run starts the animation, .rm is the reduced-motion variant (fades only), .out is the
+   180 ms fade-out the shell adds before closing the window. */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+@import "../styles/tokens.css";
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--splash-edge);
+  color: var(--foreground);
+  font-family: "Inter Variable", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+html {
+  transition: opacity 180ms ease;
+}
+html.out {
+  opacity: 0;
+}
+
+.sp {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 38%, var(--splash-center) 0%, var(--splash-mid) 45%, var(--splash-edge) 100%);
+  box-shadow: inset 0 0 0 1px var(--splash-frame);
+}
+.sp * {
+  box-sizing: border-box;
+}
+.art {
+  position: absolute;
+  inset: 0;
+}
+.grid-line {
+  stroke: var(--brand-mark);
+  stroke-opacity: 0.035;
+}
+.glow-stop-in {
+  stop-color: var(--primary);
+  stop-opacity: 0.55;
+}
+.glow-stop-out {
+  stop-color: var(--primary);
+  stop-opacity: 0;
+}
+.ring {
+  stroke: var(--splash-ring);
+  opacity: 0;
+}
+.face-top {
+  fill: var(--brand-top);
+}
+.face-left {
+  fill: var(--brand-left);
+}
+.face-right {
+  fill: var(--brand-right);
+}
+.mark {
+  stroke: var(--brand-mark);
+}
+.spark-0 {
+  fill: var(--primary);
+}
+.spark-1 {
+  fill: var(--verdict-accepted);
+}
+.spark-2 {
+  fill: var(--difficulty-medium);
+}
+.spark-3 {
+  fill: var(--difficulty-hard);
+}
+
+.title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 252px;
+  text-align: center;
+}
+.word {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.ch {
+  display: inline-block;
+  color: var(--foreground);
+}
+.ch.box {
+  color: var(--primary);
+}
+.tag {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--muted-foreground);
+  letter-spacing: 0.02em;
+}
+.foot {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  bottom: 26px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font: 500 11px "JetBrains Mono Variable", ui-monospace, monospace;
+}
+.status {
+  position: relative;
+  flex: 1;
+  height: 16px;
+  color: var(--splash-status);
+}
+.status span {
+  position: absolute;
+  left: 0;
+}
+.s3 {
+  color: var(--verdict-accepted);
+}
+.version {
+  color: var(--splash-version);
+}
+.track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--splash-track);
+}
+.bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand-left), var(--splash-ring));
+  transform-origin: left;
+  transform: scaleX(0);
+}
+
+/* Hidden until the animation runs. */
+.sp .f,
+.sp .ch,
+.sp .tag,
+.sp .brace,
+.sp .s1,
+.sp .s2,
+.sp .s3,
+.sp .spark {
+  opacity: 0;
+}
+.brace {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.sp.run .fTop {
+  animation: kbTop 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.15) 0.1s both;
+}
+.sp.run .fL {
+  animation: kbL 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.15) 0.25s both;
+}
+.sp.run .fR {
+  animation: kbR 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.15) 0.4s both;
+}
+.sp.run .brace {
+  animation: kbPop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) 1s both;
+}
+.sp.run .chev {
+  /* The path is 2 × 25 = 50 units long. */
+  stroke-dasharray: 52;
+  animation: kbDraw 0.45s ease-out 1.15s both;
+}
+.sp.run .glow {
+  animation: kbGlow 1.4s ease-out 1.2s both;
+}
+.sp.run .ring {
+  animation: kbRing 1.2s ease-out 1.25s both;
+}
+.sp.run .ch {
+  animation: kbUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.sp.run .ch:nth-child(1) {
+  animation-delay: 1.45s;
+}
+.sp.run .ch:nth-child(2) {
+  animation-delay: 1.51s;
+}
+.sp.run .ch:nth-child(3) {
+  animation-delay: 1.57s;
+}
+.sp.run .ch:nth-child(4) {
+  animation-delay: 1.63s;
+}
+.sp.run .ch:nth-child(5) {
+  animation-delay: 1.69s;
+}
+.sp.run .ch:nth-child(6) {
+  animation-delay: 1.75s;
+}
+.sp.run .ch:nth-child(7) {
+  animation-delay: 1.81s;
+}
+.sp.run .tag {
+  animation: kbFade 0.6s ease 2s both;
+}
+.sp.run .bar {
+  animation: kbBar 2.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
+}
+.sp.run .s1 {
+  animation: kbS 3.2s ease 0.2s both;
+}
+.sp.run .s2 {
+  animation: kbS 1s ease 1.4s both;
+}
+.sp.run .s3 {
+  animation: kbLast 0.4s ease 2.5s both;
+}
+.sp.run .spark {
+  animation: kbSpark 1.1s ease-out 1.25s both;
+}
+
+/* Reduced motion: everything fades in; no ring, no sparks, the chevron is simply there. */
+.sp.rm.run .fTop,
+.sp.rm.run .fL,
+.sp.rm.run .fR,
+.sp.rm.run .brace,
+.sp.rm.run .ch {
+  animation: kbFade 0.4s ease both;
+}
+.sp.rm.run .ring,
+.sp.rm.run .spark {
+  animation: none;
+  opacity: 0;
+}
+.sp.rm.run .chev {
+  animation: none;
+  stroke-dasharray: none;
+}
+.sp.rm.run .glow {
+  animation: kbFade 0.4s ease both;
+}
+.sp.rm.run .bar {
+  animation: kbFade 0.4s ease both;
+  transform: scaleX(1);
+}
+.sp.rm.run .s1,
+.sp.rm.run .s2 {
+  animation: none;
+}
+.sp.rm.run .s3,
+.sp.rm.run .tag {
+  animation: kbFade 0.4s ease both;
+}
+@keyframes kbTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-60px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes kbL {
+  0% {
+    opacity: 0;
+    transform: translate(-60px, 34px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes kbR {
+  0% {
+    opacity: 0;
+    transform: translate(60px, 34px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes kbPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes kbDraw {
+  0% {
+    stroke-dashoffset: 52;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes kbGlow {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.45;
+  }
+}
+@keyframes kbRing {
+  0% {
+    opacity: 0.8;
+    r: 40;
+  }
+  100% {
+    opacity: 0;
+    r: 150;
+  }
+}
+@keyframes kbUp {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes kbFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes kbBar {
+  0% {
+    transform: scaleX(0);
+  }
+  70% {
+    transform: scaleX(0.82);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+@keyframes kbS {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes kbLast {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes kbSpark {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.4);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(1);
+  }
+}

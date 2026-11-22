@@ -228,15 +228,103 @@
     "sortBy": "Sort by {{column}}"
   },
   "home": {
-    "title": "Home",
-    "continue": "Continue",
     "continueEdited": "{{language}} · edited {{when}}",
-    "continueOpen": "Open",
-    "noDraft": "No draft yet. Pick a problem to start.",
-    "browse": "Browse problems",
     "solved": "Solved",
     "solvedOf": "{{solved}} of {{total}}",
-    "daily": "Daily problem"
+    "greeting": {
+      "morning": "Good morning.",
+      "afternoon": "Good afternoon.",
+      "evening": "Good evening."
+    },
+    "ready": "Ready for {{minutes}} minutes?",
+    "allSet": "All done for today.",
+    "subtitle": "Pick up where you left off, then take the next step on your path.",
+    "subtitleNew": "Start with the first step of your path. Each one is a short animation and a problem.",
+    "session": {
+      "label": "Today's session",
+      "title": "Today's session · about {{minutes}} min",
+      "progress": "{{done}} of {{total}} done",
+      "start": "Start session",
+      "customise": "Customise",
+      "empty": "Nothing planned for today. Browse the library or open Learn.",
+      "allDone": "Everything in today's session is done. Nice work.",
+      "minutes": "~{{minutes}} min",
+      "onPath": "On your path",
+      "doneLabel": "Done",
+      "kind": {
+        "continue": "Continue: {{title}}",
+        "daily": "Daily problem: {{title}}",
+        "kata": "Daily kata",
+        "path": "Next on your path: {{title}}",
+        "start": "Start here: {{title}}",
+        "watch": "Watch: {{title}}",
+        "startWatch": "Start here: watch {{title}}"
+      },
+      "sub": {
+        "continue": "Your latest draft",
+        "daily": "keeps your streak alive",
+        "kata": "Timed · problems you have already solved",
+        "path": "the next problem on your path",
+        "start": "the first problem on your path",
+        "watch": "the next topic on your path · a short animation",
+        "startWatch": "the first step on your path · a short animation"
+      }
+    },
+    "week": {
+      "title": "This week",
+      "daily": "Daily streak",
+      "kata": "Kata streak",
+      "dayActive": "{{day}}: {{count}} submissions",
+      "dayIdle": "{{day}}: no submissions",
+      "today": "today"
+    },
+    "rings": {
+      "of": "of {{total}}",
+      "aria": "Solved: {{solved}} of {{total}} problems",
+      "open": "Open Progress"
+    },
+    "path": {
+      "title": "Your path",
+      "summary": "{{path}} · {{done}} of {{total}} done",
+      "on": "you're on",
+      "finished": "path complete",
+      "change": "Change path",
+      "map": "See the whole map",
+      "aria": "Path {{path}}: {{done}} of {{total}} steps done",
+      "node": {
+        "done": "{{topic}}: done",
+        "current": "{{topic}}: current step, {{solved}} of {{total}} linked problems solved",
+        "todo": "{{topic}}: step {{n}}"
+      },
+      "more": "+{{count}} more",
+      "moreAria": "{{count}} more steps: open the path in Learn",
+      "watched": "watched",
+      "toWatch": "to watch",
+      "solvedOf": "{{solved}} of {{total}}"
+    },
+    "watch": {
+      "title": "Watch next",
+      "all": "All {{count}} topics",
+      "onPath": "On your path",
+      "before": "before {{problem}}",
+      "watched": "Watched · now try",
+      "empty": "You've watched everything suggested here. Open Learn for more."
+    },
+    "fresh": {
+      "title": "Keep it fresh",
+      "reviewNone": "Nothing due today",
+      "reviewDue": "{{count}} due today",
+      "reviewOpen": "Review",
+      "planNone": "Interview coming up? Date your path.",
+      "planToday": "{{count}} items today",
+      "planNothing": "Nothing planned today",
+      "planOpen": "Plan",
+      "rustyNone": "Nothing rusty yet",
+      "rustySome": "{{count}} problems getting rusty",
+      "rustyOpen": "Kata",
+      "reviewMore": "More review actions"
+    },
+    "title": "Home"
   },
   "workspace": {
     "title": "Workspace",
@@ -486,7 +574,14 @@
       "results": "Matching settings"
     },
     "contentLang": "Problems and lessons in",
-    "contentLangHint": "Problems and Learn are written in English and Spanish."
+    "contentLangHint": "Problems and Learn are written in English and Spanish.",
+    "splash": {
+      "label": "Startup animation",
+      "help": "Plays while KataBox opens. It never slows start-up, except on the first launch after an install or update, or with Every time.",
+      "firstRunAfterUpdate": "After an install or update",
+      "always": "Every time",
+      "never": "Never"
+    }
   },
   "languages": {
     "python": "Python",
@@ -740,12 +835,7 @@
   },
   "practice": {
     "daily": {
-      "title": "Daily problem",
-      "open": "Solve it",
-      "solved": "Solved today",
-      "none": "No problems available.",
-      "hint": "A new pick every day, leaning toward your weakest pattern.",
-      "hint_start": "Start here: the first problem of the first pattern. After your first solve, picks lean toward your weakest pattern."
+      "solved": "Solved today"
     },
     "streak": {
       "label": "Daily streak: {{count}}",
@@ -897,12 +987,6 @@
       "accepted": "Your accepted {{language}} solution (read-only)",
       "close": "Close",
       "none": "No accepted solution in {{language}}."
-    },
-    "learnReview": {
-      "title": "Review a topic",
-      "intro": "You watched {{topic}}. Try a problem that uses it.",
-      "open": "Open the topic",
-      "try": "Try {{problem}}"
     }
   },
   "debug": {

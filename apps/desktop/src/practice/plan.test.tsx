@@ -34,8 +34,8 @@ describe("Study plans and ratings (expansion M2)", () => {
     await fake.api.createPlan({ patterns: [], weeks: 1, minutes_per_day: 30, today: localToday() }, "en");
     renderApp("/");
     const card = await screen.findByTestId("plan-card");
-    expect(await within(card).findByTestId("plan-today")).toBeInTheDocument();
-    expect(within(card).getAllByTestId("plan-item")).toHaveLength(2);
+    expect(await within(card).findByText("2 items today")).toBeInTheDocument();
+    expect(within(card).getByRole("link", { name: "Plan" })).toHaveAttribute("href", "/progress?tab=plan");
   });
 
   it("shows the rating as an estimate, with a trend line", async () => {
