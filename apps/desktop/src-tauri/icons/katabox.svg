@@ -1,13 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <!-- KataBox app icon (ADR 0021): an isometric cube on the UI's primary indigo.
-       Source of every icon size: `pnpm tauri icon icons/katabox.svg`. -->
-  <rect x="32" y="32" width="960" height="960" rx="216" fill="#3651c9"/>
-  <g stroke="#3651c9" stroke-width="20" stroke-linejoin="round">
-    <!-- top face -->
-    <path d="M512 196 L786 354 L512 512 L238 354 Z" fill="#ffffff"/>
-    <!-- left face -->
-    <path d="M238 354 L512 512 L512 828 L238 670 Z" fill="#c7d1ff"/>
-    <!-- right face -->
-    <path d="M512 512 L786 354 L786 670 L512 828 Z" fill="#8a9ef5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1024" height="1024">
+  <!-- KataBox app icon, "Kata Box" (ADR 0021, 0041): an isometric cube on a deep indigo
+       tile, code braces on the light face and a prompt chevron on the dark face. Every
+       shape is a path (no text, no font). Source of every size: `pnpm tauri icon
+       icons/katabox.svg`; the 16-32 px ICO layers come from katabox-small.svg
+       (`pnpm icon-small`). The installer art (`pnpm installer-art`) is drawn from this
+       file too, so keep to rect, path, g, linearGradient and matrix transforms. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#232a52"/>
+      <stop offset="1" stop-color="#121633"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="256" height="256" rx="58" fill="url(#bg)"/>
+  <!-- top, left and right faces -->
+  <path d="M128 40 L206 84 L128 128 L50 84 Z" fill="#c4d1ff"/>
+  <path d="M50 84 L128 128 L128 218 L50 174 Z" fill="#6d86f0"/>
+  <path d="M206 84 L128 128 L128 218 L206 174 Z" fill="#3d56cc"/>
+  <path d="M128 40 L206 84 L128 128 L50 84 Z" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2"/>
+  <!-- { } on the left face, sheared onto it; the right brace mirrors the left about x = 89 -->
+  <g transform="matrix(1 0.564 0 1 0 0)" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M73 80 C66 80 64 83 64 89 L64 95 C64 98.5 62 100 55 101 C62 102 64 103.5 64 107 L64 113 C64 119 66 122 73 122"/>
+    <path d="M105 80 C112 80 114 83 114 89 L114 95 C114 98.5 116 100 123 101 C116 102 114 103.5 114 107 L114 113 C114 119 112 122 105 122"/>
   </g>
+  <!-- the prompt chevron, centred on the right face and screen-aligned (a sheared one
+       reads as a "7") -->
+  <path d="M158 136 L178 151 L158 166" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- a lid seam on the top face -->
+  <path d="M110 76 L146 76" fill="none" stroke="#3d56cc" stroke-width="8" stroke-linecap="round" stroke-opacity="0.55"/>
 </svg>

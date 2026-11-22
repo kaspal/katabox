@@ -73,6 +73,18 @@ async resetWindow() : Promise<Result<null, AppError>> {
 }
 },
 /**
+ * The main window's UI has rendered (ADR 0041): show the main window and close the
+ * splash. Called once by the UI; calls from any other window are ignored.
+ */
+async appReady() : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("app_ready") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Progress → heatmap: Submits since `since_ms` (UTC ms); the UI buckets local days.
  */
 async activity(sinceMs: number) : Promise<Result<ActivityRow[], AppError>> {

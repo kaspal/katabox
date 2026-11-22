@@ -3,6 +3,7 @@
 //! it belongs in `crates/` (mostly kb-app). Every command is a short forward to kb-app
 //! and returns `Result<T, AppError>`.
 
+mod splash;
 mod window_state;
 
 use std::path::{Path, PathBuf};
@@ -477,6 +478,19 @@ async fn solved_breakdown(state: State<'_, AppState>, lang: UiLang) -> Res<Solve
 #[specta::specta]
 async fn review_summary(state: State<'_, AppState>, today: String) -> Res<ReviewSummary> {
     state.app()?.review_summary(&today).await
+}
+
+/// The main window's UI has rendered (ADR 0041): show the main window and close the
+/// splash. Called once by the UI; calls from any other window are ignored.
+#[tauri::command]
+#[specta::specta]
+async fn app_ready(app: tauri::AppHandle, webview: tauri::WebviewWindow) -> Res<()> {
+    if webview.label() != "main" {
+        return Ok(());
+    }
+    tauri::async_runtime::spawn_blocking(move || splash::ready(&app))
+        .await
+        .map_err(|e| AppError::new(AppErrorCode::Internal, e.to_string()))
 }
 
 /// Settings → Appearance → "Reset window size and position": the default size, centred,
@@ -1521,6 +1535,7 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         diagnostics,
         third_party_notices,
         reset_window,
+        app_ready,
         activity,
         solved_breakdown,
         review_summary,
@@ -1788,12 +1803,14 @@ pub fn run_app() {
                     a.backup_if_due(false).await;
                 }
             });
-            // The main window starts hidden: place it where it was, then show it.
+            // The main window starts hidden: place it where it was; it is shown when the UI
+            // calls `app_ready` (or by the splash failsafe), ADR 0041.
             app.manage(window_state::Saved::default());
             if let Some(window) = app.get_webview_window("main") {
-                window_state::restore(&window);
+                window_state::place(&window);
                 window_state::watch(&window);
             }
+            splash::start(app.handle());
             Ok(())
         })
         .build(tauri::generate_context!())

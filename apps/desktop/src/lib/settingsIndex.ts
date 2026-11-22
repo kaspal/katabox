@@ -6,7 +6,7 @@ import type { SettingsSection } from "@/lib/pageTabs";
 export const SETTINGS_SEARCH_INDEX: [SettingsSection, string[]][] = [
   [
     "appearance",
-    ["theme.label", "language.label", "settings.contentLang", "settings.contrast", "settings.motion", "settings.window.label", "settings.window.reset"],
+    ["theme.label", "language.label", "settings.contentLang", "settings.contrast", "settings.motion", "settings.splash.label", "settings.window.label", "settings.window.reset"],
   ],
   [
     "editor",

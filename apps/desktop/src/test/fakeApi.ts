@@ -508,6 +508,7 @@ export function createFakeApi(
     appInfo: vi.fn(async () => appInfoFor(installed)),
     thirdPartyNotices: vi.fn(async () => opts.notices ?? null),
     resetWindow: vi.fn(async () => null),
+    appReady: vi.fn(async () => null),
     diagnostics: vi.fn(async () => ({
       app_version: "1.0.0-beta.1",
       os: "windows",

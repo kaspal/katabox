@@ -18,7 +18,7 @@ import { usePatterns } from "@/lib/practice";
 import { usePrefs } from "@/lib/prefs";
 import { useToday } from "@/lib/today";
 import { cn } from "@/lib/utils";
-import { HomeCard } from "@/practice/HomeCards";
+import { CompactCard, HomeCard } from "@/practice/HomeCards";
 import { formatDay } from "@/practice/shared";
 
 const WEEKS = [1, 2, 4, 6, 8, 12] as const;
@@ -120,10 +120,36 @@ function ItemRow({ plan, item }: { plan: PlanView; item: PlanItemView }) {
 }
 
 /** Home: today's part of the active plan (and anything overdue). */
-export function PlanCard() {
+export function PlanCard({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation();
   const today = useToday();
   const plan = usePlan();
+  if (compact) {
+    const items = plan.data ? todayItems(plan.data, today).filter((i) => i.status === "pending") : [];
+    return (
+      <CompactCard
+        title={t("plan.card")}
+        icon={<CalendarCheck aria-hidden className="size-5" />}
+        testId="plan-card"
+        busy={plan.isPending}
+        error={plan.error}
+        line={
+          !plan.data
+            ? t("home.fresh.planNone")
+            : items.length === 0
+              ? t("home.fresh.planNothing")
+              : t("home.fresh.planToday", { count: items.length })
+        }
+        action={
+          <Button asChild size="sm" variant="outline">
+            <Link to="/progress" search={{ tab: "plan" }}>
+              {t("home.fresh.planOpen")}
+            </Link>
+          </Button>
+        }
+      />
+    );
+  }
   return (
     <HomeCard title={t("plan.card")} icon={<CalendarCheck aria-hidden className="size-4" />} testId="plan-card">
       {plan.isPending ? (
@@ -146,9 +172,14 @@ export function PlanCard() {
   );
 }
 
+/** Today's items, plus earlier ones still pending. */
+function todayItems(plan: PlanView, today: string) {
+  return plan.items.filter((i) => i.day === today || (i.day < today && i.status === "pending"));
+}
+
 function TodayList({ plan, today }: { plan: PlanView; today: string }) {
   const { t } = useTranslation();
-  const items = plan.items.filter((i) => i.day === today || (i.day < today && i.status === "pending"));
+  const items = todayItems(plan, today);
   if (items.length === 0) return <p className="text-sm text-muted-foreground">{t("plan.nothingToday")}</p>;
   return (
     <ul className="divide-y" data-testid="plan-today">

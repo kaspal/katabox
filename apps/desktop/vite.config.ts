@@ -2,15 +2,20 @@
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
+import { readFileSync } from "node:fs";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 const host = process.env.TAURI_DEV_HOST;
+const version = (JSON.parse(readFileSync(path.resolve(import.meta.dirname, "package.json"), "utf8")) as { version: string })
+  .version;
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
   plugins: [react(), tailwindcss()],
+  // The splash (ADR 0041) shows the version without IPC.
+  define: { __APP_VERSION__: JSON.stringify(version) },
   resolve: {
     alias: { "@": path.resolve(import.meta.dirname, "src") },
   },
@@ -40,6 +45,13 @@ export default defineConfig(() => ({
   build: {
     // A desktop app loads its bundle from disk; one ~600 kB chunk is fine.
     chunkSizeWarningLimit: 1024,
+    // Two pages: the app, and the static startup splash (ADR 0041).
+    rollupOptions: {
+      input: {
+        main: path.resolve(import.meta.dirname, "index.html"),
+        splash: path.resolve(import.meta.dirname, "splash.html"),
+      },
+    },
   },
 
   test: {

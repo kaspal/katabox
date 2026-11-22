@@ -7,6 +7,14 @@ All notable changes to KataBox are recorded in this file. The format follows
 ## [Unreleased]
 
 ### Added
+- A new **Home**: today's session (continue, daily problem, daily kata, the next step on
+  your path, with time estimates and **Start session**), this week, solved rings, **Your
+  path** as a track of Learn topics, **Watch next**, and compact Reviews, Study plan and
+  Rusty cards.
+- A new app icon ("Kata Box") with sharper small sizes, and new installer artwork.
+- A short **startup animation** while KataBox opens. It plays in full only on the first
+  start after an install or update; Settings → Appearance → **Startup animation** can
+  make it play every time or never.
 - The window reopens where it was, at the same size, and maximised if it was. If its
   screen is gone, it opens centred on the main screen. Settings → Appearance → **Reset
   window size and position**.

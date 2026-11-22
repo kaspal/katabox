@@ -28,57 +28,60 @@ describe("Local dates (ADR 0019)", () => {
 describe("Home: daily problem and reviews", () => {
   useFakeApi();
 
-  it("shows the daily problem with the streak, and the reviews due today", async () => {
+  it("shows the daily problem in the session, the streak, and the reviews due today", async () => {
     const fake = setFakeApi({ daily: { id: "valid-brackets" }, streak: 4, reviewsDue: ["two-sum"] });
     const { user } = renderApp("/");
-    const daily = await screen.findByTestId("daily-card");
-    expect(await within(daily).findByText("Valid Brackets")).toBeInTheDocument();
-    expect(within(daily).getByTestId("streak")).toHaveTextContent("Daily streak: 4");
-    expect(within(daily).getByRole("link", { name: /Solve it/ })).toHaveAttribute("href", "/problems/valid-brackets");
+    const daily = await screen.findByTestId("session-item-daily");
+    expect(daily).toHaveTextContent("Daily problem: Valid Brackets");
+    expect(within(daily).getByRole("link")).toHaveAttribute("href", "/problems/valid-brackets");
+    expect(await screen.findByTestId("week-daily-streak")).toHaveTextContent("4");
 
-    const reviews = screen.getByTestId("review-card");
-    const row = await within(reviews).findByTestId("review-two-sum");
-    expect(within(row).getByRole("link", { name: "Review" })).toHaveAttribute(
-      "href",
-      "/problems/two-sum?review=true",
-    );
-    await user.click(within(row).getByRole("button", { name: /Snooze 1 day/ }));
+    const reviews = await screen.findByTestId("review-card");
+    expect(await within(reviews).findByText("1 due today")).toBeInTheDocument();
+    expect(within(reviews).getByRole("link", { name: "Review" })).toHaveAttribute("href", "/problems/two-sum?review=true");
+    await user.click(within(reviews).getByRole("button", { name: "More review actions" }));
+    await user.click(await screen.findByRole("menuitem", { name: /Snooze 1 day: Two Sum/ }));
     await waitFor(() => expect(fake.api.reviewSnooze).toHaveBeenCalledWith("two-sum", localToday()));
-    expect(await within(reviews).findByText("Nothing to review today.")).toBeInTheDocument();
+    expect(await within(reviews).findByText("Nothing due today")).toBeInTheDocument();
   });
 
-  it("marks a solved daily problem and removes reviews", async () => {
+  it("marks a solved daily problem done and removes reviews", async () => {
     const fake = setFakeApi({ daily: { id: "two-sum", solved: true }, reviewsDue: ["valid-brackets"] });
     const { user } = renderApp("/");
-    const daily = await screen.findByTestId("daily-card");
-    expect(await within(daily).findByText("Solved today")).toBeInTheDocument();
-    const row = await screen.findByTestId("review-valid-brackets");
-    await user.click(within(row).getByRole("button", { name: /Remove from review/ }));
+    const daily = await screen.findByTestId("session-item-daily");
+    expect(daily).toHaveAttribute("data-done", "true");
+    expect(within(daily).getByText("Done")).toBeInTheDocument();
+    const reviews = await screen.findByTestId("review-card");
+    await user.click(await within(reviews).findByRole("button", { name: "More review actions" }));
+    await user.click(await screen.findByRole("menuitem", { name: /Remove from review: Valid Brackets/ }));
     await waitFor(() => expect(fake.api.reviewRemove).toHaveBeenCalledWith("valid-brackets"));
   });
 
-  it("captions the daily pick for a brand-new user until the first solve (ADR 0019)", async () => {
-    // The fake pack has a solved problem: the usual caption.
+  it("starts a brand-new user on the path's first problem until the first solve (ADR 0019, 0041)", async () => {
     setFakeApi({ daily: { id: "valid-brackets" } });
     const first = renderApp("/");
-    expect(await screen.findByTestId("daily-hint")).toHaveTextContent("leaning toward your weakest pattern");
+    await screen.findByTestId("session-item-daily");
+    expect(screen.queryByTestId("session-item-start")).toBeNull();
     first.unmount();
 
-    // Nothing solved yet: the start of the track.
     const fake = setFakeApi({ daily: { id: "two-sum" } });
     const original = vi.mocked(fake.api.listProblems).getMockImplementation()!;
     vi.mocked(fake.api.listProblems).mockImplementation(async (f) =>
       (await original(f)).map((p) => ({ ...p, status: null })),
     );
     renderApp("/");
-    await waitFor(() => expect(screen.getByTestId("daily-hint")).toHaveTextContent(/^Start here: the first problem/));
+    await waitFor(() => expect(screen.getByTestId("session-item-start")).toHaveTextContent("Start here: Two Sum"));
+    // The daily pick is the same problem: one item, not two.
+    expect(screen.queryByTestId("session-item-daily")).toBeNull();
   });
 
   it("hides the cards when Settings → Practice turns them off, in Spanish too", async () => {
     setFakeApi({ settings: { "practice.daily": false, "practice.review": false, ui_lang: "es" } });
     renderApp("/");
     expect(await screen.findByRole("heading", { name: "Inicio" })).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByTestId("daily-card")).toBeNull());
+    expect(await screen.findByRole("heading", { name: /^Buen/ })).toBeInTheDocument();
+    expect(await screen.findByText("Sesión de hoy", { exact: false })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId("session-item-daily")).toBeNull());
     expect(screen.queryByTestId("review-card")).toBeNull();
   });
 

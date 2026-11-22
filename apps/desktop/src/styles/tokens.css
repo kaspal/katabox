@@ -92,6 +92,25 @@
   --syntax-operator: #44546a;
   --syntax-invalid: #b42318;
 
+  /* Brand (ADR 0041): the app icon's colours, the same in both themes. Used by the Logo
+     and the startup splash; the icon files (src-tauri/icons/katabox*.svg) repeat them. */
+  --brand-bg-from: #232a52;
+  --brand-bg-to: #121633;
+  --brand-top: #c4d1ff;
+  --brand-left: #6d86f0;
+  --brand-right: #3d56cc;
+  --brand-mark: #ffffff;
+
+  /* Startup splash (ADR 0041): always dark; the rest comes from the dark tokens. */
+  --splash-center: #1c2448;
+  --splash-mid: #11152a;
+  --splash-edge: #0b0d14;
+  --splash-frame: #262c45;
+  --splash-ring: #b3c4ff;
+  --splash-status: #7d8594;
+  --splash-version: #5d6474;
+  --splash-track: #1a1f33;
+
   /* Shape and type */
   --radius: 0.5rem;
   --font-size-ui: 0.875rem;

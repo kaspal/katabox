@@ -228,15 +228,103 @@
     "sortBy": "Ordenar por {{column}}"
   },
   "home": {
-    "title": "Inicio",
-    "continue": "Continuar",
     "continueEdited": "{{language}} · editado {{when}}",
-    "continueOpen": "Abrir",
-    "noDraft": "Aún no hay borradores. Elige un problema para empezar.",
-    "browse": "Ver problemas",
     "solved": "Resueltos",
     "solvedOf": "{{solved}} de {{total}}",
-    "daily": "Problema del día"
+    "greeting": {
+      "morning": "Buenos días.",
+      "afternoon": "Buenas tardes.",
+      "evening": "Buenas noches."
+    },
+    "ready": "¿Listo para {{minutes}} minutos?",
+    "allSet": "Todo hecho por hoy.",
+    "subtitle": "Retoma donde lo dejaste y da el siguiente paso de tu ruta.",
+    "subtitleNew": "Empieza por el primer paso de tu ruta. Cada uno es una animación corta y un problema.",
+    "session": {
+      "label": "Sesión de hoy",
+      "title": "Sesión de hoy · unos {{minutes}} min",
+      "progress": "{{done}} de {{total}} hechos",
+      "start": "Empezar sesión",
+      "customise": "Personalizar",
+      "empty": "Nada previsto para hoy. Explora la biblioteca o abre Aprender.",
+      "allDone": "Todo lo de la sesión de hoy está hecho. Buen trabajo.",
+      "minutes": "~{{minutes}} min",
+      "onPath": "En tu ruta",
+      "doneLabel": "Hecho",
+      "kind": {
+        "continue": "Continuar: {{title}}",
+        "daily": "Problema del día: {{title}}",
+        "kata": "Kata del día",
+        "path": "Siguiente en tu ruta: {{title}}",
+        "start": "Empieza aquí: {{title}}",
+        "watch": "Ver: {{title}}",
+        "startWatch": "Empieza aquí: ver {{title}}"
+      },
+      "sub": {
+        "continue": "Tu último borrador",
+        "daily": "mantiene tu racha",
+        "kata": "Con tiempo · problemas que ya resolviste",
+        "path": "el siguiente problema de tu ruta",
+        "start": "el primer problema de tu ruta",
+        "watch": "el siguiente tema de tu ruta · una animación corta",
+        "startWatch": "el primer paso de tu ruta · una animación corta"
+      }
+    },
+    "week": {
+      "title": "Esta semana",
+      "daily": "Racha diaria",
+      "kata": "Racha de katas",
+      "dayActive": "{{day}}: {{count}} envíos",
+      "dayIdle": "{{day}}: sin envíos",
+      "today": "hoy"
+    },
+    "rings": {
+      "of": "de {{total}}",
+      "aria": "Resueltos: {{solved}} de {{total}} problemas",
+      "open": "Abrir Progreso"
+    },
+    "path": {
+      "title": "Tu ruta",
+      "summary": "{{path}} · {{done}} de {{total}} hechos",
+      "on": "vas por",
+      "finished": "ruta completa",
+      "change": "Cambiar ruta",
+      "map": "Ver el mapa completo",
+      "aria": "Ruta {{path}}: {{done}} de {{total}} pasos hechos",
+      "node": {
+        "done": "{{topic}}: hecho",
+        "current": "{{topic}}: paso actual, {{solved}} de {{total}} problemas enlazados resueltos",
+        "todo": "{{topic}}: paso {{n}}"
+      },
+      "more": "+{{count}} más",
+      "moreAria": "{{count}} pasos más: abrir la ruta en Aprender",
+      "watched": "visto",
+      "toWatch": "por ver",
+      "solvedOf": "{{solved}} de {{total}}"
+    },
+    "watch": {
+      "title": "Para ver ahora",
+      "all": "Los {{count}} temas",
+      "onPath": "En tu ruta",
+      "before": "antes de {{problem}}",
+      "watched": "Visto · ahora prueba",
+      "empty": "Ya viste todo lo sugerido aquí. Abre Aprender para ver más."
+    },
+    "fresh": {
+      "title": "Mantenlo fresco",
+      "reviewNone": "Nada pendiente hoy",
+      "reviewDue": "{{count}} para hoy",
+      "reviewOpen": "Repasar",
+      "planNone": "¿Se acerca una entrevista? Ponle fecha a tu ruta.",
+      "planToday": "{{count}} tareas hoy",
+      "planNothing": "Nada previsto hoy",
+      "planOpen": "Plan",
+      "rustyNone": "Nada oxidado todavía",
+      "rustySome": "{{count}} problemas oxidándose",
+      "rustyOpen": "Kata",
+      "reviewMore": "Más acciones de repaso"
+    },
+    "title": "Inicio"
   },
   "workspace": {
     "title": "Espacio de trabajo",
@@ -486,7 +574,14 @@
       "results": "Ajustes encontrados"
     },
     "contentLang": "Problemas y lecciones en",
-    "contentLangHint": "Los problemas y Aprender están escritos en inglés y español."
+    "contentLangHint": "Los problemas y Aprender están escritos en inglés y español.",
+    "splash": {
+      "label": "Animación de inicio",
+      "help": "Se reproduce mientras KataBox se abre. Nunca retrasa el inicio, salvo en el primer arranque tras instalar o actualizar, o con Siempre.",
+      "firstRunAfterUpdate": "Tras instalar o actualizar",
+      "always": "Siempre",
+      "never": "Nunca"
+    }
   },
   "languages": {
     "python": "Python",
@@ -740,12 +835,7 @@
   },
   "practice": {
     "daily": {
-      "title": "Problema del día",
-      "open": "Resolver",
-      "solved": "Resuelto hoy",
-      "none": "No hay problemas disponibles.",
-      "hint": "Uno nuevo cada día, con preferencia por tu patrón más flojo.",
-      "hint_start": "Empieza aquí: el primer problema del primer patrón. Tras tu primer problema resuelto, la elección se inclina hacia tu patrón más débil."
+      "solved": "Resuelto hoy"
     },
     "streak": {
       "label": "Racha diaria: {{count}}",
@@ -897,12 +987,6 @@
       "accepted": "Tu solución aceptada en {{language}} (solo lectura)",
       "close": "Cerrar",
       "none": "No hay una solución aceptada en {{language}}."
-    },
-    "learnReview": {
-      "title": "Repasar un tema",
-      "intro": "Viste {{topic}}. Prueba un problema que lo usa.",
-      "open": "Abrir el tema",
-      "try": "Probar {{problem}}"
     }
   },
   "debug": {
