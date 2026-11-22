@@ -29,6 +29,9 @@ export type PathProgress = {
   nextProblem: ProblemSummary | null;
   /** The current step's topic, when it is not viewed yet. */
   nextTopic: LearnTopicSummary | null;
+  /** The first unsolved linked problem from the current step on (a step may have none):
+   * the session's path item and a new user's "Start here". */
+  upcomingProblem: ProblemSummary | null;
 };
 
 export const WINDOW_BEFORE = 2;
@@ -78,6 +81,11 @@ export function buildPathProgress(
     window: { steps: steps.slice(start, end), start, moreAfter: steps.length - end },
     nextProblem: cur?.linked.find((p) => p.status !== "solved") ?? null,
     nextTopic: cur && !cur.viewed ? cur.topic : null,
+    upcomingProblem:
+      base
+        .slice(current)
+        .flatMap((s) => s.linked)
+        .find((p) => p.status !== "solved") ?? null,
   };
 }
 

@@ -174,7 +174,7 @@ export function useSession(path: PathProgress | null | undefined) {
               doneToday: !!kataSession && kataSession.ended_at !== null && kataSession.solved > 0,
             }
           : null,
-      pathNext: path?.nextProblem ?? null,
+      pathNext: path?.upcomingProblem ?? null,
       solvedToday: acceptedOn(activity.data ?? [], today),
       brandNew: !(problems.data ?? []).some((p) => p.status === "solved"),
     });

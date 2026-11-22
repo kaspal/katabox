@@ -78,7 +78,7 @@ export function WatchNext({ path }: { path: PathProgress | null | undefined }) {
         </Link>
       </div>
       {pending ? (
-        <div className="grid gap-4 sm:grid-cols-2 min-[1100px]:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 min-[68.75rem]:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-44 rounded-2xl" />
           ))}
@@ -94,7 +94,7 @@ export function WatchNext({ path }: { path: PathProgress | null | undefined }) {
       ) : picks.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("home.watch.empty")}</p>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 min-[1100px]:grid-cols-3">
+        <ul className="grid gap-4 sm:grid-cols-2 min-[68.75rem]:grid-cols-3">
           {picks.map((p) => (
             <li key={p.topic.id}>
               <WatchCard pick={p} subject={subjects.get(p.topic.subject)} />
@@ -168,7 +168,7 @@ const v = (name: string) => `var(--viz-${name})`;
 function Thumb({ icon }: { icon: string }) {
   const family = thumbFamily(icon);
   return (
-    <svg viewBox="0 0 300 110" className="block w-full bg-background" aria-hidden data-family={family}>
+    <svg viewBox="0 0 300 110" className="block h-[110px] w-full bg-background" aria-hidden data-family={family}>
       {family === "bars" &&
         [40, 60, 74, 25, 84, 50, 66, 32].map((h, i) => (
           <rect

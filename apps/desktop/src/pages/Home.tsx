@@ -72,7 +72,7 @@ export function Home() {
 
       <section
         aria-label={t("home.session.label")}
-        className="grid gap-5 min-[1100px]:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]"
+        className="grid gap-5 min-[68.75rem]:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]"
       >
         <SessionCard session={s.session} isPending={s.isPending} error={s.error} onRetry={s.refetch} />
         <div className="flex flex-col gap-5">

@@ -43,6 +43,15 @@ describe("path progress", () => {
     // t1's only problem is solved, so it needs the topic viewed: no next problem.
     expect(g.nextProblem).toBeNull();
     expect(g.nextTopic?.id).toBe("t1");
+    // The session looks further: t3's problem.
+    expect(g.upcomingProblem?.id).toBe("p-t3");
+  });
+
+  it("finds the first problem ahead when the first steps have none (a new user)", () => {
+    const w = world(3, { t0: [], t1: [] });
+    const g = buildPathProgress(w.path, w.topics, w.problems, new Set());
+    expect(g.nextProblem).toBeNull();
+    expect(g.upcomingProblem?.id).toBe("p-t2");
   });
 
   it("gives the first unsolved linked problem of the current step", () => {

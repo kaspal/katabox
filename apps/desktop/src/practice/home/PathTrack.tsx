@@ -125,6 +125,9 @@ function Track({ g }: { g: PathProgress }) {
     }
   }
   const xs = nodes.map((_, i) => nodeX(i, nodes.length));
+  // Each label gets the room between two nodes, so neighbours never overlap.
+  const gap = nodes.length > 1 ? (xs[1] - xs[0]) / W : 1;
+  const labelWidth = `calc(${(gap * 100).toFixed(3)}% - 8px)`;
   // Filled up to the current node (or all the way when the path is done).
   const curPos = nodes.findIndex((n) => n.kind === "step" && n.index === g.current);
   const lastDone = nodes.reduce((last, n, i) => (n.kind === "step" && n.step.state === "done" ? i : last), -1);
@@ -158,8 +161,8 @@ function Track({ g }: { g: PathProgress }) {
         {nodes.map((n, i) => (
           <li
             key={n.kind === "step" ? n.step.topic.id : "more"}
-            className="absolute top-[15px] flex w-[140px] -translate-x-1/2 flex-col items-center"
-            style={{ left: `${(xs[i] / W) * 100}%` }}
+            className="absolute top-[15px] flex max-w-[150px] -translate-x-1/2 flex-col items-center"
+            style={{ left: `${(xs[i] / W) * 100}%`, width: labelWidth }}
           >
             {n.kind === "step" ? <StepNode step={n.step} index={n.index} pulse={!reduced} /> : <MoreNode count={n.count} names={n.names} />}
           </li>
