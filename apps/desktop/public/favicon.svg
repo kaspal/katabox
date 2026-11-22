@@ -17,13 +17,14 @@
   <path d="M50 84 L128 128 L128 218 L50 174 Z" fill="#6d86f0"/>
   <path d="M206 84 L128 128 L128 218 L206 174 Z" fill="#3d56cc"/>
   <path d="M128 40 L206 84 L128 128 L50 84 Z" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2"/>
-  <!-- { } on the left face, sheared onto it -->
+  <!-- { } on the left face, sheared onto it; the right brace mirrors the left about x = 89 -->
   <g transform="matrix(1 0.564 0 1 0 0)" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M70 80 C63 80 61 83 61 89 L61 95 C61 98.5 59 100 52 101 C59 102 61 103.5 61 107 L61 113 C61 119 63 122 70 122"/>
-    <path d="M108 80 C115 80 117 83 117 89 L117 95 C117 98.5 119 100 126 101 C119 102 117 103.5 117 107 L117 113 C117 119 115 122 108 122"/>
+    <path d="M73 80 C66 80 64 83 64 89 L64 95 C64 98.5 62 100 55 101 C62 102 64 103.5 64 107 L64 113 C64 119 66 122 73 122"/>
+    <path d="M105 80 C112 80 114 83 114 89 L114 95 C114 98.5 116 100 123 101 C116 102 114 103.5 114 107 L114 113 C114 119 112 122 105 122"/>
   </g>
-  <!-- the prompt chevron on the right face -->
-  <path d="M152 150 L172 164 L152 178" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" transform="matrix(1 -0.564 0 1 0 94)"/>
+  <!-- the prompt chevron, centred on the right face and screen-aligned (a sheared one
+       reads as a "7") -->
+  <path d="M158 136 L178 151 L158 166" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
   <!-- a lid seam on the top face -->
   <path d="M110 76 L146 76" fill="none" stroke="#3d56cc" stroke-width="8" stroke-linecap="round" stroke-opacity="0.55"/>
 </svg>

@@ -178,7 +178,8 @@ html.out {
   animation: kbPop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) 1s both;
 }
 .sp.run .chev {
-  stroke-dasharray: 60;
+  /* The path is 2 × 25 = 50 units long. */
+  stroke-dasharray: 52;
   animation: kbDraw 0.45s ease-out 1.15s both;
 }
 .sp.run .glow {
@@ -304,7 +305,7 @@ html.out {
 }
 @keyframes kbDraw {
   0% {
-    stroke-dashoffset: 60;
+    stroke-dashoffset: 52;
   }
   100% {
     stroke-dashoffset: 0;

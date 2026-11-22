@@ -12,5 +12,5 @@
   <path d="M128 26 L218 77 L128 128 L38 77 Z" fill="#c4d1ff"/>
   <path d="M38 77 L128 128 L128 232 L38 181 Z" fill="#6d86f0"/>
   <path d="M218 77 L128 128 L128 232 L218 181 Z" fill="#3d56cc"/>
-  <path d="M150 148 L178 166 L150 184" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" transform="matrix(1 -0.567 0 1 0 94)"/>
+  <path d="M162 138 L186 155 L162 172" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

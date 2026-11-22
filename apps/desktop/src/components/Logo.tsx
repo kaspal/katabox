@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 
 /** The braces and chevron (paths, no font), shared with the splash. */
 export const LOGO_BRACES = [
-  "M70 80 C63 80 61 83 61 89 L61 95 C61 98.5 59 100 52 101 C59 102 61 103.5 61 107 L61 113 C61 119 63 122 70 122",
-  "M108 80 C115 80 117 83 117 89 L117 95 C117 98.5 119 100 126 101 C119 102 117 103.5 117 107 L117 113 C117 119 115 122 108 122",
+  "M73 80 C66 80 64 83 64 89 L64 95 C64 98.5 62 100 55 101 C62 102 64 103.5 64 107 L64 113 C64 119 66 122 73 122",
+  "M105 80 C112 80 114 83 114 89 L114 95 C114 98.5 116 100 123 101 C116 102 114 103.5 114 107 L114 113 C114 119 112 122 105 122",
 ];
 
 export function Logo({ className, mono = false, braces = true }: { className?: string; mono?: boolean; braces?: boolean }) {
@@ -49,12 +49,11 @@ export function Logo({ className, mono = false, braces = true }: { className?: s
         </g>
       )}
       <path
-        d="M152 150 l20 14 -20 14"
+        d="M158 136 L178 151 L158 166"
         fill="none"
         strokeWidth={braces ? 10 : 16}
         strokeLinecap="round"
         strokeLinejoin="round"
-        transform="matrix(1 -0.564 0 1 0 94)"
         style={{ stroke: "var(--brand-mark)" }}
       />
     </svg>
