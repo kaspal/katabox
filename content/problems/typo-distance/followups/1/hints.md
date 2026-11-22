@@ -1,4 +1,4 @@
-The base problem's full table would have 2·10⁴ · 2·10⁴ = 4·10⁸ cells: too slow and too
+The base problem's full table would have 5·10⁴ · 5·10⁴ = 2.5·10⁹ cells: too slow and too
 big. But you only need to know whether the distance is at most `k`. Which cells can
 still matter?
 ---

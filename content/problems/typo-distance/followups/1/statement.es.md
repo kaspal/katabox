@@ -3,7 +3,7 @@ Ahora el corrector solo necesita un sí o un no. Un arreglo sigue siendo uno de 
 por otra. Devuelve `true` si `typed` se puede convertir en `meant` con **como mucho `k`
 arreglos**, y `false` si no.
 
-Las palabras son mucho más largas que antes (hasta 2·10⁴ letras), pero `k` es pequeño.
+Las palabras son mucho más largas que antes (hasta 5·10⁴ letras), pero `k` es pequeño.
 
 ### Ejemplo 1
 
@@ -32,6 +32,6 @@ Sustituir la última `c` por `b` e insertar otra `b`.
 
 ### Restricciones
 
-- 1 ≤ typed.length, meant.length ≤ 2·10⁴
+- 1 ≤ typed.length, meant.length ≤ 5·10⁴
 - typed y meant solo contienen letras minúsculas del alfabeto inglés.
 - 0 ≤ k ≤ 20

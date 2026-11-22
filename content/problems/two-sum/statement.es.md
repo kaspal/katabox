@@ -1,23 +1,27 @@
-Dado un arreglo de enteros `nums` y un entero `target`, devuelve los índices de los dos números que suman `target`.
+El libro de cuentas de una tienda tiene un importe por línea en `nums`: las ventas son positivas y las devoluciones negativas. La auditora sabe que exactamente dos líneas suman juntas `target` y quiere encontrarlas.
 
-Existe exactamente un par válido y no puedes usar el mismo elemento dos veces. Devuelve los dos índices en cualquier orden.
+Devuelve las posiciones (desde 0) de esas dos líneas, en cualquier orden. Cada línea se puede usar una sola vez, aunque su importe sea justo la mitad de `target`.
 
 ### Ejemplo 1
 
 ```
-nums = [5, 8, 12, 1, 3], target = 15
-Salida: [2, 4]
+nums = [4, 11, 7, 15, 2], target = 13
+Salida: [1, 4]
 ```
+
+Las líneas 1 y 4 tienen 11 y 2, que suman 13. Ningún otro par lo hace.
 
 ### Ejemplo 2
 
 ```
-nums = [7, -3, 10, 5], target = 2
-Salida: [1, 3]
+nums = [-6, 14, 3, 20, -1], target = 14
+Salida: [0, 3]
 ```
+
+Una devolución de 6 y una venta de 20 suman 14. La línea de 14 no puede emparejarse consigo misma.
 
 ### Restricciones
 
 - 2 ≤ nums.length ≤ 10⁵
 - −10⁹ ≤ nums[i], target ≤ 10⁹
-- Existe exactamente una respuesta válida.
+- Exactamente un par de líneas suma `target`.

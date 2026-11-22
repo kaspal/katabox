@@ -6,15 +6,15 @@ Checking before inserting is what prevents using the same element twice.
 
 ### Walkthrough
 
-`nums = [7, -3, 10, 5]`, `target = 2`:
+`nums = [-6, 14, 3, 20, -1]`, `target = 14` (Example 2):
 
 | i | nums[i] | need | map before | result |
 | --- | --- | --- | --- | --- |
-| 0 | 7 | −5 | {} | store 7 → 0 |
-| 1 | −3 | 5 | {7: 0} | store −3 → 1 |
-| 2 | 10 | −8 | {7: 0, −3: 1} | store 10 → 2 |
-| 3 | 5 | −3 | {7: 0, −3: 1, 10: 2} | −3 is there: return [1, 3] |
+| 0 | −6 | 20 | {} | store −6 → 0 |
+| 1 | 14 | 0 | {−6: 0} | store 14 → 1 |
+| 2 | 3 | 11 | {−6: 0, 14: 1} | store 3 → 2 |
+| 3 | 20 | −6 | {−6: 0, 14: 1, 3: 2} | −6 is there: return [0, 3] |
 
-With `nums = [9, 2, 9]` and `target = 18`, the partner of the first 9 is 9 itself, but the map is still empty at `i = 0`, so an element is never paired with itself; the second 9 finds the first one.
+The line holding 14 needs a 0, which never appears; it is not paired with itself because it looks for its partner before it is stored. With `nums = [9, 2, 9]` and `target = 18`, the first 9 finds an empty map; the second 9 finds the first one: `[0, 2]`.
 
 **Complexity:** O(n) time, O(n) extra space. Trying every pair is O(n²), which is too slow for 10⁵ numbers.

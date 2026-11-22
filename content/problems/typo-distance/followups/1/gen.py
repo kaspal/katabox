@@ -20,11 +20,11 @@ def generate(seed, size):
     if size == "example":
         n, k, letters = rng.randint(5, 8), 2, "abcde"
     elif size == "max":
-        n, k, letters = 20_000, 20, "abcdefghijklmnopqrstuvwxyz"
+        n, k, letters = 50_000, 20, "abcdefghijklmnopqrstuvwxyz"
     else:
         n, k, letters = rng.randint(1, 10), rng.randint(0, 4), rng.choice(["ab", "abc", "abcdefgh"])
     typed = "".join(rng.choice(letters) for _ in range(n))
-    meant = _mutate(rng, typed, rng.randint(0, 2 * k + 2), letters)[:20_000]
+    meant = _mutate(rng, typed, rng.randint(0, 2 * k + 2), letters)[:50_000]
     return {"typed": typed, "meant": meant, "k": k}
 
 
