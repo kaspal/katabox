@@ -215,6 +215,15 @@ and against the clock:
   and space complexity. Your note comes back at the top of the **Notes** tab, after a
   review passes and after you solve the problem in a kata.
 
+## Snippets, comparing submissions and search
+- **Snippets:** Settings → Editor → **Snippets** keeps your own code per language. In
+  the editor, type `/snip` and pick one; or press Ctrl+K and choose **Insert snippet: …**.
+- **Compare submissions:** in the **Submissions** tab, **Compare** and tick two: they
+  are shown side by side.
+- **Search everything** (Ctrl+Shift+P, or from the command palette) finds problems,
+  Learn topics, your snippets, settings and sections of this guide. **Help** (from the
+  palette) shows this guide inside the app.
+
 ## Debugger and visualizer
 - **Languages:** Python and JavaScript/TypeScript, for function and program problems.
   Not PHP, Rust or SQL yet.
@@ -319,6 +328,7 @@ command palette, or use the keyboard button in the top bar.
 | Where | Keys | Action |
 | --- | --- | --- |
 | Anywhere | Ctrl+K | Command palette |
+| Anywhere | Ctrl+Shift+P | Search everything |
 | Library | `/` | Search problems |
 | Library | ↑ / ↓, PageUp / PageDown, Home / End, Enter | Move through the list, open a problem |
 | Library → Lists | Alt+↑ / Alt+↓ | Move a list row |

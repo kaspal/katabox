@@ -38,6 +38,8 @@ import { useOnboardingDone } from "@/onboarding/state";
 import { copyText, diagnosticsText, recentErrors } from "@/lib/diagnostics";
 import { CHANGELOG_URL, DOCS_URL } from "@/lib/links";
 import { openShortcuts } from "@/app/shortcuts";
+import { SETTINGS_SEARCH_INDEX } from "@/lib/settingsIndex";
+import { SnippetsPanel } from "@/practice/snippets";
 import { queryKeys, useAppInfo, useCalibration } from "@/lib/queries";
 import { usePracticePrefs } from "@/lib/practice";
 import {
@@ -499,38 +501,6 @@ function ResetWindowRow() {
   );
 }
 
-/** What "Search settings" finds: each section's row labels (i18n keys). */
-const SEARCH_INDEX: [SettingsSection, string[]][] = [
-  [
-    "appearance",
-    ["theme.label", "language.label", "settings.contrast", "settings.motion", "settings.window.label", "settings.window.reset"],
-  ],
-  [
-    "editor",
-    ["settings.keymap", "settings.ligatures", "settings.fontSize", "settings.tabWidth", "settings.editorTheme", "settings.preview"],
-  ],
-  ["practice", ["practice.settings.daily", "practice.settings.review", "plan.setting", "kata.rusty.setting", "welcome.again.label"]],
-  ["languages", ["settings.sections.languages", "settings.calibration.title", "settings.calibration.recalibrate"]],
-  ["learn", ["practice.settings.learnReview", "settings.learnSpeed"]],
-  ["data", ["practice.data.export", "practice.data.import"]],
-  [
-    "about",
-    [
-      "settings.version",
-      "settings.contentPack",
-      "settings.licenses.label",
-      "settings.userSchema",
-      "settings.dataFolder",
-      "settings.sandboxRoot",
-      "settings.notices",
-      "settings.docs",
-      "settings.changelog",
-      "shortcuts.title",
-      "settings.diagnostics.label",
-    ],
-  ],
-];
-
 /** Finds a setting by its label (accents and punctuation ignored) and opens its section. */
 function SettingsSearch({ onPick }: { onPick: (section: SettingsSection) => void }) {
   const { t } = useTranslation();
@@ -539,7 +509,7 @@ function SettingsSearch({ onPick }: { onPick: (section: SettingsSection) => void
     const q = normalizeForSearch(query);
     if (q === "") return [];
     const label = t as unknown as (key: string) => string;
-    return SEARCH_INDEX.flatMap(([section, keys]) =>
+    return SETTINGS_SEARCH_INDEX.flatMap(([section, keys]) =>
       keys
         .map((k) => label(k))
         .filter((text) => normalizeForSearch(text).includes(q))
@@ -802,6 +772,9 @@ export function Settings() {
                   <EditorPreview />
                 </Suspense>
               </div>
+            </Section>
+            <Section title={t("snippets.title")}>
+              <SnippetsPanel />
             </Section>
           </TabsContent>
 

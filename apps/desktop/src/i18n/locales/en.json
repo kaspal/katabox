@@ -27,7 +27,8 @@
     "language": "Language",
     "topics": "Learn topics",
     "topic": "Learn: {{title}}",
-    "help": "Help"
+    "help": "Help",
+    "insertSnippet": "Insert snippet: {{name}}"
   },
   "theme": {
     "label": "Theme",
@@ -279,7 +280,11 @@
       "none": "No submissions yet.",
       "back": "All submissions",
       "code": "Code ({{language}})",
-      "codeLabel": "Submitted code"
+      "codeLabel": "Submitted code",
+      "compare": "Compare",
+      "pickTwo": "Pick two submissions to compare.",
+      "pick": "Compare submission {{n}}",
+      "diffLabel": "Left: {{a}}. Right: {{b}}."
     },
     "notes": {
       "mode": "Notes view",
@@ -862,7 +867,8 @@
         "study_plans": "Study plans",
         "plan_items": "Study plan items",
         "mistakes": "Mistake journal entries",
-        "reflections": "Reflections"
+        "reflections": "Reflections",
+        "snippets": "Snippets"
       }
     },
     "crossLang": {
@@ -2934,7 +2940,8 @@
     },
     "general": {
       "palette": "Command palette",
-      "shortcuts": "This list of shortcuts"
+      "shortcuts": "This list of shortcuts",
+      "searchAll": "Search everything"
     },
     "library": {
       "search": "Search problems",
@@ -3178,5 +3185,31 @@
     "yours": "Your note on why it works:",
     "timeIs": "time {{c}}",
     "spaceIs": "space {{c}}"
+  },
+  "search": {
+    "title": "Search everything",
+    "placeholder": "Search problems, Learn topics, snippets, settings and help…",
+    "searching": "Searching…",
+    "snippets": "Snippets",
+    "insert": "insert"
+  },
+  "help": {
+    "title": "Help",
+    "contents": "Help contents"
+  },
+  "snippets": {
+    "title": "Snippets",
+    "intro": "Your own code snippets, per language. In the editor, type /snip to pick one, or insert one from the command palette (Ctrl+K).",
+    "none": "No snippets yet.",
+    "add": "Add a snippet",
+    "edit": "Edit {{name}}",
+    "delete": "Delete {{name}}",
+    "name": "Name",
+    "language": "Language",
+    "tags": "Tags",
+    "tagsHint": "graphs, bfs",
+    "body": "Code",
+    "save": "Save snippet",
+    "cancel": "Cancel"
   }
 }

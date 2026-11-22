@@ -229,6 +229,16 @@ memoria y contra el reloj:
   complejidad en tiempo y espacio. Tu nota vuelve arriba en la pestaña **Notas**, cuando
   pasas un repaso y cuando resuelves el problema en una kata.
 
+## Fragmentos, comparar envíos y búsqueda
+- **Fragmentos:** Ajustes → Editor → **Fragmentos de código** guarda tu propio código por
+  lenguaje. En el editor, escribe `/snip` y elige uno; o pulsa Ctrl+K y elige **Insertar
+  fragmento: …**.
+- **Comparar envíos:** en la pestaña **Envíos**, **Comparar** y marca dos: se muestran
+  uno al lado del otro.
+- **Buscar en todo** (Ctrl+Shift+P, o desde la paleta de comandos) encuentra problemas,
+  temas de Aprender, tus fragmentos, ajustes y secciones de esta guía. **Ayuda** (desde la
+  paleta) muestra esta guía dentro de la aplicación.
+
 ## Depurador y visualizador
 - **Lenguajes:** Python y JavaScript/TypeScript, en problemas de función y de programa.
   Aún no PHP, Rust ni SQL.
@@ -345,6 +355,7 @@ paleta de comandos o usa el botón del teclado en la barra superior.
 | Dónde | Teclas | Acción |
 | --- | --- | --- |
 | En cualquier sitio | Ctrl+K | Paleta de comandos |
+| En cualquier sitio | Ctrl+Shift+P | Buscar en todo |
 | Biblioteca | `/` | Buscar problemas |
 | Biblioteca | ↑ / ↓, RePág / AvPág, Inicio / Fin, Intro | Recorrer la lista, abrir un problema |
 | Biblioteca → Listas | Alt+↑ / Alt+↓ | Mover una fila de la lista |

@@ -31,6 +31,9 @@ import {
   type KataOverview,
   type KataStart,
   type KataView,
+  type SearchResults,
+  type SnippetInput,
+  type SnippetRow,
   type JournalOverview,
   type MistakeView,
   type ReflectionRow,
@@ -207,6 +210,12 @@ export const api = {
   startInterview: (setup: InterviewSetup, lang: UiLang): Promise<InterviewView> =>
     call(commands.startInterview(setup, lang)),
   interviewActive: (lang: UiLang): Promise<InterviewView | null> => call(commands.interviewActive(lang)),
+
+  // Snippets and search (expansion M4, ADR 0034)
+  snippets: (): Promise<SnippetRow[]> => call(commands.snippets()),
+  saveSnippet: (snippet: SnippetInput): Promise<SnippetRow> => call(commands.saveSnippet(snippet)),
+  deleteSnippet: (uid: string): Promise<null> => call(commands.deleteSnippet(uid)),
+  searchAll: (query: string, lang: UiLang): Promise<SearchResults> => call(commands.searchAll(query, lang)),
 
   // Mistake journal and reflections (expansion M3, ADR 0034)
   journalOverview: (lang: UiLang): Promise<JournalOverview> => call(commands.journalOverview(lang)),

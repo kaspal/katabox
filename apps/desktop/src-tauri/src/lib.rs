@@ -7,6 +7,7 @@ mod window_state;
 
 use std::path::{Path, PathBuf};
 
+use kb_app::comforts::{SearchResults, SnippetInput};
 use kb_app::debug::{DebugAction, DebugInspect, DebugStart, DebugView};
 use kb_app::interview::{InterviewResult, InterviewSetup, InterviewView};
 use kb_app::journal::{JournalOverview, MistakeView};
@@ -28,6 +29,7 @@ use kb_core::debug::EvalResult;
 use kb_core::{JudgeEvent, Language, Report};
 use kb_store::journal::ReflectionRow;
 use kb_store::kata::KataAttemptRow;
+use kb_store::snippets::SnippetRow;
 use kb_store::{AcceptedSolution, ActivityRow, LearnPath, LearnSubject, LearnTopicSummary};
 use kb_store::{
     Draft, ProblemFilter, ProblemSummary, ProblemView, Snapshot, SubmissionSummary, UiLang,
@@ -570,6 +572,33 @@ async fn interviews(state: State<'_, AppState>, lang: UiLang) -> Res<Vec<Intervi
     state.app()?.interviews(lang).await
 }
 
+// --- Snippets and search (expansion M4, ADR 0034) ------------------------------------
+
+#[tauri::command]
+#[specta::specta]
+async fn snippets(state: State<'_, AppState>) -> Res<Vec<SnippetRow>> {
+    state.app()?.snippets().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn save_snippet(state: State<'_, AppState>, snippet: SnippetInput) -> Res<SnippetRow> {
+    state.app()?.save_snippet(&snippet).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn delete_snippet(state: State<'_, AppState>, uid: String) -> Res<()> {
+    state.app()?.delete_snippet(&uid).await
+}
+
+/// "Search everything": problems, Learn topics and snippets.
+#[tauri::command]
+#[specta::specta]
+async fn search_all(state: State<'_, AppState>, query: String, lang: UiLang) -> Res<SearchResults> {
+    state.app()?.search_all(&query, lang).await
+}
+
 // --- Mistake journal and reflections (expansion M3, ADR 0034) ------------------------
 
 /// Progress → Mistakes: counts per tag with the latest examples.
@@ -1075,6 +1104,10 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         interview_active,
         end_interview,
         interviews,
+        snippets,
+        save_snippet,
+        delete_snippet,
+        search_all,
         journal_overview,
         submission_mistake,
         set_submission_mistake,

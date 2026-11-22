@@ -25,6 +25,7 @@ export const SHORTCUTS: readonly ShortcutGroup[] = [
     id: "general",
     rows: [
       { id: "palette", combos: [["Ctrl", "K"]] },
+      { id: "searchAll", combos: [["Ctrl", "Shift", "P"]] },
       { id: "shortcuts", combos: [["F1"]] },
     ],
   },

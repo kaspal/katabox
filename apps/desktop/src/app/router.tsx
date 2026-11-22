@@ -110,6 +110,16 @@ const interviewRoute = createRoute({
   path: "/interview",
   component: Interview,
 });
+/** `?section=` opens the user guide at a section (expansion M4). */
+export type HelpSearch = { section?: string };
+const helpRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/help",
+  validateSearch: (s: Record<string, unknown>): HelpSearch => ({
+    section: typeof s.section === "string" && /^[a-z0-9-]{1,80}$/.test(s.section) ? s.section : undefined,
+  }),
+  component: lazyRouteComponent(() => import("@/pages/Help"), "Help"),
+});
 const kataRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/kata",
@@ -157,6 +167,7 @@ const routeTree = rootRoute.addChildren([
   learnRoute,
   learnTopicRoute,
   kataRoute,
+  helpRoute,
   interviewRoute,
   progressRoute,
   settingsRoute,

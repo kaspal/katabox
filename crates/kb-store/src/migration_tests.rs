@@ -98,6 +98,9 @@ fn seeds(version: i64) -> Vec<String> {
                 .into(),
             "INSERT INTO reflections VALUES ('two-sum', 'one pass with a map of seen values', 'O(n)', 'O(n)', 1700000061000)".into(),
         ],
+        8 => vec![
+            "INSERT INTO snippets VALUES ('0123456789abcdef', 'python', 'BFS', '[\"graphs\"]', 'from collections import deque', 1700000070000, 1700000070000)".into(),
+        ],
         _ => vec![],
     }
 }

@@ -13,6 +13,7 @@ use sqlx::{Row, SqliteConnection};
 use crate::journal::{MistakeRow, ReflectionRow};
 use crate::kata::{KATA_MAX_MS, KataAttemptRow, KataSessionRow};
 use crate::plans::{PlanItemRow, PlanRow};
+use crate::snippets::SnippetRow;
 use crate::user::{code_hash, parse_language, parse_status, parse_verdict, verdict_code};
 use crate::{ProblemStatus, Result, SnapshotSource, UserDb};
 
@@ -169,6 +170,9 @@ pub struct ExportData {
     /// Reflections after Accepted (expansion M3).
     #[serde(default)]
     pub reflections: Vec<ReflectionRow>,
+    /// The snippet library (expansion M4).
+    #[serde(default)]
+    pub snippets: Vec<SnippetRow>,
 }
 
 impl ExportData {
@@ -180,6 +184,7 @@ impl ExportData {
             && self.plan_items.is_empty()
             && self.mistakes.is_empty()
             && self.reflections.is_empty()
+            && self.snippets.is_empty()
     }
 }
 
@@ -338,6 +343,7 @@ impl UserDb {
         d.plan_items = self.all_plan_items().await?;
         d.mistakes = self.mistakes().await?;
         d.reflections = self.reflections().await?;
+        d.snippets = self.snippets().await?;
         for r in sqlx::query("SELECT * FROM settings ORDER BY key")
             .fetch_all(p)
             .await?
@@ -871,6 +877,28 @@ impl UserDb {
             .await?
             .rows_affected();
             stats.entry("reflections").or_default().count(n, existed);
+        }
+
+        for s in &d.snippets {
+            let existed = row_exists(c, "SELECT 1 FROM snippets WHERE uid = ?", &[&s.uid]).await?;
+            let n = sqlx::query(
+                "INSERT INTO snippets (uid, language, name, tags, body, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)
+                 ON CONFLICT (uid) DO UPDATE SET language = excluded.language, name = excluded.name,
+                   tags = excluded.tags, body = excluded.body, updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > snippets.updated_at",
+            )
+            .bind(&s.uid)
+            .bind(&s.language)
+            .bind(&s.name)
+            .bind(serde_json::to_string(&s.tags)?)
+            .bind(&s.body)
+            .bind(s.created_at)
+            .bind(s.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("snippets").or_default().count(n, existed);
         }
 
         for r in &d.settings {

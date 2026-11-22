@@ -42,6 +42,9 @@ import { useInterviewActive, useSolvedLanguages } from "@/lib/modes";
 import { InterviewTimer } from "@/practice/interview";
 import { KataBar } from "@/practice/kata";
 import { ReflectionCard, SavedReflection } from "@/practice/journal";
+import { useSnippets } from "@/practice/snippets";
+import { setActiveEditor } from "@/lib/editorBridge";
+import { snippetCompletion } from "@/workspace/editor/snippets";
 import { useKataState } from "@/lib/kata";
 import { CompareView, SolveInMenu } from "@/practice/crossLanguage";
 import { useAppInfo, useProblem } from "@/lib/queries";
@@ -150,6 +153,19 @@ export function WorkspacePage() {
   // PHP has no language server on Windows: offer keywords and common functions instead.
   const basicCompletion = docLang === "php" && server.status.state === "unavailable";
   const editorView = useRef<EditorView | null>(null);
+  // Your snippets for this language: `/snip` in the editor (expansion M4).
+  const snippets = useSnippets();
+  const snippetExt = useMemo(
+    () => snippetCompletion((snippets.data ?? []).filter((s) => s.language === docLang)),
+    [snippets.data, docLang],
+  );
+  const baseLsp = sqlProblem ? sqlCompletion : basicCompletion ? phpBasicCompletion : server.extension;
+  const editorExtras = useMemo(() => [baseLsp ?? [], snippetExt], [baseLsp, snippetExt]);
+  // The palette inserts snippets into this editor while it is open.
+  useEffect(() => {
+    if (editorView.current && docLang) setActiveEditor({ view: editorView.current, language: docLang });
+    return () => setActiveEditor(null);
+  }, [docLang]);
   const judge = useJudge(problemId);
   // Review mode stays on until a review-mode Submit passes; then the old code may be seen.
   const reviewOutcome = judge.practice?.review?.outcome;
@@ -658,9 +674,7 @@ export function WorkspacePage() {
                       ligatures={ligatures}
                       tabWidth={tabWidth}
                       colorTheme={editorTheme}
-                      lspExtension={
-                        sqlProblem ? sqlCompletion : basicCompletion ? phpBasicCompletion : server.extension
-                      }
+                      lspExtension={editorExtras}
                       debugExtension={debugEditor}
                       readOnly={dbg.active}
                       ariaLabel={t("workspace.editorLabel", { language: t(`languages.${session.doc.lang}`) })}
@@ -671,7 +685,10 @@ export function WorkspacePage() {
                       onRun={() => void run()}
                       onSubmit={() => void submit()}
                       onStatus={setEditorStatus}
-                      onView={(v) => (editorView.current = v)}
+                      onView={(v) => {
+                        editorView.current = v;
+                        setActiveEditor(v && docLang ? { view: v, language: docLang } : null);
+                      }}
                     />
                     </div>
                   </div>

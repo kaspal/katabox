@@ -55,6 +55,33 @@ Date: 2026-11-21 · Status: proposed (expansion M3-M4)
 
 **Export:** v2 sections `mistakes` and `reflections`; the newer `updated_at` wins.
 
+## Decision: tool comforts (M4)
+**Snippets** (user.db migration 0008):
+- **Data:** `snippets`, keyed by a random 16-hex id so the same snippet merges across
+  machines.
+- **Fields:** a judge language, a name (at most 80 characters), tags (at most 10; letters,
+  digits, `-` and `_`) and a body (at most 64 KB).
+- **Inserting:**
+  - with `/snip` in the editor: a CodeMirror completion source, added beside the
+    language server's;
+  - from the command palette ("Insert snippet: …", for the open editor's language),
+    through a small editor bridge the workspace registers while it is open.
+- **Export:** a v2 section; the newer `updated_at` wins.
+
+**Submission diff:**
+- The History tab's merge view moves to `workspace/problem/DiffView.tsx`.
+- The Submissions tab gets **Compare**: pick two, and they are shown side by side, the
+  older on the left.
+
+**Search everything** (Ctrl+Shift+P, or from the palette):
+- **In kb-app** (`search_all`): problems (the existing FTS), Learn topics (FTS) and
+  snippets (a LIKE with escaped wildcards), at most 10 of each.
+- **In the UI:** the settings (the search index moves to `lib/settingsIndex.ts`) and the
+  user guide.
+- **Help:** the guide (EN/ES) is bundled with Vite `?raw`, loaded on demand, and shown on
+  a new **Help** route by section (`/help?section=<slug>`).
+- Nothing is fetched.
+
 ## Consequences
 - The journal only reads what the judge already stored. No new data leaves the machine.
 - A failure's tags are a guess; the user can always change them.

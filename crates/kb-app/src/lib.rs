@@ -12,6 +12,7 @@
 //!   Report.
 
 mod calibration;
+pub mod comforts;
 pub mod debug;
 pub mod diagnostics;
 mod error;

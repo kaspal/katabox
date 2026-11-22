@@ -192,7 +192,7 @@ describe("Settings → Data", () => {
     const fake = setFakeApi();
     fake.state.exportResult = {
       statuses: 3, submissions: 10, snapshots: 4, notes: 1, drafts: 2, hint_unlocks: 0, opens: 5,
-      reviews: 1, daily_picks: 2, lists: 1, interviews: 1, settings: 3, kata_sessions: 0, kata_attempts: 0, study_plans: 0, plan_items: 0, mistakes: 0, reflections: 0,
+      reviews: 1, daily_picks: 2, lists: 1, interviews: 1, settings: 3, kata_sessions: 0, kata_attempts: 0, study_plans: 0, plan_items: 0, mistakes: 0, reflections: 0, snippets: 0,
     };
     const { user } = renderApp("/settings?section=data");
     await user.click(await screen.findByRole("button", { name: "Export…" }));
@@ -223,7 +223,7 @@ describe("Settings → Data", () => {
     fake.state.importPreview = {
       id: 3,
       counts: { statuses: 1, submissions: 0, snapshots: 0, notes: 0, drafts: 0, hint_unlocks: 0, opens: 0,
-        reviews: 0, daily_picks: 0, lists: 0, interviews: 0, settings: 0, kata_sessions: 0, kata_attempts: 0, study_plans: 0, plan_items: 0, mistakes: 0, reflections: 0 },
+        reviews: 0, daily_picks: 0, lists: 0, interviews: 0, settings: 0, kata_sessions: 0, kata_attempts: 0, study_plans: 0, plan_items: 0, mistakes: 0, reflections: 0, snippets: 0 },
       conflicts: 1,
       exported_at: 1_767_225_600_000,
       app_version: "0.1.0",

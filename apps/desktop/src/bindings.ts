@@ -609,6 +609,41 @@ async interviews(lang: UiLang) : Promise<Result<InterviewResult[], AppError>> {
     else return { status: "error", error: e  as any };
 }
 },
+async snippets() : Promise<Result<SnippetRow[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("snippets") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async saveSnippet(snippet: SnippetInput) : Promise<Result<SnippetRow, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_snippet", { snippet }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteSnippet(uid: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_snippet", { uid }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * "Search everything": problems, Learn topics and snippets.
+ */
+async searchAll(query: string, lang: UiLang) : Promise<Result<SearchResults, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_all", { query, lang }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 /**
  * Progress → Mistakes: counts per tag with the latest examples.
  */
@@ -2348,6 +2383,7 @@ rusty: number;
  * Days since the last success (`None`: never practised since solving).
  */
 days: number | null }
+export type SearchResults = { problems: ProblemSummary[]; topics: LearnTopicSummary[]; snippets: SnippetRow[] }
 /**
  * Progress, after each round.
  */
@@ -2398,6 +2434,22 @@ export type SnapshotSource = "run" | "submit" |
  * The draft that was replaced by restoring another snapshot.
  */
 "restore"
+/**
+ * A snippet to save: a new one (`uid` none) or an edit.
+ */
+export type SnippetInput = { uid: string | null; language: Language; name: string; tags: string[]; body: string }
+/**
+ * One snippet (also an export row).
+ */
+export type SnippetRow = { 
+/**
+ * 16 hex characters, random.
+ */
+uid: string; 
+/**
+ * The language id (`python`, `typescript`, …).
+ */
+language: string; name: string; tags: string[]; body: string; created_at: number; updated_at: number }
 /**
  * Progress → solved by difficulty and by topic (tag).
  */
@@ -2519,7 +2571,7 @@ export type TopicReview = { topic: LearnTopicSummary; problem: ProblemSummary }
 /**
  * How many records of each kind a file holds.
  */
-export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number; mistakes: number; reflections: number }
+export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number; mistakes: number; reflections: number; snippets: number }
 /**
  * Why a trace stopped before the program ended.
  */

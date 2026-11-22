@@ -24,6 +24,7 @@ mod migration_tests;
 pub mod modes;
 pub mod plans;
 pub mod practice;
+pub mod snippets;
 pub mod transfer;
 pub mod user;
 

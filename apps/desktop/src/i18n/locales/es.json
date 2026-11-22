@@ -27,7 +27,8 @@
     "language": "Idioma",
     "topics": "Temas de Aprender",
     "topic": "Aprender: {{title}}",
-    "help": "Ayuda"
+    "help": "Ayuda",
+    "insertSnippet": "Insertar fragmento: {{name}}"
   },
   "theme": {
     "label": "Tema",
@@ -279,7 +280,11 @@
       "none": "Aún no hay envíos.",
       "back": "Todos los envíos",
       "code": "Código ({{language}})",
-      "codeLabel": "Código enviado"
+      "codeLabel": "Código enviado",
+      "compare": "Comparar",
+      "pickTwo": "Elige dos envíos para compararlos.",
+      "pick": "Comparar el envío {{n}}",
+      "diffLabel": "Izquierda: {{a}}. Derecha: {{b}}."
     },
     "notes": {
       "mode": "Vista de notas",
@@ -862,7 +867,8 @@
         "study_plans": "Planes de estudio",
         "plan_items": "Tareas de planes de estudio",
         "mistakes": "Entradas del diario de errores",
-        "reflections": "Reflexiones"
+        "reflections": "Reflexiones",
+        "snippets": "Fragmentos"
       }
     },
     "crossLang": {
@@ -2934,7 +2940,8 @@
     },
     "general": {
       "palette": "Paleta de comandos",
-      "shortcuts": "Esta lista de combinaciones"
+      "shortcuts": "Esta lista de combinaciones",
+      "searchAll": "Buscar en todo"
     },
     "library": {
       "search": "Buscar problemas",
@@ -3178,5 +3185,31 @@
     "yours": "Tu nota de por qué funciona:",
     "timeIs": "tiempo {{c}}",
     "spaceIs": "espacio {{c}}"
+  },
+  "search": {
+    "title": "Buscar en todo",
+    "placeholder": "Busca problemas, temas de Aprender, fragmentos, ajustes y ayuda…",
+    "searching": "Buscando…",
+    "snippets": "Fragmentos",
+    "insert": "insertar"
+  },
+  "help": {
+    "title": "Ayuda",
+    "contents": "Índice de la ayuda"
+  },
+  "snippets": {
+    "title": "Fragmentos de código",
+    "intro": "Tus propios fragmentos de código, por lenguaje. En el editor, escribe /snip para elegir uno, o insértalo desde la paleta de comandos (Ctrl+K).",
+    "none": "Aún no hay fragmentos.",
+    "add": "Añadir un fragmento",
+    "edit": "Editar {{name}}",
+    "delete": "Eliminar {{name}}",
+    "name": "Nombre",
+    "language": "Lenguaje",
+    "tags": "Etiquetas",
+    "tagsHint": "grafos, bfs",
+    "body": "Código",
+    "save": "Guardar fragmento",
+    "cancel": "Cancelar"
   }
 }

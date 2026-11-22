@@ -39,6 +39,12 @@ All notable changes to KataBox are recorded in this file. The format follows
 - **Reflections:** after Accepted, an optional "why it works" and a complexity pick,
   shown again in Notes, review mode and katas.
 
+- **Snippets:** your own code per language, inserted with `/snip` in the editor or from
+  the command palette (Settings → Editor → Snippets).
+- **Compare submissions** side by side in the Submissions tab.
+- **Search everything** (Ctrl+Shift+P): problems, Learn topics, snippets, settings and
+  the user guide, which is now also inside the app (**Help**).
+
 ### Changed
 - Exports are now format `katabox-export/v2`, which carries the new kinds of records
   added below. Files exported by 1.0.0-beta.1 (`v1`) still import.

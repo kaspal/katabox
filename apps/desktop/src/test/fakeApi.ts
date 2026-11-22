@@ -29,6 +29,8 @@ import type {
   KataView,
   PlanSetup,
   JournalOverview,
+  SnippetInput,
+  SnippetRow,
   MistakeView,
   ReflectionRow,
   PlanView,
@@ -365,6 +367,7 @@ export function createFakeApi(
     plan: null as PlanView | null,
     planSetups: [] as PlanSetup[],
     journal: { failures: 0, tags: [] } as JournalOverview,
+    snippets: [] as SnippetRow[],
     mistakes: new Map<number, MistakeView>(),
     reflections: new Map<string, ReflectionRow>(),
     ratings: {
@@ -817,6 +820,30 @@ export function createFakeApi(
     }),
     kataOverview: vi.fn(async () => ({ bests: [], rusty: [], streak: 0, sessions: [] })),
     ratings: vi.fn(async () => state.ratings),
+    snippets: vi.fn(async () => [...state.snippets]),
+    saveSnippet: vi.fn(async (s: SnippetInput) => {
+      const uid = s.uid ?? String(state.snippets.length + 1).padStart(16, "0");
+      const row: SnippetRow = {
+        uid,
+        language: s.language,
+        name: s.name.trim(),
+        tags: s.tags,
+        body: s.body,
+        created_at: 1,
+        updated_at: 2,
+      };
+      state.snippets = [...state.snippets.filter((x) => x.uid !== uid), row];
+      return row;
+    }),
+    deleteSnippet: vi.fn(async (uid: string) => {
+      state.snippets = state.snippets.filter((x) => x.uid !== uid);
+      return null;
+    }),
+    searchAll: vi.fn(async (q: string, lang: UiLang) => ({
+      problems: PROBLEMS.filter((p) => p.title[lang].toLowerCase().includes(q.toLowerCase())).map((p) => summary(p.id, lang)!),
+      topics: [],
+      snippets: state.snippets.filter((s) => s.name.toLowerCase().includes(q.toLowerCase())),
+    })),
     journalOverview: vi.fn(async () => state.journal),
     submissionMistake: vi.fn(async (id: number) => {
       const s = submissions.find((x) => x.id === id);

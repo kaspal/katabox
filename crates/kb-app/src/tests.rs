@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 7); // migrations 0001-0007
+    assert_eq!(info.user_schema_version, 8); // migrations 0001-0008
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -1945,6 +1945,76 @@ async fn mistake_journal_and_reflections() {
             .as_deref(),
         Some("O(n)")
     );
+    a.close().await;
+    b.close().await;
+}
+
+/// Snippets and "Search everything" (expansion M4): save, edit, delete, search across
+/// problems, topics and snippets, and export the library.
+#[tokio::test]
+async fn snippets_and_search_everything() {
+    use crate::comforts::SnippetInput;
+    let a = app("snip-a").await;
+    let s = a
+        .save_snippet(&SnippetInput {
+            uid: None,
+            language: Language::Python,
+            name: "Binary search".into(),
+            tags: vec!["Search".into()],
+            body: "lo, hi = 0, len(a) - 1".into(),
+        })
+        .await
+        .unwrap();
+    assert_eq!(s.uid.len(), 16);
+    assert_eq!(s.tags, ["search"]);
+    let edited = a
+        .save_snippet(&SnippetInput {
+            uid: Some(s.uid.clone()),
+            language: Language::Python,
+            name: "Binary search (lower bound)".into(),
+            tags: vec![],
+            body: "lo, hi = 0, len(a)".into(),
+        })
+        .await
+        .unwrap();
+    assert_eq!(
+        (edited.uid.as_str(), edited.created_at),
+        (s.uid.as_str(), s.created_at)
+    );
+    assert!(
+        a.save_snippet(&SnippetInput {
+            uid: None,
+            language: Language::Sql,
+            name: "x".into(),
+            tags: vec![],
+            body: "SELECT 1".into(),
+        })
+        .await
+        .is_err()
+    );
+    assert_eq!(a.snippets().await.unwrap().len(), 1);
+
+    let r = a.search_all("two sum", UiLang::En).await.unwrap();
+    assert!(r.problems.iter().any(|p| p.id == "two-sum"));
+    let r = a.search_all("lower bound", UiLang::En).await.unwrap();
+    assert_eq!(r.snippets.len(), 1);
+    assert!(
+        a.search_all("  ", UiLang::En)
+            .await
+            .unwrap()
+            .problems
+            .is_empty()
+    );
+
+    let dir = crate::testutil::temp_dir("snip-export");
+    let file = dir.join("s.kbx.json");
+    assert_eq!(a.export_to(&file).await.unwrap().snippets, 1);
+    let b = app("snip-b").await;
+    let p = b.import_preview_from(&file).await.unwrap();
+    b.import_apply(p.id).await.unwrap();
+    assert_eq!(b.snippets().await.unwrap(), a.snippets().await.unwrap());
+    a.delete_snippet(&s.uid).await.unwrap();
+    assert!(a.snippets().await.unwrap().is_empty());
     a.close().await;
     b.close().await;
 }

@@ -84,6 +84,7 @@ pub struct TransferCounts {
     pub plan_items: u32,
     pub mistakes: u32,
     pub reflections: u32,
+    pub snippets: u32,
 }
 
 fn counts(d: &ExportData) -> TransferCounts {
@@ -107,6 +108,7 @@ fn counts(d: &ExportData) -> TransferCounts {
         plan_items: n(d.plan_items.len()),
         mistakes: n(d.mistakes.len()),
         reflections: n(d.reflections.len()),
+        snippets: n(d.snippets.len()),
     }
 }
 
@@ -204,6 +206,7 @@ fn validate(f: &ExportFile) -> Result<()> {
         d.plan_items.len(),
         d.mistakes.len(),
         d.reflections.len(),
+        d.snippets.len(),
     ];
     if sizes.iter().any(|n| *n > MAX_ROWS) {
         return Err(invalid(format!("more than {MAX_ROWS} records of one kind")));
@@ -409,6 +412,21 @@ fn validate(f: &ExportFile) -> Result<()> {
         check_time(&p, r.updated_at)?;
         if !crate::journal::valid_reflection(r) {
             return Err(invalid(format!("{p}: bad reflection")));
+        }
+    }
+    for (i, s) in d.snippets.iter().enumerate() {
+        let p = format!("snippets[{i}]");
+        check_time(&p, s.created_at)?;
+        check_time(&p, s.updated_at)?;
+        let lang_ok = s
+            .language
+            .parse::<kb_core::Language>()
+            .is_ok_and(|l| kb_judge::languages::SUPPORTED.contains(&l));
+        if !crate::comforts::valid_uid(&s.uid)
+            || !lang_ok
+            || crate::comforts::check_snippet(&s.name, &s.tags, &s.body).is_err()
+        {
+            return Err(invalid(format!("{p}: bad snippet")));
         }
     }
     Ok(())
