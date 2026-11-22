@@ -19,6 +19,11 @@ All notable changes to KataBox are recorded in this file. The format follows
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
 
+- **Problem packs:** import `.kbpack` problem sets (Settings → Packs) after a preview that
+  shows what the pack is; every file is checked (names, types, sizes, hashes, metadata,
+  text) and pack code only runs in the sandbox. Packs are marked everywhere, stay out of
+  daily and next problem unless you opt in, update only to newer versions, and uninstall
+  cleanly. `kb-pack pack` makes them.
 - **Focus sessions:** work and break periods on the wall clock, a top-bar chip with Stop,
   a notice when the phase changes, and what each session achieved on Progress.
 - **Automatic backups:** an export to a folder you choose, every few days and optionally

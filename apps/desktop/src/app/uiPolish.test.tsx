@@ -161,6 +161,7 @@ describe("Settings sections", () => {
       "Languages and runtimes",
       "Learn",
       "Data",
+      "Packs",
       "About",
     ]);
     expect(screen.getByRole("heading", { name: "Appearance" })).toBeInTheDocument();
@@ -173,7 +174,7 @@ describe("Settings sections", () => {
     expect(history.location.search).toContain("section=editor");
     expect(fake().api.setSetting).toHaveBeenCalledWith("settings.section", "editor");
 
-    await user.click(tabs[6]);
+    await user.click(tabs[7]);
     expect(await screen.findByRole("heading", { name: "About" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Editor" })).toBeNull();
   });

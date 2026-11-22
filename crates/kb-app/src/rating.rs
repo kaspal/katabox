@@ -441,6 +441,7 @@ mod event_tests {
             tags: vec![],
             status: None,
             fix: false,
+            pack: None,
         }
     }
 

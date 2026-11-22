@@ -101,6 +101,9 @@ fn seeds(version: i64) -> Vec<String> {
         8 => vec![
             "INSERT INTO snippets VALUES ('0123456789abcdef', 'python', 'BFS', '[\"graphs\"]', 'from collections import deque', 1700000070000, 1700000070000)".into(),
         ],
+        12 => vec![
+            "INSERT INTO packs VALUES ('drills', 'Graph drills', 'Ana', '1.0.0', 'CC-BY-SA-4.0', 'ab12', 3, 1700000110000, NULL)".into(),
+        ],
         11 => vec![
             "INSERT INTO focus_sessions VALUES (1700000100000, 1700001600000, 25, 5, 1, '{\"touched\":2,\"solved\":1,\"katas\":0,\"plan_items\":0}')".into(),
         ],

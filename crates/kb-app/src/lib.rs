@@ -22,6 +22,7 @@ pub mod interview;
 pub mod journal;
 pub mod kata;
 pub mod learn_links;
+pub mod packs;
 pub mod plan;
 pub mod plan_app;
 pub mod practice;
@@ -277,6 +278,9 @@ pub struct App {
     /// Stop requested for the running shrink (ADR 0030).
     shrink_cancel: std::sync::atomic::AtomicBool,
     stress_cancel: std::sync::atomic::AtomicBool,
+    /// The app's local data folder (packs live under it; expansion M11).
+    local_dir: PathBuf,
+    pending_pack: std::sync::Mutex<Option<packs::PendingPack>>,
     /// The skill ratings replayed from the history (expansion M2); dropped on every
     /// Submit, kata Submit and import.
     ratings: std::sync::Mutex<Option<Arc<rating::Ratings>>>,
@@ -293,7 +297,9 @@ pub struct LanguageCount {
 impl App {
     /// Open both stores and pick the sandbox root (see [`root`] for the order).
     pub async fn open(paths: &AppPaths) -> Result<App> {
-        let store = Store::open(&paths.content_db, &paths.user_db).await?;
+        let mut store = Store::open(&paths.content_db, &paths.user_db).await?;
+        // Installed packs (expansion M11) are merged into the content the app reads.
+        packs::open_content(&mut store, &paths.content_db, &paths.local_data_dir).await?;
         let setting = store
             .user
             .get_setting(SANDBOX_ROOT_SETTING)
@@ -335,6 +341,8 @@ impl App {
             judging: tokio::sync::Mutex::new(()),
             shrink_cancel: std::sync::atomic::AtomicBool::new(false),
             stress_cancel: std::sync::atomic::AtomicBool::new(false),
+            local_dir: paths.local_data_dir.clone(),
+            pending_pack: std::sync::Mutex::new(None),
             calibration: RwLock::new(calibration),
             clock: std::sync::Mutex::new(None),
             pending_import: std::sync::Mutex::new(None),

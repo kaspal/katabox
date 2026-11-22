@@ -52,6 +52,8 @@ import type {
   StressEvent,
   StressResult,
   BackupStatus,
+  PackPreview,
+  PackRow,
   FocusCurrent,
   FocusSessionRow,
 } from "@/bindings";
@@ -84,6 +86,7 @@ export const PROBLEMS: Row[] = [
     tags: ["array", "hash-map"],
     status: "solved",
     fix: false,
+    pack: null,
   },
   {
     id: "valid-brackets",
@@ -95,6 +98,7 @@ export const PROBLEMS: Row[] = [
     tags: ["stack", "string"],
     status: null,
     fix: false,
+    pack: null,
   },
   {
     id: "longest-window",
@@ -106,6 +110,7 @@ export const PROBLEMS: Row[] = [
     tags: ["string"],
     status: "attempted",
     fix: false,
+    pack: null,
   },
   {
     id: "merge-meetings",
@@ -117,6 +122,7 @@ export const PROBLEMS: Row[] = [
     tags: ["array", "sorting"],
     status: null,
     fix: false,
+    pack: null,
   },
 ];
 
@@ -131,6 +137,7 @@ export const PROGRAM_ROW: Row = {
   tags: ["input-parsing"],
   status: null,
   fix: false,
+  pack: null,
 };
 
 /** An SQL problem (ADR 0031), listed only with `createFakeApi({ withSql: true })`. */
@@ -144,6 +151,7 @@ export const SQL_ROW: Row = {
   tags: ["join", "dates"],
   status: null,
   fix: false,
+  pack: null,
 };
 
 export const SQL_TABLES = [
@@ -391,6 +399,8 @@ export function createFakeApi(
     stressBrutes: new Map<string, string>(),
     focus: null as FocusCurrent | null,
     focusSessions: [] as FocusSessionRow[],
+    packs: [] as PackRow[],
+    packPreview: null as PackPreview | null,
     backup: {
       folder: null,
       every_days: 7,
@@ -654,6 +664,7 @@ export function createFakeApi(
         followups: [],
         fix: false,
         fix_languages: [],
+        pack: null,
         ...(state.problemExtras[id] ?? {}),
       };
     }),
@@ -957,6 +968,30 @@ export function createFakeApi(
       },
     ),
     cancelStress: vi.fn(async () => null),
+    importPackPreview: vi.fn(async () => state.packPreview),
+    importPackApply: vi.fn(async (_token: number): Promise<PackRow> => {
+      const p = state.packPreview!;
+      const row: PackRow = {
+        id: p.id,
+        name: p.name,
+        author: p.author,
+        version: p.version,
+        licence: p.licence,
+        sha256: p.sha256,
+        problems: p.problems,
+        installed_at: 1795334709000,
+        removed_at: null,
+      };
+      state.packs = [...state.packs.filter((x) => x.id !== row.id), row];
+      return row;
+    }),
+    importPackCancel: vi.fn(async () => null),
+    packs: vi.fn(async () => [...state.packs]),
+    uninstallPack: vi.fn(async (id: string) => {
+      state.packs = state.packs.filter((p) => p.id !== id);
+      return null;
+    }),
+    restartApp: vi.fn(async () => undefined),
     focusCurrent: vi.fn(async () => state.focus),
     focusStart: vi.fn(async (work: number, brk: number) => {
       state.focus = { started_at: Date.now(), work_min: work, break_min: brk };

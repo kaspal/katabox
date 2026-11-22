@@ -21,7 +21,7 @@ async fn opens_with_an_app_data_root() {
 
     let info = app.app_info().await.unwrap();
     assert_eq!(info.content.pack_id, "test");
-    assert_eq!(info.user_schema_version, 11); // migrations 0001-0011
+    assert_eq!(info.user_schema_version, 12); // migrations 0001-0012
     assert_eq!(info.sandbox_root_source, RootSource::AppData);
     assert!(!info.dev_data);
     assert_eq!(
@@ -2174,4 +2174,138 @@ async fn focus_sessions_survive_and_summarise() {
     assert_eq!(a.focus_current().await.unwrap(), None);
     assert_eq!(a.focus_stop().await.unwrap(), None);
     assert_eq!(a.focus_sessions().await.unwrap(), vec![row]);
+}
+
+/// Packs (expansion M11, ADR 0038, review A3): preview, install, the merged content after a
+/// restart, practice leaves pack problems out by default, the update rule, uninstall
+/// keeps history.
+#[tokio::test]
+async fn packs_install_update_and_uninstall() {
+    use crate::packs::PackAction;
+    let p = crate::testutil::paths("packs");
+    let work = crate::testutil::temp_dir("packs-src");
+    let make = |version: &str, file: &str| {
+        let m = work.join(format!("{file}.toml"));
+        std::fs::write(
+            &m,
+            format!("id = \"drills\"\nname = \"Drills\"\nauthor = \"Ana\"\nversion = \"{version}\"\nlicence = \"CC-BY-SA-4.0\"\nmin_app = \"1.0.0-beta.1\"\n"),
+        )
+        .unwrap();
+        let out = work.join(format!("{file}.kbpack"));
+        kb_pack::kbpack::write_pack(
+            &[crate::testutil::repo().join("content/problems/budget-pair")],
+            &m,
+            &out,
+        )
+        .unwrap();
+        out
+    };
+    let v1 = make("1.0.0", "v1");
+    let a = App::open(&p).await.unwrap();
+    let preview = a.import_pack_preview(&v1).await.unwrap();
+    assert_eq!(
+        (preview.action, preview.problems, preview.installed.clone()),
+        (PackAction::Install, 1, None)
+    );
+    assert_eq!(preview.sha256.len(), 64);
+    a.import_pack_apply(preview.token).await.unwrap();
+    a.close().await;
+
+    // After a restart the pack's problem is in the library, marked, and judgeable data.
+    let a = App::open(&p).await.unwrap();
+    let all = a.list_problems(&ProblemFilter::default()).await.unwrap();
+    let pack_p = all
+        .iter()
+        .find(|x| x.id == "drills--budget-pair")
+        .expect("pack problem listed");
+    assert_eq!(pack_p.pack.as_deref(), Some("drills"));
+    assert!(
+        a.get_problem("drills--budget-pair", UiLang::En)
+            .await
+            .unwrap()
+            .pack
+            .is_some()
+    );
+    // A3: not suggested unless asked for.
+    let pool = a.practice_problems(UiLang::En).await.unwrap();
+    assert!(pool.iter().all(|x| x.pack.is_none()));
+    a.set_setting(crate::practice::INCLUDE_PACKS, &json!(true))
+        .await
+        .unwrap();
+    assert!(
+        a.practice_problems(UiLang::En)
+            .await
+            .unwrap()
+            .iter()
+            .any(|x| x.pack.is_some())
+    );
+    // History on a pack problem.
+    a.store
+        .user
+        .record_submission(
+            "drills--budget-pair",
+            Language::Python,
+            "x",
+            &report_with(Verdict::Accepted),
+        )
+        .await
+        .unwrap();
+
+    // The same file: nothing to do; an older or equal version: refused; newer: update.
+    let same = a.import_pack_preview(&v1).await.unwrap();
+    assert_eq!(same.action, PackAction::Same);
+    assert_eq!(
+        a.import_pack_apply(same.token).await.unwrap_err().code,
+        AppErrorCode::PackRefused
+    );
+    let v0 = make("0.9.0", "v0");
+    let older = a.import_pack_preview(&v0).await.unwrap();
+    assert_eq!(older.action, PackAction::NotNewer);
+    assert_eq!(
+        a.import_pack_apply(older.token).await.unwrap_err().code,
+        AppErrorCode::PackRefused
+    );
+    let v2 = make("1.1.0", "v2");
+    let newer = a.import_pack_preview(&v2).await.unwrap();
+    assert_eq!(
+        (newer.action, newer.installed.as_deref()),
+        (PackAction::Update, Some("1.0.0"))
+    );
+    a.import_pack_apply(newer.token).await.unwrap();
+    assert_eq!(a.packs().await.unwrap()[0].version, "1.1.0");
+
+    // Uninstall: only its folder goes; after a restart the problem is gone, history stays.
+    a.uninstall_pack("drills").await.unwrap();
+    assert!(!p.local_data_dir.join("packs/drills").exists());
+    a.close().await;
+    let a = App::open(&p).await.unwrap();
+    assert!(
+        a.list_problems(&ProblemFilter::default())
+            .await
+            .unwrap()
+            .iter()
+            .all(|x| x.pack.is_none())
+    );
+    assert!(
+        !a.store
+            .user
+            .list_submissions("drills--budget-pair")
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    assert!(a.packs().await.unwrap().is_empty());
+    // A refused pack leaves nothing behind.
+    std::fs::write(work.join("bad.kbpack"), b"not a zip").unwrap();
+    let err = a
+        .import_pack_preview(&work.join("bad.kbpack"))
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, AppErrorCode::PackRefused);
+    let leftovers: Vec<_> = std::fs::read_dir(p.local_data_dir.join("packs"))
+        .unwrap()
+        .flatten()
+        .filter(|e| e.file_name().to_string_lossy().starts_with(".staging"))
+        .collect();
+    assert!(leftovers.is_empty(), "{leftovers:?}");
 }

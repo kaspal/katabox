@@ -191,6 +191,21 @@ Cuando resuelves el problema base, se abren desde la franja bajo el título
 dice qué cambia; sus pruebas, límites y soluciones son propios, y cuenta como un problema
 más en tu historial.
 
+## Paquetes de problemas
+Un paquete es un conjunto de problemas que alguien creó y compartió como archivo
+`.kbpack`. **Ajustes → Paquetes → Importar un paquete…** lo abre y muestra qué es antes
+de instalar nada: el nombre, el autor *según declara* (los paquetes no están firmados),
+la versión, la licencia, cuántos problemas tiene y el SHA-256 del archivo. KataBox
+comprueba cada archivo antes y rechaza lo que no sea seguro o esté mal formado. Los
+problemas de un paquete llevan su nombre como insignia, y la Biblioteca puede mostrar
+solo los incluidos o solo los de paquetes. Su texto se muestra sin enlaces ni imágenes,
+y su código solo se ejecuta en el entorno aislado. El problema del día y "siguiente
+problema" dejan fuera los problemas de paquetes salvo que marques la opción de esa misma
+página. Una versión más nueva de un paquete sustituye a la instalada; una más antigua,
+no. Desinstalar quita los archivos del paquete; tu historial en sus problemas se
+conserva. Los cambios se aplican al reiniciar. Para crear un paquete: `kb-pack pack
+CARPETA... --manifest pack.toml --out mio.kbpack` (ver docs/contributing-content.md).
+
 ## Sesiones de concentración
 Inicia una sesión de concentración desde Progreso → Resumen o la paleta de comandos
 ("Iniciar sesión de concentración"). Un indicador en la barra superior muestra si estás

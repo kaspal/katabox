@@ -126,7 +126,7 @@ export function ProblemPane({
       </TabsList>
       <div className="min-h-0 flex-1 overflow-auto p-4">
         <TabsContent value="description" className="space-y-4">
-          <Markdown text={problem.statement} />
+          <Markdown text={problem.statement} trust={problem.pack ? "pack" : "app"} />
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-t pt-3 text-xs text-muted-foreground">
             <TimeLimit problem={problem} language={currentLanguage} />
             <dt>{t("workspace.limits.memory")}</dt>
@@ -146,7 +146,7 @@ export function ProblemPane({
           {locked("hints") ? note : <HintsTab problem={problem} />}
         </TabsContent>
         <TabsContent value="editorial">
-          {locked("editorial") ? note : <EditorialTab problemId={problem.id} />}
+          {locked("editorial") ? note : <EditorialTab problemId={problem.id} pack={problem.pack !== null} />}
         </TabsContent>
         <TabsContent value="submissions">
           {locked("submissions") ? note : <SubmissionsTab problemId={problem.id} />}

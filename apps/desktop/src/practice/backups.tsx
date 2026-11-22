@@ -84,7 +84,11 @@ export function BackupSection() {
               />
             </label>
             <label className="flex items-center gap-2 pb-1.5 text-sm">
-              <Checkbox checked={s.on_exit} onCheckedChange={(v) => save({ onExit: v === true })} />
+              <Checkbox
+                checked={s.on_exit}
+                onCheckedChange={(v) => save({ onExit: v === true })}
+                aria-label={t("backup.onExit")}
+              />
               {t("backup.onExit")}
             </label>
           </div>

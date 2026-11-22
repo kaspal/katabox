@@ -146,6 +146,7 @@ mod tests {
             tags: vec![],
             status,
             fix: false,
+            pack: None,
         }
     }
 

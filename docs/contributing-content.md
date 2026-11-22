@@ -131,6 +131,23 @@ This writes `content/learn/sorting/gnome-sort/` (the subject must already be in
    sandbox (ADR 0035).
 4. Optionally link the item from a topic: `reading = ["<set>/<n>"]` in its `topic.toml`.
 
+## A problem pack
+Packs carry problems outside the bundled catalogue (ADR 0038). Write a `pack.toml`:
+
+```toml
+id = "graphs101"            # 3-20 lowercase letters and digits
+name = "Graph drills"
+author = "Your name"
+version = "1.0.0"
+licence = "CC-BY-SA-4.0"
+min_app = "1.0.0-beta.1"
+```
+
+then `cargo run -p kb-pack -- pack content/problems/a content/problems/b --manifest
+pack.toml --out graphs101.kbpack`. Each folder is validated like built-in content
+(run `validate --run --problems a,b` first for the sandbox checks); the pack lists every
+file's SHA-256. Packs hold problems only (no Learn topics yet).
+
 ## Before the pull request
 
 - `cargo run -p kb-pack -- validate` (structure) and the sandbox check above pass.

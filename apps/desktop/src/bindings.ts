@@ -655,6 +655,56 @@ async saveStressBrute(problem: string, language: Language, code: string) : Promi
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Settings → Packs → Import: a `.kbpack` from a native Open dialog, opened and checked
+ * (nothing is installed yet). `None` when cancelled.
+ */
+async importPackPreview() : Promise<Result<PackPreview | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_pack_preview") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async importPackApply(token: number) : Promise<Result<PackRow, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_pack_apply", { token }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async importPackCancel(token: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("import_pack_cancel", { token }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async packs() : Promise<Result<PackRow[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("packs") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async uninstallPack(id: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("uninstall_pack", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Packs take effect on the next start: restart the app now.
+ */
+async restartApp() : Promise<void> {
+    await TAURI_INVOKE("restart_app");
+},
 async focusCurrent() : Promise<Result<FocusCurrent | null, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("focus_current") };
@@ -1374,6 +1424,11 @@ export type AppErrorCode =
  * gen.py or the Python runtime; expansion M8).
  */
 "stress_unavailable" | 
+/**
+ * A pack failed a check, is already installed, or is not newer (expansion M11); the
+ * message lists why.
+ */
+"pack_refused" | 
 /**
  * Anything else, including the app failing to start.
  */
@@ -2206,6 +2261,36 @@ export type MistakeView = { auto_tags: string[]; tags: string[]; note: string }
  * How the traced call ended.
  */
 export type OutcomeStatus = "ok" | "error" | "memory"
+export type PackAction = "install" | 
+/**
+ * A newer version of an installed pack.
+ */
+"update" | 
+/**
+ * The same file is already installed: nothing to do.
+ */
+"same" | 
+/**
+ * Not newer than the installed version (with different content): refused (A3).
+ */
+"not_newer"
+/**
+ * What a pack would do, shown before importing (T13: unsigned, author as stated).
+ */
+export type PackPreview = { 
+/**
+ * Pass back to `import_pack_apply` / `import_pack_cancel`.
+ */
+token: number; id: string; name: string; author: string; version: string; licence: string; 
+/**
+ * SHA-256 of the `.kbpack` file.
+ */
+sha256: string; problems: number; 
+/**
+ * The installed version of the same pack, if any.
+ */
+installed: string | null; action: PackAction }
+export type PackRow = { id: string; name: string; author: string; version: string; licence: string; sha256: string; problems: number; installed_at: number; removed_at: number | null }
 /**
  * One card of the pattern map.
  */
@@ -2349,7 +2434,11 @@ status: ProblemStatus | null;
 /**
  * A fix-the-bug problem (expansion M6).
  */
-fix: boolean }
+fix: boolean; 
+/**
+ * The pack it came from (expansion M11); `None` for built-in content.
+ */
+pack: string | null }
 /**
  * Everything the problem page shows, in one UI language with English fallback.
  */
@@ -2409,7 +2498,11 @@ fix: boolean;
 /**
  * The languages that have buggy starter code (fix-the-bug problems).
  */
-fix_languages: Language[] }
+fix_languages: Language[]; 
+/**
+ * The pack it came from (expansion M11): its text is shown as untrusted.
+ */
+pack: string | null }
 /**
  * One measured size: the median of the repetitions, with every sample.
  */

@@ -467,7 +467,8 @@
       "languages": "Languages and runtimes",
       "learn": "Learn",
       "data": "Data",
-      "about": "About"
+      "about": "About",
+      "packs": "Packs"
     },
     "window": {
       "label": "Window",
@@ -529,7 +530,8 @@
     "shrink_unavailable": "Finding a smaller failing input is not available here (a program problem, or no reference solution in this language).",
     "locked_in_kata": "This is locked during the kata. It opens again when the kata ends.",
     "kata_active": "A kata is running. End it first.",
-    "stress_unavailable": "The stress test is not available here (an SQL problem, or a program problem without its generator or the Python runtime)."
+    "stress_unavailable": "The stress test is not available here (an SQL problem, or a program problem without its generator or the Python runtime).",
+    "pack_refused": "This pack can't be imported."
   },
   "judge": {
     "verdict": {
@@ -878,7 +880,8 @@
         "snippets": "Snippets",
         "reading_answers": "Reading exercise answers",
         "stress_brutes": "Stress test brute forces",
-        "focus_sessions": "Focus sessions"
+        "focus_sessions": "Focus sessions",
+        "packs": "Packs"
       }
     },
     "crossLang": {
@@ -3364,5 +3367,39 @@
     "next": "next due {{when}}",
     "failed": "The last backup failed: {{why}}",
     "prune": "KataBox deletes only its own katabox-backup-….kbx.json files in that folder, oldest first, beyond the number to keep. It never touches other files."
+  },
+  "packs": {
+    "title": "Problem packs",
+    "intro": "Packs are problem sets anyone can make and share as a .kbpack file. Their code only ever runs in the sandbox, and their text is shown without links or images.",
+    "import": "Import a pack…",
+    "includeInPractice": "Suggest pack problems in the daily problem and Next problem",
+    "none": "No packs installed.",
+    "row": "version {{version}} by {{author}} · {{count}} problems · installed {{date}}",
+    "uninstall": "Uninstall {{name}}",
+    "restartNeeded": "Pack changes take effect when KataBox restarts.",
+    "restart": "Restart now",
+    "previewTitle": "Import “{{name}}”?",
+    "unsigned": "Unsigned pack. Author as stated: {{author}}. KataBox checked the files, but cannot tell who made them.",
+    "id": "Id",
+    "version": "Version",
+    "installedVersion": "installed: {{version}}",
+    "licence": "Licence",
+    "problems": "Problems",
+    "action": {
+      "install": "This installs the pack. Your history on its problems stays even if you remove it later.",
+      "update": "This replaces the installed version with this newer one.",
+      "same": "This exact pack is already installed.",
+      "not_newer": "A pack with this id is installed, and this file is not newer: it can't replace it."
+    },
+    "install": "Install",
+    "update": "Update",
+    "cancel": "Cancel",
+    "badge": "{{pack}}",
+    "badgeTitle": "From the pack “{{pack}}”, not part of KataBox",
+    "sourceLabel": "Source",
+    "source": {
+      "builtin": "Built-in",
+      "packs": "Packs"
+    }
   }
 }

@@ -82,6 +82,9 @@ pub enum AppErrorCode {
     /// The stress lab does not work here (an SQL problem, or a program problem without
     /// gen.py or the Python runtime; expansion M8).
     StressUnavailable,
+    /// A pack failed a check, is already installed, or is not newer (expansion M11); the
+    /// message lists why.
+    PackRefused,
     /// Anything else, including the app failing to start.
     Internal,
 }

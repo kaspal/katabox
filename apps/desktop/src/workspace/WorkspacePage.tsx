@@ -33,7 +33,7 @@ import { ErrorNotice } from "@/components/ErrorNotice";
 import { PlacementBanner } from "@/onboarding/PlacementBanner";
 import { Tour } from "@/onboarding/Tour";
 import { InstallDialog } from "@/languages/InstallDialog";
-import { DifficultyLabel, FixLabel, ModeLabel } from "@/components/Semantic";
+import { DifficultyLabel, FixLabel, ModeLabel, PackLabel } from "@/components/Semantic";
 import { api } from "@/lib/api";
 import { isAppError } from "@/lib/errors";
 import { useFocusMode } from "@/lib/focus";
@@ -455,6 +455,7 @@ export function WorkspacePage() {
         <DifficultyLabel difficulty={p.difficulty} className="text-xs" />
         <ModeLabel mode={p.mode} />
         <FixLabel fix={p.fix} />
+        <PackLabel pack={p.pack} />
         <div className="ml-auto flex items-center gap-2">
           {inInterview && <InterviewTimer compact />}
           {!inInterview && !inKata && !sqlProblem && (solvedIn.data?.length ?? 0) > 0 && (

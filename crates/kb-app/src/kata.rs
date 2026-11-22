@@ -748,6 +748,7 @@ mod tests {
             tags: vec![],
             status: Some(ProblemStatus::Solved),
             fix: false,
+            pack: None,
         }
     }
 

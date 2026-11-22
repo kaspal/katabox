@@ -7,7 +7,7 @@ import type { Difficulty, ProblemMode, ProblemSummary, StatusFilter } from "@/bi
 import { Page } from "@/components/Page";
 import { PatternLearnLinks } from "@/components/PatternLearnLinks";
 import { ErrorNotice } from "@/components/ErrorNotice";
-import { DifficultyLabel, FixLabel, ModeLabel, StatusIcon, usePatternLabel, useTagLabel } from "@/components/Semantic";
+import { DifficultyLabel, FixLabel, ModeLabel, PackLabel, StatusIcon, usePatternLabel, useTagLabel } from "@/components/Semantic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -94,9 +94,12 @@ export function Library() {
   const rows = useMemo(() => {
     // The kind filter (expansion M6) is applied here: `fix` is on every summary.
     const kind = search.kind;
-    const kept = (filtered.data ?? []).filter((p) => !kind || p.fix === (kind === "fix"));
+    const source = search.source;
+    const kept = (filtered.data ?? [])
+      .filter((p) => !kind || p.fix === (kind === "fix"))
+      .filter((p) => !source || (p.pack !== null) === (source === "packs"));
     return sortProblems(kept, sort, search.desc ?? false, patternLabel);
-  }, [filtered.data, sort, search.desc, search.kind]);
+  }, [filtered.data, sort, search.desc, search.kind, search.source]);
 
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -113,7 +116,7 @@ export function Library() {
   }, []);
 
   const hasFilters = Boolean(
-    search.q || search.difficulty || search.status || search.pattern || search.tag || search.mode || search.kind,
+    search.q || search.difficulty || search.status || search.pattern || search.tag || search.mode || search.kind || search.source,
   );
   const clear = () => {
     setQuery("");
@@ -215,6 +218,23 @@ export function Library() {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+        {all.data?.some((p) => p.pack !== null) && (
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            aria-label={t("packs.sourceLabel")}
+            value={search.source ?? ""}
+            onValueChange={(v) => setSearch({ source: (v || undefined) as "builtin" | "packs" | undefined })}
+            data-testid="source-filter"
+          >
+            {(["builtin", "packs"] as const).map((k) => (
+              <ToggleGroupItem key={k} value={k} aria-label={t(`packs.source.${k}`)}>
+                {t(`packs.source.${k}`)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        )}
         <FilterSelect
           label={t("status.label")}
           anyLabel={t("status.any")}
@@ -457,6 +477,7 @@ function ProblemGrid({
                       <span className="truncate">{p.title}</span>
                       <ModeLabel mode={p.mode} compact />
                       <FixLabel fix={p.fix} />
+                      <PackLabel pack={p.pack} />
                     </div>
                     <div role="gridcell">
                       <DifficultyLabel difficulty={p.difficulty} />

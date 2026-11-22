@@ -54,6 +54,11 @@ pub(crate) fn block_on<F: std::future::Future>(f: F) -> F::Output {
         .block_on(f)
 }
 
+/// [`read_package`] for a pack's problem (expansion M11).
+pub(crate) fn read_package_for_pack(dir: &Path) -> Result<PackProblem, String> {
+    read_package(dir)
+}
+
 /// Read one (already validated) problem folder.
 fn read_package(dir: &Path) -> Result<PackProblem, String> {
     let at = |e: String| format!("{}: {e}", dir.display());
@@ -138,6 +143,8 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         validator: fs::read_to_string(dir.join("validate.py")).ok(),
         sql,
         parent: meta.parent,
+        // Set for pack problems (expansion M11).
+        pack: None,
         // The stress lab (expansion M8) generates inputs with gen.py.
         generator: fs::read_to_string(dir.join("gen.py")).ok(),
         // Fix the bug (expansion M6): the buggy code becomes the starter.

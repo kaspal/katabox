@@ -15,7 +15,8 @@ export const SETTINGS_SEARCH_INDEX: [SettingsSection, string[]][] = [
   ["practice", ["practice.settings.daily", "practice.settings.review", "plan.setting", "kata.rusty.setting", "welcome.again.label"]],
   ["languages", ["settings.sections.languages", "settings.calibration.title", "settings.calibration.recalibrate"]],
   ["learn", ["practice.settings.learnReview", "settings.learnSpeed"]],
-  ["data", ["practice.data.export", "practice.data.import"]],
+  ["data", ["practice.data.export", "practice.data.import", "backup.title"]],
+  ["packs", ["packs.title", "packs.import", "packs.includeInPractice"]],
   [
     "about",
     [

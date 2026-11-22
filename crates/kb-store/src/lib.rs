@@ -23,6 +23,7 @@ pub mod learn;
 #[cfg(test)]
 mod migration_tests;
 pub mod modes;
+pub mod packs;
 pub mod plans;
 pub mod practice;
 pub mod reading;

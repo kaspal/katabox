@@ -178,6 +178,20 @@ problem, they open from the strip under the problem's title (**Base problem · F
 1 · Follow-up 2**). A follow-up's statement says what changes; its tests, limits and
 solutions are its own, and it counts as a problem of its own in your history.
 
+## Problem packs
+A pack is a set of problems someone made and shared as a `.kbpack` file. **Settings →
+Packs → Import a pack…** opens one and shows what it is before anything is installed:
+the name, the author *as stated* (packs are not signed), the version, the licence, how
+many problems and the file's SHA-256. KataBox checks every file first and refuses
+anything unsafe or malformed. Pack problems carry the pack's name as a badge, and the
+Library can show built-in or pack problems only. Their text is shown without links or
+images, and their code only ever runs in the sandbox. The daily problem and "next
+problem" leave pack problems out unless you tick the option on the same page. A newer
+version of a pack replaces the installed one; an older one can't. Uninstalling removes
+the pack's files; your history on its problems stays. Changes take effect after a
+restart. To make a pack: `kb-pack pack PROBLEM_DIR... --manifest pack.toml --out
+my.kbpack` (see docs/contributing-content.md).
+
 ## Focus sessions
 Start a focus session from Progress → Overview or the command palette ("Start focus
 session"). A chip in the top bar shows whether you are working or on a break and how long

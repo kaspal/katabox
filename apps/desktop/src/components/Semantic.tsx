@@ -1,6 +1,6 @@
 // Semantic badges (ADR 0012): color is always paired with an icon and a text label.
 import { useTranslation } from "react-i18next";
-import { Bug, CheckCircle2, CircleDashed, CircleDot, Database, SquareTerminal } from "lucide-react";
+import { Bug, CheckCircle2, CircleDashed, CircleDot, Database, Package, SquareTerminal } from "lucide-react";
 import type { Difficulty, ProblemMode, ProblemStatus } from "@/bindings";
 import { cn } from "@/lib/utils";
 
@@ -87,6 +87,22 @@ export function FixLabel({ fix, className }: { fix: boolean; className?: string 
     >
       <Bug aria-hidden className="size-3.5" />
       {t("fix.badge")}
+    </span>
+  );
+}
+
+/** A pack problem's badge (expansion M11, T10): which pack it came from, always shown. */
+export function PackLabel({ pack, className }: { pack: string | null; className?: string }) {
+  const { t } = useTranslation();
+  if (!pack) return null;
+  return (
+    <span
+      className={cn("inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground", className)}
+      data-testid="pack-label"
+      title={t("packs.badgeTitle", { pack })}
+    >
+      <Package aria-hidden className="size-3.5" />
+      {t("packs.badge", { pack })}
     </span>
   );
 }

@@ -133,7 +133,7 @@ impl App {
                 "a plan takes {MINUTES_MIN} to {MINUTES_MAX} minutes a day"
             )));
         }
-        let all = crate::practice::without_fix(self.all_problems(lang).await?);
+        let all = self.practice_problems(lang).await?;
         let wanted: Vec<&str> = PATTERN_TRACK
             .iter()
             .copied()

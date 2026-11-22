@@ -467,7 +467,8 @@
       "languages": "Lenguajes y entornos de ejecución",
       "learn": "Aprender",
       "data": "Datos",
-      "about": "Acerca de"
+      "about": "Acerca de",
+      "packs": "Paquetes"
     },
     "window": {
       "label": "Ventana",
@@ -529,7 +530,8 @@
     "shrink_unavailable": "Aquí no se puede buscar una entrada más pequeña que falle (es un problema de programa o no hay solución de referencia en este lenguaje).",
     "locked_in_kata": "Esto está bloqueado durante la kata. Se abre de nuevo cuando la kata termina.",
     "kata_active": "Hay una kata en curso. Termínala primero.",
-    "stress_unavailable": "La prueba de estrés no está disponible aquí (un problema SQL, o un problema de programa sin su generador o sin el entorno de Python)."
+    "stress_unavailable": "La prueba de estrés no está disponible aquí (un problema SQL, o un problema de programa sin su generador o sin el entorno de Python).",
+    "pack_refused": "Este paquete no se puede importar."
   },
   "judge": {
     "verdict": {
@@ -878,7 +880,8 @@
         "snippets": "Fragmentos",
         "reading_answers": "Respuestas de ejercicios de lectura",
         "stress_brutes": "Fuerzas brutas de pruebas de estrés",
-        "focus_sessions": "Sesiones de concentración"
+        "focus_sessions": "Sesiones de concentración",
+        "packs": "Paquetes"
       }
     },
     "crossLang": {
@@ -3364,5 +3367,39 @@
     "next": "la próxima toca el {{when}}",
     "failed": "La última copia falló: {{why}}",
     "prune": "KataBox borra solo sus propios archivos katabox-backup-….kbx.json de esa carpeta, los más antiguos primero, por encima del número a conservar. Nunca toca otros archivos."
+  },
+  "packs": {
+    "title": "Paquetes de problemas",
+    "intro": "Los paquetes son conjuntos de problemas que cualquiera puede crear y compartir como archivo .kbpack. Su código solo se ejecuta en el entorno aislado y su texto se muestra sin enlaces ni imágenes.",
+    "import": "Importar un paquete…",
+    "includeInPractice": "Sugerir problemas de paquetes en el problema del día y en Siguiente problema",
+    "none": "No hay paquetes instalados.",
+    "row": "versión {{version}} de {{author}} · {{count}} problemas · instalado el {{date}}",
+    "uninstall": "Desinstalar {{name}}",
+    "restartNeeded": "Los cambios de paquetes se aplican al reiniciar KataBox.",
+    "restart": "Reiniciar ahora",
+    "previewTitle": "¿Importar «{{name}}»?",
+    "unsigned": "Paquete sin firmar. Autor declarado: {{author}}. KataBox comprobó los archivos, pero no puede saber quién los hizo.",
+    "id": "Id",
+    "version": "Versión",
+    "installedVersion": "instalada: {{version}}",
+    "licence": "Licencia",
+    "problems": "Problemas",
+    "action": {
+      "install": "Esto instala el paquete. Tu historial en sus problemas se conserva aunque lo quites después.",
+      "update": "Esto sustituye la versión instalada por esta, más nueva.",
+      "same": "Este mismo paquete ya está instalado.",
+      "not_newer": "Hay un paquete con este id instalado y este archivo no es más nuevo: no puede sustituirlo."
+    },
+    "install": "Instalar",
+    "update": "Actualizar",
+    "cancel": "Cancelar",
+    "badge": "{{pack}}",
+    "badgeTitle": "Del paquete «{{pack}}», no forma parte de KataBox",
+    "sourceLabel": "Origen",
+    "source": {
+      "builtin": "Incluidos",
+      "packs": "Paquetes"
+    }
   }
 }

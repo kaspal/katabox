@@ -36,6 +36,8 @@ CREATE TABLE problems (
     kind          TEXT NOT NULL DEFAULT 'solve' CHECK (kind IN ('solve', 'fix')),
     -- gen.py, for the stress lab's inputs (expansion M8); run only in the sandbox
     generator     TEXT,
+    -- the pack a problem came from (expansion M11); NULL for built-in content
+    pack_id       TEXT,
     CHECK ((mode = 'sql') = (schema_sql IS NOT NULL AND sql_schema IS NOT NULL))
 ) WITHOUT ROWID;
 CREATE INDEX problems_by_parent ON problems (parent_id);

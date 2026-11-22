@@ -9,7 +9,7 @@ import { useSetting } from "@/lib/settings";
 export const PROGRESS_TABS = ["overview", "patterns", "topics", "plan", "katas", "mistakes", "history"] as const;
 export type ProgressTab = (typeof PROGRESS_TABS)[number];
 
-export const SETTINGS_SECTIONS = ["appearance", "editor", "practice", "languages", "learn", "data", "about"] as const;
+export const SETTINGS_SECTIONS = ["appearance", "editor", "practice", "languages", "learn", "data", "packs", "about"] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
 export const oneOfTabs = <T extends string>(v: unknown, values: readonly T[]): T | undefined =>

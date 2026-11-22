@@ -114,6 +114,19 @@ pub fn without_fix(all: Vec<ProblemSummary>) -> Vec<ProblemSummary> {
     all.into_iter().filter(|p| !p.fix).collect()
 }
 
+/// The setting that lets the daily problem and "next problem" suggest pack problems too
+/// (expansion M11, review A3; off by default).
+pub const INCLUDE_PACKS: &str = "practice.include_packs";
+
+/// What practice suggestions draw from: no fix-the-bug problems, and no pack problems
+/// unless `include_packs`.
+pub fn practice_pool(all: Vec<ProblemSummary>, include_packs: bool) -> Vec<ProblemSummary> {
+    without_fix(all)
+        .into_iter()
+        .filter(|p| include_packs || p.pack.is_none())
+        .collect()
+}
+
 /// `all` without SQL problems (ADR 0031) until the user has opened one: the daily problem
 /// and "next problem" never push SQL on someone practising algorithms. Opened means a
 /// Run or Submit (a status), or `current` itself being an SQL problem.
@@ -687,6 +700,18 @@ pub(crate) fn parse_day(today: &str) -> Result<Day> {
 
 impl App {
     /// Every problem with its status, titles in `lang`.
+    /// What practice suggestions draw from ([`practice_pool`]).
+    pub(crate) async fn practice_problems(&self, lang: UiLang) -> Result<Vec<ProblemSummary>> {
+        let include = self
+            .store
+            .user
+            .get_setting(INCLUDE_PACKS)
+            .await?
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        Ok(practice_pool(self.all_problems(lang).await?, include))
+    }
+
     pub(crate) async fn all_problems(&self, lang: UiLang) -> Result<Vec<ProblemSummary>> {
         Ok(self
             .store
@@ -722,7 +747,7 @@ impl App {
         lang: UiLang,
     ) -> Result<Option<ProblemSummary>> {
         let floor = self.start_floor().await?;
-        let all = hide_unopened_sql(without_fix(self.all_problems(lang).await?), current);
+        let all = hide_unopened_sql(self.practice_problems(lang).await?, current);
         let all = apply_floor(all, floor.as_ref(), current);
         let ratings = self.current_ratings().await?.by_pattern();
         Ok(next_problem_rated(&all, current, &ratings).cloned())
@@ -732,7 +757,7 @@ impl App {
     pub async fn daily_problem(&self, today: &str, lang: UiLang) -> Result<Option<DailyProblem>> {
         let day = parse_day(today)?;
         let floor = self.start_floor().await?;
-        let all = hide_unopened_sql(without_fix(self.all_problems(lang).await?), "");
+        let all = hide_unopened_sql(self.practice_problems(lang).await?, "");
         let all = apply_floor(all, floor.as_ref(), "");
         let pick = match self.store.user.daily_pick(day).await? {
             Some(p) if all.iter().any(|x| x.id == p.problem_id) => p,
@@ -771,9 +796,7 @@ impl App {
 
     /// The three placement problems of the welcome flow.
     pub async fn placement_problems(&self, lang: UiLang) -> Result<Vec<ProblemSummary>> {
-        Ok(placement_problems(&without_fix(
-            self.all_problems(lang).await?,
-        )))
+        Ok(placement_problems(&self.practice_problems(lang).await?))
     }
 
     /// Finish the welcome flow: the floor from the placement (`None`: "new to this" or a
@@ -996,6 +1019,7 @@ mod tests {
             tags: vec![],
             status: solved_.then_some(ProblemStatus::Solved),
             fix: false,
+            pack: None,
         }
     }
 
@@ -1277,6 +1301,9 @@ mod tests {
             p("a2", "arrays-hashing", 2, false),
         ];
         all[0].fix = true;
+        all[1].pack = Some("drills".into());
+        assert_eq!(practice_pool(all.clone(), false).len(), 0);
+        assert_eq!(practice_pool(all.clone(), true).len(), 1);
         let kept = without_fix(all);
         assert_eq!(
             kept.iter().map(|x| x.id.as_str()).collect::<Vec<_>>(),

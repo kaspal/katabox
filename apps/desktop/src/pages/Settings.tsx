@@ -39,6 +39,7 @@ import { copyText, diagnosticsText, recentErrors } from "@/lib/diagnostics";
 import { CHANGELOG_URL, DOCS_URL } from "@/lib/links";
 import { openShortcuts } from "@/app/shortcuts";
 import { BackupSection } from "@/practice/backups";
+import { PacksSection } from "@/practice/packs";
 import { SETTINGS_SEARCH_INDEX } from "@/lib/settingsIndex";
 import { SnippetsPanel } from "@/practice/snippets";
 import { queryKeys, useAppInfo, useCalibration } from "@/lib/queries";
@@ -798,6 +799,12 @@ export function Settings() {
             <DataSection />
             <Section title={t("backup.title")}>
               <BackupSection />
+            </Section>
+          </TabsContent>
+
+          <TabsContent value="packs">
+            <Section title={t("packs.title")}>
+              <PacksSection />
             </Section>
           </TabsContent>
 

@@ -7,6 +7,8 @@ import {
   commands,
   type CustomCheck,
   type BackupStatus,
+  type PackPreview,
+  type PackRow,
   type FocusCurrent,
   type FocusSessionRow,
   type StressEvent,
@@ -176,6 +178,13 @@ export const api = {
   cancelShrink: (): Promise<null> => call(commands.cancelShrink()),
   checkCustom: (problem: string, inputs: CustomInput[]): Promise<CustomCheck> =>
     call(commands.checkCustom(problem, inputs)),
+  // Problem packs (expansion M11, ADR 0038)
+  importPackPreview: (): Promise<PackPreview | null> => call(commands.importPackPreview()),
+  importPackApply: (token: number): Promise<PackRow> => call(commands.importPackApply(token)),
+  importPackCancel: (token: number): Promise<null> => call(commands.importPackCancel(token)),
+  packs: (): Promise<PackRow[]> => call(commands.packs()),
+  uninstallPack: (id: string): Promise<null> => call(commands.uninstallPack(id)),
+  restartApp: (): Promise<void> => commands.restartApp(),
   // Focus sessions and backups (expansion M10, ADR 0037)
   focusCurrent: (): Promise<FocusCurrent | null> => call(commands.focusCurrent()),
   focusStart: (work: number, brk: number): Promise<FocusCurrent> => call(commands.focusStart(work, brk)),

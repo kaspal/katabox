@@ -3,6 +3,7 @@
 
 mod build;
 pub mod checks;
+pub mod kbpack;
 pub mod learn;
 pub mod pack;
 pub mod profile;
@@ -17,6 +18,12 @@ pub use validate::{
     TEST_BUDGET_BYTES, budget_error, run_references, select_problems, test_size, validate_all,
     validate_learn_only,
 };
+
+/// Structural checks of one problem folder, as for built-in content (packs and the CLI's
+/// `pack` command use them; expansion M11).
+pub fn validate_problem_dir(dir: &std::path::Path) -> (Option<kb_core::Difficulty>, Vec<String>) {
+    validate::validate_problem_meta(dir)
+}
 
 /// Validate every problem under `dir` and compile them into content.db at `out` (see
 /// [`build`]). Returns the problem count.

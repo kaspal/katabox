@@ -942,6 +942,57 @@ async fn pick_file(
         .transpose()
 }
 
+// --- Problem packs (expansion M11, ADR 0038) ----------------------------------------
+
+/// Settings → Packs → Import: a `.kbpack` from a native Open dialog, opened and checked
+/// (nothing is installed yet). `None` when cancelled.
+#[tauri::command]
+#[specta::specta]
+async fn import_pack_preview(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Res<Option<kb_app::packs::PackPreview>> {
+    let Some(file) = pick_file(app, "KataBox pack", &["kbpack"], None).await? else {
+        return Ok(None);
+    };
+    Ok(Some(state.app()?.import_pack_preview(&file).await?))
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn import_pack_apply(
+    state: State<'_, AppState>,
+    token: u64,
+) -> Res<kb_store::packs::PackRow> {
+    state.app()?.import_pack_apply(token).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn import_pack_cancel(state: State<'_, AppState>, token: u64) -> Res<()> {
+    state.app()?.import_pack_cancel(token);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn packs(state: State<'_, AppState>) -> Res<Vec<kb_store::packs::PackRow>> {
+    state.app()?.packs().await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn uninstall_pack(state: State<'_, AppState>, id: String) -> Res<()> {
+    state.app()?.uninstall_pack(&id).await
+}
+
+/// Packs take effect on the next start: restart the app now.
+#[tauri::command]
+#[specta::specta]
+fn restart_app(app: tauri::AppHandle) {
+    app.restart();
+}
+
 // --- Focus sessions and backups (expansion M10, ADR 0037) ----------------------------
 
 #[tauri::command]
@@ -1304,6 +1355,12 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         cancel_stress,
         stress_brute,
         save_stress_brute,
+        import_pack_preview,
+        import_pack_apply,
+        import_pack_cancel,
+        packs,
+        uninstall_pack,
+        restart_app,
         focus_current,
         focus_start,
         focus_stop,

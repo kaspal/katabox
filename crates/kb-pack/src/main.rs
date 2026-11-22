@@ -54,7 +54,55 @@ const USAGE: &str = "usage:\n  kb-pack validate [DIR] [--run [--problems ID,ID |
                        kb-pack build [DIR] [--out FILE] [--pack-id ID] [--pack-version V]
                        kb-pack new ID [--mode function|program|sql] [DIR]
                        kb-pack new-topic SUBJECT ID [LEARN_DIR]
-                       kb-pack preview PROBLEM_DIR [--out DIR]";
+                       kb-pack preview PROBLEM_DIR [--out DIR]
+                       kb-pack pack PROBLEM_DIR... --manifest PACK_TOML --out FILE.kbpack";
+
+/// `kb-pack pack PROBLEM_DIR... --manifest pack.toml --out x.kbpack` (expansion M11, ADR
+/// 0038): validate each folder like built-in content, then write a deterministic pack with
+/// every file's SHA-256 in its manifest.
+fn pack_cmd(mut args: impl Iterator<Item = String>) -> ExitCode {
+    let (mut dirs, mut manifest, mut out) = (Vec::new(), None, None);
+    while let Some(a) = args.next() {
+        match a.as_str() {
+            "--manifest" => manifest = args.next().map(PathBuf::from),
+            "--out" => out = args.next().map(PathBuf::from),
+            s if s.starts_with("--") => return usage(&format!("unknown option {s}")),
+            _ => dirs.push(PathBuf::from(a)),
+        }
+    }
+    let (Some(manifest), Some(out)) = (manifest, out) else {
+        return usage("pack needs --manifest and --out");
+    };
+    if dirs.is_empty() {
+        return usage("pack needs at least one problem folder");
+    }
+    let mut failed = false;
+    for d in &dirs {
+        let (_, errs) = kb_pack::validate_problem_dir(d);
+        for e in &errs {
+            eprintln!("{}: {e}", d.display());
+        }
+        failed |= !errs.is_empty();
+    }
+    if failed {
+        eprintln!("not packed: fix the problems above");
+        return ExitCode::FAILURE;
+    }
+    match kb_pack::kbpack::write_pack(&dirs, &manifest, &out) {
+        Ok(sha) => {
+            println!(
+                "wrote {} ({} problem folder(s), SHA-256 {sha})",
+                out.display(),
+                dirs.len()
+            );
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("{e}");
+            ExitCode::FAILURE
+        }
+    }
+}
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
@@ -66,6 +114,7 @@ fn main() -> ExitCode {
         Some("new") => new_cmd(args),
         Some("new-topic") => new_topic_cmd(args),
         Some("preview") => preview_cmd(args),
+        Some("pack") => pack_cmd(args),
         _ => usage(""),
     }
 }
