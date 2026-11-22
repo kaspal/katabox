@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="32" height="32">
+  <!-- KataBox icon for 16, 24 and 32 px (ADR 0041): the cube and a bolder chevron, no
+       braces, no highlight, a tighter tile so the cube fills more of the few pixels.
+       Rasterised into icon.ico's small layers by `pnpm icon-small`. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a3260"/>
+      <stop offset="1" stop-color="#121633"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="256" height="256" rx="52" fill="url(#bg)"/>
+  <path d="M128 26 L218 77 L128 128 L38 77 Z" fill="#c4d1ff"/>
+  <path d="M38 77 L128 128 L128 232 L38 181 Z" fill="#6d86f0"/>
+  <path d="M218 77 L128 128 L128 232 L218 181 Z" fill="#3d56cc"/>
+  <path d="M150 148 L178 166 L150 184" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" transform="matrix(1 -0.567 0 1 0 94)"/>
+</svg>
