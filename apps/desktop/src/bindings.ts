@@ -610,6 +610,17 @@ async interviews(lang: UiLang) : Promise<Result<InterviewResult[], AppError>> {
 }
 },
 /**
+ * Check custom inputs against the signature and validate.py (expansion M9).
+ */
+async checkCustom(problem: string, inputs: (Partial<{ [key in string]: JsonValue }>)[]) : Promise<Result<CustomCheck, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("check_custom", { problem, inputs }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * The stress lab (expansion M8): `code` against `brute` on generated inputs.
  */
 async stressTest(problem: string, language: Language, code: string, brute: string, onEvent: TAURI_CHANNEL<StressEvent>) : Promise<Result<StressResult, AppError>> {
@@ -1391,6 +1402,18 @@ export type ContinueItem = { problem_id: string;
  * Title in the requested UI language (English fallback).
  */
 title: string; language: Language; updated_at: number }
+/**
+ * What "Check" found for each custom input (expansion M9).
+ */
+export type CustomCheck = { 
+/**
+ * Per input: `None` when it is valid, else why not.
+ */
+problems: (string | null)[]; 
+/**
+ * The problem's validate.py ran (it needs the Python runtime).
+ */
+constraints_checked: boolean }
 /**
  * The daily problem on Home.
  */

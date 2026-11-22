@@ -47,3 +47,30 @@ both outputs, **Debug this case**, **Add to custom tests** and (function problem
 (`kb-app/tests/stress_windows.rs`) where seeded wrong solutions disagree with a correct
 brute force in Python, TypeScript and a program problem, and a crashing brute force is
 reported as such. The attack suites ran with this milestone.
+
+## Decision: visual custom-test builders (M9)
+**One source of truth:** each custom test's parameter keeps its JSON text field. A
+**Build visually** button under the field opens a builder that reads that text and writes
+JSON text back; when the text doesn't parse (or has the wrong shape), the builder says to
+fix it as JSON instead of guessing.
+
+**Which builder** (`workspace/results/builders/model.ts`, pure and tested):
+- `TreeNode` → a tree: click a node to change its value, add a left or right child, or
+  remove it with its subtree (canonical level order with nulls, ADR 0025);
+- `ListNode` and other one-dimensional arrays → rows: edit, add, remove and reorder;
+- `string[]` → a grid when the rows have equal length (cells cycle through the
+  characters in the grid plus `.` and `#`), else rows;
+- `int[][]` → a graph when every row has 2 or 3 numbers and the parameter's name looks
+  like an edge list (`edge|link|road|pair|merge|door|friend|connection`), else rows; a
+  **View as** switch offers the other one. The graph layout is the Learn engine's
+  force layout; click one node, then another, to add an edge (weight 1 when the edges are
+  weighted); weights and removals are in the edge list.
+
+**Keyboard:** every action has a keyboard path: nodes and cells are buttons (Enter),
+Delete removes a focused tree node, arrow keys move between grid cells, and the graph's
+edge list has inputs and remove buttons.
+
+**Check:** a **Check inputs** button runs `check_custom` (kb-app): the signature's types,
+then the problem's `validate.py` in the sandbox (one run, holding the judge slot), and
+shows each input's broken constraint. No solution runs. Without Python only the types
+are checked, and it says so. Function problems only (program inputs are free text).

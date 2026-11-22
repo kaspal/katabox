@@ -267,6 +267,17 @@ async fn cancel_shrink(state: State<'_, AppState>) -> Res<()> {
     Ok(())
 }
 
+/// Check custom inputs against the signature and validate.py (expansion M9).
+#[tauri::command]
+#[specta::specta]
+async fn check_custom(
+    state: State<'_, AppState>,
+    problem: String,
+    inputs: Vec<CustomInput>,
+) -> Res<kb_app::CustomCheck> {
+    state.app()?.check_custom(&problem, inputs).await
+}
+
 /// The stress lab (expansion M8): `code` against `brute` on generated inputs.
 #[tauri::command]
 #[specta::specta]
@@ -1203,6 +1214,7 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         interview_active,
         end_interview,
         interviews,
+        check_custom,
         stress_test,
         cancel_stress,
         stress_brute,

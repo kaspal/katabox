@@ -3286,5 +3286,43 @@
       "budget": "No disagreement in {{tested}} inputs ({{rounds}} rounds)",
       "cancelled": "Stopped after {{tested}} inputs"
     }
+  },
+  "builders": {
+    "show": "Build visually",
+    "hide": "Hide builder",
+    "viewAs": "View as",
+    "kind": {
+      "tree": "Tree",
+      "rows": "Rows",
+      "grid": "Grid",
+      "graph": "Graph"
+    },
+    "fixJson": "This value isn't valid JSON of the expected shape yet: edit it as JSON above, or clear it to start over.",
+    "row": "{{name}} item {{index}}",
+    "up": "Move item {{index}} up",
+    "down": "Move item {{index}} down",
+    "removeRow": "Remove item {{index}}",
+    "addRow": "Add item",
+    "addRoot": "Add a root node",
+    "node": "Node {{value}}",
+    "nodeValue": "Value of the selected node",
+    "addLeft": "Left child",
+    "addRight": "Right child",
+    "removeNode": "Remove node and its children",
+    "grid": "Grid {{name}}",
+    "cell": "Row {{row}}, column {{col}}: {{value}}",
+    "gridHint": "Click a cell (or press Enter on it) to cycle through: {{chars}}. Arrow keys move between cells.",
+    "gridEmpty": "Type at least one row in the field above to build a grid.",
+    "graphNode": "Node {{node}}: start an edge here",
+    "graphNodeTo": "Node {{node}}: end the edge from {{from}} here",
+    "graphHint": "Click one node, then another, to add an edge between them.",
+    "edges": "Edges",
+    "weight": "Weight of edge {{u}}–{{v}}",
+    "removeEdge": "Remove edge {{u}}–{{v}}",
+    "addNode": "Add node",
+    "check": "Check inputs",
+    "checkOk": "Custom {{index}}: valid",
+    "checkBad": "Custom {{index}}: {{why}}",
+    "checkTypesOnly": "Only the types were checked: the problem's constraints need the Python runtime."
   }
 }

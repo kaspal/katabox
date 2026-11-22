@@ -178,6 +178,13 @@ problem, they open from the strip under the problem's title (**Base problem · F
 1 · Follow-up 2**). A follow-up's statement says what changes; its tests, limits and
 solutions are its own, and it counts as a problem of its own in your history.
 
+## Building custom tests
+Under each custom test's value, **Build visually** opens a builder that fits the type: a
+tree you grow by clicking nodes, rows you can add, remove and reorder, a grid whose cells
+you click to change, or a graph where you click two nodes to join them. The JSON field
+above stays in sync and editable. **Check inputs** checks every custom test against the
+problem's constraints (in the sandbox, without running your code).
+
 ## Stress test
 When your solution passes the examples but you are not sure about it, open the
 **Stress test** tab under the editor. Write a slow but obviously correct brute force (for

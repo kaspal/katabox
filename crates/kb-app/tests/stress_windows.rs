@@ -135,3 +135,31 @@ async fn a_program_problem_and_a_broken_brute_force() {
         .await;
     assert!(sql.is_err());
 }
+
+/// "Check" (expansion M9): types first, then validate.py in the sandbox.
+#[tokio::test]
+async fn check_custom_reports_types_and_constraints() {
+    let a = app("check").await;
+    let input = |v: serde_json::Value| v.as_object().unwrap().clone();
+    let r = a
+        .check_custom(
+            "two-sum",
+            vec![
+                input(serde_json::json!({"nums": [1, 2], "target": 3})),
+                input(serde_json::json!({"nums": "x", "target": 3})),
+                input(serde_json::json!({"nums": [1], "target": 3})),
+            ],
+        )
+        .await
+        .unwrap();
+    assert!(r.constraints_checked);
+    assert_eq!(r.problems[0], None);
+    assert!(r.problems[1].is_some(), "{r:?}");
+    assert!(
+        r.problems[2]
+            .as_deref()
+            .unwrap_or("")
+            .contains("nums.length"),
+        "{r:?}"
+    );
+}

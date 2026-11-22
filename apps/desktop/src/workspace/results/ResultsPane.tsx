@@ -9,6 +9,8 @@ import type { JudgeEvent, ProblemView } from "@/bindings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ParamBuilder } from "@/workspace/results/builders/Builders";
+import { CheckCustoms } from "@/workspace/results/builders/CheckCustoms";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { isAppError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
@@ -266,6 +268,9 @@ export function ResultsPane({
                 <Plus aria-hidden />
                 {t("results.custom.add")}
               </Button>
+              {!program && customs.length > 0 && (
+                <CheckCustoms problemId={problem.id} signature={signature} customs={customs} disabled={busy} />
+              )}
             </div>
           )}
         </TabsContent>
@@ -412,6 +417,12 @@ function CustomTestCard({
                   {fieldErrorText(t, err)}
                 </p>
               )}
+              <ParamBuilder
+                name={p.name}
+                type={p.type}
+                text={draft.values[p.name] ?? ""}
+                onText={(text) => onChange({ ...draft.values, [p.name]: text })}
+              />
             </div>
           </div>
         );

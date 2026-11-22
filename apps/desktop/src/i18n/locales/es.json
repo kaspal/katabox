@@ -3286,5 +3286,43 @@
       "budget": "Ninguna diferencia en {{tested}} entradas ({{rounds}} rondas)",
       "cancelled": "Detenida tras {{tested}} entradas"
     }
+  },
+  "builders": {
+    "show": "Construir visualmente",
+    "hide": "Ocultar constructor",
+    "viewAs": "Ver como",
+    "kind": {
+      "tree": "Árbol",
+      "rows": "Filas",
+      "grid": "Cuadrícula",
+      "graph": "Grafo"
+    },
+    "fixJson": "Este valor aún no es JSON válido con la forma esperada: edítalo como JSON arriba, o bórralo para empezar de nuevo.",
+    "row": "{{name}}, elemento {{index}}",
+    "up": "Subir el elemento {{index}}",
+    "down": "Bajar el elemento {{index}}",
+    "removeRow": "Quitar el elemento {{index}}",
+    "addRow": "Añadir elemento",
+    "addRoot": "Añadir un nodo raíz",
+    "node": "Nodo {{value}}",
+    "nodeValue": "Valor del nodo seleccionado",
+    "addLeft": "Hijo izquierdo",
+    "addRight": "Hijo derecho",
+    "removeNode": "Quitar el nodo y sus hijos",
+    "grid": "Cuadrícula {{name}}",
+    "cell": "Fila {{row}}, columna {{col}}: {{value}}",
+    "gridHint": "Pulsa una celda (o Intro sobre ella) para alternar entre: {{chars}}. Las flechas mueven entre celdas.",
+    "gridEmpty": "Escribe al menos una fila en el campo de arriba para construir una cuadrícula.",
+    "graphNode": "Nodo {{node}}: empezar una arista aquí",
+    "graphNodeTo": "Nodo {{node}}: terminar aquí la arista desde {{from}}",
+    "graphHint": "Pulsa un nodo y luego otro para añadir una arista entre ellos.",
+    "edges": "Aristas",
+    "weight": "Peso de la arista {{u}}–{{v}}",
+    "removeEdge": "Quitar la arista {{u}}–{{v}}",
+    "addNode": "Añadir nodo",
+    "check": "Comprobar entradas",
+    "checkOk": "Personalizada {{index}}: válida",
+    "checkBad": "Personalizada {{index}}: {{why}}",
+    "checkTypesOnly": "Solo se comprobaron los tipos: las restricciones del problema necesitan el entorno de Python."
   }
 }

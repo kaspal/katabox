@@ -5,6 +5,7 @@ import { Channel } from "@tauri-apps/api/core";
 import { recordError } from "@/lib/diagnostics";
 import {
   commands,
+  type CustomCheck,
   type StressEvent,
   type StressResult,
   type ReadingAnswer,
@@ -170,6 +171,8 @@ export const api = {
     return call(commands.shrink(problem, language, code, input, ch));
   },
   cancelShrink: (): Promise<null> => call(commands.cancelShrink()),
+  checkCustom: (problem: string, inputs: CustomInput[]): Promise<CustomCheck> =>
+    call(commands.checkCustom(problem, inputs)),
   // The stress lab (expansion M8, ADR 0036)
   stressTest: (
     problem: string,

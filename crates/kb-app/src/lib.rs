@@ -239,6 +239,16 @@ pub struct SubmitOptions {
 /// A user-written test input for Run: argument values keyed by parameter name.
 pub type CustomInput = Map<String, Value>;
 
+/// What "Check" found for each custom input (expansion M9).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+pub struct CustomCheck {
+    /// Per input: `None` when it is valid, else why not.
+    pub problems: Vec<Option<String>>,
+    /// The problem's validate.py ran (it needs the Python runtime).
+    pub constraints_checked: bool,
+}
+
 #[derive(Debug)]
 pub struct App {
     store: Store,
@@ -817,6 +827,60 @@ impl App {
 
     /// Turn custom inputs into tests whose expected outputs come from the reference
     /// solution in `language`.
+    /// Check custom inputs without running any solution (expansion M9's "Check"): the
+    /// signature's types, then the problem's validate.py in the sandbox (one run) when the
+    /// Python runtime is installed. One entry per input: `None` when valid, else why not.
+    pub async fn check_custom(
+        &self,
+        problem: &str,
+        inputs: Vec<CustomInput>,
+    ) -> Result<CustomCheck> {
+        let _one = self.judge_slot()?;
+        if inputs.len() > 32 {
+            return Err(AppError::new(AppErrorCode::InvalidInput, "too many inputs"));
+        }
+        let p = self.problem(problem).await?;
+        let mut problems: Vec<Option<String>> = inputs
+            .iter()
+            .map(|x| kb_judge::check_input(x, &p.signature).err())
+            .collect();
+        let python = self.toolchains.runtime_installed(Language::Python);
+        let validator = if python {
+            self.store.content.validator(&p.id).await?
+        } else {
+            None
+        };
+        let constraints_checked = validator.is_some();
+        if let Some(v) = validator {
+            let typed: Vec<(usize, Map<String, Value>)> = inputs
+                .into_iter()
+                .enumerate()
+                .filter(|(i, _)| problems[*i].is_none())
+                .collect();
+            if !typed.is_empty() {
+                let env = self.env();
+                let given: Vec<Map<String, Value>> = typed.iter().map(|(_, x)| x.clone()).collect();
+                let answers = tokio::task::spawn_blocking(move || {
+                    let refs: Vec<&Map<String, Value>> = given.iter().collect();
+                    let limits = kb_judge::ScriptLimits {
+                        cpu_time_ms: 10_000,
+                        memory_mb: 512,
+                        max_output_bytes: 1024 * 1024,
+                    };
+                    kb_judge::validate_inputs(&env, &v, &refs, limits)
+                })
+                .await??;
+                for ((i, _), a) in typed.iter().zip(answers) {
+                    problems[*i] = a;
+                }
+            }
+        }
+        Ok(CustomCheck {
+            problems,
+            constraints_checked,
+        })
+    }
+
     async fn custom_tests(
         &self,
         p: &Problem,

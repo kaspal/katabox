@@ -19,6 +19,9 @@ All notable changes to KataBox are recorded in this file. The format follows
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
 
+- **Visual test builders:** build custom-test values as a tree, rows, a grid or a graph
+  (JSON stays in sync), and **Check inputs** against the problem's constraints without
+  running code.
 - **Stress test:** a results-pane tab that runs your solution against your own brute force
   on many small inputs in the sandbox (from the problem's generator, or random values
   without Python) until they disagree, then lets you debug, shrink or keep that input.

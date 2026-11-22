@@ -943,6 +943,10 @@ export function createFakeApi(
       },
     ),
     cancelStress: vi.fn(async () => null),
+    checkCustom: vi.fn(async (_p: string, inputs: CustomInput[]) => ({
+      problems: inputs.map((x) => (Array.isArray(x.nums) && x.nums.length < 2 ? "2 ≤ nums.length ≤ 10⁵" : null)),
+      constraints_checked: true,
+    })),
     stressBrute: vi.fn(async (p: string, l: Language) => state.stressBrutes.get(`${p}:${l}`) ?? null),
     saveStressBrute: vi.fn(async (p: string, l: Language, code: string) => {
       state.stressBrutes.set(`${p}:${l}`, code);

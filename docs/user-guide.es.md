@@ -191,6 +191,14 @@ Cuando resuelves el problema base, se abren desde la franja bajo el título
 dice qué cambia; sus pruebas, límites y soluciones son propios, y cuenta como un problema
 más en tu historial.
 
+## Construir pruebas personalizadas
+Bajo el valor de cada prueba personalizada, **Construir visualmente** abre un constructor
+adecuado al tipo: un árbol que haces crecer pulsando nodos, filas que puedes añadir,
+quitar y reordenar, una cuadrícula cuyas celdas cambias al pulsarlas, o un grafo en el que
+pulsas dos nodos para unirlos. El campo JSON de arriba se mantiene sincronizado y
+editable. **Comprobar entradas** comprueba cada prueba personalizada con las
+restricciones del problema (en el entorno aislado, sin ejecutar tu código).
+
 ## Prueba de estrés
 Cuando tu solución pasa los ejemplos pero no estás seguro de ella, abre la pestaña
 **Prueba de estrés** bajo el editor. Escribe una fuerza bruta lenta pero claramente
