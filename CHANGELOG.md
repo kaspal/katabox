@@ -19,6 +19,10 @@ All notable changes to KataBox are recorded in this file. The format follows
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
 
+- **Stress test:** a results-pane tab that runs your solution against your own brute force
+  on many small inputs in the sandbox (from the problem's generator, or random values
+  without Python) until they disagree, then lets you debug, shrink or keep that input.
+  Brute forces are kept per problem and language and travel with an export.
 - **Reading code:** 70 short exercises in Python and TypeScript on Learn home: "what does
   this print?" (loops, strings, references, recursion, scope) and complexity (loops,
   recursion, data structures). Every answer is checked by running the code when the app

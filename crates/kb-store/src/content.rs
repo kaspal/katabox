@@ -17,7 +17,7 @@ use crate::user::ProblemStatus;
 use crate::{Result, StoreError};
 
 /// Bump when `sql/content.sql` changes; the app refuses other versions.
-pub const CONTENT_SCHEMA_VERSION: i64 = 11;
+pub const CONTENT_SCHEMA_VERSION: i64 = 12;
 const SCHEMA: &str = include_str!("../sql/content.sql");
 
 /// A UI language. English is always present in a pack; others fall back to it.
@@ -89,6 +89,8 @@ pub struct PackProblem {
     pub parent: Option<String>,
     /// A fix-the-bug problem (expansion M6): its buggy starter code per language.
     pub fix: Option<Vec<(Language, String)>>,
+    /// gen.py (expansion M8): the stress lab generates inputs with it, in the sandbox.
+    pub generator: Option<String>,
 }
 
 /// An SQL problem's schema (ADR 0031).
@@ -611,6 +613,17 @@ impl ContentDb {
         Ok(Some(ProfileData { inputs, reference }))
     }
 
+    /// A problem's gen.py (expansion M8), when it has one.
+    pub async fn generator(&self, id: &str) -> Result<Option<String>> {
+        Ok(
+            sqlx::query_scalar::<_, Option<String>>("SELECT generator FROM problems WHERE id = ?")
+                .bind(id)
+                .fetch_optional(&self.pool)
+                .await?
+                .flatten(),
+        )
+    }
+
     /// A fix-the-bug problem's buggy starter code in `language` (expansion M6).
     pub async fn starter(&self, id: &str, language: Language) -> Result<Option<String>> {
         Ok(
@@ -782,8 +795,8 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
     sqlx::query(
         "INSERT INTO problems (id, difficulty, pattern, rank, mode, signature, checker,
                                time_limit_ms, memory_mb, profile, validator, schema_sql,
-                               sql_schema, parent_id, kind)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               sql_schema, parent_id, kind, generator)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&p.id)
     .bind(difficulty_code(p.difficulty))
@@ -805,6 +818,7 @@ async fn insert_problem(conn: &mut SqliteConnection, p: &PackProblem) -> Result<
     )
     .bind(&p.parent)
     .bind(if p.fix.is_some() { "fix" } else { "solve" })
+    .bind(&p.generator)
     .execute(&mut *conn)
     .await?;
 
@@ -1058,6 +1072,7 @@ pub(crate) mod tests {
             sql: None,
             parent: None,
             fix: None,
+            generator: Some("def generate(seed, size):\n    return {}\n".into()),
         }
     }
 
@@ -1246,6 +1261,15 @@ pub(crate) mod tests {
         let plain = db.get_problem("gap-a", UiLang::En).await.unwrap();
         assert!(!plain.fix && plain.fix_languages.is_empty());
         assert_eq!(db.starter("gap-a", Language::Python).await.unwrap(), None);
+        // gen.py travels too (expansion M8).
+        assert!(
+            db.generator("gap-a")
+                .await
+                .unwrap()
+                .unwrap()
+                .contains("def generate")
+        );
+        assert_eq!(db.generator("missing").await.unwrap(), None);
         db.close().await;
     }
 
@@ -1291,7 +1315,7 @@ pub(crate) mod tests {
                 .await
                 .unwrap();
         assert_eq!(kinds, ["blob/blob"]);
-        assert_eq!(CONTENT_SCHEMA_VERSION, 11);
+        assert_eq!(CONTENT_SCHEMA_VERSION, 12);
         // Profile data round-trips (ADR 0024); gap-b has none.
         let mut want = packed.profile.clone().unwrap();
         want.reference.sort_by_key(|(l, _)| l.id());

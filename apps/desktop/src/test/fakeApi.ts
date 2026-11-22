@@ -49,6 +49,8 @@ import type {
   ReadingResult,
   ReadingSetSummary,
   ReadingSetView,
+  StressEvent,
+  StressResult,
 } from "@/bindings";
 import type {
   DebugAction,
@@ -383,6 +385,8 @@ export function createFakeApi(
     journal: { failures: 0, tags: [] } as JournalOverview,
     snippets: [] as SnippetRow[],
     readingAnswers: [] as ReadingAnswerRow[],
+    stressBrutes: new Map<string, string>(),
+    stressResult: null as StressResult | null,
     /** Fields merged into getProblem's view (follow-ups, expansion M5). */
     problemExtras: {} as Record<string, Partial<ProblemView>>,
     mistakes: new Map<number, MistakeView>(),
@@ -919,6 +923,30 @@ export function createFakeApi(
         explanation: complexity ? "One pass over n." : "The range stops before 5.",
         attempts: row.attempts,
       };
+    }),
+    stressTest: vi.fn(
+      async (_p: string, _l: Language, _code: string, _brute: string, onEvent: (e: StressEvent) => void): Promise<StressResult> => {
+        onEvent({ rounds: 1, max_rounds: 40, tested: 16 });
+        return (
+          state.stressResult ?? {
+            stop: "found",
+            source: "generator",
+            rounds: 2,
+            tested: 17,
+            input: { nums: [-1, 4], target: 3 },
+            expected: [0, 1],
+            actual: [0, 0],
+            verdict: "wrong_answer",
+            message: null,
+          }
+        );
+      },
+    ),
+    cancelStress: vi.fn(async () => null),
+    stressBrute: vi.fn(async (p: string, l: Language) => state.stressBrutes.get(`${p}:${l}`) ?? null),
+    saveStressBrute: vi.fn(async (p: string, l: Language, code: string) => {
+      state.stressBrutes.set(`${p}:${l}`, code);
+      return null;
     }),
     snippets: vi.fn(async () => [...state.snippets]),
     saveSnippet: vi.fn(async (s: SnippetInput) => {

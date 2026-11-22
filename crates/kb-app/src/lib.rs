@@ -28,6 +28,7 @@ pub mod rating;
 pub mod reading;
 mod root;
 pub mod shrink;
+pub mod stress;
 pub mod transfer;
 pub mod uninstall;
 pub mod window;
@@ -263,6 +264,7 @@ pub struct App {
     debug: std::sync::Mutex<Option<debug::Session>>,
     /// Stop requested for the running shrink (ADR 0030).
     shrink_cancel: std::sync::atomic::AtomicBool,
+    stress_cancel: std::sync::atomic::AtomicBool,
     /// The skill ratings replayed from the history (expansion M2); dropped on every
     /// Submit, kata Submit and import.
     ratings: std::sync::Mutex<Option<Arc<rating::Ratings>>>,
@@ -320,6 +322,7 @@ impl App {
                 .unwrap_or_default(),
             judging: tokio::sync::Mutex::new(()),
             shrink_cancel: std::sync::atomic::AtomicBool::new(false),
+            stress_cancel: std::sync::atomic::AtomicBool::new(false),
             calibration: RwLock::new(calibration),
             clock: std::sync::Mutex::new(None),
             pending_import: std::sync::Mutex::new(None),

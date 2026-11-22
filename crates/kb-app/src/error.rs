@@ -79,6 +79,9 @@ pub enum AppErrorCode {
     ProfileUnavailable,
     /// The failing-test shrinker does not work here (a program problem, no reference).
     ShrinkUnavailable,
+    /// The stress lab does not work here (an SQL problem, or a program problem without
+    /// gen.py or the Python runtime; expansion M8).
+    StressUnavailable,
     /// Anything else, including the app failing to start.
     Internal,
 }

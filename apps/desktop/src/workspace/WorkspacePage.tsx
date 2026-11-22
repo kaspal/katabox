@@ -46,6 +46,7 @@ import { useSnippets } from "@/practice/snippets";
 import { setActiveEditor } from "@/lib/editorBridge";
 import { FollowupBanner, FollowupTabs } from "@/workspace/Followups";
 import { FixBanner } from "@/workspace/FixBanner";
+import { StressPanel } from "@/workspace/results/Stress";
 import { snippetCompletion } from "@/workspace/editor/snippets";
 import { useKataState } from "@/lib/kata";
 import { CompareView, SolveInMenu } from "@/practice/crossLanguage";
@@ -745,6 +746,11 @@ export function WorkspacePage() {
                         )}
                         {judge.lastKind === "submit" && !inKata && !inInterview && <ReflectionCard problemId={problemId} />}
                       </>
+                    ) : null
+                  }
+                  stressPanel={
+                    language ? (
+                      <StressPanel problemId={problemId} language={language} mode={p.mode} />
                     ) : null
                   }
                   debugPanel={

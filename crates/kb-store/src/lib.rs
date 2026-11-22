@@ -27,6 +27,7 @@ pub mod practice;
 pub mod reading;
 pub mod reading_answers;
 pub mod snippets;
+pub mod stress;
 pub mod transfer;
 pub mod user;
 

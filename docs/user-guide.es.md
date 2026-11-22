@@ -191,6 +191,17 @@ Cuando resuelves el problema base, se abren desde la franja bajo el título
 dice qué cambia; sus pruebas, límites y soluciones son propios, y cuenta como un problema
 más en tu historial.
 
+## Prueba de estrés
+Cuando tu solución pasa los ejemplos pero no estás seguro de ella, abre la pestaña
+**Prueba de estrés** bajo el editor. Escribe una fuerza bruta lenta pero claramente
+correcta (por ejemplo, probar todos los pares) y pulsa **Iniciar prueba de estrés**:
+KataBox ejecuta ambas sobre muchas entradas pequeñas en el entorno aislado hasta que no
+coinciden, y muestra esa entrada con las dos salidas. Desde ahí puedes depurarla,
+añadirla a tus pruebas o reducirla. Tu fuerza bruta se guarda para la próxima vez. Sin el
+entorno de Python, las entradas son valores aleatorios pequeños que no se comprueban
+contra las restricciones del problema; los problemas de programa necesitan Python. Los
+problemas SQL no tienen prueba de estrés.
+
 ## Leer código
 **Aprender → Leer código** tiene fragmentos cortos para leer, en Python o TypeScript
 (selector sobre el código):

@@ -15,6 +15,7 @@ use crate::kata::{KATA_MAX_MS, KataAttemptRow, KataSessionRow};
 use crate::plans::{PlanItemRow, PlanRow};
 use crate::reading_answers::ReadingAnswerRow;
 use crate::snippets::SnippetRow;
+use crate::stress::StressBruteRow;
 use crate::user::{code_hash, parse_language, parse_status, parse_verdict, verdict_code};
 use crate::{ProblemStatus, Result, SnapshotSource, UserDb};
 
@@ -177,6 +178,9 @@ pub struct ExportData {
     /// Answers to reading exercises (expansion M7).
     #[serde(default)]
     pub reading_answers: Vec<ReadingAnswerRow>,
+    /// The stress lab's brute-force solutions (expansion M8).
+    #[serde(default)]
+    pub stress_brutes: Vec<StressBruteRow>,
 }
 
 impl ExportData {
@@ -190,6 +194,7 @@ impl ExportData {
             && self.reflections.is_empty()
             && self.snippets.is_empty()
             && self.reading_answers.is_empty()
+            && self.stress_brutes.is_empty()
     }
 }
 
@@ -350,6 +355,7 @@ impl UserDb {
         d.reflections = self.reflections().await?;
         d.snippets = self.snippets().await?;
         d.reading_answers = self.reading_answers().await?;
+        d.stress_brutes = self.stress_brutes().await?;
         for r in sqlx::query("SELECT * FROM settings ORDER BY key")
             .fetch_all(p)
             .await?
@@ -932,6 +938,30 @@ impl UserDb {
                 .entry("reading_answers")
                 .or_default()
                 .count(n, existed);
+        }
+
+        for b in &d.stress_brutes {
+            let existed = row_exists(
+                c,
+                "SELECT 1 FROM stress_brutes WHERE problem_id = ? AND language = ?",
+                &[&b.problem_id, &b.language],
+            )
+            .await?;
+            let n = sqlx::query(
+                "INSERT INTO stress_brutes (problem_id, language, code, updated_at)
+                 VALUES (?, ?, ?, ?)
+                 ON CONFLICT (problem_id, language) DO UPDATE SET code = excluded.code,
+                   updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > stress_brutes.updated_at",
+            )
+            .bind(&b.problem_id)
+            .bind(&b.language)
+            .bind(&b.code)
+            .bind(b.updated_at)
+            .execute(&mut *c)
+            .await?
+            .rows_affected();
+            stats.entry("stress_brutes").or_default().count(n, existed);
         }
 
         for r in &d.settings {

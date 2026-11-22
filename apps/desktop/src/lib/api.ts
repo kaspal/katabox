@@ -5,6 +5,8 @@ import { Channel } from "@tauri-apps/api/core";
 import { recordError } from "@/lib/diagnostics";
 import {
   commands,
+  type StressEvent,
+  type StressResult,
   type ReadingAnswer,
   type ReadingAnswerRow,
   type ReadingLink,
@@ -168,6 +170,23 @@ export const api = {
     return call(commands.shrink(problem, language, code, input, ch));
   },
   cancelShrink: (): Promise<null> => call(commands.cancelShrink()),
+  // The stress lab (expansion M8, ADR 0036)
+  stressTest: (
+    problem: string,
+    language: Language,
+    code: string,
+    brute: string,
+    onEvent: (e: StressEvent) => void,
+  ): Promise<StressResult> => {
+    const ch = new Channel<StressEvent>();
+    ch.onmessage = onEvent;
+    return call(commands.stressTest(problem, language, code, brute, ch));
+  },
+  cancelStress: (): Promise<null> => call(commands.cancelStress()),
+  stressBrute: (problem: string, language: Language): Promise<string | null> =>
+    call(commands.stressBrute(problem, language)),
+  saveStressBrute: (problem: string, language: Language, code: string): Promise<null> =>
+    call(commands.saveStressBrute(problem, language, code)),
   submit: (
     problem: string,
     language: Language,

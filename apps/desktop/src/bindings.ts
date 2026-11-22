@@ -609,6 +609,41 @@ async interviews(lang: UiLang) : Promise<Result<InterviewResult[], AppError>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * The stress lab (expansion M8): `code` against `brute` on generated inputs.
+ */
+async stressTest(problem: string, language: Language, code: string, brute: string, onEvent: TAURI_CHANNEL<StressEvent>) : Promise<Result<StressResult, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("stress_test", { problem, language, code, brute, onEvent }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async cancelStress() : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("cancel_stress") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async stressBrute(problem: string, language: Language) : Promise<Result<string | null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("stress_brute", { problem, language }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async saveStressBrute(problem: string, language: Language, code: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_stress_brute", { problem, language, code }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async readingSets(uiLang: UiLang) : Promise<Result<ReadingSetSummary[], AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("reading_sets", { uiLang }) };
@@ -1244,6 +1279,11 @@ export type AppErrorCode =
  * The failing-test shrinker does not work here (a program problem, no reference).
  */
 "shrink_unavailable" | 
+/**
+ * The stress lab does not work here (an SQL problem, or a program problem without
+ * gen.py or the Python runtime; expansion M8).
+ */
+"stress_unavailable" | 
 /**
  * Anything else, including the app failing to start.
  */
@@ -2606,6 +2646,56 @@ frame: number; locals: VarInfo[]; globals: VarInfo[]; expanded: Expansion[]; eva
  * The visualizer's structured snapshot, when it was asked for (ADR 0027).
  */
 snapshot?: DebugSnapshot | null }
+/**
+ * Progress, after each round.
+ */
+export type StressEvent = { rounds: number; max_rounds: number; tested: number }
+export type StressResult = { stop: StressStop; source: StressSource; rounds: number; 
+/**
+ * Inputs both programs ran on.
+ */
+tested: number; 
+/**
+ * Found / BruteFailed: the input.
+ */
+input: Partial<{ [key in string]: JsonValue }> | null; 
+/**
+ * Found: the brute force's output.
+ */
+expected: JsonValue | null; 
+/**
+ * Found: the solution's output, when it returned one; BruteFailed: the brute's.
+ */
+actual: JsonValue | null; verdict: Verdict | null; message: Message | null }
+/**
+ * Where the inputs come from.
+ */
+export type StressSource = 
+/**
+ * The problem's gen.py, checked by its validate.py.
+ */
+"generator" | 
+/**
+ * Small random values from the signature, not checked against the constraints.
+ */
+"random"
+export type StressStop = 
+/**
+ * The solution and the brute force disagree on `input`.
+ */
+"found" | 
+/**
+ * The brute force itself failed (error, time limit, does not compile) on `input`.
+ */
+"brute_failed" | 
+/**
+ * No disagreement within the round and time budget.
+ */
+"budget" | 
+/**
+ * The user pressed Stop.
+ */
+"cancelled"
 export type SubmissionSummary = { id: number; problem_id: string; language: Language; verdict: Verdict; time_us: number; memory_kb: number; created_at: number }
 /**
  * A submission as the UI sees it: hidden tests redacted.
@@ -2694,7 +2784,7 @@ export type TopicReview = { topic: LearnTopicSummary; problem: ProblemSummary }
 /**
  * How many records of each kind a file holds.
  */
-export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number; mistakes: number; reflections: number; snippets: number; reading_answers: number }
+export type TransferCounts = { statuses: number; submissions: number; snapshots: number; notes: number; drafts: number; hint_unlocks: number; opens: number; reviews: number; daily_picks: number; lists: number; interviews: number; settings: number; kata_sessions: number; kata_attempts: number; study_plans: number; plan_items: number; mistakes: number; reflections: number; snippets: number; reading_answers: number; stress_brutes: number }
 /**
  * Why a trace stopped before the program ended.
  */

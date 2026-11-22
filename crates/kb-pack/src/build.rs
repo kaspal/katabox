@@ -138,6 +138,8 @@ fn read_package(dir: &Path) -> Result<PackProblem, String> {
         validator: fs::read_to_string(dir.join("validate.py")).ok(),
         sql,
         parent: meta.parent,
+        // The stress lab (expansion M8) generates inputs with gen.py.
+        generator: fs::read_to_string(dir.join("gen.py")).ok(),
         // Fix the bug (expansion M6): the buggy code becomes the starter.
         fix: match meta.kind.as_deref() {
             Some("fix") => Some(

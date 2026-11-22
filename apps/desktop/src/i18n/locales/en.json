@@ -528,7 +528,8 @@
     "profile_unavailable": "This problem has no complexity profile.",
     "shrink_unavailable": "Finding a smaller failing input is not available here (a program problem, or no reference solution in this language).",
     "locked_in_kata": "This is locked during the kata. It opens again when the kata ends.",
-    "kata_active": "A kata is running. End it first."
+    "kata_active": "A kata is running. End it first.",
+    "stress_unavailable": "The stress test is not available here (an SQL problem, or a program problem without its generator or the Python runtime)."
   },
   "judge": {
     "verdict": {
@@ -875,7 +876,8 @@
         "mistakes": "Mistake journal entries",
         "reflections": "Reflections",
         "snippets": "Snippets",
-        "reading_answers": "Reading exercise answers"
+        "reading_answers": "Reading exercise answers",
+        "stress_brutes": "Stress test brute forces"
       }
     },
     "crossLang": {
@@ -3264,5 +3266,25 @@
     "dominantLine": "Line {{line}} dominates the cost.",
     "practiceHeading": "Reading exercises",
     "linkTitle": "{{set}}, item {{n}}"
+  },
+  "stress": {
+    "tab": "Stress test",
+    "title": "Stress test",
+    "intro": "Write a slow but obviously correct brute force here. The stress test runs it and your solution on many small inputs, in the sandbox, until they disagree.",
+    "bruteLabel": "Brute force in {{language}}",
+    "start": "Start stress test",
+    "stop": "Stop",
+    "starting": "Generating inputs…",
+    "progress": "Round {{rounds}} of {{max}}: {{tested}} inputs agree so far",
+    "bruteOutput": "Brute force",
+    "yourOutput": "Your solution",
+    "random": "Without the Python runtime the inputs are small random values: they are not checked against the problem's constraints.",
+    "sql": "SQL problems have no stress test.",
+    "stopped": {
+      "found": "Found a disagreement after {{tested}} inputs",
+      "brute_failed": "Your brute force failed on this input",
+      "budget": "No disagreement in {{tested}} inputs ({{rounds}} rounds)",
+      "cancelled": "Stopped after {{tested}} inputs"
+    }
   }
 }

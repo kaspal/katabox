@@ -267,6 +267,57 @@ async fn cancel_shrink(state: State<'_, AppState>) -> Res<()> {
     Ok(())
 }
 
+/// The stress lab (expansion M8): `code` against `brute` on generated inputs.
+#[tauri::command]
+#[specta::specta]
+async fn stress_test(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+    code: String,
+    brute: String,
+    on_event: Channel<kb_app::stress::StressEvent>,
+) -> Res<kb_app::stress::StressResult> {
+    let send = move |e| {
+        let _ = on_event.send(e);
+    };
+    state
+        .app()?
+        .stress(&problem, language, &code, &brute, send)
+        .await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn cancel_stress(state: State<'_, AppState>) -> Res<()> {
+    state.app()?.cancel_stress();
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn stress_brute(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+) -> Res<Option<String>> {
+    state.app()?.stress_brute(&problem, language).await
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn save_stress_brute(
+    state: State<'_, AppState>,
+    problem: String,
+    language: Language,
+    code: String,
+) -> Res<()> {
+    state
+        .app()?
+        .save_stress_brute(&problem, language, &code)
+        .await
+}
+
 /// Every test; the submission is recorded. Progress goes to `on_event`.
 #[tauri::command]
 #[specta::specta]
@@ -1152,6 +1203,10 @@ fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         interview_active,
         end_interview,
         interviews,
+        stress_test,
+        cancel_stress,
+        stress_brute,
+        save_stress_brute,
         reading_sets,
         reading_set,
         reading_answers,

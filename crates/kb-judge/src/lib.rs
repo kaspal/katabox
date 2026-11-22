@@ -19,6 +19,7 @@ pub mod problem;
 pub mod profile;
 pub mod program;
 mod protocol;
+pub mod randgen;
 pub mod sandbox;
 pub mod shrink;
 pub mod signature;

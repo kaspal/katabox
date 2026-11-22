@@ -86,6 +86,7 @@ pub struct TransferCounts {
     pub reflections: u32,
     pub snippets: u32,
     pub reading_answers: u32,
+    pub stress_brutes: u32,
 }
 
 fn counts(d: &ExportData) -> TransferCounts {
@@ -111,6 +112,7 @@ fn counts(d: &ExportData) -> TransferCounts {
         reflections: n(d.reflections.len()),
         snippets: n(d.snippets.len()),
         reading_answers: n(d.reading_answers.len()),
+        stress_brutes: n(d.stress_brutes.len()),
     }
 }
 
@@ -210,6 +212,7 @@ fn validate(f: &ExportFile) -> Result<()> {
         d.reflections.len(),
         d.snippets.len(),
         d.reading_answers.len(),
+        d.stress_brutes.len(),
     ];
     if sizes.iter().any(|n| *n > MAX_ROWS) {
         return Err(invalid(format!("more than {MAX_ROWS} records of one kind")));
@@ -449,6 +452,18 @@ fn validate(f: &ExportFile) -> Result<()> {
         });
         if !id_ok || !(1..=1_000_000).contains(&a.attempts) {
             return Err(invalid(format!("{p}: bad reading answer")));
+        }
+    }
+    for (i, b) in d.stress_brutes.iter().enumerate() {
+        let p = format!("stress_brutes[{i}]");
+        check_id(&p, &b.problem_id)?;
+        check_time(&p, b.updated_at)?;
+        let lang_ok = b
+            .language
+            .parse::<kb_core::Language>()
+            .is_ok_and(|l| kb_judge::languages::SUPPORTED.contains(&l));
+        if !lang_ok || b.code.len() > crate::stress::MAX_BRUTE_BYTES {
+            return Err(invalid(format!("{p}: bad brute-force solution")));
         }
     }
     Ok(())

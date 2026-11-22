@@ -528,7 +528,8 @@
     "profile_unavailable": "Este problema no tiene perfil de complejidad.",
     "shrink_unavailable": "Aquí no se puede buscar una entrada más pequeña que falle (es un problema de programa o no hay solución de referencia en este lenguaje).",
     "locked_in_kata": "Esto está bloqueado durante la kata. Se abre de nuevo cuando la kata termina.",
-    "kata_active": "Hay una kata en curso. Termínala primero."
+    "kata_active": "Hay una kata en curso. Termínala primero.",
+    "stress_unavailable": "La prueba de estrés no está disponible aquí (un problema SQL, o un problema de programa sin su generador o sin el entorno de Python)."
   },
   "judge": {
     "verdict": {
@@ -875,7 +876,8 @@
         "mistakes": "Entradas del diario de errores",
         "reflections": "Reflexiones",
         "snippets": "Fragmentos",
-        "reading_answers": "Respuestas de ejercicios de lectura"
+        "reading_answers": "Respuestas de ejercicios de lectura",
+        "stress_brutes": "Fuerzas brutas de pruebas de estrés"
       }
     },
     "crossLang": {
@@ -3264,5 +3266,25 @@
     "dominantLine": "La línea {{line}} domina el coste.",
     "practiceHeading": "Ejercicios de lectura",
     "linkTitle": "{{set}}, elemento {{n}}"
+  },
+  "stress": {
+    "tab": "Prueba de estrés",
+    "title": "Prueba de estrés",
+    "intro": "Escribe aquí una fuerza bruta lenta pero claramente correcta. La prueba de estrés la ejecuta junto a tu solución sobre muchas entradas pequeñas, en el entorno aislado, hasta que no coincidan.",
+    "bruteLabel": "Fuerza bruta en {{language}}",
+    "start": "Iniciar prueba de estrés",
+    "stop": "Detener",
+    "starting": "Generando entradas…",
+    "progress": "Ronda {{rounds}} de {{max}}: {{tested}} entradas coinciden por ahora",
+    "bruteOutput": "Fuerza bruta",
+    "yourOutput": "Tu solución",
+    "random": "Sin el entorno de Python, las entradas son valores aleatorios pequeños: no se comprueban contra las restricciones del problema.",
+    "sql": "Los problemas SQL no tienen prueba de estrés.",
+    "stopped": {
+      "found": "Hay una diferencia tras {{tested}} entradas",
+      "brute_failed": "Tu fuerza bruta falló con esta entrada",
+      "budget": "Ninguna diferencia en {{tested}} entradas ({{rounds}} rondas)",
+      "cancelled": "Detenida tras {{tested}} entradas"
+    }
   }
 }
