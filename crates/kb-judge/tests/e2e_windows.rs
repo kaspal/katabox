@@ -399,7 +399,10 @@ export function twoSum(nums: number[], target: number): number[] {
     assert_eq!(r.tests[0].result.verdict, Verdict::Accepted);
     let f = r.first_failure.unwrap();
     assert_eq!(f.verdict, Verdict::WrongAnswer);
-    assert_eq!(f.stdout, "nums = [ -6, 14, 3, 20, -1 ]\n{\"kind\":\"done\"}\n");
+    assert_eq!(
+        f.stdout,
+        "nums = [ -6, 14, 3, 20, -1 ]\n{\"kind\":\"done\"}\n"
+    );
 }
 
 #[test]
