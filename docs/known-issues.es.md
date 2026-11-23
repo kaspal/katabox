@@ -1,6 +1,6 @@
 # Problemas conocidos
 
-Problemas y límites conocidos de KataBox 1.0.0-beta.1. Cada punto explica qué pasa y, cuando
+Problemas y límites conocidos de KataBox 1.0.0-beta.2. Cada punto explica qué pasa y, cuando
 existe, qué se puede hacer.
 
 [English](known-issues.md)
@@ -8,11 +8,12 @@ existe, qué se puede hacer.
 ## Instalación y actualización
 
 ### Windows SmartScreen muestra una advertencia sobre el instalador
-**Qué pasa:** los instaladores todavía no tienen firma de código. La primera vez que ejecutas
-uno, Windows puede mostrar "Windows protegió tu PC".
+**Qué pasa:** los instaladores todavía no tienen firma de código, así que la primera vez que
+ejecutas uno, Windows puede mostrar "Windows protegió tu PC" con "Editor desconocido". La firma
+está prevista para una beta posterior.
 **Solución:** haz clic en **Más información** y luego en **Ejecutar de todas formas**. Si
 quieres confirmar que el archivo es el original, compáralo con las sumas SHA-256 de la página
-de la versión.
+de la versión (PowerShell: `Get-FileHash <archivo>`).
 
 ### No hay actualizaciones automáticas
 **Qué pasa:** KataBox no busca ni descarga versiones nuevas.
@@ -20,8 +21,8 @@ de la versión.
 versión actual. Tu progreso, tus borradores y tu configuración se conservan.
 
 ### Solo para Windows
-**Qué pasa:** esta versión no incluye una compilación para Linux. El soporte para Linux está
-previsto.
+**Qué pasa:** las compilaciones para Linux todavía no se publican. El sandbox de Linux existe y
+está probado, pero los paquetes no; el soporte para Linux está previsto.
 **Solución:** ninguna por ahora.
 
 ### El primer uso de un lenguaje requiere una descarga

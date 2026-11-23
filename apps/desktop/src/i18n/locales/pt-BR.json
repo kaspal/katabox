@@ -3093,12 +3093,12 @@
     "title": "Novidades do KataBox {{version}}",
     "intro": "O KataBox foi atualizado. Seu progresso, seus rascunhos e suas configurações continuam aqui.",
     "items": {
-      "practice": "209 problemas originais: de função, de programa (stdin/stdout) e de SQL, do fácil ao difícil.",
-      "sql": "Problemas de SQL no SQLite, com um painel de tabelas e uma comparação linha por linha do seu resultado.",
-      "learn": "Aprender: 118 tópicos animados em 14 matérias, com questionários e três trilhas de aprendizagem.",
-      "debugger": "Depure e visualize Python e TypeScript, agora também em problemas de programa.",
-      "shrinker": "\"Encontrar uma entrada menor que falha\" transforma um teste que falha no menor teste que ainda falha.",
-      "about": "Configurações → Sobre mostra as versões, as licenças e todos os atalhos de teclado (F1)."
+      "home": "Um novo Início: a sessão de hoje (seu rascunho, o problema do dia, uma kata e o próximo passo da sua trilha), sua semana e o que assistir agora.",
+      "brand": "Um novo ícone e uma breve animação de abertura (Configurações → Aparência → Animação de abertura).",
+      "content": "273 pacotes de problemas: 233 problemas, incluindo 24 de \"corrija o erro\", e 40 variantes mais difíceis; além de 70 exercícios de \"ler o código\" em Aprender.",
+      "practice": "Novas formas de praticar: katas, uma avaliação por padrão, planos de estudo, um diário de erros, sessões de foco e um teste de estresse contra sua própria força bruta.",
+      "packs": "Pacotes de problemas, um editor de problemas integrado e tarefas para a turma.",
+      "app": "Português (Brasil), Progresso e Configurações em abas, busca global (Ctrl+Shift+P), snippets e backups automáticos."
     },
     "more": "A lista completa está em CHANGELOG.md (Configurações → Sobre).",
     "close": "Entendi"

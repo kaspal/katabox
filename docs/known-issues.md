@@ -1,6 +1,6 @@
 # Known issues
 
-Known issues and limits in KataBox 1.0.0-beta.1. Each item says what happens and, where
+Known issues and limits in KataBox 1.0.0-beta.2. Each item says what happens and, where
 there is one, what to do about it.
 
 [Español](known-issues.es.md)
@@ -8,10 +8,12 @@ there is one, what to do about it.
 ## Installing and updating
 
 ### Windows SmartScreen warns about the installer
-**What happens:** the installers are not code-signed yet. The first time you run one,
-Windows may show "Windows protected your PC".
+**What happens:** the installers are not code-signed yet, so the first time you run one,
+Windows may show "Windows protected your PC" with "Unknown publisher". Signing is planned
+for a later beta.
 **Workaround:** click **More info**, then **Run anyway**. Check the file against the
-SHA-256 checksums on the release page if you want to be sure it is the original.
+SHA-256 checksums on the release page if you want to be sure it is the original
+(PowerShell: `Get-FileHash <file>`).
 
 ### No automatic updates
 **What happens:** KataBox does not check for or download new versions.
@@ -19,7 +21,8 @@ SHA-256 checksums on the release page if you want to be sure it is the original.
 current version. Your progress, drafts and settings are kept.
 
 ### Windows only
-**What happens:** there is no Linux build in this release. Linux support is planned.
+**What happens:** Linux builds are not released yet. The Linux sandbox exists and is
+tested, but the packages are not; Linux support is planned.
 **Workaround:** none for now.
 
 ### First use of a language needs a download
