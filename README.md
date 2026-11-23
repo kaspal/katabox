@@ -1,35 +1,37 @@
 # KataBox
 
+<img src="apps/desktop/src-tauri/icons/128x128.png" alt="" width="96" height="96" align="right">
+
 **Offline coding practice for your desktop.** KataBox is a free, open-source app for practising coding problems, from easy to hard, in Python, JavaScript/TypeScript, PHP, Rust and SQL. Your code runs on your own machine in a sandbox and is judged against public and hidden tests. No account, no subscription, and no internet needed once a language is installed.
 
 [Leer en español](README.es.md)
 
-> **Status:** 1.0.0-beta.1, Windows only. Linux builds are not available yet.
+> **Status:** 1.0.0-beta.2, Windows only. Linux builds are not available yet. [Download it from the Releases page](https://github.com/kaspal/katabox/releases).
 
 ## Features
 
-- **209 original problems:** 150 function problems, 35 program problems (stdin/stdout) and 24 SQL problems (SQLite). 68 easy, 90 medium, 51 hard, across 27 patterns.
+- **273 problem packages:** 233 original problems (174 function problems, 24 of them "fix the bug" problems that start from buggy code; 35 program problems with stdin/stdout; 24 SQL problems on SQLite) and 40 harder follow-up variants. 76 easy, 101 medium and 56 hard problems across 27 patterns.
 - **Five languages:** Python, JavaScript/TypeScript, PHP and Rust for function and program problems; SQL for SQL problems.
 - **Tests:** public examples, your own custom tests, and hidden tests that show the first failing input after a failed submit. For function problems, a shrinker finds a smaller input that still fails.
 - **Editor:** autocomplete and diagnostics from local language servers (Python, TypeScript, Rust).
 - **Debugger and visualizer** for Python and TypeScript: step through a test case and see your arrays, grids, linked lists, trees, maps and graphs change.
 - **Estimated complexity** for 95 problems: runs your solution on growing inputs and estimates its time complexity.
 - **Help when you are stuck:** three tiers of hints and an editorial for every problem.
-- **Learn:** 118 topics in 14 subjects, with step-by-step animations, theory, sample code and quizzes, plus 3 learning paths.
-- **Practice modes:** timed mock interviews, spaced reviews, a daily problem, a streak and personal lists.
+- **Learn:** 118 topics in 14 subjects, with step-by-step animations, theory, sample code and quizzes, plus 3 learning paths and 8 sets of "read the code" exercises.
+- **A Home that plans your session:** continue your draft, the daily problem, a daily kata and the next step on your path, with time estimates; your week, your solved count and what to watch next.
+- **Practice modes:** timed mock interviews, spaced reviews, a daily problem, a streak and personal lists; kata drills against the clock, a skill rating per pattern, study plans, a mistake journal, focus sessions and a stress test against your own brute force.
 - **Progress:** stats, an activity heatmap, progress by difficulty and topic, and a history of your submissions and code snapshots.
-- **Export and import** of your progress as a single file.
-- **English and Spanish** interface.
+- **Problem packs and classroom mode:** import verified `.kbpack` problem sets, make your own with the in-app editor, and hand out assignments.
+- **Export and import** of your progress as a single file, and automatic backups to a folder you choose.
+- **Three interface languages:** English, Spanish and Portuguese (Brazil).
 
 ## Screenshots
 
-![The Library: problems filtered by pattern, difficulty and status](docs/images/library.png)
+![Home: today's session, the week, the solved rings and the learning path](docs/images/home.png)
 
-![The workspace with the debugger paused on a test case](docs/images/workspace-debugger.png)
+![A problem workspace: the statement, the editor and the test results](docs/images/workspace.png)
 
 ![A Learn topic with its step-by-step animation](docs/images/learn.png)
-
-![An SQL problem with its tables and the query editor](docs/images/sql.png)
 
 ![The Progress page](docs/images/progress.png)
 
@@ -52,7 +54,7 @@ Linux is not available yet.
 
 ## Install
 
-1. Download `KataBox_1.0.0-beta.1_x64-setup.exe` from the [Releases](https://github.com/kaspal/katabox/releases) page.
+1. Download `KataBox_1.0.0-beta.2_x64-setup.exe` from the [Releases](https://github.com/kaspal/katabox/releases) page.
 2. Run it. It installs for your user only; no administrator rights are needed.
 3. This beta is not code-signed, so Windows SmartScreen may show "Windows protected your PC". Click **More info**, then **Run anyway**.
 4. On first start, KataBox asks which languages to install and downloads them. After that it works offline.

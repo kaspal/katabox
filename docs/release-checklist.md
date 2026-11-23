@@ -1,6 +1,7 @@
 # Release checklist
 
-These are the steps used for 1.0.0-beta.1, in order, so the next release repeats them.
+These are the steps used for 1.0.0-beta.1 and 1.0.0-beta.2, in order, so the next release
+repeats them.
 Releases are built by `.github/workflows/release.yml` from a `v*` tag into a **draft,
 pre-release** GitHub release (ADR 0021, Windows only for now). Everything up to step 8
 happens locally on Windows, on a `chore/release-<version>` branch from an up-to-date
@@ -20,12 +21,23 @@ happens locally on Windows, on a `chore/release-<version>` branch from an up-to-
 ## 2. Documents
 - **`CHANGELOG.md`:** a section for the version (features, fixes, content added).
 - **Release notes:** `release/<version>.md` (highlights, install, upgrading, known
-  issues, a checksums placeholder).
+  issues, a checksums placeholder). While the installers are unsigned, keep the
+  "The installer is unsigned" section with the SmartScreen steps (**More info** →
+  **Run anyway**).
+- **`SECURITY.md`:** the supported-versions table (the new version Yes, the previous
+  one No). Reports go through GitHub private vulnerability reporting; no email address.
 - **`docs/known-issues.md` and `.es.md`:** add what's new, remove what's fixed.
 - **README and user guide:** update the numbers if the catalogue changed. Retake the
-  `docs/images/` screenshots when the UI changed visibly (1280 × 800, light theme).
-- **"What's new":** `whatsNew.items` in both locales holds the highlights for the
-  dialog shown after an upgrade (`apps/desktop/src/app/WhatsNew.tsx`).
+  `docs/images/` screenshots when the UI changed visibly (1280 × 800, light theme):
+  Home, a problem workspace, Learn and Progress.
+  - A dev build shows a **DEV DATA** badge that release builds don't have; hide it for
+    the screenshots (or take them from an installed build).
+  - If port 1420 is taken (for example by another checkout's dev server), run
+    `pnpm tauri dev --config <file>` with `build.devUrl` `http://localhost:1430` and
+    `beforeDevCommand` `pnpm vite --port 1430 --strictPort`.
+- **"What's new":** `whatsNew.items` in the three UI locales (EN, ES, pt-BR) holds the
+  highlights for the dialog shown after an upgrade; the item ids are listed in
+  `WHATS_NEW_ITEMS` (`apps/desktop/src/app/WhatsNew.tsx`).
 
 ## 3. Pins and notices
 - If `crates/kb-toolchain/manifest.toml` changed since the last release, run
@@ -41,7 +53,10 @@ happens locally on Windows, on a `chore/release-<version>` branch from an up-to-
   - the desktop app, with and without `updater`.
 - **Bindings:** `cargo run -p katabox-desktop --features bindings --bin export-bindings`,
   then `git diff --exit-code apps/desktop/src/bindings.ts`.
-- `cargo test` for the crates the release changed, run with `--test-threads=1`.
+- `cargo test` for the crates the release changed, run with `--test-threads=1` (the
+  judge suites share one sandbox user; `judge_windows`'s shrink test is flaky under
+  parallel load).
+- The Windows e2e suites, once each, one at a time.
 - The kb-runner attack suite, once, after the release build:
   `cargo test -p kb-runner --test attacks_windows`.
 - `pnpm test`, `pnpm build`, `pnpm licenses:check`.
@@ -117,7 +132,7 @@ happens locally on Windows, on a `chore/release-<version>` branch from an up-to-
    3. Re-hash. Every hash, the file count and the size must match.
    4. Don't start the app before re-hashing.
 
-Screenshots of each step go in `.handoff/screenshots/release/`. The CDP driver
+Screenshots of each step go in `.handoff/screenshots/release-<version>/`. The CDP driver
 `drive-release.mjs` there automates the app: start it with
 `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9224`.
 
@@ -129,6 +144,10 @@ Commit on the release branch, push, open the PR. CI must be green. The maintaine
 merges.
 
 ## 8. Tag and draft release (maintainer)
+Before the first public release: make the repository public (GitHub Actions minutes are
+free for public repositories), turn on **private vulnerability reporting** (Settings →
+Code security), and read `.handoff/history-sweep.md` (merged branches to delete).
+
 1. On `main`: `git tag -a v<version> -m "KataBox <version>"` and
    `git push origin v<version>`.
 2. In the draft release:
