@@ -3093,12 +3093,12 @@
     "title": "What's new in KataBox {{version}}",
     "intro": "KataBox was updated. Your progress, drafts and settings are all still here.",
     "items": {
-      "practice": "209 original problems: function, program (stdin/stdout) and SQL, from easy to hard.",
-      "sql": "SQL problems on SQLite, with a Tables panel and a row-by-row comparison of your result.",
-      "learn": "Learn: 118 animated topics in 14 subjects, with quizzes and three learning paths.",
-      "debugger": "Debug and visualize Python and TypeScript, now also in program problems.",
-      "shrinker": "\"Find a smaller failing input\" turns a failing test into the smallest one that still fails.",
-      "about": "Settings → About shows the versions, the licences and every keyboard shortcut (F1)."
+      "home": "A new Home: today's session (your draft, the daily problem, a kata and the next step on your path), your week and what to watch next.",
+      "brand": "A new icon, and a short startup animation (Settings → Appearance → Startup animation).",
+      "content": "273 problem packages: 233 problems, including 24 \"fix the bug\" problems, and 40 harder follow-ups; plus 70 \"read the code\" exercises in Learn.",
+      "practice": "New ways to practise: kata drills, a skill rating, study plans, a mistake journal, focus sessions and a stress test against your own brute force.",
+      "packs": "Problem packs, an in-app problem editor and classroom assignments.",
+      "app": "Português (Brasil), Progress and Settings in tabs, global search (Ctrl+Shift+P), snippets and automatic backups."
     },
     "more": "The full list is in CHANGELOG.md (Settings → About).",
     "close": "Got it"

@@ -13,5 +13,5 @@ most `k`, so the answer is whether the final cell is at most `k`.
 
 ## Complexity
 
-O(typed.length · k) time, about 2·10⁴ · 41 ≈ 8·10⁵ cells, and O(k) extra memory when you
+O(typed.length · k) time, about 5·10⁴ · 41 ≈ 2·10⁶ cells, and O(k) extra memory when you
 keep only the previous row's band.

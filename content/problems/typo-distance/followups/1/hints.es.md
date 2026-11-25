@@ -1,4 +1,4 @@
-La tabla completa del problema base tendría 2·10⁴ · 2·10⁴ = 4·10⁸ celdas: demasiado lenta
+La tabla completa del problema base tendría 5·10⁴ · 5·10⁴ = 2,5·10⁹ celdas: demasiado lenta
 y demasiado grande. Pero solo necesitas saber si la distancia es como mucho `k`. ¿Qué
 celdas pueden importar todavía?
 ---

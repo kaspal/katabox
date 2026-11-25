@@ -2,5 +2,5 @@
 # built into content.db and shown on Settings → About. Bump the version and the date
 # when the content changes in a release (docs/release-checklist.md).
 id = "core"
-version = "1.0.0"
-date = "2026-11-15"
+version = "1.0.1"
+date = "2026-11-22"

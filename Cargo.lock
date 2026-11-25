@@ -2052,7 +2052,7 @@ dependencies = [
 
 [[package]]
 name = "katabox-desktop"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "dirs 6.0.0",
  "kb-app",
@@ -2075,7 +2075,7 @@ dependencies = [
 
 [[package]]
 name = "kb-app"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "kb-bridge",
  "kb-core",
@@ -2094,7 +2094,7 @@ dependencies = [
 
 [[package]]
 name = "kb-bridge"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "kb-core",
  "kb-toolchain",
@@ -2109,7 +2109,7 @@ dependencies = [
 
 [[package]]
 name = "kb-core"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "serde",
  "serde_json",
@@ -2119,7 +2119,7 @@ dependencies = [
 
 [[package]]
 name = "kb-judge"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "fs4",
  "kb-core",
@@ -2134,7 +2134,7 @@ dependencies = [
 
 [[package]]
 name = "kb-pack"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "flate2",
  "kb-core",
@@ -2152,7 +2152,7 @@ dependencies = [
 
 [[package]]
 name = "kb-runner"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "hakoniwa",
  "kb-core",
@@ -2166,7 +2166,7 @@ dependencies = [
 
 [[package]]
 name = "kb-store"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "kb-core",
  "kb-judge",
@@ -2183,7 +2183,7 @@ dependencies = [
 
 [[package]]
 name = "kb-toolchain"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "base64 0.23.1",
  "flate2",

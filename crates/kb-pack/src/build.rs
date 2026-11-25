@@ -282,7 +282,7 @@ mod tests {
             assert_eq!(en.signature["params"][0]["type"], "int[]");
             let es = db.get_problem("two-sum", UiLang::Es).await.unwrap();
             assert_eq!(es.title, "Suma de dos");
-            assert!(es.statement.contains("índices"));
+            assert!(es.statement.contains("devoluciones"));
             assert_eq!(es.hints.len(), 3);
             assert_ne!(es.hints, en.hints); // hints.es.md
             assert!(en.has_validator);
@@ -318,7 +318,7 @@ mod tests {
                     .is_none()
             );
 
-            for q in ["two sum", "TWO", "hash-map", "índices", "indices", "suma"] {
+            for q in ["two sum", "TWO", "hash-map", "línea", "linea", "suma"] {
                 let hits = db
                     .list_problems(&ProblemFilter {
                         query: Some(q.into()),

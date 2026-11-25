@@ -6,6 +6,11 @@ All notable changes to KataBox are recorded in this file. The format follows
 
 ## [Unreleased]
 
+## [1.0.0-beta.2] - 2026-11-22
+
+The first public release. The Windows installers are unsigned for now (see the release
+notes).
+
 ### Added
 - A new **Home**: today's session (continue, daily problem, daily kata, the next step on
   your path, with time estimates and **Start session**), this week, solved rings, **Your
@@ -26,7 +31,6 @@ All notable changes to KataBox are recorded in this file. The format follows
   - Every tab and section can be linked to, and the last one used opens next time.
 - The command palette opens each Progress tab and Settings section ("Progress: By
   pattern", "Settings: Editor").
-
 - **Problem packs:** import `.kbpack` problem sets (Settings → Packs) after a preview that
   shows what the pack is; every file is checked (names, types, sizes, hashes, metadata,
   text) and pack code only runs in the sandbox. Packs are marked everywhere, stay out of
@@ -100,7 +104,16 @@ All notable changes to KataBox are recorded in this file. The format follows
 
 ### Changed
 - Exports are now format `katabox-export/v2`, which carries the new kinds of records
-  added below. Files exported by 1.0.0-beta.1 (`v1`) still import.
+  added above. Files exported by 1.0.0-beta.1 (`v1`) still import.
+- **Content pack 1.0.1:** the catalogue has 273 problem packages (233 problems and 40
+  follow-ups), 118 Learn topics, 8 reading sets and 3 learning paths.
+  - Two Sum has a new statement and new examples in KataBox's own setting (a shop's
+    ledger); the task, its tests and your history are unchanged.
+  - Two follow-ups test their harder idea at full size: "Recent Pages" (least frequently
+    used) now has a cache of 50 000 pages, and "Typo Distance: Close Enough?" takes words
+    of up to 10⁵ letters, so the full table no longer fits in the time limit.
+- `SECURITY.md`: vulnerabilities are reported through GitHub's private vulnerability
+  reporting.
 
 ### Fixed
 - The command palette now finds a command typed exactly as its label, punctuation
@@ -223,4 +236,6 @@ The first release. Everything below is new.
   third-party notices.
 - A "What's new" dialog after an upgrade.
 
+[Unreleased]: https://github.com/kaspal/katabox/compare/v1.0.0-beta.2...HEAD
+[1.0.0-beta.2]: https://github.com/kaspal/katabox/compare/v1.0.0-beta.1...v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/kaspal/katabox/releases/tag/v1.0.0-beta.1

@@ -1,1 +1,1 @@
-{"input": {"nums": [7, -3, 10, 5], "target": 2}, "output": [1, 3]}
+{"input": {"nums": [-6, 14, 3, 20, -1], "target": 14}, "output": [0, 3]}

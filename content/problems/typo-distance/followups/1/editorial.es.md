@@ -13,5 +13,5 @@ celda es como mucho `k`, así que la respuesta es si la última celda es como mu
 
 ## Complejidad
 
-O(typed.length · k) en tiempo, unas 2·10⁴ · 41 ≈ 8·10⁵ celdas, y O(k) de memoria extra si
+O(typed.length · k) en tiempo, unas 5·10⁴ · 41 ≈ 2·10⁶ celdas, y O(k) de memoria extra si
 solo guardas la banda de la fila anterior.

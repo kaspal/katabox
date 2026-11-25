@@ -17,7 +17,7 @@ import { settingKey, useSetting } from "@/lib/settings";
 export const LAST_VERSION_KEY = "app.last_version";
 
 /** The highlights shown after an upgrade (`whatsNew.items.<id>`), from CHANGELOG.md. */
-export const WHATS_NEW_ITEMS = ["practice", "sql", "learn", "debugger", "shrinker", "about"] as const;
+export const WHATS_NEW_ITEMS = ["home", "brand", "content", "practice", "packs", "app"] as const;
 
 /**
  * Whether to show "What's new" (decided once per start). A start on a new version
